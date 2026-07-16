@@ -1,0 +1,1 @@
+[&>p:not([hidden])]:text-sm w-[calc(100%-1rem)] [mask-type:luminance]

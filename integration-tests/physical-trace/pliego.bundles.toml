@@ -1,0 +1,10 @@
+schema = 1
+targets = "modern"
+format = "minified"
+
+[theme]
+kind = "seed"
+
+[bundles.card]
+sources = ["src/card.rs"]
+emit-theme = true

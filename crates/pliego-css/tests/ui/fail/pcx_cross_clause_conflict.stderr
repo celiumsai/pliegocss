@@ -1,0 +1,5 @@
+error: PCX003: independent clauses 1 and 2 can both assign [Opacity] under the same condition; express the combined state space in one `match`
+ --> tests/ui/fail/pcx_cross_clause_conflict.rs:9:21
+  |
+9 |         if second { "opacity-100" } else { "opacity-50" },
+  |                     ^^^^^^^^^^^^^

@@ -1,0 +1,163 @@
+{
+  "schema_version": 4,
+  "benchmark": "PliegoCSS Gate A matched-core fresh-process compile",
+  "profile": "matched-core",
+  "generated_at": "2026-07-13T10:33:13.339Z",
+  "provenance": {
+    "git": {
+      "commit": "c47239ce0bf1d046aa01710d436baea61f4e6528",
+      "dirty": false,
+      "status_entry_count": 0,
+      "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "harness": {
+      "path": "scripts/measure-pliego-gate-a.mjs",
+      "sha256": "660756cc830a3b5f7b7a97bfd237b0978f98ac762743fa8b497aaa936dacc2a2"
+    },
+    "tracked_inputs": [
+      {
+        "path": "benchmarks/pliego-gate-a/core-fixture.html",
+        "sha256": "4e13f4ec19e7901353d6178da7ff1e5d163efad74bf9b6c210cd5f2b73bcf6a3"
+      }
+    ]
+  },
+  "fixture": {
+    "html": "benchmarks/pliego-gate-a/core-fixture.html",
+    "groups": [
+      "button",
+      "card",
+      "navbar",
+      "form",
+      "dashboard"
+    ],
+    "class_attribute_count": 44,
+    "unique_style_inputs": 28,
+    "utility_occurrences": 257,
+    "unique_utility_tokens": 65,
+    "theme_included": true,
+    "html_sha256": "4e13f4ec19e7901353d6178da7ff1e5d163efad74bf9b6c210cd5f2b73bcf6a3",
+    "derived_input_sha256": "70cc77ae38d61deccf0ea924599d9876a56f649bf166af74f4b14eb5cbb782a9",
+    "advanced_variant_corpus_excluded": "benchmarks/pliego-gate-a/styles.txt"
+  },
+  "environment": {
+    "os": {
+      "platform": "win32",
+      "type": "Windows_NT",
+      "release": "10.0.26200",
+      "version": "Windows 11 Home",
+      "architecture": "x64"
+    },
+    "cpu": {
+      "models": [
+        "Intel(R) Core(TM) Ultra 9 285H"
+      ],
+      "logical_core_count": 16,
+      "available_parallelism": 16
+    },
+    "memory": {
+      "total_bytes": 33820106752
+    },
+    "node": "v24.16.0",
+    "zlib": "1.3.1-e00f703",
+    "toolchain": {
+      "cargo": "cargo 1.96.0 (30a34c682 2026-05-25)",
+      "rustc": "rustc 1.96.0 (ac68faa20 2026-05-25)",
+      "host_target": "x86_64-pc-windows-msvc"
+    },
+    "build": {
+      "host_target": "x86_64-pc-windows-msvc",
+      "cargo_target_dir": "target/benchmarks/pliego-gate-a",
+      "cargo_incremental": false,
+      "cargo_home": "target/benchmarks/cargo-home-gate-a",
+      "cargo_home_policy": "isolated benchmark directory without user Cargo configuration",
+      "sanitized_environment_keys": []
+    },
+    "power_plan": {
+      "status": "recorded",
+      "source": "powercfg /getactivescheme",
+      "value": "Power Scheme GUID: 381b4222-f694-41f0-9685-ff5bb260df2e  (Balanced)"
+    },
+    "security_tooling": {
+      "status": "active",
+      "tooling": "Microsoft Defender Antivirus; Windows Application Control",
+      "source": "environment"
+    }
+  },
+  "command": "pliego-cssc compile --input <derived-from-core-class-attributes> --seed --theme --output <temporary-file>",
+  "statistics": {
+    "median": "average of the two middle values for even samples",
+    "p95": "nearest-rank",
+    "median_absolute_deviation": "conventional median of absolute deviations from the median"
+  },
+  "timing": {
+    "warmup_processes": 5,
+    "runs": 30,
+    "min_ms": 31.959,
+    "median_ms": 34.934,
+    "mean_ms": 49.903,
+    "p95_ms": 248.502,
+    "max_ms": 267.676,
+    "median_absolute_deviation_ms": 0.708,
+    "standard_deviation_ms": 55.713,
+    "samples_ms": [
+      37.158,
+      38.614,
+      38.231,
+      267.676,
+      35.684,
+      34.279,
+      35.02,
+      34.268,
+      34.474,
+      36.542,
+      34.946,
+      34.63,
+      35.022,
+      34.784,
+      34.736,
+      35.015,
+      34.922,
+      35.706,
+      34.66,
+      34.101,
+      34.777,
+      248.502,
+      33.145,
+      31.959,
+      33.056,
+      36.111,
+      36.953,
+      35.144,
+      32.644,
+      34.343
+    ]
+  },
+  "determinism": {
+    "verified_runs": 30,
+    "deterministic": true,
+    "sha256": "aebdbff60a76abc1347cc34818bd31d54502c63505fb4962b1b6b3af46f5bf8e"
+  },
+  "output": {
+    "css_raw_bytes": 6546,
+    "css_gzip_bytes": 1594,
+    "css_sha256": "aebdbff60a76abc1347cc34818bd31d54502c63505fb4962b1b6b3af46f5bf8e",
+    "executable_sha256": "4c8f1964fda895e7f29213af2456bd79905b7b2e79b6ecadcc81124c3e444a73",
+    "manifest_sha256": "4e545d0f71cc6a99ae26caafa13f7dc247a68fc20b13a57aa933debef15bdfe2",
+    "transfer_gzip_bytes": 3038,
+    "html_unchanged_outside_class_values": true,
+    "html": {
+      "utility_strings": {
+        "raw_bytes": 5007,
+        "gzip_bytes": 1310,
+        "transfer_html_css_gzip_bytes": 2904,
+        "sha256": "4e13f4ec19e7901353d6178da7ff1e5d163efad74bf9b6c210cd5f2b73bcf6a3"
+      },
+      "generated_classes": {
+        "raw_bytes": 3916,
+        "gzip_bytes": 1444,
+        "transfer_html_css_gzip_bytes": 3038,
+        "sha256": "0a956dc40924c4cc52f1b167fa77a28fd300dcc0c9dd4f45eab079ed87832b36"
+      }
+    }
+  }
+}

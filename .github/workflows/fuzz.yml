@@ -1,0 +1,33 @@
+name: Fuzz soak
+
+on:
+  schedule:
+    - cron: "17 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fuzz-soak:
+    name: Five-minute soak per target
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22.13.0
+      - name: Install pinned nightly and cargo-fuzz
+        run: |
+          rustup toolchain install nightly-2026-06-26 --profile minimal --component rust-src
+          cargo +nightly-2026-06-26 install cargo-fuzz --version 0.13.2 --locked
+      - name: Run scheduled fuzz soak
+        run: node scripts/check-fuzz.mjs --seconds 300
+      - name: Preserve fuzz reproductions
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: pliegocss-fuzz-soak-${{ github.sha }}
+          path: target/fuzz-runs
+          if-no-files-found: ignore

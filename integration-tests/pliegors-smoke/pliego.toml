@@ -1,0 +1,10 @@
+[project]
+id = "pliegocss-pliegors-smoke"
+name = "PliegoCSS PliegoRS smoke"
+site_package = "pliegocss-pliegors-smoke"
+output = "target/site"
+
+[client]
+package = "pliegocss-pliegors-client"
+wasm_name = "pliegocss_pliegors_client"
+bindgen_output = "target/pliegocss-pliegors-client/pkg"

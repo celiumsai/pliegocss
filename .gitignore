@@ -1,0 +1,17 @@
+/node_modules/
+/target/
+/.pliegocss-repair.lock
+/benchmarks/tailwind-v4/dist/
+/benchmarks/rust-check/runtime/
+/benchmarks/wasm-overhead/runtime/
+/benchmarks/results/*.local.json
+/benchmarks/results/pliego-gate-a.local.json
+/benchmarks/results/pliego-gate-b.local.json
+/benchmarks/results/wasm-overhead.json
+/benchmarks/pliegors-integration/runtime/
+/integration-tests/pliegors-smoke/target/
+/integration-tests/pliegors-smoke/.pliegocss-gate/
+/integration-tests/pliegors-dev-loop/target/
+/integration-tests/public-api-smoke/target/
+*.profraw
+*.pliego.lock

@@ -1,0 +1,5 @@
+error: PCS011: arbitrary properties contain exactly one declaration and no block at bytes 0..24
+ --> tests/ui/fail/multiple_arbitrary_properties.rs:4:17
+  |
+4 |     let _ = pc!("[display:flex;color:red]");
+  |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^

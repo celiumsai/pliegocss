@@ -1,0 +1,11 @@
+[package]
+name = "pliego-publication-lock-holder"
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.85"
+publish = false
+
+[dependencies]
+fs2 = "=0.4.3"
+
+[workspace]

@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "policyVersion": 1,
+  "budgets": [
+    {
+      "id": "audit-example-file",
+      "subject": {
+        "kind": "file",
+        "id": "examples/audit/app.css"
+      },
+      "limits": {
+        "bytes": {
+          "maximum": 256,
+          "baseline": 128,
+          "maxIncrease": 64
+        },
+        "rules": {
+          "maximum": 8,
+          "baseline": 3,
+          "maxIncrease": 2
+        },
+        "selectors": {
+          "maximum": 8,
+          "baseline": 2,
+          "maxIncrease": 2
+        },
+        "specificity": {
+          "maximum": "0,2,0",
+          "baseline": "0,1,0",
+          "maxIncrease": "0,1,0"
+        },
+        "semanticDuplicates": {
+          "maximum": 0,
+          "baseline": 0,
+          "maxIncrease": 0
+        }
+      }
+    },
+    {
+      "id": "audit-example-package",
+      "subject": {
+        "kind": "package",
+        "id": "example-app"
+      },
+      "limits": {
+        "bytes": {
+          "maximum": 256,
+          "baseline": null,
+          "maxIncrease": null
+        }
+      }
+    },
+    {
+      "id": "audit-example-route",
+      "subject": {
+        "kind": "route",
+        "id": "/demo"
+      },
+      "limits": {
+        "rules": {
+          "maximum": 8,
+          "baseline": null,
+          "maxIncrease": null
+        }
+      }
+    },
+    {
+      "id": "audit-example-layer",
+      "subject": {
+        "kind": "layer",
+        "id": "app.components"
+      },
+      "limits": {
+        "selectors": {
+          "maximum": 4,
+          "baseline": 2,
+          "maxIncrease": 1
+        }
+      }
+    }
+  ],
+  "exceptions": []
+}

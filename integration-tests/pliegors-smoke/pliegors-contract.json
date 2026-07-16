@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 2,
+  "revision": "24ab658942bdc79a92e400bde6b422b50ae1af01",
+  "sourceSha256": "79eddc6c1b8467153096c97c150d8809c25d4f31548c334b79f269d58adba5da",
+  "surfaces": [
+    "Cargo.toml",
+    "Cargo.lock",
+    "crates/pliego-reactive/**",
+    "crates/pliego-dom/**",
+    "crates/pliego-macros/**",
+    "crates/pliego-resume/**",
+    "crates/pliego-ssg/**",
+    "crates/pliego-starters/**",
+    "crates/pliego-cli/**"
+  ]
+}

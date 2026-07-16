@@ -1,0 +1,5 @@
+error: PCS002: the style list is empty; use `Style::EMPTY` at bytes 0..0; try `Style::EMPTY`
+ --> tests/ui/fail/empty.rs:4:17
+  |
+4 |     let _ = pc!("");
+  |                 ^^

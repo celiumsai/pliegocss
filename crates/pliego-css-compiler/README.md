@@ -1,0 +1,33 @@
+# pliego-css-compiler
+
+`pliego-css-compiler` lowers parsed PliegoCSS utilities into typed semantic IR, detects conflicts,
+derives theme-scoped `StyleId` values, and emits deterministic CSS.
+
+```rust
+use pliego_css_compiler::{emit_css, lower_style};
+use pliego_css_parser::parse_style_list;
+
+let syntax = parse_style_list("flex gap-4 hover:bg-accent")?;
+let style = lower_style(&syntax)?;
+let css = emit_css(&style)?;
+assert!(css.contains(".pc_"));
+# Ok::<(), Box<dyn std::error::Error>>(())
+```
+
+Registry-aware variants accept one shared `pliego-css-theme::ThemeRegistry`. The crate also owns the
+utility catalog, conditional composition analysis, typed container and fixed-order cascade-layer
+conditions, StyleId format 2 encoding, theme CSS emission, and semantic IR binary format 2. The IR
+artifact is a canonical, theme-aware persistence envelope
+with resolved assignment records and portable spans; it is separate from the one-way identity stream
+and adds no Serde dependency.
+
+## Stability
+
+This is a lockstep implementation and tooling crate, not the supported application facade. Its
+public functions exist so `pliego-css-macros`, `pliego-cssc`, and build tooling can share one compiler
+contract. Direct consumers must pin exact matching PliegoCSS package versions; advanced composition,
+catalog, and identity APIs are not covered by the application SemVer promise unless explicitly
+promoted by a later release contract.
+
+The current workspace is pre-release and this README does not claim that `0.1.0` is published. The
+CSS emission, StyleId, and semantic-IR binary references live under `docs/` in a release checkout.

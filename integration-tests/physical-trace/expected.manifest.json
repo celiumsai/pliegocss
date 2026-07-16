@@ -1,0 +1,1053 @@
+{
+  "schemaVersion": 5,
+  "styleIdFormatVersion": 2,
+  "classNameFormatVersion": 1,
+  "themeIdFormatVersion": 1,
+  "themeId": "c46b8b7ec8c3aa6daadf15cc9196ba3e",
+  "targets": "modern",
+  "format": "minified",
+  "cssSha256": "d136e3781d6892a52e4d56a5cb7735d0fa61e301e08c1357ef42069fca928e10",
+  "cssBytes": 1210,
+  "styles": [
+    {
+      "styleId": "7e64479f7843d28ea3915ab7833598f0",
+      "className": "pc_7hdkn8sg0c1tbktur15buquwg",
+      "origins": [
+        {
+          "source": "text-sm antialiased transition-colors outline-2 ring-2 ring-accent/20 shadow-md opacity-50! [color:light-dark(red,blue)] [--label:'😀;'] md:hover:bg-accent",
+          "file": "src/card.rs",
+          "byteStart": 24,
+          "byteEnd": 188,
+          "macroKind": "pc",
+          "reason": "visible-literal"
+        }
+      ]
+    }
+  ],
+  "graph": {
+    "schemaVersion": 2,
+    "declarationIdFormatVersion": 1,
+    "physicalRuleIdFormatVersion": 1,
+    "physicalDeclarationIdFormatVersion": 1,
+    "originCoverage": "compiler-verified-complete",
+    "applicationCoverage": "adapter-attested-complete",
+    "physicalCoverage": "compiler-verified-complete",
+    "declarations": [
+      {
+        "id": "decl:7e64479f7843d28ea3915ab7833598f0:00000000",
+        "styleId": "7e64479f7843d28ea3915ab7833598f0",
+        "ordinal": 0
+      },
+      {
+        "id": "decl:7e64479f7843d28ea3915ab7833598f0:00000001",
+        "styleId": "7e64479f7843d28ea3915ab7833598f0",
+        "ordinal": 1
+      },
+      {
+        "id": "decl:7e64479f7843d28ea3915ab7833598f0:00000002",
+        "styleId": "7e64479f7843d28ea3915ab7833598f0",
+        "ordinal": 2
+      },
+      {
+        "id": "decl:7e64479f7843d28ea3915ab7833598f0:00000003",
+        "styleId": "7e64479f7843d28ea3915ab7833598f0",
+        "ordinal": 3
+      },
+      {
+        "id": "decl:7e64479f7843d28ea3915ab7833598f0:00000004",
+        "styleId": "7e64479f7843d28ea3915ab7833598f0",
+        "ordinal": 4
+      },
+      {
+        "id": "decl:7e64479f7843d28ea3915ab7833598f0:00000005",
+        "styleId": "7e64479f7843d28ea3915ab7833598f0",
+        "ordinal": 5
+      },
+      {
+        "id": "decl:7e64479f7843d28ea3915ab7833598f0:00000006",
+        "styleId": "7e64479f7843d28ea3915ab7833598f0",
+        "ordinal": 6
+      },
+      {
+        "id": "decl:7e64479f7843d28ea3915ab7833598f0:00000007",
+        "styleId": "7e64479f7843d28ea3915ab7833598f0",
+        "ordinal": 7
+      },
+      {
+        "id": "decl:7e64479f7843d28ea3915ab7833598f0:00000008",
+        "styleId": "7e64479f7843d28ea3915ab7833598f0",
+        "ordinal": 8
+      },
+      {
+        "id": "decl:7e64479f7843d28ea3915ab7833598f0:00000009",
+        "styleId": "7e64479f7843d28ea3915ab7833598f0",
+        "ordinal": 9
+      },
+      {
+        "id": "decl:7e64479f7843d28ea3915ab7833598f0:0000000a",
+        "styleId": "7e64479f7843d28ea3915ab7833598f0",
+        "ordinal": 10
+      }
+    ],
+    "tokens": [
+      {
+        "id": "token:color:13e3e9b7",
+        "kind": "color",
+        "tokenId": "13e3e9b7",
+        "name": "accent"
+      },
+      {
+        "id": "token:font-size:4452173d",
+        "kind": "font-size",
+        "tokenId": "4452173d",
+        "name": "sm"
+      },
+      {
+        "id": "token:shadow:672e2914",
+        "kind": "shadow",
+        "tokenId": "672e2914",
+        "name": "md"
+      }
+    ],
+    "components": [
+      {
+        "id": "component:app::card"
+      }
+    ],
+    "routes": [
+      {
+        "id": "route:home",
+        "path": "/"
+      }
+    ],
+    "islands": [
+      {
+        "id": "island:card-preview",
+        "name": "CardPreview"
+      }
+    ],
+    "syntheticProducers": [
+      {
+        "id": "producer:theme",
+        "kind": "theme"
+      }
+    ],
+    "physicalRules": [
+      {
+        "id": "css-rule:00000000",
+        "ordinal": 0,
+        "kind": "qualified",
+        "byteStart": 0,
+        "byteEnd": 371,
+        "headerByteStart": 0,
+        "headerByteEnd": 5
+      },
+      {
+        "id": "css-rule:00000001",
+        "ordinal": 1,
+        "kind": "qualified",
+        "byteStart": 371,
+        "byteEnd": 1113,
+        "headerByteStart": 371,
+        "headerByteEnd": 400
+      },
+      {
+        "id": "css-rule:00000002",
+        "ordinal": 2,
+        "kind": "media",
+        "byteStart": 1113,
+        "byteEnd": 1209,
+        "headerByteStart": 1113,
+        "headerByteEnd": 1134
+      },
+      {
+        "id": "css-rule:00000003",
+        "ordinal": 3,
+        "kind": "qualified",
+        "byteStart": 1135,
+        "byteEnd": 1208,
+        "headerByteStart": 1135,
+        "headerByteEnd": 1170
+      }
+    ],
+    "physicalDeclarations": [
+      {
+        "id": "css-decl:00000000:00000000",
+        "ordinal": 0,
+        "property": "--color-accent",
+        "important": false,
+        "generated": false,
+        "byteStart": 6,
+        "byteEnd": 38,
+        "propertyByteStart": 6,
+        "propertyByteEnd": 20,
+        "valueByteStart": 21,
+        "valueByteEnd": 38
+      },
+      {
+        "id": "css-decl:00000000:00000001",
+        "ordinal": 1,
+        "property": "--color-accent-strong",
+        "important": false,
+        "generated": false,
+        "byteStart": 39,
+        "byteEnd": 78,
+        "propertyByteStart": 39,
+        "propertyByteEnd": 60,
+        "valueByteStart": 61,
+        "valueByteEnd": 78
+      },
+      {
+        "id": "css-decl:00000000:00000002",
+        "ordinal": 2,
+        "property": "--color-canvas",
+        "important": false,
+        "generated": false,
+        "byteStart": 79,
+        "byteEnd": 114,
+        "propertyByteStart": 79,
+        "propertyByteEnd": 93,
+        "valueByteStart": 94,
+        "valueByteEnd": 114
+      },
+      {
+        "id": "css-decl:00000000:00000003",
+        "ordinal": 3,
+        "property": "--color-ink",
+        "important": false,
+        "generated": false,
+        "byteStart": 115,
+        "byteEnd": 145,
+        "propertyByteStart": 115,
+        "propertyByteEnd": 126,
+        "valueByteStart": 127,
+        "valueByteEnd": 145
+      },
+      {
+        "id": "css-decl:00000000:00000004",
+        "ordinal": 4,
+        "property": "--color-line",
+        "important": false,
+        "generated": false,
+        "byteStart": 146,
+        "byteEnd": 177,
+        "propertyByteStart": 146,
+        "propertyByteEnd": 158,
+        "valueByteStart": 159,
+        "valueByteEnd": 177
+      },
+      {
+        "id": "css-decl:00000000:00000005",
+        "ordinal": 5,
+        "property": "--color-muted",
+        "important": false,
+        "generated": false,
+        "byteStart": 178,
+        "byteEnd": 210,
+        "propertyByteStart": 178,
+        "propertyByteEnd": 191,
+        "valueByteStart": 192,
+        "valueByteEnd": 210
+      },
+      {
+        "id": "css-decl:00000000:00000006",
+        "ordinal": 6,
+        "property": "--color-surface",
+        "important": false,
+        "generated": false,
+        "byteStart": 211,
+        "byteEnd": 231,
+        "propertyByteStart": 211,
+        "propertyByteEnd": 226,
+        "valueByteStart": 227,
+        "valueByteEnd": 231
+      },
+      {
+        "id": "css-decl:00000000:00000007",
+        "ordinal": 7,
+        "property": "--color-surface-raised",
+        "important": false,
+        "generated": false,
+        "byteStart": 232,
+        "byteEnd": 273,
+        "propertyByteStart": 232,
+        "propertyByteEnd": 254,
+        "valueByteStart": 255,
+        "valueByteEnd": 273
+      },
+      {
+        "id": "css-decl:00000000:00000008",
+        "ordinal": 8,
+        "property": "--font-mono",
+        "important": false,
+        "generated": false,
+        "byteStart": 274,
+        "byteEnd": 323,
+        "propertyByteStart": 274,
+        "propertyByteEnd": 285,
+        "valueByteStart": 286,
+        "valueByteEnd": 323
+      },
+      {
+        "id": "css-decl:00000000:00000009",
+        "ordinal": 9,
+        "property": "--font-sans",
+        "important": false,
+        "generated": false,
+        "byteStart": 324,
+        "byteEnd": 370,
+        "propertyByteStart": 324,
+        "propertyByteEnd": 335,
+        "valueByteStart": 336,
+        "valueByteEnd": 370
+      },
+      {
+        "id": "css-decl:00000001:00000000",
+        "ordinal": 0,
+        "property": "--pc-shadow",
+        "important": false,
+        "generated": true,
+        "byteStart": 401,
+        "byteEnd": 422,
+        "propertyByteStart": 401,
+        "propertyByteEnd": 412,
+        "valueByteStart": 413,
+        "valueByteEnd": 422
+      },
+      {
+        "id": "css-decl:00000001:00000001",
+        "ordinal": 1,
+        "property": "--pc-ring-width",
+        "important": false,
+        "generated": true,
+        "byteStart": 423,
+        "byteEnd": 440,
+        "propertyByteStart": 423,
+        "propertyByteEnd": 438,
+        "valueByteStart": 439,
+        "valueByteEnd": 440
+      },
+      {
+        "id": "css-decl:00000001:00000002",
+        "ordinal": 2,
+        "property": "--pc-ring-color",
+        "important": false,
+        "generated": true,
+        "byteStart": 441,
+        "byteEnd": 469,
+        "propertyByteStart": 441,
+        "propertyByteEnd": 456,
+        "valueByteStart": 457,
+        "valueByteEnd": 469
+      },
+      {
+        "id": "css-decl:00000001:00000003",
+        "ordinal": 3,
+        "property": "font-size",
+        "important": false,
+        "generated": false,
+        "byteStart": 470,
+        "byteEnd": 487,
+        "propertyByteStart": 470,
+        "propertyByteEnd": 479,
+        "valueByteStart": 480,
+        "valueByteEnd": 487
+      },
+      {
+        "id": "css-decl:00000001:00000004",
+        "ordinal": 4,
+        "property": "line-height",
+        "important": false,
+        "generated": false,
+        "byteStart": 488,
+        "byteEnd": 507,
+        "propertyByteStart": 488,
+        "propertyByteEnd": 499,
+        "valueByteStart": 500,
+        "valueByteEnd": 507
+      },
+      {
+        "id": "css-decl:00000001:00000005",
+        "ordinal": 5,
+        "property": "-webkit-font-smoothing",
+        "important": false,
+        "generated": false,
+        "byteStart": 508,
+        "byteEnd": 542,
+        "propertyByteStart": 508,
+        "propertyByteEnd": 530,
+        "valueByteStart": 531,
+        "valueByteEnd": 542
+      },
+      {
+        "id": "css-decl:00000001:00000006",
+        "ordinal": 6,
+        "property": "-moz-osx-font-smoothing",
+        "important": false,
+        "generated": false,
+        "byteStart": 543,
+        "byteEnd": 576,
+        "propertyByteStart": 543,
+        "propertyByteEnd": 566,
+        "valueByteStart": 567,
+        "valueByteEnd": 576
+      },
+      {
+        "id": "css-decl:00000001:00000007",
+        "ordinal": 7,
+        "property": "outline-width",
+        "important": false,
+        "generated": false,
+        "byteStart": 577,
+        "byteEnd": 594,
+        "propertyByteStart": 577,
+        "propertyByteEnd": 590,
+        "valueByteStart": 591,
+        "valueByteEnd": 594
+      },
+      {
+        "id": "css-decl:00000001:00000008",
+        "ordinal": 8,
+        "property": "outline-style",
+        "important": false,
+        "generated": false,
+        "byteStart": 595,
+        "byteEnd": 614,
+        "propertyByteStart": 595,
+        "propertyByteEnd": 608,
+        "valueByteStart": 609,
+        "valueByteEnd": 614
+      },
+      {
+        "id": "css-decl:00000001:00000009",
+        "ordinal": 9,
+        "property": "--pc-shadow",
+        "important": false,
+        "generated": false,
+        "byteStart": 615,
+        "byteEnd": 651,
+        "propertyByteStart": 615,
+        "propertyByteEnd": 626,
+        "valueByteStart": 627,
+        "valueByteEnd": 651
+      },
+      {
+        "id": "css-decl:00000001:0000000a",
+        "ordinal": 10,
+        "property": "--pc-ring-width",
+        "important": false,
+        "generated": false,
+        "byteStart": 652,
+        "byteEnd": 671,
+        "propertyByteStart": 652,
+        "propertyByteEnd": 667,
+        "valueByteStart": 668,
+        "valueByteEnd": 671
+      },
+      {
+        "id": "css-decl:00000001:0000000b",
+        "ordinal": 11,
+        "property": "--pc-ring-color",
+        "important": false,
+        "generated": false,
+        "byteStart": 672,
+        "byteEnd": 743,
+        "propertyByteStart": 672,
+        "propertyByteEnd": 687,
+        "valueByteStart": 688,
+        "valueByteEnd": 743
+      },
+      {
+        "id": "css-decl:00000001:0000000c",
+        "ordinal": 12,
+        "property": "transition-property",
+        "important": false,
+        "generated": false,
+        "byteStart": 744,
+        "byteEnd": 833,
+        "propertyByteStart": 744,
+        "propertyByteEnd": 763,
+        "valueByteStart": 764,
+        "valueByteEnd": 833
+      },
+      {
+        "id": "css-decl:00000001:0000000d",
+        "ordinal": 13,
+        "property": "transition-duration",
+        "important": false,
+        "generated": false,
+        "byteStart": 834,
+        "byteEnd": 858,
+        "propertyByteStart": 834,
+        "propertyByteEnd": 853,
+        "valueByteStart": 854,
+        "valueByteEnd": 858
+      },
+      {
+        "id": "css-decl:00000001:0000000e",
+        "ordinal": 14,
+        "property": "transition-timing-function",
+        "important": false,
+        "generated": false,
+        "byteStart": 859,
+        "byteEnd": 909,
+        "propertyByteStart": 859,
+        "propertyByteEnd": 885,
+        "valueByteStart": 886,
+        "valueByteEnd": 909
+      },
+      {
+        "id": "css-decl:00000001:0000000f",
+        "ordinal": 15,
+        "property": "--label",
+        "important": false,
+        "generated": false,
+        "byteStart": 910,
+        "byteEnd": 925,
+        "propertyByteStart": 910,
+        "propertyByteEnd": 917,
+        "valueByteStart": 918,
+        "valueByteEnd": 925
+      },
+      {
+        "id": "css-decl:00000001:00000010",
+        "ordinal": 16,
+        "property": "color",
+        "important": false,
+        "generated": false,
+        "byteStart": 926,
+        "byteEnd": 990,
+        "propertyByteStart": 926,
+        "propertyByteEnd": 931,
+        "valueByteStart": 932,
+        "valueByteEnd": 990
+      },
+      {
+        "id": "css-decl:00000001:00000011",
+        "ordinal": 17,
+        "property": "box-shadow",
+        "important": false,
+        "generated": true,
+        "byteStart": 991,
+        "byteEnd": 1091,
+        "propertyByteStart": 991,
+        "propertyByteEnd": 1001,
+        "valueByteStart": 1002,
+        "valueByteEnd": 1091
+      },
+      {
+        "id": "css-decl:00000001:00000012",
+        "ordinal": 18,
+        "property": "opacity",
+        "important": true,
+        "generated": false,
+        "byteStart": 1092,
+        "byteEnd": 1112,
+        "propertyByteStart": 1092,
+        "propertyByteEnd": 1099,
+        "valueByteStart": 1100,
+        "valueByteEnd": 1102
+      },
+      {
+        "id": "css-decl:00000003:00000000",
+        "ordinal": 0,
+        "property": "background-color",
+        "important": false,
+        "generated": false,
+        "byteStart": 1171,
+        "byteEnd": 1207,
+        "propertyByteStart": 1171,
+        "propertyByteEnd": 1187,
+        "valueByteStart": 1188,
+        "valueByteEnd": 1207
+      }
+    ],
+    "edges": [
+      {
+        "kind": "componentUsesDeclaration",
+        "from": "component:app::card",
+        "to": "decl:7e64479f7843d28ea3915ab7833598f0:00000000"
+      },
+      {
+        "kind": "componentUsesDeclaration",
+        "from": "component:app::card",
+        "to": "decl:7e64479f7843d28ea3915ab7833598f0:00000001"
+      },
+      {
+        "kind": "componentUsesDeclaration",
+        "from": "component:app::card",
+        "to": "decl:7e64479f7843d28ea3915ab7833598f0:00000002"
+      },
+      {
+        "kind": "componentUsesDeclaration",
+        "from": "component:app::card",
+        "to": "decl:7e64479f7843d28ea3915ab7833598f0:00000003"
+      },
+      {
+        "kind": "componentUsesDeclaration",
+        "from": "component:app::card",
+        "to": "decl:7e64479f7843d28ea3915ab7833598f0:00000004"
+      },
+      {
+        "kind": "componentUsesDeclaration",
+        "from": "component:app::card",
+        "to": "decl:7e64479f7843d28ea3915ab7833598f0:00000005"
+      },
+      {
+        "kind": "componentUsesDeclaration",
+        "from": "component:app::card",
+        "to": "decl:7e64479f7843d28ea3915ab7833598f0:00000006"
+      },
+      {
+        "kind": "componentUsesDeclaration",
+        "from": "component:app::card",
+        "to": "decl:7e64479f7843d28ea3915ab7833598f0:00000007"
+      },
+      {
+        "kind": "componentUsesDeclaration",
+        "from": "component:app::card",
+        "to": "decl:7e64479f7843d28ea3915ab7833598f0:00000008"
+      },
+      {
+        "kind": "componentUsesDeclaration",
+        "from": "component:app::card",
+        "to": "decl:7e64479f7843d28ea3915ab7833598f0:00000009"
+      },
+      {
+        "kind": "componentUsesDeclaration",
+        "from": "component:app::card",
+        "to": "decl:7e64479f7843d28ea3915ab7833598f0:0000000a"
+      },
+      {
+        "kind": "declarationContributesToPhysicalDeclaration",
+        "from": "decl:7e64479f7843d28ea3915ab7833598f0:00000000",
+        "to": "css-decl:00000001:00000003"
+      },
+      {
+        "kind": "declarationContributesToPhysicalDeclaration",
+        "from": "decl:7e64479f7843d28ea3915ab7833598f0:00000000",
+        "to": "css-decl:00000001:00000004"
+      },
+      {
+        "kind": "declarationContributesToPhysicalDeclaration",
+        "from": "decl:7e64479f7843d28ea3915ab7833598f0:00000001",
+        "to": "css-decl:00000001:00000005"
+      },
+      {
+        "kind": "declarationContributesToPhysicalDeclaration",
+        "from": "decl:7e64479f7843d28ea3915ab7833598f0:00000001",
+        "to": "css-decl:00000001:00000006"
+      },
+      {
+        "kind": "declarationContributesToPhysicalDeclaration",
+        "from": "decl:7e64479f7843d28ea3915ab7833598f0:00000002",
+        "to": "css-decl:00000001:00000007"
+      },
+      {
+        "kind": "declarationContributesToPhysicalDeclaration",
+        "from": "decl:7e64479f7843d28ea3915ab7833598f0:00000002",
+        "to": "css-decl:00000001:00000008"
+      },
+      {
+        "kind": "declarationContributesToPhysicalDeclaration",
+        "from": "decl:7e64479f7843d28ea3915ab7833598f0:00000003",
+        "to": "css-decl:00000001:00000012"
+      },
+      {
+        "kind": "declarationContributesToPhysicalDeclaration",
+        "from": "decl:7e64479f7843d28ea3915ab7833598f0:00000004",
+        "to": "css-decl:00000001:00000000"
+      },
+      {
+        "kind": "declarationContributesToPhysicalDeclaration",
+        "from": "decl:7e64479f7843d28ea3915ab7833598f0:00000004",
+        "to": "css-decl:00000001:00000001"
+      },
+      {
+        "kind": "declarationContributesToPhysicalDeclaration",
+        "from": "decl:7e64479f7843d28ea3915ab7833598f0:00000004",
+        "to": "css-decl:00000001:00000002"
+      },
+      {
+        "kind": "declarationContributesToPhysicalDeclaration",
+        "from": "decl:7e64479f7843d28ea3915ab7833598f0:00000004",
+        "to": "css-decl:00000001:00000009"
+      },
+      {
+        "kind": "declarationContributesToPhysicalDeclaration",
+        "from": "decl:7e64479f7843d28ea3915ab7833598f0:00000004",
+        "to": "css-decl:00000001:00000011"
+      },
+      {
+        "kind": "declarationContributesToPhysicalDeclaration",
+        "from": "decl:7e64479f7843d28ea3915ab7833598f0:00000005",
+        "to": "css-decl:00000001:00000000"
+      },
+      {
+        "kind": "declarationContributesToPhysicalDeclaration",
+        "from": "decl:7e64479f7843d28ea3915ab7833598f0:00000005",
+        "to": "css-decl:00000001:00000001"
+      },
+      {
+        "kind": "declarationContributesToPhysicalDeclaration",
+        "from": "decl:7e64479f7843d28ea3915ab7833598f0:00000005",
+        "to": "css-decl:00000001:00000002"
+      },
+      {
+        "kind": "declarationContributesToPhysicalDeclaration",
+        "from": "decl:7e64479f7843d28ea3915ab7833598f0:00000005",
+        "to": "css-decl:00000001:0000000a"
+      },
+      {
+        "kind": "declarationContributesToPhysicalDeclaration",
+        "from": "decl:7e64479f7843d28ea3915ab7833598f0:00000005",
+        "to": "css-decl:00000001:00000011"
+      },
+      {
+        "kind": "declarationContributesToPhysicalDeclaration",
+        "from": "decl:7e64479f7843d28ea3915ab7833598f0:00000006",
+        "to": "css-decl:00000001:00000000"
+      },
+      {
+        "kind": "declarationContributesToPhysicalDeclaration",
+        "from": "decl:7e64479f7843d28ea3915ab7833598f0:00000006",
+        "to": "css-decl:00000001:00000001"
+      },
+      {
+        "kind": "declarationContributesToPhysicalDeclaration",
+        "from": "decl:7e64479f7843d28ea3915ab7833598f0:00000006",
+        "to": "css-decl:00000001:00000002"
+      },
+      {
+        "kind": "declarationContributesToPhysicalDeclaration",
+        "from": "decl:7e64479f7843d28ea3915ab7833598f0:00000006",
+        "to": "css-decl:00000001:0000000b"
+      },
+      {
+        "kind": "declarationContributesToPhysicalDeclaration",
+        "from": "decl:7e64479f7843d28ea3915ab7833598f0:00000006",
+        "to": "css-decl:00000001:00000011"
+      },
+      {
+        "kind": "declarationContributesToPhysicalDeclaration",
+        "from": "decl:7e64479f7843d28ea3915ab7833598f0:00000007",
+        "to": "css-decl:00000001:0000000c"
+      },
+      {
+        "kind": "declarationContributesToPhysicalDeclaration",
+        "from": "decl:7e64479f7843d28ea3915ab7833598f0:00000007",
+        "to": "css-decl:00000001:0000000d"
+      },
+      {
+        "kind": "declarationContributesToPhysicalDeclaration",
+        "from": "decl:7e64479f7843d28ea3915ab7833598f0:00000007",
+        "to": "css-decl:00000001:0000000e"
+      },
+      {
+        "kind": "declarationContributesToPhysicalDeclaration",
+        "from": "decl:7e64479f7843d28ea3915ab7833598f0:00000008",
+        "to": "css-decl:00000001:0000000f"
+      },
+      {
+        "kind": "declarationContributesToPhysicalDeclaration",
+        "from": "decl:7e64479f7843d28ea3915ab7833598f0:00000009",
+        "to": "css-decl:00000001:00000010"
+      },
+      {
+        "kind": "declarationContributesToPhysicalDeclaration",
+        "from": "decl:7e64479f7843d28ea3915ab7833598f0:0000000a",
+        "to": "css-decl:00000003:00000000"
+      },
+      {
+        "kind": "declarationUsesToken",
+        "from": "decl:7e64479f7843d28ea3915ab7833598f0:00000000",
+        "to": "token:font-size:4452173d"
+      },
+      {
+        "kind": "declarationUsesToken",
+        "from": "decl:7e64479f7843d28ea3915ab7833598f0:00000004",
+        "to": "token:shadow:672e2914"
+      },
+      {
+        "kind": "declarationUsesToken",
+        "from": "decl:7e64479f7843d28ea3915ab7833598f0:00000006",
+        "to": "token:color:13e3e9b7"
+      },
+      {
+        "kind": "declarationUsesToken",
+        "from": "decl:7e64479f7843d28ea3915ab7833598f0:0000000a",
+        "to": "token:color:13e3e9b7"
+      },
+      {
+        "kind": "islandUsesComponent",
+        "from": "island:card-preview",
+        "to": "component:app::card"
+      },
+      {
+        "kind": "physicalDeclarationBelongsToRule",
+        "from": "css-decl:00000000:00000000",
+        "to": "css-rule:00000000"
+      },
+      {
+        "kind": "physicalDeclarationBelongsToRule",
+        "from": "css-decl:00000000:00000001",
+        "to": "css-rule:00000000"
+      },
+      {
+        "kind": "physicalDeclarationBelongsToRule",
+        "from": "css-decl:00000000:00000002",
+        "to": "css-rule:00000000"
+      },
+      {
+        "kind": "physicalDeclarationBelongsToRule",
+        "from": "css-decl:00000000:00000003",
+        "to": "css-rule:00000000"
+      },
+      {
+        "kind": "physicalDeclarationBelongsToRule",
+        "from": "css-decl:00000000:00000004",
+        "to": "css-rule:00000000"
+      },
+      {
+        "kind": "physicalDeclarationBelongsToRule",
+        "from": "css-decl:00000000:00000005",
+        "to": "css-rule:00000000"
+      },
+      {
+        "kind": "physicalDeclarationBelongsToRule",
+        "from": "css-decl:00000000:00000006",
+        "to": "css-rule:00000000"
+      },
+      {
+        "kind": "physicalDeclarationBelongsToRule",
+        "from": "css-decl:00000000:00000007",
+        "to": "css-rule:00000000"
+      },
+      {
+        "kind": "physicalDeclarationBelongsToRule",
+        "from": "css-decl:00000000:00000008",
+        "to": "css-rule:00000000"
+      },
+      {
+        "kind": "physicalDeclarationBelongsToRule",
+        "from": "css-decl:00000000:00000009",
+        "to": "css-rule:00000000"
+      },
+      {
+        "kind": "physicalDeclarationBelongsToRule",
+        "from": "css-decl:00000001:00000000",
+        "to": "css-rule:00000001"
+      },
+      {
+        "kind": "physicalDeclarationBelongsToRule",
+        "from": "css-decl:00000001:00000001",
+        "to": "css-rule:00000001"
+      },
+      {
+        "kind": "physicalDeclarationBelongsToRule",
+        "from": "css-decl:00000001:00000002",
+        "to": "css-rule:00000001"
+      },
+      {
+        "kind": "physicalDeclarationBelongsToRule",
+        "from": "css-decl:00000001:00000003",
+        "to": "css-rule:00000001"
+      },
+      {
+        "kind": "physicalDeclarationBelongsToRule",
+        "from": "css-decl:00000001:00000004",
+        "to": "css-rule:00000001"
+      },
+      {
+        "kind": "physicalDeclarationBelongsToRule",
+        "from": "css-decl:00000001:00000005",
+        "to": "css-rule:00000001"
+      },
+      {
+        "kind": "physicalDeclarationBelongsToRule",
+        "from": "css-decl:00000001:00000006",
+        "to": "css-rule:00000001"
+      },
+      {
+        "kind": "physicalDeclarationBelongsToRule",
+        "from": "css-decl:00000001:00000007",
+        "to": "css-rule:00000001"
+      },
+      {
+        "kind": "physicalDeclarationBelongsToRule",
+        "from": "css-decl:00000001:00000008",
+        "to": "css-rule:00000001"
+      },
+      {
+        "kind": "physicalDeclarationBelongsToRule",
+        "from": "css-decl:00000001:00000009",
+        "to": "css-rule:00000001"
+      },
+      {
+        "kind": "physicalDeclarationBelongsToRule",
+        "from": "css-decl:00000001:0000000a",
+        "to": "css-rule:00000001"
+      },
+      {
+        "kind": "physicalDeclarationBelongsToRule",
+        "from": "css-decl:00000001:0000000b",
+        "to": "css-rule:00000001"
+      },
+      {
+        "kind": "physicalDeclarationBelongsToRule",
+        "from": "css-decl:00000001:0000000c",
+        "to": "css-rule:00000001"
+      },
+      {
+        "kind": "physicalDeclarationBelongsToRule",
+        "from": "css-decl:00000001:0000000d",
+        "to": "css-rule:00000001"
+      },
+      {
+        "kind": "physicalDeclarationBelongsToRule",
+        "from": "css-decl:00000001:0000000e",
+        "to": "css-rule:00000001"
+      },
+      {
+        "kind": "physicalDeclarationBelongsToRule",
+        "from": "css-decl:00000001:0000000f",
+        "to": "css-rule:00000001"
+      },
+      {
+        "kind": "physicalDeclarationBelongsToRule",
+        "from": "css-decl:00000001:00000010",
+        "to": "css-rule:00000001"
+      },
+      {
+        "kind": "physicalDeclarationBelongsToRule",
+        "from": "css-decl:00000001:00000011",
+        "to": "css-rule:00000001"
+      },
+      {
+        "kind": "physicalDeclarationBelongsToRule",
+        "from": "css-decl:00000001:00000012",
+        "to": "css-rule:00000001"
+      },
+      {
+        "kind": "physicalDeclarationBelongsToRule",
+        "from": "css-decl:00000003:00000000",
+        "to": "css-rule:00000003"
+      },
+      {
+        "kind": "routeUsesComponent",
+        "from": "route:home",
+        "to": "component:app::card"
+      },
+      {
+        "kind": "ruleNestedInRule",
+        "from": "css-rule:00000003",
+        "to": "css-rule:00000002"
+      },
+      {
+        "kind": "styleHasDeclaration",
+        "from": "style:7e64479f7843d28ea3915ab7833598f0",
+        "to": "decl:7e64479f7843d28ea3915ab7833598f0:00000000"
+      },
+      {
+        "kind": "styleHasDeclaration",
+        "from": "style:7e64479f7843d28ea3915ab7833598f0",
+        "to": "decl:7e64479f7843d28ea3915ab7833598f0:00000001"
+      },
+      {
+        "kind": "styleHasDeclaration",
+        "from": "style:7e64479f7843d28ea3915ab7833598f0",
+        "to": "decl:7e64479f7843d28ea3915ab7833598f0:00000002"
+      },
+      {
+        "kind": "styleHasDeclaration",
+        "from": "style:7e64479f7843d28ea3915ab7833598f0",
+        "to": "decl:7e64479f7843d28ea3915ab7833598f0:00000003"
+      },
+      {
+        "kind": "styleHasDeclaration",
+        "from": "style:7e64479f7843d28ea3915ab7833598f0",
+        "to": "decl:7e64479f7843d28ea3915ab7833598f0:00000004"
+      },
+      {
+        "kind": "styleHasDeclaration",
+        "from": "style:7e64479f7843d28ea3915ab7833598f0",
+        "to": "decl:7e64479f7843d28ea3915ab7833598f0:00000005"
+      },
+      {
+        "kind": "styleHasDeclaration",
+        "from": "style:7e64479f7843d28ea3915ab7833598f0",
+        "to": "decl:7e64479f7843d28ea3915ab7833598f0:00000006"
+      },
+      {
+        "kind": "styleHasDeclaration",
+        "from": "style:7e64479f7843d28ea3915ab7833598f0",
+        "to": "decl:7e64479f7843d28ea3915ab7833598f0:00000007"
+      },
+      {
+        "kind": "styleHasDeclaration",
+        "from": "style:7e64479f7843d28ea3915ab7833598f0",
+        "to": "decl:7e64479f7843d28ea3915ab7833598f0:00000008"
+      },
+      {
+        "kind": "styleHasDeclaration",
+        "from": "style:7e64479f7843d28ea3915ab7833598f0",
+        "to": "decl:7e64479f7843d28ea3915ab7833598f0:00000009"
+      },
+      {
+        "kind": "styleHasDeclaration",
+        "from": "style:7e64479f7843d28ea3915ab7833598f0",
+        "to": "decl:7e64479f7843d28ea3915ab7833598f0:0000000a"
+      },
+      {
+        "kind": "syntheticProducerProducesPhysicalDeclaration",
+        "from": "producer:theme",
+        "to": "css-decl:00000000:00000000"
+      },
+      {
+        "kind": "syntheticProducerProducesPhysicalDeclaration",
+        "from": "producer:theme",
+        "to": "css-decl:00000000:00000001"
+      },
+      {
+        "kind": "syntheticProducerProducesPhysicalDeclaration",
+        "from": "producer:theme",
+        "to": "css-decl:00000000:00000002"
+      },
+      {
+        "kind": "syntheticProducerProducesPhysicalDeclaration",
+        "from": "producer:theme",
+        "to": "css-decl:00000000:00000003"
+      },
+      {
+        "kind": "syntheticProducerProducesPhysicalDeclaration",
+        "from": "producer:theme",
+        "to": "css-decl:00000000:00000004"
+      },
+      {
+        "kind": "syntheticProducerProducesPhysicalDeclaration",
+        "from": "producer:theme",
+        "to": "css-decl:00000000:00000005"
+      },
+      {
+        "kind": "syntheticProducerProducesPhysicalDeclaration",
+        "from": "producer:theme",
+        "to": "css-decl:00000000:00000006"
+      },
+      {
+        "kind": "syntheticProducerProducesPhysicalDeclaration",
+        "from": "producer:theme",
+        "to": "css-decl:00000000:00000007"
+      },
+      {
+        "kind": "syntheticProducerProducesPhysicalDeclaration",
+        "from": "producer:theme",
+        "to": "css-decl:00000000:00000008"
+      },
+      {
+        "kind": "syntheticProducerProducesPhysicalDeclaration",
+        "from": "producer:theme",
+        "to": "css-decl:00000000:00000009"
+      }
+    ]
+  }
+}

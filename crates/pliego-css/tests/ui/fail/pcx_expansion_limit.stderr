@@ -1,0 +1,5 @@
+error: PCX004: `pcx!` expands to more than 64 style combinations; collapse related state into one `match`
+  --> tests/ui/fail/pcx_expansion_limit.rs:13:9
+   |
+13 |         if flag { "block" } else { "hidden" },
+   |         ^^

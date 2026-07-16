@@ -1,0 +1,10 @@
+@layer app.components {
+  .card {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .card__title {
+    font-weight: 700;
+  }
+}

@@ -1,0 +1,31 @@
+[package]
+name = "pliego-css-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+pliego-css-compiler = { path = "../crates/pliego-css-compiler" }
+pliego-css-parser = { path = "../crates/pliego-css-parser" }
+sha2 = "0.10"
+
+[[bin]]
+name = "parser_pipeline"
+path = "fuzz_targets/parser_pipeline.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "binary_artifacts"
+path = "fuzz_targets/binary_artifacts.rs"
+test = false
+doc = false
+bench = false
+
+[workspace]
+members = ["."]

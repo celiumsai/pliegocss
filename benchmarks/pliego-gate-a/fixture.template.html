@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="./pliego.css" />
+    <title>PliegoCSS Gate A fixture</title>
+  </head>
+  <body>
+    <main>
+      <section data-fixture="button">
+        <button class="{{STYLE_01}}">Save changes</button>
+        <button class="{{STYLE_02}}" disabled>Disabled</button>
+      </section>
+
+      <article data-fixture="card" class="{{STYLE_03}}">
+        <div class="{{STYLE_04}}"></div>
+        <div class="{{STYLE_05}}">
+          <h2 class="{{STYLE_06}}">A typed styling system for Rust</h2>
+          <p class="{{STYLE_07}}">Deterministic CSS from semantic styles.</p>
+        </div>
+      </article>
+
+      <nav data-fixture="navbar" class="{{STYLE_08}}">
+        <div class="{{STYLE_09}}">
+          <a class="{{STYLE_10}}" href="#docs">Docs</a>
+          <a class="{{STYLE_11}}" href="#start">Get started</a>
+        </div>
+      </nav>
+
+      <form data-fixture="form" class="{{STYLE_12}}">
+        <label class="{{STYLE_13}}">
+          Project name
+          <input class="{{STYLE_14}}" placeholder="my-pliego-app" />
+        </label>
+        <div class="{{STYLE_15}}">
+          <button type="submit">Create project</button>
+        </div>
+      </form>
+
+      <section data-fixture="dashboard" class="{{STYLE_16}}">
+        <article class="{{STYLE_17}}">
+          <p class="{{STYLE_18}}">Build time</p>
+          <p class="{{STYLE_19}}">12 ms</p>
+          <p class="{{STYLE_20}}">Incremental</p>
+          <span class="{{STYLE_21}}">Gate A</span>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>

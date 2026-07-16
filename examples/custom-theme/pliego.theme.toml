@@ -1,0 +1,11 @@
+schema = 1
+extends = "seed"
+
+[tokens.color]
+brand = "oklch(56% 0.18 255)"
+
+[tokens.spacing]
+gutter = "1.75rem"
+
+[breakpoints]
+tablet = "52rem"

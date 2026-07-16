@@ -1,0 +1,37 @@
+[package]
+name = "pliego-css-control"
+description = "Canonical control-manifest and build-receipt contracts for PliegoCSS"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license-file.workspace = true
+repository.workspace = true
+authors.workspace = true
+readme = "README.md"
+exclude = ["tests"]
+keywords.workspace = true
+categories.workspace = true
+
+[features]
+default = []
+package-verify = []
+projection = [
+    "dep:lightningcss",
+    "dep:pliego-css-build",
+    "dep:pliego-css-config",
+    "dep:pliego-css-ir",
+    "dep:pliego-css-theme",
+]
+
+[dependencies]
+lightningcss = { version = "1.0.0-alpha.71", default-features = false, optional = true }
+pliego-css-build = { workspace = true, features = ["artifacts"], optional = true }
+pliego-css-config = { workspace = true, features = ["compatibility-data", "css-analysis"], optional = true }
+pliego-css-ir = { workspace = true, optional = true }
+pliego-css-theme = { workspace = true, optional = true }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+sha2 = "0.10"
+
+[lints]
+workspace = true

@@ -1,0 +1,228 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  provenance:
+    name: Standards provenance
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22.13.0
+      - name: Check standards provenance and attribution
+        run: node scripts/check-standards-provenance.mjs
+
+  rust:
+    name: Rust ${{ matrix.toolchain }} / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        toolchain: ["1.85.0", "1.96.0"]
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Install Rust toolchain
+        run: rustup toolchain install ${{ matrix.toolchain }} --profile minimal --component clippy
+      - name: Test workspace
+        run: |
+          cargo +${{ matrix.toolchain }} test --workspace --all-targets --locked
+          cargo +${{ matrix.toolchain }} test --workspace --doc --locked
+      - name: Clippy
+        run: |
+          cargo +${{ matrix.toolchain }} clippy --workspace --all-targets --locked -- -D warnings
+          cargo +${{ matrix.toolchain }} clippy --locked --manifest-path integration-tests/publication-lock-holder/Cargo.toml --target-dir target -- -D warnings
+      - name: Install portability-contract Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22.13.0
+      - name: Build CLI for portability contract
+        run: |
+          cargo +${{ matrix.toolchain }} build --locked -p pliego-cssc
+          cargo +${{ matrix.toolchain }} build --locked --manifest-path integration-tests/publication-lock-holder/Cargo.toml --target-dir target
+      - name: Check reachability-pruning benchmark
+        env:
+          PLIEGO_CSSC: target/debug/pliego-cssc${{ runner.os == 'Windows' && '.exe' || '' }}
+        run: node scripts/measure-reachability-pruning.mjs --check
+      - name: Check benchmarked media-query merge
+        env:
+          PLIEGO_CSSC: target/debug/pliego-cssc${{ runner.os == 'Windows' && '.exe' || '' }}
+        run: node scripts/measure-media-merge.mjs --check
+      - name: Check parallel compiler determinism
+        env:
+          PLIEGO_CSSC: target/debug/pliego-cssc${{ runner.os == 'Windows' && '.exe' || '' }}
+          PLIEGO_LOCK_HOLDER: target/debug/pliego-publication-lock-holder${{ runner.os == 'Windows' && '.exe' || '' }}
+        run: node scripts/check-parallel-determinism.mjs
+      - name: Check cross-platform bundle contract
+        run: node scripts/check-portability.mjs
+
+  fuzz:
+    name: Bounded fuzz smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22.13.0
+      - name: Install pinned nightly and cargo-fuzz
+        run: |
+          rustup toolchain install nightly-2026-06-26 --profile minimal --component rust-src --component clippy
+          cargo +nightly-2026-06-26 install cargo-fuzz --version 0.13.2 --locked
+      - name: Run fixed-seed fuzz smoke
+        run: node scripts/check-fuzz.mjs --runs 20000
+      - name: Lint fuzz targets
+        run: cargo +nightly-2026-06-26 clippy --locked --manifest-path fuzz/Cargo.toml --all-targets --target-dir target/fuzz-clippy -- -D warnings
+      - name: Preserve fuzz reproductions
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: pliegocss-fuzz-${{ github.sha }}
+          path: target/fuzz-runs
+          if-no-files-found: ignore
+
+  format:
+    name: Rust format
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22.13.0
+      - name: Install rustfmt
+        run: rustup toolchain install 1.96.0 --profile minimal --component rustfmt
+      - name: Check formatting
+        run: |
+          cargo +1.96.0 fmt --all -- --check
+          cargo +1.96.0 fmt --manifest-path fuzz/Cargo.toml --all -- --check
+          cargo +1.96.0 fmt --manifest-path integration-tests/publication-lock-holder/Cargo.toml --all -- --check
+      - name: Check rustdoc warnings
+        env:
+          RUSTDOCFLAGS: -D warnings
+        run: cargo +1.96.0 doc --workspace --no-deps --locked
+      - name: Check frozen benchmark evidence
+        run: node scripts/check-benchmark-evidence.mjs
+      - name: Check repair authority corpus
+        env:
+          RUSTUP_TOOLCHAIN: 1.96.0
+        run: node scripts/check-repair-corpus.mjs
+      - name: Check generated utility catalog
+        run: cargo +1.96.0 run --locked -p pliego-cssc -- catalog --seed --format markdown --check docs/reference/generated-catalog.md
+      - name: Check editor query contracts
+        run: cargo +1.96.0 run --locked -p pliego-cssc -- explain --style "hover:bg-accent/50 -mt-4" --seed --format json > target/pliego-explain.json
+      - name: Check structured diagnostic process contract
+        run: |
+          cargo +1.96.0 build --locked -p pliego-cssc
+          set +e
+          ./target/debug/pliego-cssc --diagnostic-format json check --seed --style flec > target/pliego-diagnostic.stdout 2> target/pliego-diagnostic.json
+          status=$?
+          set -e
+          test "$status" -eq 1
+          test ! -s target/pliego-diagnostic.stdout
+          set +e
+          ./target/debug/pliego-cssc --diagnostic-format json compile --seed --style flex --manifest target > target/pliego-tool-failure.stdout 2> target/pliego-tool-failure.json
+          tool_status=$?
+          set -e
+          test "$tool_status" -eq 1
+          test ! -s target/pliego-tool-failure.stdout
+          set +e
+          ./target/debug/pliego-cssc --diagnostic-format json --diagnostic-format human check > target/pliego-global.stdout 2> target/pliego-global.json
+          global_status=$?
+          ./target/debug/pliego-cssc --diagnostic-format json check --seed --source crates/pliego-cssc/tests/fixtures/source_diagnostics.rs > target/pliego-source.stdout 2> target/pliego-source.json
+          source_status=$?
+          ./target/debug/pliego-cssc fmt --source crates/pliego-cssc/tests/fixtures/format_drift.rs --check --diagnostic-format=json > target/pliego-format.stdout 2> target/pliego-format.json
+          format_status=$?
+          set -e
+          test "$global_status" -eq 1
+          test "$source_status" -eq 1
+          test "$format_status" -eq 1
+          test ! -s target/pliego-global.stdout
+          test ! -s target/pliego-source.stdout
+          test ! -s target/pliego-format.stdout
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          document = json.loads(Path("target/pliego-diagnostic.json").read_text())
+          assert document["schemaVersion"] == 1
+          assert document["command"] == "check"
+          assert document["diagnostics"][0]["code"] == "PCS001"
+          assert document["diagnostics"][0]["suggestion"] == "flex"
+          tool_failure = json.loads(Path("target/pliego-tool-failure.json").read_text())
+          assert tool_failure["command"] == "compile"
+          assert tool_failure["diagnostics"][0]["code"] == "PCL002"
+          global_failure = json.loads(Path("target/pliego-global.json").read_text())
+          assert global_failure["command"] == "check"
+          assert global_failure["diagnostics"][0]["code"] == "PCL001"
+          source_failure = json.loads(Path("target/pliego-source.json").read_text())
+          assert [item["code"] for item in source_failure["diagnostics"]] == ["PSC001", "PSC001"]
+          assert source_failure["diagnostics"][0]["range"]["byteStart"] < source_failure["diagnostics"][1]["range"]["byteStart"]
+          format_failure = json.loads(Path("target/pliego-format.json").read_text())
+          assert [item["code"] for item in format_failure["diagnostics"]] == ["FMT001", "FMT001", "FMT001"]
+          assert all(item["replacement"]["kind"] == "decoded-style-value" for item in format_failure["diagnostics"])
+          PY
+      - name: Check canonical utility formatting
+        run: |
+          cargo +1.96.0 run --locked -p pliego-cssc -- fmt --input benchmarks/pliego-gate-a/styles.txt --check
+          cargo +1.96.0 run --locked -p pliego-cssc -- fmt --source examples/basic/src --check
+      - name: Verify revision-pinned CLI installation
+        run: |
+          cargo +1.96.0 install --path crates/pliego-cssc --locked --root target/cli-install --force
+          ./target/cli-install/bin/pliego-cssc --version
+          ./target/cli-install/bin/pliego-cssc check --seed --source examples/basic/src
+
+  packages:
+    name: Package archives
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22.13.0
+      - name: Install package toolchain
+        run: |
+          rustup toolchain install 1.85.0 --profile minimal
+          rustup toolchain install 1.96.0 --profile minimal
+      - name: Verify normalized package archives
+        run: node scripts/check-packages.mjs
+
+  wasm-and-diagnostics:
+    name: WASM and diagnostics
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22.13.0
+      - name: Install pnpm
+        run: npm install --global pnpm@11.7.0
+      - name: Install Rust and WASM target
+        run: |
+          rustup toolchain install 1.85.0 --profile minimal
+          rustup toolchain install 1.96.0 --profile minimal
+          rustup target add wasm32-unknown-unknown --toolchain 1.85.0
+          rustup target add wasm32-unknown-unknown --toolchain 1.96.0
+      - name: Install benchmark dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Check compile-time diagnostics
+        run: pnpm baseline:check-diagnostics
+      - name: Check downstream public API and identity
+        run: pnpm check:api
+      - name: Check WASM MSRV target
+        run: cargo +1.85.0 check --locked -p pliego-css --target wasm32-unknown-unknown
+      - name: Verify zero raw WASM size delta
+        run: pnpm baseline:measure-wasm

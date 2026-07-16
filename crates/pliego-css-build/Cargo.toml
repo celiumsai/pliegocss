@@ -1,0 +1,48 @@
+[package]
+name = "pliego-css-build"
+description = "Build-script bridge for validated PliegoCSS theme artifacts"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license-file.workspace = true
+repository.workspace = true
+authors.workspace = true
+readme = "README.md"
+exclude = ["tests"]
+keywords.workspace = true
+categories.workspace = true
+
+[features]
+default = []
+package-verify = []
+usage-artifacts = [
+    "dep:serde",
+    "dep:serde_json",
+    "dep:sha2",
+]
+artifacts = [
+    "usage-artifacts",
+    "dep:lightningcss",
+    "dep:pliego-css-ir",
+    "pliego-css-config/compatibility-data",
+    "pliego-css-config/css-analysis",
+]
+catalog = [
+    "artifacts",
+    "dep:pliego-css-compiler",
+    "dep:pliego-css-parser",
+]
+
+[dependencies]
+lightningcss = { version = "1.0.0-alpha.71", default-features = false, optional = true }
+pliego-css-compiler = { workspace = true, optional = true }
+pliego-css-config.workspace = true
+pliego-css-ir = { workspace = true, optional = true }
+pliego-css-parser = { workspace = true, optional = true }
+pliego-css-theme.workspace = true
+serde = { version = "1.0.228", features = ["derive"], optional = true }
+serde_json = { version = "1.0.149", optional = true }
+sha2 = { version = "0.10", optional = true }
+
+[lints]
+workspace = true

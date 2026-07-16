@@ -1,0 +1,22 @@
+[package]
+name = "pliego-css"
+description = "Utility-first styling compiler for Rust and PliegoRS"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license-file.workspace = true
+repository.workspace = true
+authors.workspace = true
+readme = "README.md"
+keywords.workspace = true
+categories.workspace = true
+
+[dependencies]
+pliego-css-ir.workspace = true
+pliego-css-macros.workspace = true
+
+[dev-dependencies]
+trybuild = "1.0.116"
+
+[lints]
+workspace = true

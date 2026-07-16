@@ -1,0 +1,5 @@
+error: PCS004: value is outside this utility domain; expected spacing token at bytes 2..8
+ --> tests/ui/fail/wrong_domain.rs:4:17
+  |
+4 |     let _ = pc!("p-accent");
+  |                 ^^^^^^^^^^

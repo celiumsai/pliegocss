@@ -1,0 +1,5 @@
+error: PCS009: `!` is only valid as one trailing important marker at bytes 0..1; try `flex!`
+ --> tests/ui/fail/prefix_important.rs:4:17
+  |
+4 |     let _ = pc!("!flex");
+  |                 ^^^^^^^

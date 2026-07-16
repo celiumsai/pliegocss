@@ -1,0 +1,149 @@
+{
+  "schemaVersion": 4,
+  "styleIdFormatVersion": 2,
+  "classNameFormatVersion": 1,
+  "themeIdFormatVersion": 1,
+  "themeId": "c46b8b7ec8c3aa6daadf15cc9196ba3e",
+  "targets": "modern",
+  "format": "minified",
+  "cssSha256": "2e9c2cac1b6ef4ef08da09a4abef8268923895e1f63210347bdbfc6f3e362c9f",
+  "cssBytes": 81,
+  "styles": [
+    {
+      "styleId": "f3c8ca821f1654e9f51aa5de679db45d",
+      "className": "pc_efkogezwizbem6tcas20wpx7h",
+      "origins": [
+        {
+          "source": "p-4 bg-accent",
+          "file": "src/card.rs",
+          "byteStart": 24,
+          "byteEnd": 44,
+          "macroKind": "pc",
+          "reason": "visible-literal"
+        }
+      ]
+    }
+  ],
+  "graph": {
+    "schemaVersion": 1,
+    "declarationIdFormatVersion": 1,
+    "originCoverage": "compiler-verified-complete",
+    "applicationCoverage": "adapter-attested-complete",
+    "declarations": [
+      {
+        "id": "decl:f3c8ca821f1654e9f51aa5de679db45d:00000000",
+        "styleId": "f3c8ca821f1654e9f51aa5de679db45d",
+        "ordinal": 0
+      },
+      {
+        "id": "decl:f3c8ca821f1654e9f51aa5de679db45d:00000001",
+        "styleId": "f3c8ca821f1654e9f51aa5de679db45d",
+        "ordinal": 1
+      }
+    ],
+    "tokens": [
+      {
+        "id": "token:color:13e3e9b7",
+        "kind": "color",
+        "tokenId": "13e3e9b7",
+        "name": "accent"
+      },
+      {
+        "id": "token:spacing:310ca263",
+        "kind": "spacing",
+        "tokenId": "310ca263",
+        "name": "4"
+      }
+    ],
+    "components": [
+      {
+        "id": "component:card"
+      },
+      {
+        "id": "component:shell"
+      }
+    ],
+    "routes": [
+      {
+        "id": "route:home",
+        "path": "/card"
+      },
+      {
+        "id": "route:shell",
+        "path": "/"
+      }
+    ],
+    "islands": [
+      {
+        "id": "island:card-preview",
+        "name": "CardPreview"
+      },
+      {
+        "id": "island:shell-chrome",
+        "name": "ShellChrome"
+      }
+    ],
+    "edges": [
+      {
+        "kind": "componentUsesDeclaration",
+        "from": "component:card",
+        "to": "decl:f3c8ca821f1654e9f51aa5de679db45d:00000000"
+      },
+      {
+        "kind": "componentUsesDeclaration",
+        "from": "component:card",
+        "to": "decl:f3c8ca821f1654e9f51aa5de679db45d:00000001"
+      },
+      {
+        "kind": "declarationUsesToken",
+        "from": "decl:f3c8ca821f1654e9f51aa5de679db45d:00000000",
+        "to": "token:spacing:310ca263"
+      },
+      {
+        "kind": "declarationUsesToken",
+        "from": "decl:f3c8ca821f1654e9f51aa5de679db45d:00000001",
+        "to": "token:color:13e3e9b7"
+      },
+      {
+        "kind": "islandUsesComponent",
+        "from": "island:card-preview",
+        "to": "component:card"
+      },
+      {
+        "kind": "islandUsesComponent",
+        "from": "island:card-preview",
+        "to": "component:shell"
+      },
+      {
+        "kind": "islandUsesComponent",
+        "from": "island:shell-chrome",
+        "to": "component:shell"
+      },
+      {
+        "kind": "routeUsesComponent",
+        "from": "route:home",
+        "to": "component:card"
+      },
+      {
+        "kind": "routeUsesComponent",
+        "from": "route:home",
+        "to": "component:shell"
+      },
+      {
+        "kind": "routeUsesComponent",
+        "from": "route:shell",
+        "to": "component:shell"
+      },
+      {
+        "kind": "styleHasDeclaration",
+        "from": "style:f3c8ca821f1654e9f51aa5de679db45d",
+        "to": "decl:f3c8ca821f1654e9f51aa5de679db45d:00000000"
+      },
+      {
+        "kind": "styleHasDeclaration",
+        "from": "style:f3c8ca821f1654e9f51aa5de679db45d",
+        "to": "decl:f3c8ca821f1654e9f51aa5de679db45d:00000001"
+      }
+    ]
+  }
+}

@@ -1,0 +1,5 @@
+error: PCS012: a condition accepts one breakpoint at bytes 3..5
+ --> tests/ui/fail/invalid_variant_chain.rs:4:17
+  |
+4 |     let _ = pc!("md:lg:flex");
+  |                 ^^^^^^^^^^^^

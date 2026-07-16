@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "ownershipCoverage": "adapter-attested-complete",
+  "assetPlanBytes": 2808,
+  "assetPlanSha256": "44f80aea91a016d298a814da551165fb488c66341b14f09feacf179809a554c8",
+  "bundlePackages": [
+    {
+      "bundleId": "island-visit-counter",
+      "packageId": "counter-feature"
+    },
+    {
+      "bundleId": "route-home",
+      "packageId": "site-pages"
+    },
+    {
+      "bundleId": "route-visit",
+      "packageId": "site-pages"
+    },
+    {
+      "bundleId": "shared",
+      "packageId": "app-shell"
+    },
+    {
+      "bundleId": "unreachable",
+      "packageId": "experiments"
+    }
+  ],
+  "routeCompositions": [
+    {
+      "routeId": "route:home",
+      "islandIds": []
+    },
+    {
+      "routeId": "route:visit",
+      "islandIds": [
+        "island:visit-counter"
+      ]
+    }
+  ]
+}

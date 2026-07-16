@@ -1,0 +1,15 @@
+[package]
+name = "pliego-css-ir"
+description = "Semantic intermediate representation for PliegoCSS"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license-file.workspace = true
+repository.workspace = true
+authors.workspace = true
+readme = "README.md"
+keywords.workspace = true
+categories.workspace = true
+
+[lints]
+workspace = true

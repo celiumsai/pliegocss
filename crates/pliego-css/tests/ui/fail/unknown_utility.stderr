@@ -1,0 +1,5 @@
+error: PCS001: unknown utility `flec` at bytes 0..4; try `flex`
+ --> tests/ui/fail/unknown_utility.rs:4:17
+  |
+4 |     let _ = pc!("flec");
+  |                 ^^^^^^

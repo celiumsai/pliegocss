@@ -1,0 +1,2 @@
+grid gap-4 p-4 rounded-lg shadow-md
+inline-flex items-center justify-center px-4 py-2 rounded-md

@@ -1,0 +1,18 @@
+[package]
+name = "pliego-css-parser"
+description = "Utility grammar parser for PliegoCSS"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license-file.workspace = true
+repository.workspace = true
+authors.workspace = true
+readme = "README.md"
+keywords.workspace = true
+categories.workspace = true
+
+[dependencies]
+pliego-css-ir.workspace = true
+
+[lints]
+workspace = true

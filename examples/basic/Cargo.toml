@@ -1,0 +1,15 @@
+[package]
+name = "pliego-css-basic-example"
+description = "Compile-checked PliegoCSS syntax example"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license-file.workspace = true
+repository.workspace = true
+publish = false
+
+[dependencies]
+pliego-css.workspace = true
+
+[lints]
+workspace = true

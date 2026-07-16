@@ -1,0 +1,21 @@
+.page {
+  color: #1f2937;
+  background-color: #ffffff;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .notice {
+    transition: opacity 150ms ease;
+  }
+}
+
+.button:hover,
+.button:focus-visible {
+  background-color: #dbeafe;
+  outline: 2px solid #1f2937;
+  outline-offset: 2px;
+}
+
+.brand-mark {
+  forced-color-adjust: auto;
+}

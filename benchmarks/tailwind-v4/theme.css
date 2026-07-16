@@ -1,0 +1,10 @@
+@theme {
+  --color-canvas: oklch(0.985 0.004 80);
+  --color-surface: oklch(1 0 0);
+  --color-surface-raised: oklch(0.96 0.006 80);
+  --color-ink: oklch(0.19 0.012 70);
+  --color-muted: oklch(0.5 0.014 70);
+  --color-accent: oklch(0.58 0.19 32);
+  --color-accent-strong: oklch(0.5 0.18 30);
+  --color-line: oklch(0.88 0.008 75);
+}

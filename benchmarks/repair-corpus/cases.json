@@ -1,0 +1,125 @@
+{
+  "schemaVersion": 1,
+  "corpusId": "repair-authority-conformance-v1",
+  "provenance": {
+    "kind": "synthetic",
+    "source": "engineered from the public repair contract",
+    "consent": "not-applicable",
+    "redaction": "not-required"
+  },
+  "claimBoundary": "conformance-only-not-real-incident-or-agent-turn-evidence",
+  "cases": [
+    {
+      "id": "accept.verified-low-risk",
+      "category": "authority",
+      "mutation": "none",
+      "expected": "accepted",
+      "reasonContains": "accepted"
+    },
+    {
+      "id": "reject.budget-inserted",
+      "category": "change-budget",
+      "mutation": "inserted-budget-exceeded",
+      "expected": "rejected",
+      "reasonContains": "exceeds budget"
+    },
+    {
+      "id": "reject.budget-removed",
+      "category": "change-budget",
+      "mutation": "removed-budget-exceeded",
+      "expected": "rejected",
+      "reasonContains": "exceeds budget"
+    },
+    {
+      "id": "reject.finding-exception",
+      "category": "authority",
+      "mutation": "reviewed-exception",
+      "expected": "rejected",
+      "reasonContains": "reviewed exception"
+    },
+    {
+      "id": "reject.finding-hash-drift",
+      "category": "integrity",
+      "mutation": "finding-hash-drift",
+      "expected": "rejected",
+      "reasonContains": "does not match"
+    },
+    {
+      "id": "reject.finding-unverified",
+      "category": "authority",
+      "mutation": "unverified-finding",
+      "expected": "rejected",
+      "reasonContains": "is not verified"
+    },
+    {
+      "id": "reject.invalid-source-path",
+      "category": "path-safety",
+      "mutation": "invalid-source-path",
+      "expected": "rejected",
+      "reasonContains": "edit.file"
+    },
+    {
+      "id": "reject.missing-prerequisite",
+      "category": "authority",
+      "mutation": "missing-prerequisite",
+      "expected": "rejected",
+      "reasonContains": "absent from requiredChecks"
+    },
+    {
+      "id": "reject.non-utf8-source",
+      "category": "source-safety",
+      "mutation": "non-utf8-source",
+      "expected": "rejected",
+      "reasonContains": "is not UTF-8"
+    },
+    {
+      "id": "reject.overlapping-edits",
+      "category": "edit-order",
+      "mutation": "overlapping-edits",
+      "expected": "rejected",
+      "reasonContains": "overlapping source ranges"
+    },
+    {
+      "id": "reject.source-range-escape",
+      "category": "authority",
+      "mutation": "source-range-escape",
+      "expected": "rejected",
+      "reasonContains": "escapes finding source"
+    },
+    {
+      "id": "reject.source-set-drift",
+      "category": "integrity",
+      "mutation": "source-set-drift",
+      "expected": "rejected",
+      "reasonContains": "source snapshot set must exactly equal"
+    },
+    {
+      "id": "reject.suggestion-medium-risk",
+      "category": "authority",
+      "mutation": "medium-risk-suggestion",
+      "expected": "rejected",
+      "reasonContains": "accepts only low-risk"
+    },
+    {
+      "id": "reject.unknown-field",
+      "category": "closed-schema",
+      "mutation": "unknown-field",
+      "expected": "rejected",
+      "reasonContains": "unknown field"
+    },
+    {
+      "id": "reject.unknown-finding",
+      "category": "authority",
+      "mutation": "unknown-finding",
+      "expected": "rejected",
+      "reasonContains": "unknown finding"
+    },
+    {
+      "id": "reject.unknown-suggestion",
+      "category": "authority",
+      "mutation": "unknown-suggestion",
+      "expected": "rejected",
+      "reasonContains": "has no suggestion"
+    }
+  ]
+}

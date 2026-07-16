@@ -1,0 +1,5 @@
+error: PCX001: conditional branches must be visible Rust string literals
+ --> tests/ui/fail/pcx_non_literal.rs:8:19
+  |
+8 |         if true { ACTIVE } else { "bg-transparent" },
+  |                   ^^^^^^

@@ -1,0 +1,83 @@
+{
+  "version": "2025.10",
+  "name": "PliegoCSS product themes",
+  "$defs": {
+    "light": {
+      "color": {
+        "$type": "color",
+        "brand": {
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [0.9, 0.9, 0.9],
+            "alpha": 1
+          }
+        },
+        "action": {
+          "$value": "{color.brand}",
+          "$deprecated": "Use color.brand"
+        }
+      }
+    },
+    "dark": {
+      "color": {
+        "$type": "color",
+        "brand": {
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [0.1, 0.1, 0.1],
+            "alpha": 1
+          }
+        },
+        "action": {
+          "$value": "{color.brand}",
+          "$deprecated": "Use color.brand"
+        }
+      }
+    },
+    "semantic-light": {
+      "semantic": {
+        "$type": "color",
+        "brand": {
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [0.95, 0.95, 0.95],
+            "alpha": 1
+          }
+        }
+      }
+    },
+    "semantic-dark": {
+      "semantic": {
+        "$type": "color",
+        "brand": {
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [0.05, 0.05, 0.05],
+            "alpha": 1
+          }
+        }
+      }
+    }
+  },
+  "sets": {},
+  "modifiers": {
+    "appearance": {
+      "contexts": {
+        "light": [{"$ref": "#/$defs/light"}],
+        "dark": [{"$ref": "#/$defs/dark"}]
+      },
+      "default": "light"
+    },
+    "channel": {
+      "contexts": {
+        "light": [{"$ref": "#/$defs/semantic-light"}],
+        "dark": [{"$ref": "#/$defs/semantic-dark"}]
+      },
+      "default": "light"
+    }
+  },
+  "resolutionOrder": [
+    {"$ref": "#/modifiers/appearance"},
+    {"$ref": "#/modifiers/channel"}
+  ]
+}

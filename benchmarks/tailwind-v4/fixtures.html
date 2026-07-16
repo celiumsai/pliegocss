@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="./dist/full-complete.min.css" />
+    <title>PliegoCSS Tailwind v4 baseline</title>
+  </head>
+  <body class="min-h-screen bg-canvas font-sans text-ink antialiased">
+    <main class="mx-auto flex max-w-6xl flex-col gap-12 px-4 py-12 sm:px-6 lg:px-8">
+      <section data-fixture="button" class="flex flex-wrap items-center gap-4">
+        <button
+          class="inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-accent-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Save changes
+        </button>
+        <button
+          disabled
+          class="inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-line bg-surface px-4 py-2 text-sm font-semibold text-ink shadow-sm transition-colors hover:bg-surface-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Disabled
+        </button>
+      </section>
+
+      <article
+        data-fixture="card"
+        class="flex flex-col gap-6 rounded-2xl border border-line bg-surface p-6 shadow-sm md:flex-row md:items-center"
+      >
+        <div class="aspect-square w-full rounded-xl bg-surface-raised md:w-40"></div>
+        <div class="flex min-w-0 flex-1 flex-col gap-3">
+          <p class="text-sm font-medium text-accent">Edition 001</p>
+          <h2 class="text-2xl font-semibold tracking-tight text-ink">A typed styling system for Rust</h2>
+          <p class="max-w-prose text-sm leading-6 text-muted">
+            The reference card exercises spacing, color, typography, sizing, border, responsive, and layout utilities.
+          </p>
+        </div>
+      </article>
+
+      <nav
+        data-fixture="navbar"
+        aria-label="Primary navigation"
+        class="flex flex-col gap-4 border-b border-line pb-4 md:flex-row md:items-center md:justify-between"
+      >
+        <a class="text-lg font-bold tracking-tight text-ink" href="#">PliegoCSS</a>
+        <div class="flex flex-wrap items-center gap-2">
+          <a class="rounded-md px-3 py-2 text-sm font-medium text-muted hover:bg-surface-raised hover:text-ink" href="#docs">Docs</a>
+          <a class="rounded-md px-3 py-2 text-sm font-medium text-muted hover:bg-surface-raised hover:text-ink" href="#examples">Examples</a>
+          <a class="rounded-md bg-ink px-3 py-2 text-sm font-semibold text-white hover:opacity-90" href="#start">Get started</a>
+        </div>
+      </nav>
+
+      <form
+        data-fixture="form"
+        class="grid gap-6 rounded-2xl border border-line bg-surface p-6 md:grid-cols-2"
+      >
+        <label class="flex flex-col gap-2 text-sm font-medium text-ink">
+          Project name
+          <input
+            class="w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink outline-none placeholder:text-muted focus:border-accent focus:ring-2 focus:ring-accent/20"
+            placeholder="my-pliego-app"
+          />
+        </label>
+        <label class="flex flex-col gap-2 text-sm font-medium text-ink">
+          Deployment
+          <select class="w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent/20">
+            <option>Cloudflare Workers</option>
+          </select>
+        </label>
+        <label class="flex flex-col gap-2 text-sm font-medium text-ink md:col-span-2">
+          Description
+          <textarea class="min-h-28 w-full resize-y rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink outline-none placeholder:text-muted focus:border-accent focus:ring-2 focus:ring-accent/20"></textarea>
+        </label>
+        <div class="flex justify-end gap-3 md:col-span-2">
+          <button class="rounded-lg border border-line px-4 py-2 text-sm font-semibold text-ink hover:bg-surface-raised" type="button">Cancel</button>
+          <button class="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-strong" type="submit">Create project</button>
+        </div>
+      </form>
+
+      <section data-fixture="dashboard" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <article class="rounded-xl border border-line bg-surface p-5 shadow-sm">
+          <p class="text-sm font-medium text-muted">Build time</p>
+          <p class="mt-2 text-3xl font-bold tracking-tight text-ink">12 ms</p>
+          <p class="mt-1 text-xs font-medium text-accent">Incremental</p>
+        </article>
+        <article class="rounded-xl border border-line bg-surface p-5 shadow-sm">
+          <p class="text-sm font-medium text-muted">CSS gzip</p>
+          <p class="mt-2 text-3xl font-bold tracking-tight text-ink">4.2 KB</p>
+          <p class="mt-1 text-xs font-medium text-accent">Per route</p>
+        </article>
+        <article class="rounded-xl border border-line bg-surface p-5 shadow-sm">
+          <p class="text-sm font-medium text-muted">Rules removed</p>
+          <p class="mt-2 text-3xl font-bold tracking-tight text-ink">312</p>
+          <p class="mt-1 text-xs font-medium text-accent">Unreachable</p>
+        </article>
+        <article class="rounded-xl border border-line bg-surface p-5 shadow-sm sm:col-span-2 lg:col-span-1">
+          <p class="text-sm font-medium text-muted">WASM overhead</p>
+          <p class="mt-2 text-3xl font-bold tracking-tight text-ink">0 B</p>
+          <p class="mt-1 text-xs font-medium text-accent">Static CSS</p>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>

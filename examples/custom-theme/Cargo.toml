@@ -1,0 +1,18 @@
+[package]
+name = "pliego-css-custom-theme-example"
+description = "Compile-time custom theme example for PliegoCSS"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license-file.workspace = true
+repository.workspace = true
+publish = false
+
+[dependencies]
+pliego-css.workspace = true
+
+[build-dependencies]
+pliego-css-build.workspace = true
+
+[lints]
+workspace = true

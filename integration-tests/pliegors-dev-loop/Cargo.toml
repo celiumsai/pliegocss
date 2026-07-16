@@ -1,0 +1,13 @@
+[package]
+name = "pliegocss-pliegors-dev-loop"
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.85"
+publish = false
+
+[workspace]
+
+[dependencies]
+pliego-css = { path = "../../crates/pliego-css" }
+pliego-dom = { path = "../../../pliegors/crates/pliego-dom" }
+pliego-ssg = { path = "../../../pliegors/crates/pliego-ssg" }

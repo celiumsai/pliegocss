@@ -1,0 +1,22 @@
+[package]
+name = "pliego-css-compiler"
+description = "Deterministic CSS compiler for PliegoCSS"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license-file.workspace = true
+repository.workspace = true
+authors.workspace = true
+readme = "README.md"
+exclude = ["tests/**"]
+keywords.workspace = true
+categories.workspace = true
+
+[dependencies]
+pliego-css-ir.workspace = true
+pliego-css-parser.workspace = true
+pliego-css-theme.workspace = true
+sha2 = "0.10"
+
+[lints]
+workspace = true

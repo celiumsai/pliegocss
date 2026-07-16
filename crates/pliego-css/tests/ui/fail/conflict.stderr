@@ -1,0 +1,5 @@
+error: PCS005: utilities assign conflicting values in the same condition at bytes 5..9; try `remove one utility or move it to a narrower variant`
+ --> tests/ui/fail/conflict.rs:4:17
+  |
+4 |     let _ = pc!("flex grid");
+  |                 ^^^^^^^^^^^

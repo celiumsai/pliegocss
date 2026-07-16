@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "applicationCoverage": "complete",
+  "components": [
+    {
+      "id": "app::card",
+      "sites": [
+        {
+          "file": "src/card.rs",
+          "byteStart": 24,
+          "byteEnd": 188
+        }
+      ]
+    }
+  ],
+  "routes": [
+    {
+      "id": "home",
+      "path": "/",
+      "components": ["app::card"]
+    }
+  ],
+  "islands": [
+    {
+      "id": "card-preview",
+      "name": "CardPreview",
+      "components": ["app::card"]
+    }
+  ]
+}

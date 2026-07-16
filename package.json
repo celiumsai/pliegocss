@@ -1,0 +1,45 @@
+{
+  "name": "pliegocss-baseline",
+  "private": true,
+  "packageManager": "pnpm@11.7.0",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "baseline:build": "tailwindcss -i ./benchmarks/tailwind-v4/input.css -o ./benchmarks/tailwind-v4/dist/full-complete.min.css --minify",
+    "baseline:watch": "tailwindcss -i ./benchmarks/tailwind-v4/input.css -o ./benchmarks/tailwind-v4/dist/full-complete.min.css --watch",
+    "baseline:measure": "node ./scripts/measure-tailwind-baseline.mjs",
+    "baseline:measure-watch": "node ./scripts/measure-tailwind-watch.mjs",
+    "baseline:measure-rust": "node ./scripts/measure-rust-check.mjs",
+    "baseline:measure-pliego": "node ./scripts/measure-pliego-gate-a.mjs",
+    "baseline:measure-pliego-b": "node ./scripts/measure-pliego-gate-b.mjs",
+    "baseline:measure-media": "node ./scripts/measure-media-merge.mjs",
+    "baseline:measure-wasm": "node ./scripts/measure-wasm-overhead.mjs",
+    "baseline:check-diagnostics": "node ./scripts/check-diagnostics.mjs",
+    "check:api": "node ./scripts/check-public-api.mjs && pnpm check:manifest && pnpm check:trace",
+    "check:determinism": "node ./scripts/check-parallel-determinism.mjs",
+    "check:properties": "cargo +1.85.0 test --locked -p pliego-css-compiler --test property_contract",
+    "check:fuzz": "node ./scripts/check-fuzz.mjs",
+    "soak:fuzz": "node ./scripts/check-fuzz.mjs --seconds 300",
+    "check:manifest": "node ./scripts/check-manifest-graph.mjs",
+    "check:trace": "node ./scripts/check-physical-trace.mjs",
+    "check:media": "node ./scripts/measure-media-merge.mjs --check",
+    "check:pruning": "node ./scripts/measure-reachability-pruning.mjs --check",
+    "check:evidence": "node ./scripts/check-benchmark-evidence.mjs",
+    "check:portability": "cargo build --locked -p pliego-cssc && node ./scripts/check-portability.mjs",
+    "check:compatibility": "node ./scripts/check-compatibility-policy.mjs",
+    "check:attribution": "node ./scripts/check-standards-provenance.mjs",
+    "check:cascade": "cargo test --locked -p pliego-css-cascade --lib && cargo test --locked -p pliego-cssc --test cascade_explain",
+    "check:agent": "cargo test --locked -p pliego-css-agent --all-targets && cargo test --locked -p pliego-cssc --test repair_plan",
+    "check:repair-corpus": "node ./scripts/check-repair-corpus.mjs",
+    "check:packages": "node ./scripts/check-packages.mjs",
+    "integration:plain-html": "node ./scripts/check-plain-html-integration.mjs",
+    "integration:pliegors": "node ./scripts/check-pliegors-integration.mjs",
+    "integration:pliegors-browser": "node ./scripts/check-pliegors-browser.mjs",
+    "integration:pliegors-dev": "node ./scripts/check-pliegors-dev-loop.mjs"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "4.3.2",
+    "tailwindcss": "4.3.2"
+  }
+}

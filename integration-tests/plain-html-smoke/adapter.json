@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "styleInput": "styles.txt",
+  "template": "index.template.html",
+  "output": "index.html",
+  "slots": [
+    {
+      "id": "card",
+      "marker": "{{PLIEGOCSS_CLASS:card}}",
+      "styleLine": 1
+    },
+    {
+      "id": "action",
+      "marker": "{{PLIEGOCSS_CLASS:action}}",
+      "styleLine": 2
+    }
+  ]
+}

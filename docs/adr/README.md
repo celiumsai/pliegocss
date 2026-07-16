@@ -1,0 +1,24 @@
+# Architecture decision records
+
+ADRs record decisions that constrain implementation or public behavior.
+
+- [ADR-0001: Compile to standard CSS](./0001-compile-to-standard-css.md)
+- [ADR-0002: Utility syntax over semantic IR](./0002-utility-syntax-over-semantic-ir.md)
+- [ADR-0003: Conflicts do not depend on source order](./0003-conflicts-ignore-source-order.md)
+- [ADR-0004: Reuse Lightning CSS downstream](./0004-reuse-lightning-css.md)
+- [ADR-0005: Normalize commuting variants only](./0005-normalize-commuting-variants.md)
+- [ADR-0006: Keep CSS post-processing outside the macro graph](./0006-separate-css-postprocessing.md)
+- [ADR-0007: Persist semantic IR through an explicit binary envelope](./0007-version-semantic-ir-artifacts.md)
+- [ADR-0008: Require explicit application reachability](./0008-require-explicit-application-reachability.md)
+- [ADR-0009: Require a fail-closed physical CSS trace](./0009-require-fail-closed-physical-css-trace.md)
+- [ADR-0010: Generate framework-neutral asset load plans](./0010-generate-framework-neutral-asset-load-plans.md)
+- [ADR-0011: Share one portable Project Index](./0011-share-one-portable-project-index.md)
+- [ADR-0012: Freeze Baseline compatibility as a versioned policy](./0012-freeze-baseline-compatibility-policy.md)
+- [ADR-0013: Model cascade layers in semantic IR](./0013-model-cascade-layers-in-semantic-ir.md)
+- [ADR-0014: Defer native component scope from 0.1.0](./0014-defer-native-component-scope.md)
+- [ADR-0015: Adopt a standards-first verifiable CSS control layer](./0015-adopt-verifiable-css-control-layer.md)
+- [ADR-0016: Separate canonical findings and control receipts from legacy artifacts](./0016-separate-canonical-findings-and-control-receipts.md)
+- [ADR-0017: Bind budget ownership to exact Asset Plan bytes](./0017-bind-budget-ownership-to-asset-plan.md)
+- [ADR-0018: Separate reachability, observation, usage, and removal](./0018-separate-reachability-observation-and-removal.md)
+- [ADR-0019: Retain structurally dead styles only by explicit policy](./0019-retain-dead-styles-by-explicit-policy.md)
+- [ADR-0020: Derive PliegoRS partitions from an explicit product registry](./0020-derive-pliegors-partitions-from-product-registry.md)

@@ -1,0 +1,44 @@
+{
+  "schema": 1,
+  "applicationCoverage": "complete",
+  "components": [
+    {
+      "id": "card",
+      "sites": [
+        {
+          "file": "src/card.rs",
+          "byteStart": 24,
+          "byteEnd": 44
+        }
+      ]
+    },
+    {
+      "id": "shell",
+      "sites": []
+    }
+  ],
+  "routes": [
+    {
+      "id": "home",
+      "path": "/card",
+      "components": ["card", "shell"]
+    },
+    {
+      "id": "shell",
+      "path": "/",
+      "components": ["shell"]
+    }
+  ],
+  "islands": [
+    {
+      "id": "card-preview",
+      "name": "CardPreview",
+      "components": ["card", "shell"]
+    },
+    {
+      "id": "shell-chrome",
+      "name": "ShellChrome",
+      "components": ["shell"]
+    }
+  ]
+}

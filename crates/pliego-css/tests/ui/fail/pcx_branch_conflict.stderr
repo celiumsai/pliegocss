@@ -1,0 +1,5 @@
+error: PCS005: utilities assign conflicting values in the same condition at bytes 5..9; try `remove one utility or move it to a narrower variant`
+ --> tests/ui/fail/pcx_branch_conflict.rs:6:19
+  |
+6 |         if true { "flex grid" } else { "inline-flex" },
+  |                   ^^^^^^^^^^^

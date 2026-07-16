@@ -1,0 +1,240 @@
+{
+  "schema_version": 3,
+  "benchmark": "PliegoCSS Gate B complete-fixture fresh-process compile",
+  "profile": "complete",
+  "generated_at": "2026-07-13T10:34:02.132Z",
+  "provenance": {
+    "git": {
+      "commit": "c47239ce0bf1d046aa01710d436baea61f4e6528",
+      "dirty": false,
+      "status_entry_count": 0,
+      "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "harness": {
+      "path": "scripts/measure-pliego-gate-b.mjs",
+      "sha256": "47a4807f723fa96258ec18a68d80e2981fa24fb9e9881b590d40576d0644d242"
+    },
+    "tracked_inputs": [
+      {
+        "path": "benchmarks/tailwind-v4/fixtures.html",
+        "sha256": "338eb480327e54fe7e56e81b42c67324464afaa8c65d606e5d57c1c45690e86c"
+      }
+    ]
+  },
+  "fixture": {
+    "html": "benchmarks/tailwind-v4/fixtures.html",
+    "groups": [
+      "button",
+      "card",
+      "navbar",
+      "form",
+      "dashboard"
+    ],
+    "class_attribute_count": 44,
+    "class_attributes_resolved": 44,
+    "all_class_attributes_resolved": true,
+    "unique_style_inputs": 31,
+    "utility_occurrences": 302,
+    "unique_utility_tokens": 90,
+    "variants": [
+      "disabled",
+      "focus",
+      "focus-visible",
+      "hover",
+      "lg",
+      "md",
+      "placeholder",
+      "sm"
+    ],
+    "required_variants": [
+      "disabled",
+      "focus",
+      "focus-visible",
+      "hover",
+      "lg",
+      "md",
+      "placeholder",
+      "sm"
+    ],
+    "emitted_variant_markers_verified": [
+      "disabled",
+      "focus",
+      "focus-visible",
+      "hover",
+      "lg",
+      "md",
+      "placeholder",
+      "sm"
+    ],
+    "theme_included": true,
+    "html_sha256": "338eb480327e54fe7e56e81b42c67324464afaa8c65d606e5d57c1c45690e86c",
+    "derived_input_sha256": "e05792969f60490896e0f9df5570a542ac73364ffc9d4f2d1066ae7696c1945a"
+  },
+  "environment": {
+    "os": {
+      "platform": "win32",
+      "type": "Windows_NT",
+      "release": "10.0.26200",
+      "version": "Windows 11 Home",
+      "architecture": "x64"
+    },
+    "cpu": {
+      "models": [
+        "Intel(R) Core(TM) Ultra 9 285H"
+      ],
+      "logical_core_count": 16,
+      "available_parallelism": 16
+    },
+    "memory": {
+      "total_bytes": 33820106752
+    },
+    "node": "v24.16.0",
+    "zlib": "1.3.1-e00f703",
+    "toolchain": {
+      "cargo": "cargo 1.96.0 (30a34c682 2026-05-25)",
+      "rustc": "rustc 1.96.0 (ac68faa20 2026-05-25)",
+      "host_target": "x86_64-pc-windows-msvc"
+    },
+    "build": {
+      "host_target": "x86_64-pc-windows-msvc",
+      "cargo_target_dir": "target/benchmarks/pliego-gate-b",
+      "cargo_incremental": false,
+      "cargo_home": "target/benchmarks/cargo-home-gate-b",
+      "cargo_home_policy": "isolated benchmark directory without user Cargo configuration",
+      "sanitized_environment_keys": []
+    },
+    "power_plan": {
+      "status": "recorded",
+      "source": "powercfg /getactivescheme",
+      "value": "Power Scheme GUID: 381b4222-f694-41f0-9685-ff5bb260df2e  (Balanced)"
+    },
+    "security_tooling": {
+      "status": "active",
+      "tooling": "Microsoft Defender Antivirus; Windows Application Control",
+      "source": "environment"
+    }
+  },
+  "command": "pliego-cssc compile --input <derived-from-complete-class-attributes> --seed --theme --output <temporary-file>",
+  "statistics": {
+    "median": "average of the two middle values for even samples",
+    "p95": "nearest-rank",
+    "median_absolute_deviation": "conventional median of absolute deviations from the median"
+  },
+  "timing": {
+    "warmup_processes": 5,
+    "runs": 30,
+    "min_ms": 35.811,
+    "median_ms": 37.894,
+    "mean_ms": 45.763,
+    "p95_ms": 41.29,
+    "max_ms": 271.727,
+    "median_absolute_deviation_ms": 0.588,
+    "standard_deviation_ms": 41.977,
+    "samples_ms": [
+      36.656,
+      38.53,
+      37.461,
+      38.173,
+      37.983,
+      37.354,
+      38.859,
+      38.349,
+      38.666,
+      37.903,
+      39.612,
+      271.727,
+      37.148,
+      37.36,
+      37.885,
+      37.545,
+      38.732,
+      38.409,
+      37.251,
+      37.703,
+      37.526,
+      39.116,
+      36.162,
+      37.438,
+      41.29,
+      40.665,
+      37.429,
+      36.236,
+      35.811,
+      37.914
+    ]
+  },
+  "determinism": {
+    "verified_runs": 30,
+    "deterministic": true,
+    "sha256": "11f632e3e4321ab93a2c8df77e7ad1ce6034f912cbec48e62b92654f01a700fe"
+  },
+  "output": {
+    "css_raw_bytes": 10463,
+    "css_gzip_bytes": 2049,
+    "css_sha256": "11f632e3e4321ab93a2c8df77e7ad1ce6034f912cbec48e62b92654f01a700fe",
+    "executable_sha256": "d3dce60245d4f9f508298ef8f5f245d3d0e3f7d60de3ae9366cdb6cf64b4551c",
+    "manifest_sha256": "9cea396224de6107d135833e9b6d7c6e68ead60e2e7b0cc2e6052c0d4c33c594",
+    "transfer_gzip_bytes": 3550,
+    "html_unchanged_outside_class_values": true,
+    "html": {
+      "utility_strings": {
+        "raw_bytes": 5868,
+        "gzip_bytes": 1506,
+        "transfer_html_css_gzip_bytes": 3555,
+        "sha256": "338eb480327e54fe7e56e81b42c67324464afaa8c65d606e5d57c1c45690e86c"
+      },
+      "generated_classes": {
+        "raw_bytes": 3917,
+        "gzip_bytes": 1501,
+        "transfer_html_css_gzip_bytes": 3550,
+        "sha256": "c75734b307458d4cf15f2fb3b08478757674704145b48b396e61680289ae8639"
+      }
+    }
+  },
+  "frozen_tailwind_baseline": {
+    "version": "4.3.2",
+    "generated_at": "2026-07-12T22:30:41.861Z",
+    "profiles": {
+      "full-complete": {
+        "median_ms": 210.202,
+        "min_ms": 187.341,
+        "p95_ms": 318.531,
+        "css_raw_bytes": 12377,
+        "css_gzip_bytes": 3333,
+        "html_gzip_bytes": 1506,
+        "transfer_gzip_bytes": 4839
+      },
+      "no-preflight-complete": {
+        "median_ms": 204.826,
+        "min_ms": 185.374,
+        "p95_ms": 418.003,
+        "css_raw_bytes": 8618,
+        "css_gzip_bytes": 2327,
+        "html_gzip_bytes": 1506,
+        "transfer_gzip_bytes": 3833
+      }
+    }
+  },
+  "comparisons": {
+    "full-complete": {
+      "median_time_change_percent": -81.973,
+      "median_speed_ratio": 5.547,
+      "css_raw_change_percent": -15.464,
+      "css_gzip_change_percent": -38.524,
+      "transfer_gzip_change_percent": -26.638
+    },
+    "no-preflight-complete": {
+      "median_time_change_percent": -81.499,
+      "median_speed_ratio": 5.405,
+      "css_raw_change_percent": 21.409,
+      "css_gzip_change_percent": -11.947,
+      "transfer_gzip_change_percent": -7.383
+    }
+  },
+  "caveats": [
+    "Fresh-process timings retain normal OS caches and exclude the release build.",
+    "Manifest generation and HTML rewriting are verified outside the timed region.",
+    "PliegoCSS does not emit reset/preflight; no-preflight-complete is the primary payload comparison.",
+    "The generated-class HTML and Tailwind utility HTML preserve the same DOM but have different class-value bytes."
+  ]
+}

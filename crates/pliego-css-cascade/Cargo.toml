@@ -1,0 +1,24 @@
+[package]
+name = "pliego-css-cascade"
+description = "Fail-closed standard-CSS cascade explanation for PliegoCSS"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license-file.workspace = true
+repository.workspace = true
+authors.workspace = true
+readme = "README.md"
+exclude = ["tests"]
+keywords.workspace = true
+categories.workspace = true
+
+[features]
+default = []
+package-verify = []
+
+[dependencies]
+lightningcss = { version = "1.0.0-alpha.71", default-features = false }
+serde = { version = "1.0.228", features = ["derive"] }
+
+[lints]
+workspace = true

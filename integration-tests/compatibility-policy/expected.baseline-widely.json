@@ -1,0 +1,191 @@
+{
+  "schemaVersion": 2,
+  "policyVersion": 7,
+  "profile": "baseline-widely",
+  "guarantee": "baseline-widely",
+  "compatibilityData": {
+    "capturedOn": "2026-07-14",
+    "webFeatures": {
+      "name": "web-features",
+      "version": "3.32.0",
+      "artifact": "https://registry.npmjs.org/web-features/-/web-features-3.32.0.tgz",
+      "integrity": "sha512-PQBbTofqV8FtMP65oT9tLPjbN4FSB2dRdNxLM0A9j4bNifVpFhEP/ATXSMMJAqPPWb/pgUOh6B+98yzfNEVbNw==",
+      "content": "data.json",
+      "contentSha256": "58bc2056041c93e313c3a58658a8120f857cf4888d0592e6e4a9b0484748441e"
+    },
+    "baselineBrowserMapping": {
+      "name": "baseline-browser-mapping",
+      "version": "2.10.43",
+      "artifact": "https://registry.npmjs.org/baseline-browser-mapping/-/baseline-browser-mapping-2.10.43.tgz",
+      "integrity": "sha512-AjYpR78kDWAY3Efj+cDTFH9t9SCoL7OoTp1BOb0mQV7S+6CiLwnWM3FyxhJtdPufDFKzmCSFoUncKjWgJEZTCQ==",
+      "query": "widelyAvailableOnDate=2026-07-14;includeDownstreamBrowsers=false",
+      "resultSha256": "05b26b78a9c0f3ad82ce4565ef058ac34fac7ebae45fc260daf3343ffece53fd"
+    }
+  },
+  "baseline": {
+    "status": "widely-available",
+    "snapshotDate": "2026-07-14",
+    "source": "https://web-platform-dx.github.io/supported-browsers/"
+  },
+  "browserTargets": [
+    {
+      "id": "chrome",
+      "minimum": "120.0.0"
+    },
+    {
+      "id": "edge",
+      "minimum": "120.0.0"
+    },
+    {
+      "id": "firefox",
+      "minimum": "121.0.0"
+    },
+    {
+      "id": "ios-safari",
+      "minimum": "17.2.0"
+    },
+    {
+      "id": "safari",
+      "minimum": "17.2.0"
+    }
+  ],
+  "reset": {
+    "profile": "none",
+    "action": "warn",
+    "implicit": false,
+    "ownership": "host-owned-explicit-import"
+  },
+  "scope": {
+    "profile": "standard-class",
+    "action": "allow",
+    "boundary": "host-owned"
+  },
+  "features": [
+    {
+      "id": "typed-utility-catalog",
+      "tier": "core",
+      "action": "allow",
+      "enforcement": "compiler-validated"
+    },
+    {
+      "id": "custom-property-references",
+      "tier": "core",
+      "action": "allow",
+      "enforcement": "typed-reference"
+    },
+    {
+      "id": "typed-attribute-variants",
+      "tier": "extended",
+      "action": "allow",
+      "enforcement": "compiler-validated-selector"
+    },
+    {
+      "id": "configurable-attribute-variants",
+      "tier": "extended",
+      "action": "allow",
+      "enforcement": "compiler-bounded-attribute-selector"
+    },
+    {
+      "id": "writing-direction-variants",
+      "tier": "core",
+      "action": "allow",
+      "enforcement": "compiler-validated-selector"
+    },
+    {
+      "id": "writing-mode-utilities",
+      "tier": "core",
+      "action": "allow",
+      "enforcement": "compiler-validated-native-property"
+    },
+    {
+      "id": "container-queries",
+      "tier": "extended",
+      "action": "allow",
+      "enforcement": "typed-condition-native-css"
+    },
+    {
+      "id": "vendor-prefixes",
+      "tier": "core",
+      "action": "transform",
+      "enforcement": "lightning-target-driven"
+    },
+    {
+      "id": "selector-syntax",
+      "tier": "extended",
+      "action": "transform",
+      "enforcement": "lightning-target-driven"
+    },
+    {
+      "id": "media-query-syntax",
+      "tier": "core",
+      "action": "transform",
+      "enforcement": "lightning-target-driven"
+    },
+    {
+      "id": "color-syntax",
+      "tier": "extended",
+      "action": "transform",
+      "enforcement": "lightning-target-driven"
+    },
+    {
+      "id": "logical-properties",
+      "tier": "extended",
+      "action": "transform",
+      "enforcement": "lightning-target-driven"
+    },
+    {
+      "id": "arbitrary-values",
+      "tier": "escape-hatch",
+      "action": "error",
+      "enforcement": "CMP001"
+    },
+    {
+      "id": "arbitrary-properties",
+      "tier": "escape-hatch",
+      "action": "error",
+      "enforcement": "CMP002"
+    },
+    {
+      "id": "arbitrary-selectors",
+      "tier": "escape-hatch",
+      "action": "error",
+      "enforcement": "CMP003"
+    },
+    {
+      "id": "light-dark",
+      "tier": "experimental",
+      "action": "error",
+      "enforcement": "unclassified-syntax"
+    },
+    {
+      "id": "custom-media",
+      "tier": "experimental",
+      "action": "error",
+      "enforcement": "draft-parser-disabled"
+    },
+    {
+      "id": "browser-reset",
+      "tier": "core",
+      "action": "warn",
+      "enforcement": "host-owned-explicit-import"
+    },
+    {
+      "id": "cascade-layers",
+      "tier": "extended",
+      "action": "allow",
+      "enforcement": "compiler-fixed-order-native-css"
+    },
+    {
+      "id": "standard-class-scope",
+      "tier": "core",
+      "action": "allow",
+      "enforcement": "native-css-class"
+    },
+    {
+      "id": "component-scope",
+      "tier": "experimental",
+      "action": "error",
+      "enforcement": "not-implemented"
+    }
+  ]
+}

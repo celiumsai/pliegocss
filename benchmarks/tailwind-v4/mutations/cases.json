@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "unknown-utility",
+      "input": "flec",
+      "pliegoCode": "PCS001",
+      "expectedSuggestion": "flex"
+    },
+    {
+      "id": "unknown-token",
+      "input": "gap-7",
+      "pliegoCode": "PCS003",
+      "expectedSuggestion": "gap-6 or gap-8"
+    },
+    {
+      "id": "wrong-domain",
+      "input": "p-accent",
+      "pliegoCode": "PCS004",
+      "expectedSuggestion": "use a spacing token"
+    },
+    {
+      "id": "display-conflict",
+      "input": "flex grid",
+      "pliegoCode": "PCS005",
+      "expectedSuggestion": "choose one display mode"
+    },
+    {
+      "id": "incomplete-variant",
+      "input": "hover:",
+      "pliegoCode": "PCS002",
+      "expectedSuggestion": "add a utility after the variant"
+    },
+    {
+      "id": "unknown-breakpoint",
+      "input": "tablet:flex",
+      "pliegoCode": "PCS003",
+      "expectedSuggestion": "use a configured breakpoint"
+    },
+    {
+      "id": "unbalanced-arbitrary-value",
+      "input": "w-[calc(100%",
+      "pliegoCode": "PCS007",
+      "expectedSuggestion": "close the bracket and parenthesis"
+    },
+    {
+      "id": "duplicate-important",
+      "input": "bg-accent!!",
+      "pliegoCode": "PCS009",
+      "expectedSuggestion": "bg-accent!"
+    },
+    {
+      "id": "redundant-variant",
+      "input": "hover:hover:flex",
+      "pliegoCode": "PCS012",
+      "expectedSuggestion": "hover:flex"
+    },
+    {
+      "id": "impossible-preference",
+      "input": "motion-safe:motion-reduce:flex",
+      "pliegoCode": "PCS012",
+      "expectedSuggestion": "choose one motion preference"
+    }
+  ]
+}

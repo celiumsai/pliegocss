@@ -1,0 +1,5 @@
+error: PCS002: variant chain must end with a utility at bytes 5..6
+ --> tests/ui/fail/incomplete_variant.rs:4:17
+  |
+4 |     let _ = pc!("hover:");
+  |                 ^^^^^^^^
