@@ -1,6 +1,6 @@
 # Packaging status
 
-Status: **migration contract corpus passed the complete exact-clean `44f6c09` replay; no
+Status: **CSS Modules require bindings passed the complete exact-clean `20d0fac` replay; no
 registry upload performed**
 
 The publishable workspace boundary has six dependency waves. `pliego-css-usage` and
@@ -18,6 +18,24 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## CSS Modules require-binding clean replay — 2026-07-16
+
+The exact clean `20d0fac` Debian WSL2 gate passed 36 source tests, strict source Clippy, the complete
+public API smoke with Rust 1.85, and the three-case migration corpus including CommonJS and
+TypeScript import-equals consumers. It then packaged and extracted all fifteen archives with Cargo
+1.96 and compiled the extracted graph in release mode. Publication remained disabled, the worktree
+was clean, and the fixed 61,440-byte ceiling was not raised.
+
+| Package | Compressed bytes | Remaining margin | SHA-256 |
+|---|---:|---:|---|
+| `pliego-css-source` | 45,791 | 15,649 | `0a061a7973497586362313b56dd16a88b72e3d7a238615808f09fbd551cbed81` |
+| `pliego-cssc` | 61,394 | 46 | `298b906dbc9dce07a86ae7010a2e72fc495a02dd6f0a803d9c76284aa329f3e8` |
+
+CSS Modules consumers now share exact target linking across default/namespace ESM, TypeScript
+import-equals, and simple `const|let|var` CommonJS require bindings. Unbound requires remain dynamic;
+calculated/escaped arguments, destructuring, and alias propagation are not guessed. R0.8 remains
+open. The CLI package remains closed to additive feature growth.
 
 ## Migration contract-corpus clean replay — 2026-07-16
 
