@@ -481,7 +481,9 @@ version = "0.0.0"
 dependencies = [
  "pliego-css-parser",
  "pliego-css-source",
+ "serde",
  "serde_json",
+ "sha2",
 ]
 
 [[package]]

@@ -3,7 +3,7 @@
 const THEME_MODES = new Set(["discover", "seed", "config"]);
 
 /**
- * @typedef {{serverPath:string, compilerPath:string, themeMode:string, themeConfig:string}} Settings
+ * @typedef {{serverPath:string, compilerPath:string, projectIndexPath:string, themeMode:string, themeConfig:string}} Settings
  */
 
 /**
@@ -20,6 +20,8 @@ function serverInvocation(settings) {
     throw new Error(`unsupported PliegoCSS theme mode: ${settings.themeMode}`);
   }
   const args = ["--pliego-cssc", compilerPath];
+  const projectIndexPath = settings.projectIndexPath.trim();
+  if (projectIndexPath) args.push("--project-index", projectIndexPath);
   if (settings.themeMode === "seed") args.push("--seed");
   if (settings.themeMode === "config") {
     const config = settings.themeConfig.trim();

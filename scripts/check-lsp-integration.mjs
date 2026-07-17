@@ -1,6 +1,7 @@
 import { spawn, spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
-import { resolve } from "node:path";
+import { createHash } from "node:crypto";
+import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const ROOT = resolve(import.meta.dirname, "..");
@@ -24,10 +25,124 @@ if (build.error) fail(`cannot build LSP gate: ${build.error.message}`);
 if (build.status !== 0) fail(`${build.stdout}${build.stderr}`.trim());
 if (!existsSync(lsp) || !existsSync(compiler)) fail("LSP gate binaries are missing");
 
-const child = spawn(lsp, ["--pliego-cssc", compiler, "--seed"], {
-  cwd: ROOT,
-  stdio: ["pipe", "pipe", "pipe"],
-});
+const workspace = resolve(target, "lsp-integration-workspace");
+if (!workspace.startsWith(`${target}${sep}`)) fail("unsafe LSP fixture path");
+rmSync(workspace, { recursive: true, force: true });
+mkdirSync(resolve(workspace, "src"), { recursive: true });
+mkdirSync(resolve(workspace, "out"), { recursive: true });
+const text = 'fn view(){let _=pc!(" flex   gap-4 ");}';
+const literalStart = text.indexOf('" flex');
+const literalEnd = text.indexOf('"', literalStart + 1) + 1;
+const css = Buffer.from(".pc{display:flex}\n");
+const hash = (bytes) => createHash("sha256").update(bytes).digest("hex");
+const manifest = Buffer.from(
+  JSON.stringify({
+    schemaVersion: 5,
+    cssSha256: hash(css),
+    cssBytes: css.length,
+    themeId: "seed",
+    graph: {
+      schemaVersion: 2,
+      physicalDeclarationIdFormatVersion: 1,
+      physicalCoverage: "compiler-verified-complete",
+      declarations: [],
+      physicalDeclarations: [
+        {
+          id: "css-decl:00000000:00000000",
+          ordinal: 0,
+          property: "display",
+          important: false,
+          generated: false,
+          byteStart: 4,
+          byteEnd: 16,
+          propertyByteStart: 4,
+          propertyByteEnd: 11,
+          valueByteStart: 12,
+          valueByteEnd: 16,
+        },
+      ],
+    },
+  }),
+);
+const index = {
+  schemaVersion: 1,
+  sourceSiteIdFormatVersion: 1,
+  manifestSchemaVersion: 5,
+  graphSchemaVersion: 2,
+  declarationIdFormatVersion: 1,
+  physicalRuleIdFormatVersion: 1,
+  physicalDeclarationIdFormatVersion: 1,
+  originCoverage: "compiler-verified-complete",
+  applicationCoverage: "adapter-attested-complete",
+  physicalCoverage: "compiler-verified-complete",
+  styleIdFormatVersion: 2,
+  classNameFormatVersion: 1,
+  themeIdFormatVersion: 1,
+  themeId: "seed",
+  targets: "modern",
+  format: "minified",
+  ruleSelection: "all-compiled",
+  assetPlanFile: "pliego.assets.json",
+  assetPlanBytes: 1,
+  assetPlanSha256: hash("x"),
+  documents: [
+    {
+      id: "document:one",
+      path: "src/view.rs",
+      bytes: Buffer.byteLength(text),
+      sha256: hash(text),
+      siteIds: ["site:one"],
+    },
+  ],
+  bundles: [
+    {
+      id: "app",
+      cssFile: "app.css",
+      manifestFile: "app.manifest.json",
+      emitsTheme: false,
+      cssBytes: css.length,
+      cssSha256: hash(css),
+      manifestBytes: manifest.length,
+      manifestSha256: hash(manifest),
+      siteIds: ["site:one"],
+    },
+  ],
+  sites: [
+    {
+      id: "site:one",
+      documentId: "document:one",
+      path: "src/view.rs",
+      byteStart: literalStart,
+      byteEnd: literalEnd,
+      macroKind: "pc",
+      reason: "visible-literal",
+      source: "flex gap-4",
+      styleId: "style",
+      className: "pc_one",
+      bundleIds: ["app"],
+      declarationIds: ["decl:one"],
+      tokenIds: [],
+      componentIds: ["component:one"],
+      physicalDeclarations: [
+        { bundleId: "app", id: "css-decl:00000000:00000000" },
+      ],
+    },
+  ],
+};
+writeFileSync(resolve(workspace, "src", "view.rs"), text);
+writeFileSync(resolve(workspace, "out", "app.css"), css);
+writeFileSync(resolve(workspace, "out", "app.manifest.json"), manifest);
+writeFileSync(resolve(workspace, "out", "pliego.index.json"), JSON.stringify(index));
+writeFileSync(resolve(workspace, "out", "pliego.assets.json"), "x");
+
+const child = spawn(
+  lsp,
+  ["--pliego-cssc", compiler, "--seed", "--project-index", "out/pliego.index.json"],
+  {
+    cwd: workspace,
+    stdio: ["pipe", "pipe", "pipe"],
+  },
+);
 const output = [];
 const errors = [];
 child.stdout.on("data", (chunk) => output.push(chunk));
@@ -39,9 +154,8 @@ function send(message) {
   child.stdin.write(body);
 }
 
-const uri = pathToFileURL(resolve(ROOT, "lsp-smoke.rs")).href;
-const rootUri = pathToFileURL(ROOT).href;
-const text = 'fn view(){let _=pc!(" flex   gap-4 ");}';
+const uri = pathToFileURL(resolve(workspace, "src", "view.rs")).href;
+const rootUri = pathToFileURL(workspace).href;
 const cursor = text.indexOf("gap") + 3;
 
 send({ jsonrpc: "2.0", id: 1, method: "initialize", params: { rootUri } });
@@ -69,7 +183,13 @@ send({
   method: "textDocument/hover",
   params: { textDocument: { uri }, position: { line: 0, character: cursor } },
 });
-send({ jsonrpc: "2.0", id: 5, method: "shutdown", params: null });
+send({
+  jsonrpc: "2.0",
+  id: 5,
+  method: "textDocument/definition",
+  params: { textDocument: { uri }, position: { line: 0, character: cursor } },
+});
+send({ jsonrpc: "2.0", id: 6, method: "shutdown", params: null });
 send({ jsonrpc: "2.0", method: "exit", params: null });
 child.stdin.end();
 
@@ -105,6 +225,9 @@ const published = messages.find((message) => message.method === "textDocument/pu
 if (byId.get(1)?.result?.capabilities?.positionEncoding !== "utf-16") {
   fail("initialize did not negotiate UTF-16");
 }
+if (byId.get(1)?.result?.capabilities?.definitionProvider !== true) {
+  fail("initialize did not advertise configured Project Index navigation");
+}
 if (published?.params?.diagnostics?.[0]?.code !== "FMT001") {
   fail("didOpen did not publish FMT001");
 }
@@ -121,7 +244,19 @@ if (item.textEdit.range.end.character !== text.indexOf("gap-4") + "gap-4".length
 if (!byId.get(4)?.result?.contents?.value?.includes("```css")) {
   fail("hover did not include compiler-emitted CSS");
 }
-if (byId.get(5)?.result !== null) fail("shutdown did not return null");
+const definition = byId.get(5)?.result?.[0];
+if (!definition?.targetUri?.endsWith("/out/app.css")) {
+  fail("definition did not target the integrity-bound stylesheet");
+}
+if (
+  definition.targetRange?.start?.character !== 4 ||
+  definition.targetRange?.end?.character !== 16
+) {
+  fail("definition did not select the physical declaration range");
+}
+if (byId.get(6)?.result !== null) fail("shutdown did not return null");
+
+rmSync(workspace, { recursive: true, force: true });
 
 process.stdout.write(
   `${JSON.stringify({
@@ -132,6 +267,7 @@ process.stdout.write(
     completion: item.label,
     completionRange: item.textEdit.range,
     hover: "compiler-css",
+    definition: "project-index-to-physical-css",
     exitCode,
   }, null, 2)}\n`,
 );

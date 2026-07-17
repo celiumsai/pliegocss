@@ -7,6 +7,7 @@ const { serverInvocation } = require("../src/settings");
 const defaults = {
   serverPath: "pliego-css-lsp",
   compilerPath: "pliego-cssc",
+  projectIndexPath: "",
   themeMode: "discover",
   themeConfig: "pliego.theme.toml",
 };
@@ -27,6 +28,18 @@ test("seed and config are exact mutually exclusive invocations", () => {
   assert.deepEqual(
     serverInvocation({ ...defaults, themeMode: "config", themeConfig: "themes/app.toml" }).args,
     ["--pliego-cssc", "pliego-cssc", "--config", "themes/app.toml"],
+  );
+});
+
+test("Project Index navigation is explicit and path preserving", () => {
+  assert.deepEqual(
+    serverInvocation({ ...defaults, projectIndexPath: "target/site/assets/pliego.index.json" }).args,
+    [
+      "--pliego-cssc",
+      "pliego-cssc",
+      "--project-index",
+      "target/site/assets/pliego.index.json",
+    ],
   );
 });
 

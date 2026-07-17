@@ -26,6 +26,9 @@ pliego-css-lsp --config pliego.theme.toml
 
 # No theme flag: conventional discovery from the initialize root
 pliego-css-lsp
+
+# Optional verified source-to-final-CSS navigation
+pliego-css-lsp --project-index target/site/assets/pliego.index.json
 ```
 
 The server runs delegated compiler commands from the `initialize.rootUri` file directory. Compiler
@@ -35,7 +38,8 @@ of returning guessed metadata.
 ## Implemented protocol surface
 
 The initialize result selects `positionEncoding: "utf-16"`, requests full-document synchronization,
-and advertises completion, hover, and document formatting. The current closed method set is:
+and advertises completion, hover, document formatting, and optionally definition when a Project
+Index is configured. The current closed method set is:
 
 | Direction | Method | Contract |
 |---|---|---|
@@ -44,6 +48,7 @@ and advertises completion, hover, and document formatting. The current closed me
 | server to client | `textDocument/publishDiagnostics` | Rust parse/scanner diagnostics, PCS syntax diagnostics, and `FMT001` drift. |
 | request | `textDocument/completion` | Catalog schema 3 examples and summaries, with a whole-utility `textEdit`. |
 | request | `textDocument/hover` | Explain schema 2 pattern, summary, and emitted CSS. |
+| request | `textDocument/definition` | Exact Project Index source site to integrity-bound manifest and final CSS declaration links. Advertised only with `--project-index`. |
 | request | `textDocument/formatting` | Complete Rust literal-token edits produced from canonical decoded values. |
 
 Input frames are capped at 16 MiB. LSP lines and characters are zero-based UTF-16 positions; the
@@ -65,6 +70,10 @@ replaces the complete literal token with a newly escaped ordinary Rust string.
   `pliego-css-parser` canonical formatter as the CLI.
 - Formatting returns edits only; it never writes a source file. The editor remains responsible for
   applying the version-bound edit set.
+- Definition consumes Project Index schema 1 or 2 instead of scanning repository structure. It
+  verifies the Asset Plan, source snapshot, bundle ownership, manifest/CSS hashes, schema-5 physical
+  contract, and exact declaration ranges on every request. Any stale or mixed artifact fails the
+  request closed.
 
 The current diagnostic pass covers Rust parsing, macro extraction, PliegoCSS syntax, and canonical
 formatting. Theme-aware semantic/compiler diagnostics are not yet evaluated on every keystroke, so
@@ -72,11 +81,10 @@ this candidate does not yet prove complete CLI/editor diagnostic equality.
 
 ## Current non-goals
 
-This candidate does not yet provide editor-extension packaging, incremental document changes,
-workspace folders, dynamic configuration reload, code actions, Project Index navigation,
-go-to-definition, semantic tokens, cancellation, background/debounced compiler checks, or a
-hosted multi-editor matrix. Those remain release gates; the existence of the stdio server does not
-close the full F6 editor-tooling task.
+This candidate does not yet provide incremental document changes, workspace folders, code actions,
+semantic tokens, cancellation, background/debounced compiler checks, a real extension-host gate,
+another editor client, or a hosted multi-editor matrix. Those remain release gates; the existence
+of the stdio server and initial VS Code package does not close the full F6 editor-tooling task.
 
 Run the reproducible local process gate with:
 
@@ -87,13 +95,17 @@ pnpm integration:lsp
 The gate builds both binaries with Rust 1.85, performs one framed stdio session, and asserts UTF-16
 initialization, `FMT001` publication, whole-literal formatting, exact completion replacement,
 compiler-backed hover CSS, clean shutdown, and zero stderr.
+The same session configures a synthetic integrity-bound Project Index and requires Go to Definition
+to select the exact physical declaration in its verified stylesheet.
 
 ## VS Code client candidate
 
 The unreleased client under `editors/vscode` follows the official VS Code language-client pattern
 and selects only file-backed Rust documents. Configure `pliegocss.server.path` and
 `pliegocss.compiler.path` to same-version external binaries; the extension does not download or
-update either executable. Theme mode is explicitly `discover`, `seed`, or `config`.
+update either executable. Theme mode is explicitly `discover`, `seed`, or `config`. Optional
+`pliegocss.projectIndex.path` forwards one exact workspace-relative or absolute index path and is
+empty by default.
 
 The client runs in the workspace extension host, uses the first local workspace folder as process
 working directory, restarts on configuration changes or through **PliegoCSS: Restart Language

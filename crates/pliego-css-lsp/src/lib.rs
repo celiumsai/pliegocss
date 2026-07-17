@@ -1,5 +1,7 @@
 //! Standard Language Server Protocol transport for `PliegoCSS` Rust literals.
 
+#![recursion_limit = "256"]
+
 use std::collections::BTreeMap;
 use std::ffi::OsString;
 use std::io::{self, BufRead, BufReader, Write};
@@ -9,6 +11,8 @@ use std::process::Command;
 use pliego_css_parser::{format_style_list, parse_style_list};
 use pliego_css_source::{InvocationKind, ScanReport, SourceRange, StyleLiteral, scan_source_named};
 use serde_json::{Value, json};
+
+mod project_index;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -21,6 +25,8 @@ pub struct ServerConfig {
     pub seed: bool,
     /// Optional exact theme configuration path.
     pub config: Option<PathBuf>,
+    /// Optional exact generated Project Index path used for source-to-CSS navigation.
+    pub project_index: Option<PathBuf>,
 }
 
 impl Default for ServerConfig {
@@ -30,6 +36,7 @@ impl Default for ServerConfig {
                 .unwrap_or_else(|| OsString::from("pliego-cssc")),
             seed: false,
             config: None,
+            project_index: None,
         }
     }
 }
@@ -58,6 +65,13 @@ fn parse_args(arguments: impl IntoIterator<Item = OsString>) -> Result<ServerCon
             Some("--config") if !config.seed && config.config.is_none() => {
                 config.config = Some(PathBuf::from(
                     arguments.next().ok_or("`--config` requires a value")?,
+                ));
+            }
+            Some("--project-index") if config.project_index.is_none() => {
+                config.project_index = Some(PathBuf::from(
+                    arguments
+                        .next()
+                        .ok_or("`--project-index` requires a value")?,
                 ));
             }
             Some(value) => return Err(format!("unknown or conflicting option `{value}`")),
@@ -178,6 +192,7 @@ fn handle_request(server: &mut Server, method: &str, params: &Value) -> Result<V
                     "textDocumentSync": {"openClose":true,"change":1},
                     "completionProvider": {"triggerCharacters":["-",":","["]},
                     "hoverProvider": true,
+                    "definitionProvider": server.config.project_index.is_some(),
                     "documentFormattingProvider": true
                 },
                 "serverInfo":{"name":"pliego-css-lsp","version":VERSION}
@@ -189,6 +204,7 @@ fn handle_request(server: &mut Server, method: &str, params: &Value) -> Result<V
         }
         "textDocument/completion" => completion(server, params),
         "textDocument/hover" => hover(server, params),
+        "textDocument/definition" => definition(server, params),
         "textDocument/formatting" => formatting(server, params),
         _ => Err(format!("unsupported method `{method}`")),
     }
@@ -372,6 +388,32 @@ fn hover(server: &mut Server, params: &Value) -> Result<Value, String> {
     }))
 }
 
+fn definition(server: &Server, params: &Value) -> Result<Value, String> {
+    let index_path = server
+        .config
+        .project_index
+        .as_deref()
+        .ok_or("Project Index navigation is not configured")?;
+    let (uri, line, character) = text_position(params)?;
+    let text = &server
+        .documents
+        .get(uri)
+        .ok_or("document is not open")?
+        .text;
+    let context =
+        utility_context(uri, text, line, character)?.ok_or("cursor is not in a utility literal")?;
+    let document_path = file_uri_path(uri)?;
+    project_index::definitions(&project_index::NavigationRequest {
+        root: &server.root,
+        index_path,
+        document_path: &document_path,
+        document_text: text,
+        literal_start: context.literal_start,
+        literal_end: context.literal_end,
+        origin_range: byte_range_to_lsp(text, context.source_word_start..context.source_word_end),
+    })
+}
+
 fn formatting(server: &Server, params: &Value) -> Result<Value, String> {
     let uri = string_field(
         params.get("textDocument").ok_or("missing textDocument")?,
@@ -440,6 +482,8 @@ struct UtilityContext {
     word_end: usize,
     source_word_start: usize,
     source_word_end: usize,
+    literal_start: usize,
+    literal_end: usize,
 }
 
 fn utility_context(
@@ -495,6 +539,8 @@ fn literal_context(source: &str, literal: &StyleLiteral, cursor: usize) -> Optio
         word_end,
         source_word_start: absolute_start + word_start,
         source_word_end: absolute_start + word_end,
+        literal_start: literal.range.start.byte,
+        literal_end: literal.range.end.byte,
     })
 }
 

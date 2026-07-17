@@ -1,7 +1,7 @@
 {
   "name": "pliegocss-vscode",
   "displayName": "PliegoCSS",
-  "description": "PliegoCSS completion, hover, diagnostics, and Rust literal formatting through the native language server.",
+  "description": "PliegoCSS completion, hover, diagnostics, source-to-CSS navigation, and Rust literal formatting through the native language server.",
   "publisher": "celiums",
   "version": "0.0.0",
   "private": true,
@@ -60,6 +60,11 @@
           "default": "pliego-cssc",
           "scope": "machine-overridable",
           "description": "Exact path or executable name for the same-version pliego-cssc used by completion and hover."
+        },
+        "pliegocss.projectIndex.path": {
+          "type": "string",
+          "default": "",
+          "description": "Optional workspace-relative or absolute path to generated pliego.index.json. Enables verified Go to Definition from Rust utility literals to final CSS."
         },
         "pliegocss.theme.mode": {
           "type": "string",

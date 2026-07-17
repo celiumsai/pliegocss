@@ -13,6 +13,7 @@ function readSettings() {
   return {
     serverPath: configuration.get("server.path", "pliego-css-lsp"),
     compilerPath: configuration.get("compiler.path", "pliego-cssc"),
+    projectIndexPath: configuration.get("projectIndex.path", ""),
     themeMode: configuration.get("theme.mode", "discover"),
     themeConfig: configuration.get("theme.config", "pliego.theme.toml"),
   };
