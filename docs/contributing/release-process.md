@@ -94,6 +94,7 @@ pnpm integration:pliegors
 pnpm integration:pliegors-dev
 pnpm integration:lsp
 pnpm integration:vscode
+pnpm integration:vscode-host
 ```
 
 Run rustdoc with warnings denied. In a POSIX shell:

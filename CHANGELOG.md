@@ -23,7 +23,9 @@ pre-1.0 compatibility policy.
 - An unreleased VS Code client candidate that connects file-backed Rust documents to explicit
   external `pliego-css-lsp` and `pliego-cssc` binaries. It supports discover/seed/config theme
   modes, optional Project Index navigation, fail-closed machine-overridable paths, configuration
-  restart, and a bounded VSIX package gate without embedding or downloading native executables.
+  restart, and a bounded VSIX package gate without embedding or downloading native executables. A
+  pinned VS Code 1.105.1 extension-host gate opens a real Rust document, follows the physical CSS
+  definition, edits the buffer, and observes the exact compiler-backed `PCS001` diagnostic.
 - Bounded typed migration discovery through `discover_migration_project`. The library walks one
   project-relative root in canonical order, ignores only `.git`/`node_modules`/`target`, rejects
   link-like or non-regular paths, caps traversal at 32 levels, 65,536 entries, and 256 MiB of

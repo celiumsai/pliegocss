@@ -279,7 +279,9 @@ if (
 }
 if (byId.get(6)?.result !== null) fail("shutdown did not return null");
 
-rmSync(workspace, { recursive: true, force: true });
+if (process.env.PLIEGOCSS_KEEP_LSP_FIXTURE !== "1") {
+  rmSync(workspace, { recursive: true, force: true });
+}
 
 process.stdout.write(
   `${JSON.stringify({

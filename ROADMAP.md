@@ -271,8 +271,10 @@ ETA: 3–5 días
   declaraciones físicas finales en CSS, rechazando snapshots o artifacts mezclados/stale.
 - [x] Reusar diagnósticos semánticos schema 1 del compilador por literal, con cache/límites y mapeo
   exacto de byte ranges a posiciones UTF-16.
-- [ ] Añadir prueba real en extension host, otro cliente de editor, debounce/cancelación y paridad
-  diagnóstica completa para composición `pcx!` CLI/LSP.
+- [x] Ejecutar la extensión real en VS Code 1.105.1 y probar diagnóstico compiler-backed más
+  navegación Project Index desde la API del extension host.
+- [ ] Añadir otro cliente de editor, debounce/cancelación y paridad diagnóstica completa para
+  composición `pcx!` CLI/LSP.
 - [x] Mejorar diagnósticos usando los cinco fixtures reales.
 - [x] Crear documentación de CLI, configuración y troubleshooting; editor setup sigue abierto.
 - [x] Ejecutar doctests y ejemplos del workspace desde el workflow de CI.

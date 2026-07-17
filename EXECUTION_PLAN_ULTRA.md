@@ -244,8 +244,9 @@ fixture acotado.
   verificación fail-closed de Asset Plan, snapshots, hashes y rangos.
 - [x] Reusar `check` schema 1 para diagnósticos semánticos theme-aware por literal y conservar
   código, mensaje y rango exacto al proyectar UTF-8 → UTF-16.
-- [ ] Añadir gate real de extension host, otro cliente, debounce/cancelación y paridad semántica
-  completa de composición `pcx!` CLI/LSP.
+- [x] Añadir gate real de VS Code 1.105.1 extension host sobre diagnostics y definition.
+- [ ] Añadir otro cliente, debounce/cancelación y paridad semántica completa de composición `pcx!`
+  CLI/LSP.
 - [x] Añadir formatter determinista y `--check` para utilidades explícitas y archivos line-oriented.
 - [x] Añadir diagnósticos y reemplazos read-only sobre literales Rust.
 - [x] Añadir envelope JSON estable para diagnósticos de comandos one-shot.

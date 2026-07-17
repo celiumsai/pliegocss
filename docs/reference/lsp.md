@@ -91,8 +91,8 @@ CLI/editor diagnostic equality.
 ## Current non-goals
 
 This candidate does not yet provide incremental document changes, workspace folders, code actions,
-semantic tokens, cancellation, background/debounced compiler checks, a real extension-host gate,
-another editor client, or a hosted multi-editor matrix. Those remain release gates; the existence
+semantic tokens, cancellation, background/debounced compiler checks, another editor client, or a
+hosted multi-editor matrix. Those remain release gates; the existence
 of the stdio server and initial VS Code package does not close the full F6 editor-tooling task.
 
 Run the reproducible local process gate with:
@@ -130,3 +130,15 @@ That gate type-checks the client, tests fail-closed argument construction, bundl
 entry, verifies the exact four-file extension payload, packages a VSIX below 256 KiB, and confirms
 that no native server is embedded. The VSIX hash is evidence for one run, not a reproducibility
 claim because the packaging tool may encode timestamps.
+
+Run the real extension-host gate with:
+
+```console
+pnpm integration:vscode-host
+```
+
+The first run downloads the exact VS Code 1.105.1 test runtime through the official Microsoft test
+harness; later runs reuse the ignored local cache. The gate builds external Rust 1.85 server and
+compiler binaries, loads the development extension in a real workspace host, follows Go to
+Definition to the exact physical CSS range, edits the Rust buffer, and requires the compiler-backed
+`PCS001` diagnostic. The extension itself still downloads no server or compiler.
