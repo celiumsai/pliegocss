@@ -342,7 +342,8 @@ también requiere E0–E4 y todos los Must de R0 en el contrato estratégico.
   Sass/Tailwind-entry/CSS-Modules con bytes/hash/spans, constructs dynamic/unsupported, dependencia
   Preflight y output stdout no-mutante. El core ya confirma un snapshot multi-file declarado por
   doble inventario canónico y deriva dependencias Sass/CSS/CSS Modules con resolución local exacta
-  fail-closed y clasificaciones external/unresolved/local/dynamic. Faltan su CLI, crawling y
+  fail-closed y clasificaciones external/unresolved/local/dynamic; la declaración JSON schema 1
+  permite persistir el mismo source set cerrado. Faltan su CLI, crawling y
   resolución específica del toolchain, templates/config/plugins, composition consumers y fixtures
   de migración reales antes de escribir la guía completa.
 - [ ] Crear tutorial completo, how-to guides y referencia de API.

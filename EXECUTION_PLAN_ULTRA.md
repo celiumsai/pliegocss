@@ -413,7 +413,8 @@ Toda optimización tiene benchmark; ninguna complejidad entra solamente por intu
   ya confirma snapshots declarados de hasta 4.096 fuentes mediante doble inventario canónico y
   deriva edges conservadores Sass/CSS/CSS Modules: targets locales exactos fallan si no están
   declarados con el tipo esperado; external/unresolved/local/dynamic quedan explícitos sin emular el
-  toolchain. Faltan CLI/crawling de proyecto, resolución específica Sass/bundlers,
+  toolchain. El mismo source set puede persistirse como declaración JSON schema 1 cerrada y acotada.
+  Faltan CLI/crawling de proyecto, resolución específica Sass/bundlers,
   templates/config/plugins, composition consumers y fixtures de proyectos reales para cerrar.
 - [ ] Entrevistar 10–15 developers/equipos y reunir 20 incidentes reales anonimizados.
 - [ ] Medir precision/recall, falsos positivos, excepciones y tiempo de resolución por categoría.

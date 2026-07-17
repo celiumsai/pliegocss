@@ -139,6 +139,10 @@ fn exercise_migration_inventory_surface() {
         MigrationSourceKind::Sass,
         "src/app.scss",
     ));
+    let declared_project = MigrationProject::from_json(
+        br#"{"schemaVersion":1,"sources":[{"sourceKind":"sass","file":"src/app.scss"}]}"#,
+    )
+    .expect("valid closed migration project declaration");
     let _project_collector: fn(
         MigrationProject,
     ) -> Result<MigrationProjectInventory, MigrationInventoryError> = MigrationProject::collect;
@@ -156,6 +160,7 @@ fn exercise_migration_inventory_surface() {
     let _: MigrationDependencyKind = MigrationDependencyKind::SassUse;
     let _: MigrationDependencyResolution = MigrationDependencyResolution::Resolved;
     drop(project);
+    drop(declared_project);
     let inventory: MigrationInventory = inventory_migration_source(
         MigrationSourceKind::Tailwind,
         "src/app.css",

@@ -9,6 +9,25 @@ does not crawl the repository or infer source kind from filenames. Collection so
 set canonically, rejects duplicate paths and more than 4,096 sources, inventories every regular
 file twice, and publishes bytes only when both complete reads agree.
 
+The same closed input set can be checked into the project as schema-1 JSON and parsed with
+`MigrationProject::from_json`:
+
+```json
+{
+  "schemaVersion": 1,
+  "sources": [
+    { "sourceKind": "sass", "file": "src/legacy.scss" },
+    { "sourceKind": "tailwind", "file": "src/app.css" },
+    { "sourceKind": "css-modules", "file": "src/card.module.css" }
+  ]
+}
+```
+
+The declaration is bounded to 1 MiB, rejects unknown fields, unsafe paths, kind/extension mismatch,
+unsupported schema versions, and more than 4,096 entries. Parsing does not read sources; collection
+performs the same canonical duplicate, file-safety, two-pass, and dependency checks as the builder
+API. Declaration order therefore does not affect snapshot bytes.
+
 ```rust,no_run
 use pliego_css_source::{
     MigrationProject, MigrationProjectSource, MigrationSourceKind,

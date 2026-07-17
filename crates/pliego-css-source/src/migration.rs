@@ -19,6 +19,7 @@ pub const MIGRATION_INVENTORY_SCHEMA_VERSION: u8 = 1;
 const MAX_SOURCE_BYTES: usize = 16 * 1024 * 1024;
 const MAX_CONSTRUCTS: usize = 65_535;
 const MAX_PROJECT_SOURCES: usize = 4_096;
+const MAX_PROJECT_DOCUMENT_BYTES: usize = 1024 * 1024;
 const MAX_SYNTAX_BYTES: usize = 4_096;
 #[cfg(windows)]
 const FILE_ATTRIBUTE_REPARSE_POINT: u32 = 0x400;
@@ -260,6 +261,20 @@ pub struct MigrationProjectSource {
     file: String,
 }
 
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+struct MigrationProjectDeclaration {
+    schema_version: u8,
+    sources: Vec<MigrationProjectDeclarationSource>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+struct MigrationProjectDeclarationSource {
+    source_kind: MigrationSourceKind,
+    file: String,
+}
+
 /// Dependency seam observed in a migration source.
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "kebab-case")]
@@ -379,6 +394,46 @@ impl MigrationProject {
         Self {
             sources: Vec::new(),
         }
+    }
+
+    /// Parses a closed schema-1 project declaration without reading any source file.
+    ///
+    /// Declaration order is not significant; [`Self::collect`] canonicalizes it before reading.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`MigrationInventoryError`] for input above 1 MiB, malformed or non-schema-1 JSON,
+    /// unknown fields, more than 4,096 sources, or unsafe/kind-incompatible source paths.
+    pub fn from_json(bytes: &[u8]) -> Result<Self, MigrationInventoryError> {
+        if bytes.len() > MAX_PROJECT_DOCUMENT_BYTES {
+            return Err(MigrationInventoryError::new(
+                "migration project declaration exceeds 1 MiB",
+            ));
+        }
+        let declaration: MigrationProjectDeclaration =
+            serde_json::from_slice(bytes).map_err(|error| {
+                MigrationInventoryError::new(format!(
+                    "cannot parse migration project declaration: {error}"
+                ))
+            })?;
+        if declaration.schema_version != MIGRATION_INVENTORY_SCHEMA_VERSION {
+            return Err(MigrationInventoryError::new(
+                "migration project declaration schemaVersion must be 1",
+            ));
+        }
+        if declaration.sources.len() > MAX_PROJECT_SOURCES {
+            return Err(MigrationInventoryError::new(
+                "migration project exceeds 4,096 sources",
+            ));
+        }
+        let mut project = Self::new();
+        for source in declaration.sources {
+            validate_input(source.source_kind, source.file.as_str(), "")?;
+            project
+                .sources
+                .push(MigrationProjectSource::new(source.source_kind, source.file));
+        }
+        Ok(project)
     }
 
     /// Adds one explicit source. Collection sorts declarations canonically.
@@ -1646,6 +1701,35 @@ $color: red;
             .collect();
         assert!(duplicate.is_err());
         fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
+    fn project_declaration_json_is_closed_bounded_and_order_independent() {
+        let project = MigrationProject::from_json(
+            br#"{
+  "schemaVersion": 1,
+  "sources": [
+    {"sourceKind": "tailwind", "file": "src/app.css"},
+    {"sourceKind": "sass", "file": "src/legacy.scss"}
+  ]
+}"#,
+        )
+        .unwrap();
+        assert_eq!(project.sources.len(), 2);
+        assert_eq!(project.sources[0].file, "src/app.css");
+        assert_eq!(project.sources[1].source_kind, MigrationSourceKind::Sass);
+        assert!(MigrationProject::from_json(br#"{"schemaVersion":2,"sources":[]}"#).is_err());
+        assert!(
+            MigrationProject::from_json(br#"{"schemaVersion":1,"sources":[],"unexpected":true}"#)
+                .is_err()
+        );
+        assert!(
+            MigrationProject::from_json(
+                br#"{"schemaVersion":1,"sources":[{"sourceKind":"sass","file":"../app.scss"}]}"#
+            )
+            .is_err()
+        );
+        assert!(MigrationProject::from_json(&vec![b' '; MAX_PROJECT_DOCUMENT_BYTES + 1]).is_err());
     }
 
     #[test]

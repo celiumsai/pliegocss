@@ -243,6 +243,8 @@ declared-file snapshot. It emits canonical schema-1 JSON, records dynamic/unsupp
 derives conservative dependency observations for Sass module/import seams, CSS import/reference,
 and CSS Modules/ICSS composition. Exact supported local targets fail closed unless declared with the
 expected kind; extensionless or dynamic resolution remains explicit without toolchain emulation;
+`MigrationProject::from_json` parses a bounded, closed, reviewable schema-1 declaration without
+reading source files;
 `inventory_migration_file` additionally enforces a bounded regular project-relative file and rejects
 symlink/reparse-point components before reading. The bridge does not execute
 Sass/Tailwind/plugins/configs, crawl undeclared sources, discover consumers, or promise a codemod.

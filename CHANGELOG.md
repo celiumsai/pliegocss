@@ -24,6 +24,10 @@ pre-1.0 compatibility policy.
   while external, unresolved, local, and dynamic edges remain explicit. Project CLI integration,
   graph crawling, source-toolchain-specific resolution, configs/plugins/templates, consumers, and
   real-project fixtures remain open.
+- Bounded closed schema-1 JSON declarations through `MigrationProject::from_json`, allowing the
+  typed source set to be reviewed and checked into a project before canonical collection. Unknown
+  fields, unsupported versions, unsafe/kind-incompatible paths, oversized documents, and source
+  count overflow fail before any source read.
 - Closed post-change verification through the dedicated `pliego-css-agent verify` executable,
   repair-check policy and Verification Receipt schemas 1.2.0 with canonical 1.0.0/1.1.0 read
   support. Built-in `standard-css-audit`, `token-graph-integrity`, and `css-budget-audit` kinds
