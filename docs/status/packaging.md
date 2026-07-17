@@ -1,7 +1,7 @@
 # Packaging status
 
-Status: **complete CLI/LSP diagnostic parity and the complete exact-clean `4755d58` Rust package
-replay passed; no registry or editor Marketplace upload performed**
+Status: **source-owned PCR001 conversion and the complete exact-clean `435c632` Rust package replay
+passed; no registry or editor Marketplace upload performed**
 
 The publishable workspace boundary has six dependency waves. `pliego-css-usage` and
 `pliego-css-control` follow `pliego-css-build` because direct and optional Cargo dependencies both
@@ -18,6 +18,25 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## Source-owned PCR001 conversion clean replay — 2026-07-17
+
+The exact clean `435c632` Debian WSL2 gate packaged and extracted all sixteen Rust archives with
+native Linux Node 24.14.0 and Cargo 1.96, compiled the complete extracted graph in release mode,
+and executed the Rust 1.85 downstream consumer, which now exercises the public
+`SourceParseError -> ScanDiagnostic` conversion. `pliego-css-lsp` measured 26,647 compressed bytes
+(34,793 bytes of margin, SHA-256
+`2e0a8fa1a4949d7ccdaf00c8ffb15937196435e4bafbc3f0a71c5a17c4c1003b`). Tight archives
+remained below the fixed ceiling: `pliego-cssc` measured 61,393 bytes (47 bytes of margin,
+SHA-256 `bb878fecdf3e1ac7ba69a6e16c9f5c41ff480332529f78e1aac40598d7e0dcc2`),
+`pliego-css-control` 61,071 (369 bytes), `pliego-css-build` 59,907 (1,533 bytes), and
+`pliego-css-source` 57,032 (4,408 bytes). Publication remained disabled and the 61,440-byte
+ceiling was not raised.
+
+Moving the typed conversion to its owning source crate recovered 33 compressed CLI bytes while
+retaining the complete diagnostic parity gate. The resulting 47-byte CLI margin is still too small
+for unmeasured growth; future CLI changes must replay this gate and preferentially move reusable
+behavior to an owning library crate.
 
 ## Complete CLI/LSP diagnostic parity clean replay — 2026-07-17
 
