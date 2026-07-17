@@ -1,7 +1,7 @@
 # Packaging status
 
-Status: **PliegoRS CSS-check delegation passed the complete exact-clean `f899ae5` replay; no
-registry upload performed**
+Status: **initial LSP transport passed the complete exact-clean `67448b0` replay; no registry
+upload performed**
 
 The publishable workspace boundary has six dependency waves. `pliego-css-usage` and
 `pliego-css-control` follow `pliego-css-build` because direct and optional Cargo dependencies both
@@ -18,6 +18,26 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## Initial LSP transport clean replay — 2026-07-16
+
+The exact clean `67448b0` Windows gate packaged and extracted all sixteen archives with Cargo 1.96,
+compiled the complete extracted graph in release mode, and executed the Rust 1.85 downstream
+consumer. The new `pliego-css-lsp` archive measured 14,823 compressed bytes (46,617 bytes of
+margin, SHA-256 `c699501fcb989d3f283627c4b095b338eebf451d278db2ba58ca6dd27fedb262`).
+The existing tight archives remained below the fixed ceiling: `pliego-cssc` measured 61,335 bytes
+(105 bytes of margin, SHA-256
+`9153cb861bc739c113f6a3c45521a951d842061b437ba8db1f0b5973d578c1e2`),
+`pliego-css-control` 61,074 (366 bytes), and `pliego-css-build` 59,929 (1,511 bytes).
+`pliego-css-source` measured 56,783 bytes (4,657 bytes). Publication remained disabled and the
+61,440-byte ceiling was not raised.
+
+The package replay is supplemented by the versioned `integration:lsp` process gate on Windows and
+Debian WSL2 with native Linux Node 24.14.0. That gate builds both Rust 1.85 binaries and verifies one
+framed stdio session through UTF-16 initialization, open-buffer `FMT001`, a whole-literal format
+edit, catalog-backed completion with an exact replacement range, explain-backed hover CSS, clean
+shutdown, and zero stderr. This does not prove packaged editor clients, Project Index navigation,
+theme-aware semantic diagnostic parity, or hosted multi-editor compatibility.
 
 ## PliegoRS CSS-check delegation clean replay — 2026-07-16
 
