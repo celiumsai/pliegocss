@@ -12,6 +12,16 @@ use pliego_css_build::artifacts::{
 use pliego_css_ir::StyleId;
 use serde::{Deserialize, Serialize};
 
+mod token_usage;
+
+pub use token_usage::{
+    TOKEN_USAGE_FILE, TOKEN_USAGE_SCHEMA_VERSION, TokenUsageConsumerInput, TokenUsageReport,
+    TokenUsageStatus, build_token_usage_report, collect_selected_bundle_token_references,
+    collect_selected_token_references, collect_selected_token_usage_consumers,
+    collect_token_usage_consumers, explain_token_usage, explain_token_usage_text,
+    parse_token_usage_report,
+};
+
 /// Maximum accepted size of one usage, observation, or retention document (16 MiB).
 pub const MAX_USAGE_DOCUMENT_BYTES: usize = 16 * 1024 * 1024;
 

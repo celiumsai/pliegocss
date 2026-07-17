@@ -319,7 +319,22 @@ pub fn emit_used_theme<'a>(
     theme: &ThemeRegistry,
     styles: impl IntoIterator<Item = &'a SemanticStyle>,
 ) -> String {
-    let used = styles
+    let used = referenced_tokens(styles);
+    emit_theme_references(theme, &used)
+}
+
+/// Emits only custom properties named by an application-wide retained token set.
+#[must_use]
+pub fn emit_theme_references(theme: &ThemeRegistry, used: &BTreeSet<TokenRef>) -> String {
+    emit_theme_subset(theme, Some(used))
+}
+
+/// Collects distinct typed token references from retained semantic styles.
+#[must_use]
+pub fn referenced_tokens<'a>(
+    styles: impl IntoIterator<Item = &'a SemanticStyle>,
+) -> BTreeSet<TokenRef> {
+    styles
         .into_iter()
         .flat_map(|style| style.assignments.iter())
         .filter_map(|assignment| match assignment.value {
@@ -330,8 +345,18 @@ pub fn emit_used_theme<'a>(
             }),
             _ => None,
         })
-        .collect::<BTreeSet<_>>();
-    emit_theme_subset(theme, Some(&used))
+        .collect()
+}
+
+/// Returns the custom-property name emitted for a variable-backed token kind and name.
+#[must_use]
+pub fn theme_custom_property_name(kind: TokenKind, name: &str) -> Option<String> {
+    let prefix = match kind {
+        TokenKind::Color if !matches!(name, "transparent" | "current" | "white") => "color",
+        TokenKind::FontFamily => "font",
+        _ => return None,
+    };
+    Some(format!("--{prefix}-{name}"))
 }
 
 fn emit_theme_subset(theme: &ThemeRegistry, used: Option<&BTreeSet<TokenRef>>) -> String {
@@ -347,18 +372,8 @@ fn emit_theme_subset(theme: &ThemeRegistry, used: Option<&BTreeSet<TokenRef>>) -
             }) {
                 return None;
             }
-            let prefix = match token.kind {
-                TokenKind::Color
-                    if token.name != "transparent"
-                        && token.name != "current"
-                        && token.name != "white" =>
-                {
-                    "color"
-                }
-                TokenKind::FontFamily => "font",
-                _ => return None,
-            };
-            Some((format!("--{prefix}-{}", token.name), token.value.as_str()))
+            theme_custom_property_name(token.kind, &token.name)
+                .map(|name| (name, token.value.as_str()))
         })
         .collect::<Vec<_>>();
     declarations.sort_unstable_by(|left, right| left.0.cmp(&right.0));

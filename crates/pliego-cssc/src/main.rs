@@ -41,8 +41,8 @@ use pliego_css_cascade::{CascadeExplanation, CascadeStatus, explain_stylesheet_c
 use pliego_css_compiler::{
     CssFragmentCache, STYLE_ID_FORMAT_VERSION, UtilityDescriptor, UtilityForm,
     analyze_cross_clause_conflicts, compose_style_override_with_theme, emit_css_with_theme_traced,
-    emit_theme, emit_used_theme, lower_style_with_theme, try_encode_style_identity_with_theme,
-    utility_catalog,
+    emit_theme, emit_theme_references, emit_used_theme, lower_style_with_theme, referenced_tokens,
+    try_encode_style_identity_with_theme, utility_catalog,
 };
 use pliego_css_config::{
     BudgetObservation, BudgetPolicy, BudgetSubject, BudgetSubjectKind, CssBudgetInventory,
@@ -50,8 +50,8 @@ use pliego_css_config::{
     parse_token_graph,
 };
 use pliego_css_ir::{
-    CLASS_NAME_FORMAT_VERSION, CandidateKind, ColorValue, Diagnostic, SemanticStyle, SemanticValue,
-    StyleItem, TokenKind, is_classified_selector_transform,
+    CLASS_NAME_FORMAT_VERSION, CandidateKind, Diagnostic, SemanticStyle, StyleItem, TokenRef,
+    is_classified_selector_transform,
 };
 use pliego_css_ownership::{
     AssetRuleSelection as OwnershipRuleSelection, Ownership, parse_asset_plan, parse_ownership,
@@ -66,8 +66,9 @@ use pliego_css_source::{
 };
 use pliego_css_theme::{THEME_ID_FORMAT_VERSION, ThemeRegistry};
 use pliego_css_usage::{
-    PreparedUsageAnalysis, UsageCandidateInput, UsageSelection, UsageStyleInput,
-    collect_usage_style_inputs, prepare_usage_analysis,
+    PreparedUsageAnalysis, TOKEN_USAGE_FILE, UsageCandidateInput, UsageSelection, UsageStyleInput,
+    build_token_usage_report, collect_selected_bundle_token_references,
+    collect_selected_token_usage_consumers, collect_usage_style_inputs, prepare_usage_analysis,
 };
 use pliego_css_watch::{
     FileSnapshot as WatchFileSnapshot, WatchScheduler, confirmed as watch_snapshot_confirmed,
@@ -77,8 +78,6 @@ use serde::{Deserialize, Serialize};
 
 use pliego_css_control::accessibility::parse_accessibility_policy;
 use pliego_css_control::projection as control;
-#[cfg(all(test, not(feature = "package-verify")))]
-use pliego_css_control::projection::build_flat_token_measurements;
 use pliego_css_control::projection::{
     AccessibilityPolicySource, AccessibilityStylesheetInput, AuditControlGroup, AuditControlInput,
     AuditSourceInput, ControlOutputInput, ControlSourceMapInput, FlatTokenReference,
@@ -97,11 +96,6 @@ const USAGE: &str = include_str!("../README.md");
 
 type TargetContract = CompatibilityProfile;
 type CssCaches = (CssFragmentCache, FixedCssOutputCache);
-
-#[cfg(all(test, not(feature = "package-verify")))]
-const fn version(major: u32, minor: u32, patch: u32) -> u32 {
-    (major << 16) | (minor << 8) | patch
-}
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 enum DiagnosticFormat {
@@ -197,11 +191,6 @@ impl CliFailure {
                 replacement: None,
             }],
         }
-    }
-
-    #[cfg(all(test, not(feature = "package-verify")))]
-    fn contains(&self, pattern: &str) -> bool {
-        self.human.contains(pattern)
     }
 }
 
@@ -2463,6 +2452,13 @@ fn run_bundle(arguments: &BundleArgs) -> Result<(), CliFailure> {
         .as_deref()
         .map(|path| read_bounded_utf8_document(path, "usage retention"))
         .transpose()?;
+    let registry_graph = TokenGraph::from_registry(theme.registry());
+    let registry_selections = BTreeMap::new();
+    let (token_graph, token_selections) = if let LoadedTheme::Dtcg(theme) = &theme {
+        (theme.graph(), theme.selections())
+    } else {
+        (&registry_graph, &registry_selections)
+    };
     let snapshots = capture_bundle_sources(sources.paths)?;
     let mut group = compile_bundle_group(
         &plan,
@@ -2480,6 +2476,8 @@ fn run_bundle(arguments: &BundleArgs) -> Result<(), CliFailure> {
         reachability_bytes.as_deref(),
         observation_bytes.as_deref(),
         retention_bytes.as_deref(),
+        token_graph,
+        token_selections,
     )?;
     let control_passed = if arguments.control {
         append_bundle_control(
@@ -2498,6 +2496,8 @@ fn run_bundle(arguments: &BundleArgs) -> Result<(), CliFailure> {
             &snapshots,
             &output_dir,
             &theme,
+            token_graph,
+            token_selections,
         )?
     } else {
         true
@@ -2640,6 +2640,7 @@ fn bundle_output_roles(
     }
     if arguments.usage_report {
         outputs.push(("usage report".into(), output_dir.join("pliego.usage.json")));
+        outputs.push(("tokens".into(), output_dir.join(TOKEN_USAGE_FILE)));
     }
     if arguments.control {
         for file in [
@@ -2744,12 +2745,14 @@ fn compile_bundle_group(
     reachability_source: Option<&[u8]>,
     observation_source: Option<&[u8]>,
     retention_source: Option<&[u8]>,
+    token_graph: &TokenGraph,
+    token_selections: &BTreeMap<String, String>,
 ) -> Result<CompiledBundleGroup, CliFailure> {
     let mut payloads = Vec::with_capacity(
         plan.bundles.len() * 2
             + usize::from(arguments.asset_plan)
             + usize::from(arguments.project_index)
-            + usize::from(arguments.usage_report)
+            + 2 * usize::from(arguments.usage_report)
             + plan.bundles.len() * usize::from(arguments.control),
     );
     let mut source_maps = Vec::with_capacity(plan.bundles.len() * usize::from(arguments.control));
@@ -2757,6 +2760,7 @@ fn compile_bundle_group(
     let mut style_references = 0;
     let mut token_references = BTreeSet::new();
     let mut usage_styles = Vec::new();
+    let mut token_consumers = Vec::new();
     let mut resolved_by_bundle = BTreeMap::new();
     let mut emitted_themes = Vec::with_capacity(plan.bundles.len());
 
@@ -2782,7 +2786,7 @@ fn compile_bundle_group(
             )));
         }
         let resolved = resolve_candidates(theme, &candidates, 1)?;
-        if arguments.usage_report {
+        if arguments.usage_report || graph.pruning.is_enabled() {
             usage_styles.extend(bundle_usage_inputs(name, &resolved)?);
         }
         resolved_by_bundle.insert(name.clone(), resolved);
@@ -2795,8 +2799,7 @@ fn compile_bundle_group(
     } else {
         AssetRuleSelection::AllCompiled
     };
-    let prepared_usage = arguments
-        .usage_report
+    let prepared_usage = (arguments.usage_report || graph.pruning.is_enabled())
         .then(|| {
             prepare_usage_analysis(
                 &usage_styles,
@@ -2807,6 +2810,14 @@ fn compile_bundle_group(
             )
         })
         .transpose()?;
+    let global_theme_references = graph.pruning.is_enabled().then(|| {
+        collect_selected_bundle_token_references(
+            prepared_usage.as_ref().expect("selection").selection(),
+            resolved_by_bundle.iter().map(|(bundle, styles)| {
+                (bundle.as_str(), styles.iter().map(|item| &item.semantic))
+            }),
+        )
+    });
 
     for (name, bundle) in &plan.bundles {
         let resolved = resolved_by_bundle
@@ -2821,9 +2832,17 @@ fn compile_bundle_group(
                     .map(PreparedUsageAnalysis::selection)
             })
             .flatten();
+        if let Some(prepared) = &prepared_usage {
+            token_consumers.extend(collect_selected_token_usage_consumers(
+                name,
+                prepared.selection(),
+                resolved.iter().map(|candidate| &candidate.semantic),
+            )?);
+        }
         let bundle_graph = ArtifactGraphOptions {
             selection,
             bundle_id: selection.map(|_| name.as_str()),
+            theme_references: global_theme_references.as_ref(),
             ..graph
         };
         let artifact = compile_resolved_candidates_with_manifest(
@@ -2909,6 +2928,17 @@ fn compile_bundle_group(
                 .as_ref()
                 .expect("usage report preparation follows the output option")
                 .build_analysis()?,
+        });
+        payloads.push(BundleOutputPayload {
+            destination: output_dir.join(TOKEN_USAGE_FILE),
+            bytes: build_token_usage_report(
+                token_graph,
+                token_selections,
+                theme,
+                token_consumers,
+                emitted_themes.iter().any(|emitted| *emitted),
+            )?
+            .to_canonical_json()?,
         });
     }
     payloads.extend(source_maps);
@@ -3059,6 +3089,8 @@ fn bundle_control_outputs<'a>(
                 ("asset-plan", "application/json")
             } else if file == "pliego.usage.json" {
                 ("usage-analysis", "application/json")
+            } else if file == TOKEN_USAGE_FILE {
+                ("token-usage", "application/json")
             } else {
                 ("project-index", "application/json")
             };
@@ -3096,7 +3128,7 @@ fn bundle_control_outputs<'a>(
                 })
                 .cloned()
                 .collect()
-        } else if output.file == "pliego.usage.json" {
+        } else if matches!(output.file.as_str(), "pliego.usage.json" | TOKEN_USAGE_FILE) {
             artifact_files
                 .iter()
                 .filter(|file| {
@@ -3130,6 +3162,8 @@ fn append_bundle_control(
     snapshots: &BTreeMap<String, BundleSourceSnapshot>,
     output_dir: &Path,
     theme: &LoadedTheme,
+    token_graph: &TokenGraph,
+    token_selections: &BTreeMap<String, String>,
 ) -> Result<bool, CliFailure> {
     let (document, metrics, measured, passed) = audit_bundle_outputs(group, plan)?;
 
@@ -3189,18 +3223,13 @@ fn append_bundle_control(
         });
     }
     let registry = theme.registry();
-    let registry_graph;
-    let registry_selections = BTreeMap::new();
-    let (token_graph, selections) = match theme {
-        LoadedTheme::Registry(_) => {
-            registry_graph = TokenGraph::from_registry(registry);
-            (&registry_graph, &registry_selections)
-        }
-        LoadedTheme::Dtcg(theme) => (theme.graph(), theme.selections()),
-    };
-    let token_measurements =
-        build_token_graph_measurements(token_graph, selections, registry, &group.token_references)
-            .map_err(CliFailure::tool)?;
+    let token_measurements = build_token_graph_measurements(
+        token_graph,
+        token_selections,
+        registry,
+        &group.token_references,
+    )
+    .map_err(CliFailure::tool)?;
     let control_group = {
         let outputs = bundle_control_outputs(group, output_dir)?;
         let generated_outputs = project_bundle_control_outputs(&outputs)?;
@@ -5480,6 +5509,7 @@ struct ArtifactGraphOptions<'a> {
     reachability: Option<&'a ReachabilityDocument>,
     selection: Option<&'a UsageSelection>,
     bundle_id: Option<&'a str>,
+    theme_references: Option<&'a BTreeSet<TokenRef>>,
     physical_trace: bool,
     pruning: ReachabilityPruning,
 }
@@ -5560,25 +5590,6 @@ fn resolve_candidates(
             })
         })
         .collect()
-}
-
-#[cfg(all(test, not(feature = "package-verify")))]
-fn compile_resolved_candidates(
-    theme: &ThemeRegistry,
-    candidates: &[ResolvedCandidate],
-    include_theme: bool,
-    targets: TargetContract,
-    format: CssFormat,
-) -> Result<CompiledArtifact, String> {
-    compile_resolved_candidates_with_manifest(
-        theme,
-        candidates,
-        include_theme,
-        targets,
-        format,
-        ArtifactGraphOptions::default(),
-        &mut CssCaches::default(),
-    )
 }
 
 #[allow(clippy::too_many_lines)]
@@ -5684,7 +5695,10 @@ fn compile_resolved_candidates_with_manifest(
     let mut emits_theme = false;
     if include_theme {
         let theme_css = if graph.pruning.is_enabled() {
-            emit_used_theme(theme, semantic_styles.values().map(|(style, _)| style))
+            graph.theme_references.map_or_else(
+                || emit_used_theme(theme, semantic_styles.values().map(|(style, _)| style)),
+                |references| emit_theme_references(theme, references),
+            )
         } else {
             emit_theme(theme)
         };
@@ -5843,23 +5857,10 @@ fn compile_resolved_candidates_with_manifest(
 fn collect_token_references(
     styles: &BTreeMap<Vec<u8>, (SemanticStyle, Vec<Provenance>)>,
 ) -> BTreeSet<FlatTokenReference> {
-    styles
-        .values()
-        .flat_map(|(style, _)| style.assignments.iter())
-        .filter_map(|assignment| artifact_token_reference(assignment.value))
+    referenced_tokens(styles.values().map(|(style, _)| style))
+        .into_iter()
+        .map(|reference| FlatTokenReference::new(reference.kind, reference.id))
         .collect()
-}
-
-const fn artifact_token_reference(value: SemanticValue) -> Option<FlatTokenReference> {
-    match value {
-        SemanticValue::Token(reference) => {
-            Some(FlatTokenReference::new(reference.kind, reference.id))
-        }
-        SemanticValue::Color(ColorValue::Token { id, .. }) => {
-            Some(FlatTokenReference::new(TokenKind::Color, id))
-        }
-        _ => None,
-    }
 }
 
 fn enforce_compatibility_policy(
@@ -6719,16 +6720,6 @@ fn watch_event_paths(arguments: &WatchArgs) -> Vec<PathBuf> {
                 .flatten(),
         )
         .collect()
-}
-
-#[cfg(all(test, not(feature = "package-verify")))]
-fn watch_iteration(
-    arguments: &WatchArgs,
-    previous: Option<&WatchSnapshot>,
-    cache: &mut RustScanCache,
-) -> WatchIteration {
-    let snapshot = capture_watch_snapshot(arguments);
-    watch_iteration_from_snapshot(arguments, snapshot, previous, cache)
 }
 
 fn watch_iteration_from_snapshot(

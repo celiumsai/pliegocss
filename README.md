@@ -389,10 +389,14 @@ recomputes the entire group without writing. `pliego.usage.json` independently r
 pre-pruning `(bundleId, StyleId)` universe and distinguishes static reachability, optional scoped
 observation, `observed|unobserved|dead|unknown` usage, and report/pruning disposition. A reachable
 style is not relabeled as observed, and absence in sampled observation never proves deadness. This
-report can also bind a non-empty `--retention pliego.retention.json` sidecar during explicit
+option also emits `pliego.token-usage.json`, which classifies the active Token Graph as direct,
+dependency-only, or unused and records exact retained consumers. Query it without compiling using
+`pliego-css-tokens explain --report FILE --token KIND.NAME`. The StyleId report can also bind a
+non-empty `--retention pliego.retention.json` sidecar during explicit
 pruning. Retained entries stay `unreachable + dead`, are emitted whole only in their named bundle,
-and record `policy-retained`; all other dead entries remain removed. The three selected artifacts
-upgrade together to schema 2, and the exact policy enters controlled `configHash` as
+and record `policy-retained`; all other dead entries remain removed. Usage Analysis, Asset Plan,
+and Project Index upgrade together to schema 2; Token Usage projects the same selected StyleIds,
+and the exact policy enters controlled `configHash` as
 `usage-retention`. The compiler command remains deterministic explicit partitioning: it does not
 rewrite a supplied plan, inspect a product registry, generate URLs, or select preload policy. The
 PliegoRS adapter now generates both reachability and an explicit plan from its product registry

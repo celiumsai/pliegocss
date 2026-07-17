@@ -308,6 +308,9 @@ hosted/multi-browser permanece como gate de release.
   Asset Plan, Project Index y ownership.
 - [x] Eliminar del bloque `--theme` las variables sin consumidores entre los StyleIds retenidos
   cuando `--prune-unreachable` está activo; el modo normal conserva el registro completo.
+- [x] Publicar `pliego.token-usage.json` desde la selección retenida y el Token Graph canónico, con
+  estados direct/dependency/unused y consulta read-only `pliego-css-tokens explain`; la poda de tema
+  usa el conjunto de referencias global de todos los bundles.
 - [x] Fusionar media queries adyacentes con AST exactamente igual sin cruzar límites de cascada;
   el benchmark dirigido ahorra 437 B raw / 13 B gzip con tema y deja Gate A/B neutrales.
 - [x] Implementar `why included` semántico como ruta/island → componente → declaración → token.

@@ -12,7 +12,7 @@ mod ir_binary;
 pub use emitter::{
     CssFragmentCache, DeclarationLineage, EmitError, RuleLineage, StyleLineage, class_name,
     emit_css, emit_css_with_theme, emit_css_with_theme_traced, emit_seed_theme, emit_theme,
-    emit_used_theme,
+    emit_theme_references, emit_used_theme, referenced_tokens, theme_custom_property_name,
 };
 pub use identity::{
     IdentityError, STYLE_ID_FORMAT_VERSION, derive_style_id, derive_style_id_with_theme,

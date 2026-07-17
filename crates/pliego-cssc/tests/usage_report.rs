@@ -113,13 +113,21 @@ emit-theme = false
     assert_eq!(report["styles"][0]["usageState"], "unknown");
     assert_eq!(report["styles"][0]["removalDisposition"], "blocked");
     pliego_css_usage::parse_usage_analysis(&report_bytes).unwrap();
+    let token_report_path = root.join("reported/pliego.token-usage.json");
+    let token_report_bytes = fs::read(&token_report_path).unwrap();
+    let token_report = pliego_css_usage::parse_token_usage_report(&token_report_bytes).unwrap();
+    let spacing = pliego_css_usage::explain_token_usage(&token_report, "spacing.4").unwrap();
+    assert!(spacing.contains("\"status\": \"direct\""));
+    assert!(spacing.contains("\"emitted\": false"));
 
     assert_success(&run(root, &arguments));
     assert_eq!(fs::read(&report_path).unwrap(), report_bytes);
+    assert_eq!(fs::read(&token_report_path).unwrap(), token_report_bytes);
     let mut check = arguments.to_vec();
     check.push("--check");
     assert_success(&run(root, &check));
     assert_eq!(fs::read(&report_path).unwrap(), report_bytes);
+    assert_eq!(fs::read(&token_report_path).unwrap(), token_report_bytes);
 
     fs::write(&report_path, b"drift\n").unwrap();
     let failure = run(root, &check);

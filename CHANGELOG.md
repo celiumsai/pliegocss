@@ -12,6 +12,12 @@ pre-1.0 compatibility policy.
 
 ### Added
 
+- `bundle --usage-report` now also emits canonical `pliego.token-usage.json`, projecting the active
+  Token Graph over the exact retained StyleId selection as `direct`, `dependency`, or `unused` with
+  bundle-qualified consumers and actual custom-property emission state. The new read-only
+  `pliego-css-tokens explain` binary queries an existing report without recompilation. Pruned theme
+  emission now uses the retained token union across the complete bundle group, preventing a shared
+  theme bundle from dropping variables consumed only by route/island bundles.
 - Opt-in theme-variable pruning under `--prune-unreachable`. After whole-StyleId selection and
   explicit retention, `--theme` emits only variable-backed tokens directly consumed by retained
   semantic styles; normal builds retain the complete byte-compatible registry block. Empty root

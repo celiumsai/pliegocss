@@ -92,7 +92,7 @@ source files in the order supplied.
 | `audit --control-dir path` | No | For direct CSS or Asset Plan input, publishes canonical findings, control manifest, and receipt files plus fixed `pliego.tokens.json` when `--token-graph` is supplied. |
 | `audit --check` | Boolean | Recomputes the complete three- or four-artifact audit control group and fails on byte drift without writing; requires `--control-dir`. |
 | `--project-index` | Boolean | Adds fixed `OUTPUT_DIR/pliego.index.json` to a bundle build. Requires `--asset-plan`, manifest schema 5, and `--reachability`; takes no value. |
-| `bundle --usage-report` | Boolean | Adds fixed `OUTPUT_DIR/pliego.usage.json`. It inventories the all-compiled bundle-qualified StyleId universe before pruning and does not require reachability; without it every static/usage verdict remains `unknown`. |
+| `bundle --usage-report` | Boolean | Adds fixed `OUTPUT_DIR/pliego.usage.json` and `OUTPUT_DIR/pliego.token-usage.json`. The first inventories the all-compiled bundle-qualified StyleId universe; the second projects the active Token Graph through the retained selection. Reachability is optional. |
 | `bundle --observations path.json` | No | Supplies explicit usage-observation schema 1. Requires `--usage-report` plus exact `--reachability`; the universe and reachability hashes must match. The file is never discovered. |
 | `bundle --retention path.json` | No | Supplies explicit non-empty usage-retention schema 1. Requires `--usage-report`, `--prune-unreachable`, and exact `--reachability`; selects the reachable union plus only the exact bundle-qualified dead StyleIds granted by policy. The file is never discovered. |
 
@@ -652,6 +652,13 @@ dead. `--observations FILE` is optional explicit positive-hit evidence bound to 
 universe hash and the exact reachability digest. Contradictory or stale evidence fails before
 publication.
 
+The same option also adds fixed `OUTPUT_DIR/pliego.token-usage.json`. It classifies every active
+resolved token as `direct`, `dependency`, or `unused`, records exact retained `(bundleId, StyleId)`
+consumers, and distinguishes a compiler-owned custom-property spelling from actual emission in this
+build. Query it without recompilation using
+`pliego-css-tokens explain --report FILE --token KIND.NAME [--format text|json]`. See
+[token-usage report schema 1](./token-usage-schema-1.md).
+
 `--retention FILE` is an independent policy input over the same exact universe and reachability
 bytes. It is accepted only with `--usage-report`, `--prune-unreachable`, and `--reachability`.
 Each entry must name one structurally unreachable `(bundleId, StyleId)`; missing, reachable,
@@ -669,9 +676,9 @@ output. Each option is single-use and neither file is discovered.
 
 `--control` requires `--asset-plan`. For `B` declared bundles it adds one Source Map per CSS and one
 shared `OUTPUT_DIR/pliego.tokens.json`, findings, control manifest, and receipt. The complete group
-contains `3B + 5 + I + U` artifacts: CSS/map/style-manifest triples, Asset Plan, four fixed control
-artifacts, `I = 1` only when the Project Index is requested, and `U = 1` only when usage analysis is
-requested. Seed/config plans publish the
+contains `3B + 5 + I + 2U` artifacts: CSS/map/style-manifest triples, Asset Plan, four fixed control
+artifacts, `I = 1` only when the Project Index is requested, and `U = 1` only when both usage
+reports are requested. Seed/config plans publish the
 canonical projection of the active registry. A schema-2 DTCG plan publishes the Resolver's complete
 canonical graph and uses the selected registry for CSS and coverage. Its exact Resolver bytes enter
 the input ledger as `token-resolver`; exact plan bytes, including `[theme.inputs]`, participate in
@@ -686,7 +693,7 @@ analysis, as a
 rollback-capable group. The capture is
 stable after each read but is not a filesystem-wide transaction against unrelated concurrent
 writers. `--check` instead performs a byte-exact, read-only comparison against every expected CSS
-and manifest file plus the Asset Plan, Project Index, and usage report when requested. It does not
+and manifest file plus the Asset Plan, Project Index, and both usage reports when requested. It does not
 delete stale assets.
 
 Bundle ownership remains explicit: the plan does not infer Cargo or PliegoRS reachability, route

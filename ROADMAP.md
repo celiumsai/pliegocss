@@ -329,8 +329,9 @@ ETA: 3–5 días
 - [ ] Evaluar publicación crash-atomic frente a la publicación agrupada rollback-capable ya
   implementada y al output híbrido.
 - [ ] Seleccionar estrategia por coste raw/gzip.
-- [ ] Añadir reporte de tokens no usados y query interactiva sobre inclusión; la poda de variables
-  emitidas ya existe, pero todavía no hay reporte/query de producto ni poda de declaraciones.
+- [x] Añadir reporte canónico de tokens directos, dependencias y no usados, con query read-only por
+  `KIND.NAME`, consumidores bundle-qualified y estado real de emisión. La poda de declaraciones
+  individuales permanece fuera del contrato whole-StyleId.
 - [x] Añadir explicación de inclusión de cada regla mediante la cadena completa de graph schema 2.
 - [x] Comparar rendimiento contra Tailwind v4.
 - [x] Documentar el modelo de optimización implementado con benchmarks controlados y límites

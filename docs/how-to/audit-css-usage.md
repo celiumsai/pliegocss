@@ -26,6 +26,18 @@ Review `pliego.usage.json`:
 - `unknown + unavailable + unknown + blocked` means application evidence is missing; and
 - a StyleId with mixed reachable/unreachable origins remains reachable and retains every origin.
 
+Review a token without recompiling:
+
+```console
+pliego-css-tokens explain \
+  --report dist/assets/pliego.token-usage.json \
+  --token color.accent
+```
+
+`direct` lists retained bundle/StyleId consumers, `dependency` is needed transitively by a direct
+token source, and `unused` has neither path in this exact active theme. This is static build evidence,
+not authorization to delete a token used by authored CSS, another application, or another theme.
+
 ## 2. Add scoped positive observations
 
 Collect hits from the same immutable build. Generate a closed sidecar using the universe and

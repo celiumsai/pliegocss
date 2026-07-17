@@ -194,6 +194,82 @@ fn reachability_pruning_is_fail_closed_deterministic_and_shared_by_artifact_comm
     assert_bundle_contract(&fixture, &evidence);
 }
 
+#[test]
+fn pruned_theme_uses_application_wide_references_across_bundles() {
+    const THEME_SOURCE: &str = "fn shell() { let _ = pc!(\"p-4\"); }\n";
+    const ROUTE_SOURCE: &str = "fn route() { let _ = pc!(\"text-accent\"); }\n";
+    let directory = TemporaryDirectory::new();
+    let root = directory.path();
+    fs::create_dir_all(root.join("src")).expect("fixture source directory must exist");
+    fs::create_dir(root.join("out")).expect("fixture output directory must exist");
+    fs::write(root.join("src/theme.rs"), THEME_SOURCE).expect("theme source must exist");
+    fs::write(root.join("src/route.rs"), ROUTE_SOURCE).expect("route source must exist");
+    let theme_site = unique_site(THEME_SOURCE, r#"pc!("p-4")"#);
+    let route_site = unique_site(ROUTE_SOURCE, r#"pc!("text-accent")"#);
+    write_json(
+        root.join("reachability.json"),
+        &json!({
+            "schema": 1,
+            "applicationCoverage": "complete",
+            "components": [
+                component_in("shell", "src/theme.rs", theme_site),
+                component_in("route", "src/route.rs", route_site),
+            ],
+            "routes": [{"id": "home", "path": "/", "components": ["shell", "route"]}],
+            "islands": [],
+        }),
+    );
+    fs::write(
+        root.join("pliego.bundles.toml"),
+        r#"schema = 1
+targets = "modern"
+format = "minified"
+
+[theme]
+kind = "seed"
+
+[bundles.theme]
+sources = ["src/theme.rs"]
+emit-theme = true
+
+[bundles.route]
+sources = ["src/route.rs"]
+emit-theme = false
+"#,
+    )
+    .expect("bundle plan must exist");
+    let output = run(
+        root,
+        &arguments(&[
+            "bundle",
+            "--plan",
+            "pliego.bundles.toml",
+            "--output-dir",
+            "out",
+            "--manifest-version",
+            "4",
+            "--reachability",
+            "reachability.json",
+            "--prune-unreachable",
+            "--usage-report",
+        ]),
+    );
+    assert_success(&output);
+    let theme_css = fs::read_to_string(root.join("out/theme.css")).expect("theme CSS must exist");
+    assert!(
+        theme_css.contains("--color-accent:"),
+        "the shared theme dropped a token used only by another bundle: {theme_css}"
+    );
+    let report = pliego_css_usage::parse_token_usage_report(
+        &fs::read(root.join("out/pliego.token-usage.json")).expect("token report must exist"),
+    )
+    .expect("token report must be canonical");
+    let accent = pliego_css_usage::explain_token_usage(&report, "color.accent")
+        .expect("accent must be queryable");
+    assert!(accent.contains("\"status\": \"direct\""));
+    assert!(accent.contains("\"emitted\": true"));
+}
+
 fn assert_primary_pruning(fixture: &Fixture) -> Evidence {
     let baseline = compile_success(
         fixture.root(),
@@ -751,6 +827,7 @@ fn assert_bundle_contract(fixture: &Fixture, evidence: &Evidence) {
             "pliego.assets.json",
             "pliego.css.findings.json",
             "pliego.index.json",
+            "pliego.token-usage.json",
             "pliego.usage.json",
             "pliego.tokens.json",
         ])
@@ -842,6 +919,13 @@ fn assert_bundle_contract(fixture: &Fixture, evidence: &Evidence) {
             .expect("usage analysis must be readable"),
     )
     .expect("usage analysis must satisfy its closed contract");
+    let token_usage_bytes = fs::read(fixture.root().join("bundle/pliego.token-usage.json"))
+        .expect("token usage must be readable");
+    let token_usage = pliego_css_usage::parse_token_usage_report(&token_usage_bytes)
+        .expect("token usage must satisfy its closed contract");
+    let dead_token = pliego_css_usage::explain_token_usage(&token_usage, "color.accent-strong")
+        .expect("dead fixture token must remain queryable");
+    assert!(dead_token.contains("\"status\": \"unused\""));
     let token_graph_output = control_manifest
         .outputs
         .iter()
@@ -1102,7 +1186,10 @@ emit-theme = true
     assert!(manifest_styles(&dead_manifest).is_empty());
     let themed_css = fs::read(fixture.root().join("bundle-multi/themed-dead.css"))
         .expect("themed dead bundle CSS must exist");
-    assert_eq!(themed_css, b":root{}\n");
+    let themed_css = String::from_utf8(themed_css).expect("theme CSS must be UTF-8");
+    assert!(themed_css.contains("--color-accent:"));
+    assert!(themed_css.contains("--color-muted:"));
+    assert!(!themed_css.contains("--color-accent-strong:"));
     let themed_manifest = read_json(
         fixture
             .root()
@@ -1118,19 +1205,19 @@ emit-theme = true
         .iter()
         .find(|bundle| bundle["id"] == "themed-dead")
         .expect("themed-dead must remain in the integrity ledger");
-    assert_eq!(themed_bundle["emitsTheme"], false);
+    assert_eq!(themed_bundle["emitsTheme"], true);
     for field in ["routes", "islands"] {
         for root in asset_plan[field]
             .as_array()
             .expect("asset roots must be arrays")
         {
             assert!(
-                !root["bundles"]
+                root["bundles"]
                     .as_array()
                     .expect("root bundles must be an array")
                     .iter()
                     .any(|bundle| bundle == "themed-dead"),
-                "empty requested-theme bundle was selected globally",
+                "the application theme bundle was not selected globally",
             );
         }
     }
@@ -1464,10 +1551,14 @@ fn reachability(sites: &Sites) -> Value {
 }
 
 fn component(id: &str, site: Site) -> Value {
+    component_in(id, "src/styles.rs", site)
+}
+
+fn component_in(id: &str, file: &str, site: Site) -> Value {
     json!({
         "id": id,
         "sites": [{
-            "file": "src/styles.rs",
+            "file": file,
             "byteStart": site.start,
             "byteEnd": site.end,
         }],

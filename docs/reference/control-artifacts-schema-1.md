@@ -181,7 +181,7 @@ the vector also proves that control `--check` is read-only. Those no-graph vecto
 three-artifact groups. Direct CSS and independently reopened Asset Plan audit become four-artifact
 groups only when `--token-graph` is supplied. Generated compile/watch groups contain seven artifacts.
 The one-bundle portability fixture with Asset Plan and Project Index contains nine outputs; adding
-Usage Analysis makes that group ten. Their
+Usage Analysis and Token Usage makes that group eleven. Their
 TokenGraph-bearing hashes are frozen and green on local Windows and Debian WSL2 Linux x64; hosted
 runners and macOS remain open gates.
 
@@ -194,7 +194,7 @@ observation, optional usage retention, and Rust source snapshots. A schema-2 DTC
 retention bytes use `usage-retention`. Every exact optional config input participates in
 `configHash`.
 Its output ledger hashes every CSS/source-map/style-manifest set, TokenGraph, Asset Plan, optional
-Project Index, optional Usage Analysis, and findings document. Relationships connect CSS and style manifests to the shared
+Project Index, optional Usage Analysis, optional Token Usage, and findings document. Relationships connect CSS and style manifests to the shared
 graph, the graph back to those outputs, each map back to its CSS, the Asset Plan to all CSS/manifest
 pairs, the Project Index to the Asset Plan, and Usage Analysis to the generated bundle artifacts it
 explains. One

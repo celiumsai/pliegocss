@@ -1,7 +1,46 @@
 //! Internal CLI behavior tests.
 use super::*;
 use pliego_css_build::artifacts::optimize_css;
+use pliego_css_control::projection::build_flat_token_measurements;
+use pliego_css_ir::TokenKind;
 use std::time::{SystemTime, UNIX_EPOCH};
+
+const fn version(major: u32, minor: u32, patch: u32) -> u32 {
+    (major << 16) | (minor << 8) | patch
+}
+
+impl CliFailure {
+    fn contains(&self, pattern: &str) -> bool {
+        self.human.contains(pattern)
+    }
+}
+
+fn compile_resolved_candidates(
+    theme: &ThemeRegistry,
+    candidates: &[ResolvedCandidate],
+    include_theme: bool,
+    targets: TargetContract,
+    format: CssFormat,
+) -> Result<CompiledArtifact, String> {
+    compile_resolved_candidates_with_manifest(
+        theme,
+        candidates,
+        include_theme,
+        targets,
+        format,
+        ArtifactGraphOptions::default(),
+        &mut CssCaches::default(),
+    )
+}
+
+fn watch_iteration(
+    arguments: &WatchArgs,
+    previous: Option<&WatchSnapshot>,
+    cache: &mut RustScanCache,
+) -> WatchIteration {
+    let snapshot = capture_watch_snapshot(arguments);
+    watch_iteration_from_snapshot(arguments, snapshot, previous, cache)
+}
 
 fn os(arguments: &[&str]) -> Vec<OsString> {
     arguments.iter().map(OsString::from).collect()

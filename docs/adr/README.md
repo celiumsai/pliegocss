@@ -22,3 +22,4 @@ ADRs record decisions that constrain implementation or public behavior.
 - [ADR-0018: Separate reachability, observation, usage, and removal](./0018-separate-reachability-observation-and-removal.md)
 - [ADR-0019: Retain structurally dead styles only by explicit policy](./0019-retain-dead-styles-by-explicit-policy.md)
 - [ADR-0020: Derive PliegoRS partitions from an explicit product registry](./0020-derive-pliegors-partitions-from-product-registry.md)
+- [ADR-0021: Project token usage from retained semantic styles](./0021-project-token-usage-from-retained-semantic-styles.md)

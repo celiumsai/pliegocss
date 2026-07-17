@@ -494,7 +494,10 @@ name = "pliego-css-usage"
 version = "0.0.0"
 dependencies = [
  "pliego-css-build",
+ "pliego-css-compiler",
+ "pliego-css-config",
  "pliego-css-ir",
+ "pliego-css-theme",
  "serde",
  "serde_json",
 ]

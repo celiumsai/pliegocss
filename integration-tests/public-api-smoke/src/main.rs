@@ -41,9 +41,10 @@ use pliego_css_source::{
 use pliego_css_usage::{
     AssetRuleSelection as UsageRuleSelection, UsageCandidateInput, UsageObservationCoverage,
     UsageObservationInput, UsageObservationScopeInput, UsageObservedStyleInput,
-    UsageRetentionEntryInput, UsageRetentionInput, build_usage_analysis, build_usage_observation,
-    build_usage_retention, collect_usage_style_inputs, parse_usage_observation,
-    parse_usage_retention, verify_usage_analysis,
+    UsageRetentionEntryInput, UsageRetentionInput, TOKEN_USAGE_FILE, TOKEN_USAGE_SCHEMA_VERSION,
+    TokenUsageReport, build_usage_analysis, build_usage_observation, build_usage_retention,
+    collect_usage_style_inputs, explain_token_usage, parse_token_usage_report,
+    parse_usage_observation, parse_usage_retention, verify_usage_analysis,
 };
 
 const OWNERSHIP_ASSET_PLAN: &[u8] = br#"{
@@ -328,6 +329,10 @@ fn exercise_ownership_adapter_surface() {
 }
 
 fn exercise_usage_adapter_surface() {
+    assert_eq!(TOKEN_USAGE_FILE, "pliego.token-usage.json");
+    assert_eq!(TOKEN_USAGE_SCHEMA_VERSION, 1);
+    let _: fn(&[u8]) -> Result<TokenUsageReport, String> = parse_token_usage_report;
+    let _: fn(&TokenUsageReport, &str) -> Result<String, String> = explain_token_usage;
     let style_id = format!("{:032x}", FIXED_STYLE.id().get());
     let class_name = FIXED_STYLE.id().to_class_name();
     let styles = collect_usage_style_inputs(

@@ -20,6 +20,11 @@ The crate reexports its exact `AssetRuleSelection` input and enables the narrow
 `pliego-css-build/usage-artifacts` feature; observation/retention producer tooling does not pull
 Lightning CSS.
 
+`bundle --usage-report` also publishes `pliego.token-usage.json`: a canonical projection of the
+active Token Graph over retained StyleIds with `direct`, `dependency`, and `unused` states. Query an
+existing report without compilation using `pliego-css-tokens explain --report FILE --token
+KIND.NAME [--format text|json]`.
+
 Every sidecar is closed, bounded, canonical, and bound to the complete pre-pruning universe plus
 the exact reachability bytes. Selection always operates on a whole `(bundleId, StyleId)` and never
 edits authored Rust, individual declarations, or theme variables.

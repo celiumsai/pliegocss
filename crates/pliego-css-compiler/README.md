@@ -26,8 +26,10 @@ with resolved assignment records and portable spans; it is separate from the one
 and adds no Serde dependency.
 
 `emit_theme` emits the complete variable-backed registry surface. `emit_used_theme` accepts the
-already selected semantic styles and emits only their directly referenced variable-backed tokens;
-it returns `:root{}` when none are needed. Callers must establish the retention proof first and must
+retained styles for one artifact; `emit_theme_references` accepts the application-wide retained
+token set used by grouped bundle emission. Both pruned paths emit only directly referenced
+variable-backed tokens and return `:root{}` when none are needed. Callers must establish the
+retention proof first and must
 account separately for authored CSS that consumes custom properties through `var(...)`.
 
 ## Stability
