@@ -1,7 +1,7 @@
 # Packaging status
 
-Status: **declared Sass partial resolution passed the complete exact-clean `347c6cf` replay; no
-registry upload performed**
+Status: **PliegoRS mainline integration and from-empty guide passed the complete exact-clean
+`254ae3c` replay; no registry upload performed**
 
 The publishable workspace boundary has six dependency waves. `pliego-css-usage` and
 `pliego-css-control` follow `pliego-css-build` because direct and optional Cargo dependencies both
@@ -18,6 +18,25 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## PliegoRS mainline integration and guide clean replay — 2026-07-16
+
+The exact clean `254ae3c` Debian WSL2 gate packaged and extracted all fifteen archives with native
+Node 24.14.0 and Cargo 1.96, compiled the extracted graph in release mode, and executed the complete
+Rust 1.85 downstream consumer. Publication remained disabled and the fixed 61,440-byte ceiling was
+not raised. Git for Windows was exposed through a temporary WSL shim only for the clean-worktree
+query; all Node and Cargo package work ran with Linux binaries.
+
+| Package | Compressed bytes | Remaining margin | SHA-256 |
+|---|---:|---:|---|
+| `pliego-css-source` | 53,578 | 7,862 | `46390628160a7316edf70f8f7b7ff5608f3388514604bb2a252591c7e23df4f3` |
+| `pliego-css-control` | 61,083 | 357 | `253e2e931ad574e831b1e5dd993442d1270ae3932b1226b21a14b7aa88d7f1ec` |
+| `pliego-cssc` | 61,391 | 49 | `41bcb03f002e821e93b4a0990fe7b1319fb721145bd00c83cdef7609dc70a9ce` |
+
+The same checkpoint pins the executable PliegoRS fixture to public-main child `700d112`, validates
+the receipt-bound causal graph, and publishes the checked from-empty guide. Package evidence does
+not widen the integration claim to hosted, multi-browser, production-application, or unbuilt Cargo
+feature/target coverage. The CLI and control packages remain closed to additive feature growth.
 
 ## Declared Sass partial-resolution clean replay — 2026-07-16
 
