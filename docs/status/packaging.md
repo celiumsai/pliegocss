@@ -1112,6 +1112,17 @@ packages compiled together in release/all-features mode. The eleven-package regi
 and TOML surfaces with identical output. The worktree was clean, publication remained disabled, and
 the 60 KiB ceiling was not raised.
 
+Commit `85bf79c` passed the exact clean Windows package gate with Cargo 1.96 and the extracted Rust
+1.85 downstream consumer after adding opt-in Rust source fixes. All fifteen archives remained below
+the fixed 61,440-byte ceiling. `pliego-css-source` measured 56,784 bytes (4,656 bytes of margin,
+SHA-256 `07e70ca5b60e70dd458ec3d8989026605192824fe1a30a61f0d50361ed6d1677`), while the tight
+archives were `pliego-cssc` at 61,328 bytes (112 bytes of margin, SHA-256
+`67ca8f8586439d5a706de0f8124ceff112919c6be0671c4102d34d3de3abc4a3`),
+`pliego-css-control` at 61,070 (370 bytes), and `pliego-css-build` at 59,924 (1,516 bytes).
+The twelve-package public consumer compiled the new read-only formatting-inspection surface and
+retained identical DTCG, TOML, and StyleId output. The worktree was clean, publication remained
+disabled, and the CLI margin is explicitly considered tight rather than available feature budget.
+
 `pliego-css-compiler` keeps its integration tests tracked and executes them in workspace/CI matrices,
 but excludes `tests/**` from the registry archive. No runtime source, README, or license file is
 omitted; the separation preserves compressed-size margin without weakening local verification.
