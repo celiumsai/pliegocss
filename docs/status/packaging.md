@@ -1,7 +1,8 @@
 # Packaging status
 
-Status: **initial VS Code client passed its closed-payload gate and the complete exact-clean
-`de13a9e` Rust package replay; no registry or Marketplace upload performed**
+Status: **Project Index navigation passed Windows/Linux process gates, the closed-payload VSIX
+gate, and the complete exact-clean `089f555` Rust package replay; no registry or Marketplace
+upload performed**
 
 The publishable workspace boundary has six dependency waves. `pliego-css-usage` and
 `pliego-css-control` follow `pliego-css-build` because direct and optional Cargo dependencies both
@@ -18,6 +19,32 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## Project Index navigation clean replay — 2026-07-17
+
+The exact clean `089f555` Debian WSL2 gate packaged and extracted all sixteen Rust archives with
+native Linux Node 24.14.0 and Cargo 1.96, compiled the complete extracted graph in release mode,
+and executed the Rust 1.85 downstream consumer. The expanded `pliego-css-lsp` archive measured
+20,602 compressed bytes (40,838 bytes of margin, SHA-256
+`f50a713f1607d14f9404e6b5998c375df09e6a732a04d8ab35f6b6c5cc681428`). Tight archives
+remained below the fixed ceiling: `pliego-cssc` measured 61,333 bytes (107 bytes of margin,
+SHA-256 `ae180c2efd20af8f08c694a7517382a45db5531340fde7b49964b01875dd06f0`),
+`pliego-css-control` 61,076 (364 bytes), `pliego-css-build` 59,918 (1,522 bytes), and
+`pliego-css-source` 56,783 (4,657 bytes). Publication remained disabled and the 61,440-byte
+ceiling was not raised.
+
+The versioned `integration:lsp` session passed on Windows and on Debian WSL2 with a separate native
+Linux target under Rust 1.85. It now generates one integrity-bound synthetic Project Index, Asset
+Plan, schema-5 manifest, and stylesheet, then requires `textDocument/definition` to select the exact
+physical declaration after validating every bound artifact. The complete workspace test,
+all-feature strict-Clippy, and warning-denied rustdoc matrices also passed locally.
+
+The companion `integration:vscode` gate packaged a 103,654-byte VSIX with the same closed four-file
+payload and a 446,117-byte bundle. The client exposes optional `pliegocss.projectIndex.path` without
+embedding or downloading a server. The observed VSIX SHA-256 was
+`e806449de3693ca6019f315a75ec7399fa58294dbc5b627bab25ac290f8fdc6d`; VSCE timestamp
+behavior still prevents a reproducibility claim. Real extension-host execution, Marketplace
+publication, another editor, and semantic diagnostic parity remain separate blockers.
 
 ## Initial VS Code client clean replay — 2026-07-17
 
