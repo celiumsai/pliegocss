@@ -516,10 +516,12 @@ pliego-cssc migration-project-inventory migration.project.json > migration.inven
 ```
 
 The command does not crawl the repository, infer source kinds, execute source toolchains, or mutate
-the project. Source and consumer paths in the declaration are relative to the command working
+the project. Source, consumer, and auxiliary paths in the declaration are relative to the command working
 directory. Missing or mistyped exact local dependencies fail the complete command; external, local,
 unresolved, and dynamic seams stay explicit. Declared CSS Modules JS/TS consumers add exact imports,
-static class accesses, and conservative dynamic-usage observations. See the
+static class accesses, and conservative dynamic-usage observations. Declared Tailwind configs,
+plugins, and templates add exact content identities and resolve matching relative `@config`,
+`@plugin`, and exact-file `@source` seams without executing JavaScript or template code. See the
 [migration project inventory schema 1](./migration-project-inventory-schema-1.md).
 
 ### `compile` and `build`

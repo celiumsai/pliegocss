@@ -24,7 +24,7 @@ pre-1.0 compatibility policy.
   while external, unresolved, local, and dynamic edges remain explicit. The read-only
   `pliego-cssc migration-project-inventory` command loads a closed declaration and emits the
   canonical project snapshot only to stdout. Graph crawling, source-toolchain-specific resolution,
-  configs/plugins/templates, consumers, and real-project fixtures remain open.
+  transitive crawling, toolchain-specific semantics, and real-project corpus remain open.
 - Bounded closed schema-1 JSON declarations through `MigrationProject::from_json`, allowing the
   typed source set to be reviewed and checked into a project before canonical collection. Unknown
   fields, unsupported versions, unsafe/kind-incompatible paths, oversized documents, and source
@@ -34,13 +34,19 @@ pre-1.0 compatibility policy.
   Modules together, with exact assertions for resolved, local, external, unresolved, and unsupported
   seams through the public CLI.
 - Project dependency observations for Tailwind `@config`, `@plugin`, and `@source`. Package-owned
-  plugins are external, relative config/plugin and static source-discovery paths remain unresolved,
-  and inline/dynamic sources remain dynamic; PliegoCSS records these seams without executing or
-  pretending to understand their JavaScript/toolchain semantics.
+  plugins are external, declared relative config/plugin/exact-template paths resolve by auxiliary
+  kind, undeclared or glob/directory discovery remains unresolved, and inline sources remain
+  dynamic; PliegoCSS records these seams without executing or pretending to understand their
+  JavaScript/toolchain semantics.
 - Declared CSS Modules consumers for JavaScript and TypeScript module extensions. Project snapshots
   bind default/namespace `.module.css` imports to declared CSS Modules sources, retain exact dot and
   quoted-bracket class usage, classify computed/binding-escape/template usage as dynamic, and reject
   missing or mistyped local targets without executing JavaScript, TypeScript, or bundlers.
+- Explicit Tailwind config, plugin, and template auxiliaries in migration project declarations.
+  Every auxiliary is read twice through the bounded no-link file boundary and retained by exact
+  bytes/SHA-256. Relative `@config`, `@plugin`, and exact-file `@source` seams resolve only to the
+  declared auxiliary kind; glob/directory discovery remains unresolved. Configuration and plugins
+  are lexically validated but never executed.
 - Closed post-change verification through the dedicated `pliego-css-agent verify` executable,
   repair-check policy and Verification Receipt schemas 1.2.0 with canonical 1.0.0/1.1.0 read
   support. Built-in `standard-css-audit`, `token-graph-integrity`, and `css-budget-audit` kinds

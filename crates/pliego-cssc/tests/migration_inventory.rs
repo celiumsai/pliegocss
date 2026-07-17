@@ -165,12 +165,16 @@ fn inventories_the_versioned_cross_toolchain_project_fixture() {
     assert_eq!(document["summary"]["tailwindSources"], 2);
     assert_eq!(document["summary"]["cssModulesSources"], 2);
     assert_eq!(document["summary"]["consumers"], 1);
-    assert_eq!(document["summary"]["dependencies"], 8);
-    assert_eq!(document["summary"]["resolvedDependencies"], 4);
+    assert_eq!(document["summary"]["auxiliaries"], 3);
+    assert_eq!(document["summary"]["tailwindConfigs"], 1);
+    assert_eq!(document["summary"]["tailwindPlugins"], 1);
+    assert_eq!(document["summary"]["tailwindTemplates"], 1);
+    assert_eq!(document["summary"]["dependencies"], 11);
+    assert_eq!(document["summary"]["resolvedDependencies"], 7);
     assert_eq!(document["summary"]["externalDependencies"], 3);
     assert_eq!(document["summary"]["unresolvedDependencies"], 1);
     assert_eq!(document["summary"]["dynamicDependencies"], 0);
-    assert_eq!(document["summary"]["unsupported"], 1);
+    assert_eq!(document["summary"]["unsupported"], 3);
     assert_eq!(document["summary"]["consumerImports"], 1);
     assert_eq!(document["summary"]["staticConsumerUsages"], 2);
     assert_eq!(document["summary"]["dynamicConsumerUsages"], 1);
@@ -196,5 +200,20 @@ fn inventories_the_versioned_cross_toolchain_project_fixture() {
         edge["kind"] == "tailwind-plugin"
             && edge["specifier"] == "@acme/tailwind-plugin"
             && edge["resolution"] == "external"
+    }));
+    assert!(dependencies.iter().any(|edge| {
+        edge["kind"] == "tailwind-config"
+            && edge["resolution"] == "resolved"
+            && edge["target"] == "tailwind/tailwind.config.js"
+    }));
+    assert!(dependencies.iter().any(|edge| {
+        edge["kind"] == "tailwind-plugin"
+            && edge["resolution"] == "resolved"
+            && edge["target"] == "tailwind/plugin.ts"
+    }));
+    assert!(dependencies.iter().any(|edge| {
+        edge["kind"] == "tailwind-source"
+            && edge["resolution"] == "resolved"
+            && edge["target"] == "templates/card.html"
     }));
 }

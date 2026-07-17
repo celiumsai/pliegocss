@@ -156,6 +156,7 @@ struct MigrationInventoryDocument<'a> {
 struct MigrationProjectSummary {
     sources: usize,
     consumers: usize,
+    auxiliaries: usize,
     sass_sources: usize,
     tailwind_sources: usize,
     css_modules_sources: usize,
@@ -170,6 +171,9 @@ struct MigrationProjectSummary {
     consumer_imports: usize,
     static_consumer_usages: usize,
     dynamic_consumer_usages: usize,
+    tailwind_configs: usize,
+    tailwind_plugins: usize,
+    tailwind_templates: usize,
 }
 
 #[derive(Serialize)]
@@ -180,6 +184,7 @@ struct MigrationProjectDocument<'a> {
     sources: Vec<MigrationInventoryDocument<'a>>,
     dependencies: &'a [MigrationDependency],
     consumers: &'a [MigrationConsumerInventory],
+    auxiliaries: &'a [MigrationAuxiliaryInventory],
 }
 
 /// Canonical read-only inventory for one migration source.
@@ -281,6 +286,45 @@ pub struct MigrationProjectConsumer {
     file: String,
 }
 
+/// Explicit Tailwind-owned auxiliary family inspected by a migration snapshot.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Ord, PartialEq, PartialOrd, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum MigrationAuxiliaryKind {
+    /// JavaScript/TypeScript Tailwind configuration module.
+    TailwindConfig,
+    /// JavaScript/TypeScript Tailwind plugin module.
+    TailwindPlugin,
+    /// Exact template or component file scanned by Tailwind.
+    TailwindTemplate,
+}
+
+impl MigrationAuxiliaryKind {
+    const fn as_str(self) -> &'static str {
+        match self {
+            Self::TailwindConfig => "tailwind-config",
+            Self::TailwindPlugin => "tailwind-plugin",
+            Self::TailwindTemplate => "tailwind-template",
+        }
+    }
+}
+
+/// Explicit auxiliary declaration for a migration project snapshot.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MigrationProjectAuxiliary {
+    auxiliary_kind: MigrationAuxiliaryKind,
+    file: String,
+}
+
+/// Canonical content identity for one declared Tailwind auxiliary file.
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct MigrationAuxiliaryInventory {
+    auxiliary_kind: MigrationAuxiliaryKind,
+    file: String,
+    source_bytes: usize,
+    source_sha256: String,
+}
+
 /// Kind of exact observation retained from a migration consumer.
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "kebab-case")]
@@ -323,6 +367,8 @@ struct MigrationProjectDeclaration {
     sources: Vec<MigrationProjectDeclarationSource>,
     #[serde(default)]
     consumers: Vec<MigrationProjectDeclarationConsumer>,
+    #[serde(default)]
+    auxiliaries: Vec<MigrationProjectDeclarationAuxiliary>,
 }
 
 #[derive(Deserialize)]
@@ -336,6 +382,13 @@ struct MigrationProjectDeclarationSource {
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 struct MigrationProjectDeclarationConsumer {
     consumer_kind: MigrationConsumerKind,
+    file: String,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+struct MigrationProjectDeclarationAuxiliary {
+    auxiliary_kind: MigrationAuxiliaryKind,
     file: String,
 }
 
@@ -462,6 +515,43 @@ impl MigrationProjectConsumer {
     }
 }
 
+impl MigrationProjectAuxiliary {
+    /// Declares one auxiliary kind and portable project-relative path.
+    #[must_use]
+    pub fn new(auxiliary_kind: MigrationAuxiliaryKind, file: impl Into<String>) -> Self {
+        Self {
+            auxiliary_kind,
+            file: file.into(),
+        }
+    }
+}
+
+impl MigrationAuxiliaryInventory {
+    /// Returns the auxiliary family.
+    #[must_use]
+    pub const fn auxiliary_kind(&self) -> MigrationAuxiliaryKind {
+        self.auxiliary_kind
+    }
+
+    /// Returns the portable logical path.
+    #[must_use]
+    pub fn file(&self) -> &str {
+        &self.file
+    }
+
+    /// Returns the exact UTF-8 input byte count.
+    #[must_use]
+    pub const fn source_bytes(&self) -> usize {
+        self.source_bytes
+    }
+
+    /// Returns the exact input SHA-256.
+    #[must_use]
+    pub fn source_sha256(&self) -> &str {
+        &self.source_sha256
+    }
+}
+
 impl MigrationConsumerObservation {
     /// Returns the observation kind.
     #[must_use]
@@ -543,6 +633,14 @@ impl MigrationConsumerInventory {
 pub struct MigrationProject {
     sources: Vec<MigrationProjectSource>,
     consumers: Vec<MigrationProjectConsumer>,
+    auxiliaries: Vec<MigrationProjectAuxiliary>,
+}
+
+#[derive(Eq, PartialEq)]
+struct MigrationProjectPass {
+    sources: Vec<MigrationInventory>,
+    consumers: Vec<MigrationConsumerInventory>,
+    auxiliaries: Vec<MigrationAuxiliaryInventory>,
 }
 
 impl MigrationProject {
@@ -552,6 +650,7 @@ impl MigrationProject {
         Self {
             sources: Vec::new(),
             consumers: Vec::new(),
+            auxiliaries: Vec::new(),
         }
     }
 
@@ -580,9 +679,11 @@ impl MigrationProject {
                 "migration project declaration schemaVersion must be 1",
             ));
         }
-        if declaration.sources.len() + declaration.consumers.len() > MAX_PROJECT_SOURCES {
+        if declaration.sources.len() + declaration.consumers.len() + declaration.auxiliaries.len()
+            > MAX_PROJECT_SOURCES
+        {
             return Err(MigrationInventoryError::new(
-                "migration project exceeds 4,096 sources and consumers",
+                "migration project exceeds 4,096 declared files",
             ));
         }
         let mut project = Self::new();
@@ -597,6 +698,13 @@ impl MigrationProject {
             project.consumers.push(MigrationProjectConsumer::new(
                 consumer.consumer_kind,
                 consumer.file,
+            ));
+        }
+        for auxiliary in declaration.auxiliaries {
+            validate_auxiliary_path(auxiliary.auxiliary_kind, auxiliary.file.as_str())?;
+            project.auxiliaries.push(MigrationProjectAuxiliary::new(
+                auxiliary.auxiliary_kind,
+                auxiliary.file,
             ));
         }
         Ok(project)
@@ -632,6 +740,13 @@ impl MigrationProject {
         self
     }
 
+    /// Adds one explicit Tailwind auxiliary. Collection sorts declarations canonically.
+    #[must_use]
+    pub fn auxiliary(mut self, auxiliary: MigrationProjectAuxiliary) -> Self {
+        self.auxiliaries.push(auxiliary);
+        self
+    }
+
     /// Reads every source and consumer twice and emits only when both complete inventories agree.
     ///
     /// # Errors
@@ -639,14 +754,27 @@ impl MigrationProject {
     /// Returns [`MigrationInventoryError`] for empty, duplicate, unsafe, unstable, malformed, or
     /// over-limit project declarations and for any source inventory failure.
     pub fn collect(mut self) -> Result<MigrationProjectInventory, MigrationInventoryError> {
+        self.canonicalize()?;
+        let first = self.inventory_once()?;
+        let second = self.inventory_once()?;
+        if first != second {
+            return Err(MigrationInventoryError::new(
+                "migration project changed while its snapshot was being collected",
+            ));
+        }
+        MigrationProjectInventory::from_parts(first.sources, first.consumers, first.auxiliaries)
+    }
+
+    fn canonicalize(&mut self) -> Result<(), MigrationInventoryError> {
         if self.sources.is_empty() {
             return Err(MigrationInventoryError::new(
                 "migration project requires at least one source",
             ));
         }
-        if self.sources.len() + self.consumers.len() > MAX_PROJECT_SOURCES {
+        if self.sources.len() + self.consumers.len() + self.auxiliaries.len() > MAX_PROJECT_SOURCES
+        {
             return Err(MigrationInventoryError::new(
-                "migration project exceeds 4,096 sources and consumers",
+                "migration project exceeds 4,096 declared files",
             ));
         }
         self.sources.sort_by(|left, right| {
@@ -673,30 +801,43 @@ impl MigrationProject {
                 )));
             }
         }
-        if self.sources.iter().any(|source| {
-            self.consumers
-                .iter()
-                .any(|consumer| consumer.file == source.file)
-        }) {
+        self.auxiliaries.sort_by(|left, right| {
+            (left.file.as_str(), left.auxiliary_kind)
+                .cmp(&(right.file.as_str(), right.auxiliary_kind))
+        });
+        for pair in self.auxiliaries.windows(2) {
+            if pair[0].file == pair[1].file {
+                return Err(MigrationInventoryError::new(format!(
+                    "migration project auxiliary `{}` is declared more than once",
+                    pair[0].file
+                )));
+            }
+        }
+        let mut roles = self
+            .sources
+            .iter()
+            .map(|item| item.file.as_str())
+            .collect::<Vec<_>>();
+        roles.extend(self.consumers.iter().map(|item| item.file.as_str()));
+        roles.extend(self.auxiliaries.iter().map(|item| item.file.as_str()));
+        roles.sort_unstable();
+        if roles.windows(2).any(|pair| pair[0] == pair[1]) {
             return Err(MigrationInventoryError::new(
-                "migration project path cannot be both a source and consumer",
+                "migration project path cannot have more than one declared role",
             ));
         }
-        let first = self
+        Ok(())
+    }
+
+    fn inventory_once(&self) -> Result<MigrationProjectPass, MigrationInventoryError> {
+        let sources = self
             .sources
             .iter()
             .map(|source| {
                 inventory_migration_file(source.source_kind, Path::new(source.file.as_str()))
             })
             .collect::<Result<Vec<_>, _>>()?;
-        let second = self
-            .sources
-            .iter()
-            .map(|source| {
-                inventory_migration_file(source.source_kind, Path::new(source.file.as_str()))
-            })
-            .collect::<Result<Vec<_>, _>>()?;
-        let first_consumers = self
+        let consumers = self
             .consumers
             .iter()
             .map(|consumer| {
@@ -706,22 +847,21 @@ impl MigrationProject {
                 )
             })
             .collect::<Result<Vec<_>, _>>()?;
-        let second_consumers = self
-            .consumers
+        let auxiliaries = self
+            .auxiliaries
             .iter()
-            .map(|consumer| {
-                inventory_migration_consumer_file(
-                    consumer.consumer_kind,
-                    Path::new(consumer.file.as_str()),
+            .map(|auxiliary| {
+                inventory_migration_auxiliary_file(
+                    auxiliary.auxiliary_kind,
+                    Path::new(auxiliary.file.as_str()),
                 )
             })
             .collect::<Result<Vec<_>, _>>()?;
-        if first != second || first_consumers != second_consumers {
-            return Err(MigrationInventoryError::new(
-                "migration project changed while its snapshot was being collected",
-            ));
-        }
-        MigrationProjectInventory::from_parts(first, first_consumers)
+        Ok(MigrationProjectPass {
+            sources,
+            consumers,
+            auxiliaries,
+        })
     }
 }
 
@@ -732,6 +872,7 @@ pub struct MigrationProjectInventory {
     sources: Vec<MigrationInventory>,
     dependencies: Vec<MigrationDependency>,
     consumers: Vec<MigrationConsumerInventory>,
+    auxiliaries: Vec<MigrationAuxiliaryInventory>,
     bytes: Vec<u8>,
 }
 
@@ -739,86 +880,17 @@ impl MigrationProjectInventory {
     fn from_parts(
         sources: Vec<MigrationInventory>,
         mut consumers: Vec<MigrationConsumerInventory>,
+        auxiliaries: Vec<MigrationAuxiliaryInventory>,
     ) -> Result<Self, MigrationInventoryError> {
-        let dependencies = derive_project_dependencies(&sources)?;
+        let dependencies = derive_project_dependencies(&sources, &auxiliaries)?;
         resolve_consumer_targets(&sources, &mut consumers)?;
-        let summary = MigrationProjectSummary {
-            sources: sources.len(),
-            consumers: consumers.len(),
-            sass_sources: sources
-                .iter()
-                .filter(|source| source.source_kind == MigrationSourceKind::Sass)
-                .count(),
-            tailwind_sources: sources
-                .iter()
-                .filter(|source| source.source_kind == MigrationSourceKind::Tailwind)
-                .count(),
-            css_modules_sources: sources
-                .iter()
-                .filter(|source| source.source_kind == MigrationSourceKind::CssModules)
-                .count(),
-            constructs: sources.iter().map(|source| source.summary.constructs).sum(),
-            dynamic: sources.iter().map(|source| source.summary.dynamic).sum(),
-            unsupported: sources
-                .iter()
-                .map(|source| source.summary.unsupported)
-                .sum(),
-            dependencies: dependencies.len(),
-            resolved_dependencies: dependencies
-                .iter()
-                .filter(|dependency| {
-                    matches!(
-                        dependency.resolution,
-                        MigrationDependencyResolution::Resolved
-                            | MigrationDependencyResolution::Local
-                    )
-                })
-                .count(),
-            external_dependencies: dependencies
-                .iter()
-                .filter(|dependency| {
-                    dependency.resolution == MigrationDependencyResolution::External
-                })
-                .count(),
-            unresolved_dependencies: dependencies
-                .iter()
-                .filter(|dependency| {
-                    dependency.resolution == MigrationDependencyResolution::Unresolved
-                })
-                .count(),
-            dynamic_dependencies: dependencies
-                .iter()
-                .filter(|dependency| {
-                    dependency.resolution == MigrationDependencyResolution::Dynamic
-                })
-                .count(),
-            consumer_imports: consumers
-                .iter()
-                .flat_map(|consumer| &consumer.observations)
-                .filter(|observation| observation.kind == MigrationConsumerObservationKind::Import)
-                .count(),
-            static_consumer_usages: consumers
-                .iter()
-                .flat_map(|consumer| &consumer.observations)
-                .filter(|observation| {
-                    observation.kind == MigrationConsumerObservationKind::ClassUsage
-                        && observation.disposition == MigrationDisposition::Static
-                })
-                .count(),
-            dynamic_consumer_usages: consumers
-                .iter()
-                .flat_map(|consumer| &consumer.observations)
-                .filter(|observation| {
-                    observation.kind == MigrationConsumerObservationKind::ClassUsage
-                        && observation.disposition == MigrationDisposition::Dynamic
-                })
-                .count(),
-        };
+        let summary = migration_project_summary(&sources, &dependencies, &consumers, &auxiliaries);
         let mut inventory = Self {
             summary,
             sources,
             dependencies,
             consumers,
+            auxiliaries,
             bytes: Vec::new(),
         };
         let document = MigrationProjectDocument {
@@ -827,6 +899,7 @@ impl MigrationProjectInventory {
             sources: inventory.sources.iter().map(inventory_document).collect(),
             dependencies: &inventory.dependencies,
             consumers: &inventory.consumers,
+            auxiliaries: &inventory.auxiliaries,
         };
         inventory.bytes = serde_json::to_vec_pretty(&document).map_err(|error| {
             MigrationInventoryError::new(format!(
@@ -855,6 +928,12 @@ impl MigrationProjectInventory {
         &self.consumers
     }
 
+    /// Returns declared Tailwind auxiliary inventories in canonical path order.
+    #[must_use]
+    pub fn auxiliaries(&self) -> &[MigrationAuxiliaryInventory] {
+        &self.auxiliaries
+    }
+
     /// Returns the total number of recorded constructs.
     #[must_use]
     pub const fn construct_count(&self) -> usize {
@@ -865,6 +944,92 @@ impl MigrationProjectInventory {
     #[must_use]
     pub fn as_bytes(&self) -> &[u8] {
         &self.bytes
+    }
+}
+
+fn migration_project_summary(
+    sources: &[MigrationInventory],
+    dependencies: &[MigrationDependency],
+    consumers: &[MigrationConsumerInventory],
+    auxiliaries: &[MigrationAuxiliaryInventory],
+) -> MigrationProjectSummary {
+    MigrationProjectSummary {
+        sources: sources.len(),
+        consumers: consumers.len(),
+        auxiliaries: auxiliaries.len(),
+        sass_sources: sources
+            .iter()
+            .filter(|source| source.source_kind == MigrationSourceKind::Sass)
+            .count(),
+        tailwind_sources: sources
+            .iter()
+            .filter(|source| source.source_kind == MigrationSourceKind::Tailwind)
+            .count(),
+        css_modules_sources: sources
+            .iter()
+            .filter(|source| source.source_kind == MigrationSourceKind::CssModules)
+            .count(),
+        constructs: sources.iter().map(|source| source.summary.constructs).sum(),
+        dynamic: sources.iter().map(|source| source.summary.dynamic).sum(),
+        unsupported: sources
+            .iter()
+            .map(|source| source.summary.unsupported)
+            .sum(),
+        dependencies: dependencies.len(),
+        resolved_dependencies: dependencies
+            .iter()
+            .filter(|dependency| {
+                matches!(
+                    dependency.resolution,
+                    MigrationDependencyResolution::Resolved | MigrationDependencyResolution::Local
+                )
+            })
+            .count(),
+        external_dependencies: dependencies
+            .iter()
+            .filter(|dependency| dependency.resolution == MigrationDependencyResolution::External)
+            .count(),
+        unresolved_dependencies: dependencies
+            .iter()
+            .filter(|dependency| dependency.resolution == MigrationDependencyResolution::Unresolved)
+            .count(),
+        dynamic_dependencies: dependencies
+            .iter()
+            .filter(|dependency| dependency.resolution == MigrationDependencyResolution::Dynamic)
+            .count(),
+        consumer_imports: consumers
+            .iter()
+            .flat_map(|consumer| &consumer.observations)
+            .filter(|observation| observation.kind == MigrationConsumerObservationKind::Import)
+            .count(),
+        static_consumer_usages: consumers
+            .iter()
+            .flat_map(|consumer| &consumer.observations)
+            .filter(|observation| {
+                observation.kind == MigrationConsumerObservationKind::ClassUsage
+                    && observation.disposition == MigrationDisposition::Static
+            })
+            .count(),
+        dynamic_consumer_usages: consumers
+            .iter()
+            .flat_map(|consumer| &consumer.observations)
+            .filter(|observation| {
+                observation.kind == MigrationConsumerObservationKind::ClassUsage
+                    && observation.disposition == MigrationDisposition::Dynamic
+            })
+            .count(),
+        tailwind_configs: auxiliaries
+            .iter()
+            .filter(|item| item.auxiliary_kind == MigrationAuxiliaryKind::TailwindConfig)
+            .count(),
+        tailwind_plugins: auxiliaries
+            .iter()
+            .filter(|item| item.auxiliary_kind == MigrationAuxiliaryKind::TailwindPlugin)
+            .count(),
+        tailwind_templates: auxiliaries
+            .iter()
+            .filter(|item| item.auxiliary_kind == MigrationAuxiliaryKind::TailwindTemplate)
+            .count(),
     }
 }
 
@@ -879,18 +1044,29 @@ impl fmt::Display for MigrationProjectInventory {
 
 fn derive_project_dependencies(
     sources: &[MigrationInventory],
+    auxiliaries: &[MigrationAuxiliaryInventory],
 ) -> Result<Vec<MigrationDependency>, MigrationInventoryError> {
     let declared = sources
         .iter()
         .map(|source| (source.file.as_str(), source.source_kind))
         .collect::<std::collections::BTreeMap<_, _>>();
     let mut dependencies = Vec::new();
+    let declared_auxiliaries = auxiliaries
+        .iter()
+        .map(|item| (item.file.as_str(), item.auxiliary_kind))
+        .collect::<std::collections::BTreeMap<_, _>>();
     for source in sources {
         for construct in &source.constructs {
             let Some(kind) = dependency_kind(construct.kind.as_str()) else {
                 continue;
             };
-            dependencies.extend(observe_dependencies(source, construct, kind, &declared)?);
+            dependencies.extend(observe_dependencies(
+                source,
+                construct,
+                kind,
+                &declared,
+                &declared_auxiliaries,
+            )?);
         }
     }
     Ok(dependencies)
@@ -949,6 +1125,7 @@ fn observe_dependencies(
     construct: &MigrationConstruct,
     kind: MigrationDependencyKind,
     declared: &std::collections::BTreeMap<&str, MigrationSourceKind>,
+    declared_auxiliaries: &std::collections::BTreeMap<&str, MigrationAuxiliaryKind>,
 ) -> Result<Vec<MigrationDependency>, MigrationInventoryError> {
     let dependency = MigrationDependency {
         from: source.file.clone(),
@@ -1004,6 +1181,7 @@ fn observe_dependencies(
                 kind,
                 specifier.as_str(),
                 declared,
+                declared_auxiliaries,
             )?;
             Ok(MigrationDependency {
                 specifier: Some(specifier),
@@ -1085,21 +1263,43 @@ fn classify_dependency(
     kind: MigrationDependencyKind,
     specifier: &str,
     declared: &std::collections::BTreeMap<&str, MigrationSourceKind>,
+    declared_auxiliaries: &std::collections::BTreeMap<&str, MigrationAuxiliaryKind>,
 ) -> Result<(MigrationDependencyResolution, Option<String>), MigrationInventoryError> {
-    if kind == MigrationDependencyKind::TailwindSource {
-        return Ok((MigrationDependencyResolution::Unresolved, None));
-    }
     if !specifier.starts_with("./") && !specifier.starts_with("../") {
         return Ok((MigrationDependencyResolution::External, None));
     }
-    if matches!(
-        kind,
-        MigrationDependencyKind::TailwindConfig | MigrationDependencyKind::TailwindPlugin
-    ) {
-        return Ok((MigrationDependencyResolution::Unresolved, None));
-    }
     if specifier.contains('\\') || specifier.contains(['?', '#']) {
         return Ok((MigrationDependencyResolution::Unresolved, None));
+    }
+    if matches!(
+        kind,
+        MigrationDependencyKind::TailwindConfig
+            | MigrationDependencyKind::TailwindPlugin
+            | MigrationDependencyKind::TailwindSource
+    ) {
+        if kind == MigrationDependencyKind::TailwindSource
+            && (specifier.contains('*') || specifier.ends_with('/'))
+        {
+            return Ok((MigrationDependencyResolution::Unresolved, None));
+        }
+        let expected = match kind {
+            MigrationDependencyKind::TailwindConfig => MigrationAuxiliaryKind::TailwindConfig,
+            MigrationDependencyKind::TailwindPlugin => MigrationAuxiliaryKind::TailwindPlugin,
+            MigrationDependencyKind::TailwindSource => MigrationAuxiliaryKind::TailwindTemplate,
+            _ => unreachable!("matched Tailwind auxiliary dependency"),
+        };
+        let target = normalize_relative_target(from, specifier)?;
+        let Some(actual) = declared_auxiliaries.get(target.as_str()).copied() else {
+            return Ok((MigrationDependencyResolution::Unresolved, None));
+        };
+        if actual != expected {
+            return Err(MigrationInventoryError::new(format!(
+                "migration dependency `{specifier}` from `{from}` requires {} auxiliary `{target}`, but it is declared as {}",
+                expected.as_str(),
+                actual.as_str()
+            )));
+        }
+        return Ok((MigrationDependencyResolution::Resolved, Some(target)));
     }
     let extension = specifier.rsplit('/').next().and_then(|name| {
         name.rsplit_once('.')
@@ -1131,7 +1331,7 @@ fn classify_dependency(
         }
         MigrationDependencyKind::TailwindConfig
         | MigrationDependencyKind::TailwindPlugin
-        | MigrationDependencyKind::TailwindSource => unreachable!("classified before extension"),
+        | MigrationDependencyKind::TailwindSource => unreachable!("classified above"),
         MigrationDependencyKind::CssModulesComposes
         | MigrationDependencyKind::CssModulesImport
         | MigrationDependencyKind::CssModulesValue => {
@@ -1344,6 +1544,100 @@ pub fn inventory_migration_consumer_file(
         MigrationInventoryError::new(format!("migration consumer is not valid UTF-8: {error}"))
     })?;
     inventory_migration_consumer_source(consumer_kind, &logical, source)
+}
+
+/// Inventories the exact content identity of one Tailwind-owned auxiliary without executing it.
+///
+/// Configuration and plugin modules must also pass the bounded JavaScript lexical check. Template
+/// content is retained by exact bytes/hash because arbitrary template-language semantics remain
+/// outside this execution-free bridge.
+///
+/// # Errors
+///
+/// Returns [`MigrationInventoryError`] for unsafe/kind-incompatible paths, oversized or NUL input,
+/// or an unterminated JavaScript lexical state in configuration and plugin modules.
+pub fn inventory_migration_auxiliary_source(
+    auxiliary_kind: MigrationAuxiliaryKind,
+    file: &str,
+    source: &str,
+) -> Result<MigrationAuxiliaryInventory, MigrationInventoryError> {
+    validate_auxiliary_path(auxiliary_kind, file)?;
+    if source.len() > MAX_SOURCE_BYTES || source.contains('\0') {
+        return Err(MigrationInventoryError::new(
+            "migration auxiliary must be NUL-free and at most 16 MiB",
+        ));
+    }
+    if auxiliary_kind != MigrationAuxiliaryKind::TailwindTemplate {
+        lexical_masks(source)?;
+    }
+    Ok(MigrationAuxiliaryInventory {
+        auxiliary_kind,
+        file: file.into(),
+        source_bytes: source.len(),
+        source_sha256: format!("{:x}", Sha256::digest(source.as_bytes())),
+    })
+}
+
+/// Reads one bounded regular Tailwind auxiliary without following links.
+///
+/// # Errors
+///
+/// Returns [`MigrationInventoryError`] when the path/file boundary or auxiliary content is invalid.
+pub fn inventory_migration_auxiliary_file(
+    auxiliary_kind: MigrationAuxiliaryKind,
+    file: &Path,
+) -> Result<MigrationAuxiliaryInventory, MigrationInventoryError> {
+    let (logical, bytes) =
+        read_regular_project_file(file, MAX_SOURCE_BYTES, "migration auxiliary")?;
+    let source = std::str::from_utf8(&bytes).map_err(|error| {
+        MigrationInventoryError::new(format!("migration auxiliary is not valid UTF-8: {error}"))
+    })?;
+    inventory_migration_auxiliary_source(auxiliary_kind, &logical, source)
+}
+
+fn validate_auxiliary_path(
+    auxiliary_kind: MigrationAuxiliaryKind,
+    file: &str,
+) -> Result<(), MigrationInventoryError> {
+    if !is_portable_source_path(file) {
+        return Err(MigrationInventoryError::new(
+            "migration auxiliary requires a portable project-relative file",
+        ));
+    }
+    let extension = Path::new(file)
+        .extension()
+        .and_then(std::ffi::OsStr::to_str)
+        .unwrap_or_default()
+        .to_ascii_lowercase();
+    let script = matches!(
+        extension.as_str(),
+        "js" | "jsx" | "ts" | "tsx" | "mjs" | "cjs"
+    );
+    let accepted = match auxiliary_kind {
+        MigrationAuxiliaryKind::TailwindConfig | MigrationAuxiliaryKind::TailwindPlugin => script,
+        MigrationAuxiliaryKind::TailwindTemplate => matches!(
+            extension.as_str(),
+            "html"
+                | "htm"
+                | "js"
+                | "jsx"
+                | "ts"
+                | "tsx"
+                | "vue"
+                | "svelte"
+                | "astro"
+                | "md"
+                | "mdx"
+                | "php"
+        ),
+    };
+    if !accepted {
+        return Err(MigrationInventoryError::new(format!(
+            "{} auxiliary inventory does not accept `{file}`",
+            auxiliary_kind.as_str()
+        )));
+    }
+    Ok(())
 }
 
 fn validate_consumer_path(
@@ -2563,15 +2857,33 @@ $color: red;
         ));
         fs::create_dir(&directory).unwrap();
         let css = directory.join("app.css");
+        let config = directory.join("tailwind.config.js");
+        let plugin = directory.join("plugin.ts");
+        let template = directory.join("index.html");
         fs::write(
             &css,
-            "@config \"./tailwind.config.js\";\n@plugin \"@acme/plugin\";\n@source \"../templates/**/*.html\";\n@source inline(\"grid flex\");\n",
+            "@config \"./tailwind.config.js\";\n@plugin \"./plugin.ts\";\n@plugin \"@acme/plugin\";\n@source \"./index.html\";\n@source inline(\"grid flex\");\n",
         )
         .unwrap();
+        fs::write(&config, "export default { theme: {} };\n").unwrap();
+        fs::write(&plugin, "export default function plugin() {}\n").unwrap();
+        fs::write(&template, "<main class=\"grid\"></main>\n").unwrap();
         let inventory = MigrationProject::new()
             .source(MigrationProjectSource::new(
                 MigrationSourceKind::Tailwind,
                 css.to_string_lossy().into_owned(),
+            ))
+            .auxiliary(MigrationProjectAuxiliary::new(
+                MigrationAuxiliaryKind::TailwindConfig,
+                config.to_string_lossy().into_owned(),
+            ))
+            .auxiliary(MigrationProjectAuxiliary::new(
+                MigrationAuxiliaryKind::TailwindPlugin,
+                plugin.to_string_lossy().into_owned(),
+            ))
+            .auxiliary(MigrationProjectAuxiliary::new(
+                MigrationAuxiliaryKind::TailwindTemplate,
+                template.to_string_lossy().into_owned(),
             ))
             .collect()
             .unwrap();
@@ -2583,9 +2895,10 @@ $color: red;
         assert_eq!(
             resolutions,
             [
-                MigrationDependencyResolution::Unresolved,
+                MigrationDependencyResolution::Resolved,
+                MigrationDependencyResolution::Resolved,
                 MigrationDependencyResolution::External,
-                MigrationDependencyResolution::Unresolved,
+                MigrationDependencyResolution::Resolved,
                 MigrationDependencyResolution::Dynamic,
             ]
         );
@@ -2594,13 +2907,37 @@ $color: red;
             MigrationDependencyKind::TailwindConfig
         );
         assert_eq!(
-            inventory.dependencies()[1].kind(),
+            inventory.dependencies()[2].kind(),
             MigrationDependencyKind::TailwindPlugin
         );
         assert_eq!(
-            inventory.dependencies()[2].kind(),
+            inventory.dependencies()[3].kind(),
             MigrationDependencyKind::TailwindSource
         );
+        assert_eq!(inventory.auxiliaries().len(), 3);
+        assert!(
+            inventory
+                .auxiliaries()
+                .iter()
+                .all(|item| { item.source_bytes() > 0 && item.source_sha256().len() == 64 })
+        );
+        let document: serde_json::Value = serde_json::from_slice(inventory.as_bytes()).unwrap();
+        assert_eq!(document["summary"]["auxiliaries"], 3);
+        assert_eq!(document["summary"]["tailwindConfigs"], 1);
+        assert_eq!(document["summary"]["tailwindPlugins"], 1);
+        assert_eq!(document["summary"]["tailwindTemplates"], 1);
+        let mistyped = MigrationProject::new()
+            .source(MigrationProjectSource::new(
+                MigrationSourceKind::Tailwind,
+                css.to_string_lossy().into_owned(),
+            ))
+            .auxiliary(MigrationProjectAuxiliary::new(
+                MigrationAuxiliaryKind::TailwindPlugin,
+                config.to_string_lossy().into_owned(),
+            ))
+            .collect()
+            .unwrap_err();
+        assert!(mistyped.to_string().contains("requires tailwind-config"));
         fs::remove_dir_all(directory).unwrap();
     }
 

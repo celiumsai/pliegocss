@@ -78,9 +78,10 @@ them canonically, rejects duplicate paths, and inventories the complete set twic
 schema-1 project snapshot. The project snapshot derives conservative Sass, CSS import/reference,
 and CSS Modules/ICSS dependency observations. Exact supported local targets must exist in the
 declared set with the expected kind; package and built-in references stay external, while dynamic or
-toolchain-specific resolution remains visible without guessing. Tailwind config, plugin, and source
-discovery seams are also retained as external, unresolved, or dynamic observations. It does not
-crawl imports or inspect those auxiliary files. Declared JS/TS CSS Modules consumers can be linked
+toolchain-specific resolution remains visible without guessing. Explicit Tailwind config, plugin,
+and template auxiliaries are retained by exact bytes/hash; relative `@config`, `@plugin`, and
+exact-file `@source` seams link only to the declared auxiliary kind. Configuration and plugin
+modules are lexically validated but never executed. Declared JS/TS CSS Modules consumers can be linked
 to exact sources and inventory static property/bracket class usage plus conservative dynamic binding
 usage without executing a bundler.
 `MigrationProject::from_json` accepts the same closed declaration as bounded schema-1 JSON so it can

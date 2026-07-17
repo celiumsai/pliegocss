@@ -1,6 +1,9 @@
 @import "tailwindcss";
 @reference "./theme.css";
 @plugin "@acme/tailwind-plugin";
+@plugin "../tailwind/plugin.ts";
+@config "../tailwind/tailwind.config.js";
+@source "../templates/card.html";
 
 @utility content-auto {
   content-visibility: auto;

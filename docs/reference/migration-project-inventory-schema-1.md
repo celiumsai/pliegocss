@@ -1,13 +1,13 @@
 # Migration project inventory schema 1
 
-Status: **explicit source snapshot, conservative dependencies, and declared CSS Modules consumers
-implemented; templates, config/plugin contents, transitive discovery, and broader consumer syntax
-remain open**
+Status: **explicit source/consumer/auxiliary snapshot, conservative dependencies, and CSS Modules
+consumer linking implemented; transitive discovery, auxiliary semantic evaluation, and broader
+consumer syntax remain open**
 
 `MigrationProject` declares a closed set of Sass, Tailwind CSS v4 entry, and CSS Modules files. It
 does not crawl the repository or infer source kind from filenames. Collection sorts the declaration
-set canonically, rejects duplicate/cross-role paths and more than 4,096 combined sources and
-consumers, inventories every regular file twice, and publishes bytes only when both complete reads
+set canonically, rejects duplicate/cross-role paths and more than 4,096 combined declared files,
+inventories every regular file twice, and publishes bytes only when both complete reads
 agree.
 
 The same closed input set can be checked into the project as schema-1 JSON and parsed with
@@ -23,12 +23,17 @@ The same closed input set can be checked into the project as schema-1 JSON and p
   ],
   "consumers": [
     { "consumerKind": "css-modules", "file": "src/Card.tsx" }
+  ],
+  "auxiliaries": [
+    { "auxiliaryKind": "tailwind-config", "file": "tailwind.config.js" },
+    { "auxiliaryKind": "tailwind-plugin", "file": "src/plugin.ts" },
+    { "auxiliaryKind": "tailwind-template", "file": "src/index.html" }
   ]
 }
 ```
 
 The declaration is bounded to 1 MiB, rejects unknown fields, unsafe paths, kind/extension mismatch,
-unsupported schema versions, and more than 4,096 entries. Parsing does not read sources; collection
+unsupported schema versions, and more than 4,096 files across all three roles. Parsing does not read declared files; collection
 performs the same canonical duplicate, file-safety, two-pass, and dependency checks as the builder
 API. Declaration order therefore does not affect snapshot bytes.
 
@@ -41,8 +46,8 @@ pliego-cssc migration-project-inventory migration.project.json > migration.inven
 
 ```rust,no_run
 use pliego_css_source::{
-    MigrationConsumerKind, MigrationProject, MigrationProjectConsumer, MigrationProjectSource,
-    MigrationSourceKind,
+    MigrationAuxiliaryKind, MigrationConsumerKind, MigrationProject, MigrationProjectAuxiliary,
+    MigrationProjectConsumer, MigrationProjectSource, MigrationSourceKind,
 };
 
 let snapshot = MigrationProject::new()
@@ -62,6 +67,10 @@ let snapshot = MigrationProject::new()
         MigrationConsumerKind::CssModules,
         "src/Card.tsx",
     ))
+    .auxiliary(MigrationProjectAuxiliary::new(
+        MigrationAuxiliaryKind::TailwindConfig,
+        "tailwind.config.js",
+    ))
     .collect()?;
 std::fs::write("migration.inventory.json", snapshot.as_bytes())?;
 # Ok::<(), Box<dyn std::error::Error>>(())
@@ -75,6 +84,7 @@ The canonical document uses two-space JSON and one trailing LF:
   "summary": {
     "sources": 3,
     "consumers": 1,
+    "auxiliaries": 3,
     "sassSources": 1,
     "tailwindSources": 1,
     "cssModulesSources": 1,
@@ -88,7 +98,10 @@ The canonical document uses two-space JSON and one trailing LF:
     "dynamicDependencies": 0,
     "consumerImports": 1,
     "staticConsumerUsages": 2,
-    "dynamicConsumerUsages": 1
+    "dynamicConsumerUsages": 1,
+    "tailwindConfigs": 1,
+    "tailwindPlugins": 1,
+    "tailwindTemplates": 1
   },
   "sources": [
     {
@@ -125,6 +138,14 @@ The canonical document uses two-space JSON and one trailing LF:
       "sourceSha256": "<64 lowercase hex characters>",
       "observations": []
     }
+  ],
+  "auxiliaries": [
+    {
+      "auxiliaryKind": "tailwind-config",
+      "file": "tailwind.config.js",
+      "sourceBytes": 42,
+      "sourceSha256": "<64 lowercase hex characters>"
+    }
   ]
 }
 ```
@@ -150,14 +171,14 @@ The project layer observes these bounded constructs:
 
 Resolution is intentionally narrower than Sass, PostCSS, bundler, or Node resolution:
 
-- `resolved`: an explicit `./` or `../` specifier includes a supported extension, normalizes inside
-  the project, and names a declared source of the expected kind;
+- `resolved`: an explicit `./` or `../` specifier normalizes inside the project and names a
+  declared source or exact Tailwind auxiliary of the expected kind;
 - `local`: CSS Modules `composes` has no `from` and targets its containing source;
 - `external`: a package, Sass built-in, URL, browser-absolute path, `global`, or relative Sass CSS
   import is owned outside this declared source graph;
 - `unresolved`: static syntax is visible, but extensionless Sass lookup, query/fragment syntax, or
-  another source-toolchain-specific rule would be required. Relative Tailwind config/plugin paths
-  and static `@source` paths remain here until auxiliary files can be declared and inspected;
+  another source-toolchain-specific rule would be required. Undeclared Tailwind auxiliaries plus
+  glob/directory `@source` discovery remain here;
 - `dynamic`: interpolation or syntax that cannot expose one safe static specifier.
 
 An exact supported local path is an integrity claim: if its normalized target is absent from the
@@ -177,16 +198,28 @@ targets fail the complete snapshot. Package imports remain visible without a loc
 lexical migration inventory, not JavaScript execution, TypeScript type analysis, bundler alias
 resolution, destructuring semantics, or proof that an exported CSS class exists.
 
+## Tailwind auxiliary boundary
+
+`tailwind-config` and `tailwind-plugin` accept JavaScript/TypeScript module extensions. They pass
+bounded lexical-state validation, then retain exact UTF-8 byte count and SHA-256.
+`tailwind-template` accepts common HTML/component/template extensions and retains the same exact
+identity without pretending to parse every template language.
+
+Relative `@config`, `@plugin`, and exact-file `@source` specifiers normalize from their containing
+CSS file and resolve only when the target is declared with the required auxiliary kind. A declared
+target with the wrong kind fails the snapshot; an undeclared target stays `unresolved`. Package
+plugins stay `external`, inline sources stay `dynamic`, and glob/directory discovery stays
+`unresolved`. No auxiliary is imported, executed, transpiled, or passed to Tailwind/Node.
+
 ## Security and consistency boundary
 
-- every source and consumer path is explicit, project-relative, UTF-8, kind-compatible, and
-  duplicate-free across both sets;
+- every source, consumer, and auxiliary path is explicit, project-relative, UTF-8, kind-compatible,
+  and duplicate-free across all roles;
 - every component is inspected and symbolic links or Windows reparse points are rejected;
 - the final file is opened with no-follow semantics, must remain regular, and is bounded to 16 MiB;
 - malformed UTF-8, comments, strings, dependency targets, or per-file defensive limits fail the
   whole snapshot;
-- all sources and consumers are inventoried in canonical order and then inventoried again in that
-  same order;
+- all declared files are inventoried in canonical order and then inventoried again in that order;
 - any byte or derived-inventory difference between passes fails instead of mixing revisions.
 
 This is a confirmed declared-file snapshot, not an atomic filesystem transaction. It does not prove
@@ -200,4 +233,6 @@ one declaration, including exact resolved Sass/CSS/CSS Modules targets, local CS
 composition, package/built-in external edges, extensionless Sass unresolved lookup, and an
 unsupported Tailwind plugin seam. It is a representative cross-toolchain contract fixture, not yet
 a corpus of real migrated applications. Its declared TSX consumer freezes two static CSS Modules
-class usages and one computed dynamic usage.
+class usages and one computed dynamic usage. Its declared Tailwind config, plugin, and HTML
+template freeze three exact auxiliary identities and three resolved relative seams while the
+package plugin remains external.

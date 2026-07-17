@@ -345,8 +345,9 @@ también requiere E0–E4 y todos los Must de R0 en el contrato estratégico.
   fail-closed y clasificaciones external/unresolved/local/dynamic; la declaración JSON schema 1
   permite persistir el mismo source set cerrado y el CLI read-only lo carga con límites/no-follow y
   emite el snapshot por stdout. Un fixture cross-toolchain versionado cubre las tres familias y las
-  clasificaciones de edge; `@config`/`@plugin`/`@source` ya quedan visibles sin ejecución. Faltan
-  crawling y resolución específica del toolchain, inspección de templates/config/plugins,
+  clasificaciones de edge; `@config`/`@plugin`/`@source` ya quedan visibles sin ejecución. Configs,
+  plugins y templates declarados ya tienen identidad bytes/hash y linking relativo tipado. Faltan
+  crawling, resolución específica del toolchain e inspección semántica profunda de auxiliares,
   consumers/aliases avanzados y fixtures
   de migración reales antes de escribir la guía completa.
 - [ ] Crear tutorial completo, how-to guides y referencia de API.

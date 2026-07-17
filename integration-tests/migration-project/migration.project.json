@@ -10,5 +10,10 @@
   ],
   "consumers": [
     { "consumerKind": "css-modules", "file": "components/Card.tsx" }
+  ],
+  "auxiliaries": [
+    { "auxiliaryKind": "tailwind-config", "file": "tailwind/tailwind.config.js" },
+    { "auxiliaryKind": "tailwind-plugin", "file": "tailwind/plugin.ts" },
+    { "auxiliaryKind": "tailwind-template", "file": "templates/card.html" }
   ]
 }

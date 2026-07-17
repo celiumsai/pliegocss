@@ -35,13 +35,15 @@ pub use application::{
     CollectedReachability,
 };
 pub use migration::{
-    MIGRATION_INVENTORY_SCHEMA_VERSION, MigrationConstruct, MigrationConsumerInventory,
-    MigrationConsumerKind, MigrationConsumerObservation, MigrationConsumerObservationKind,
-    MigrationDependency, MigrationDependencyKind, MigrationDependencyResolution,
-    MigrationDisposition, MigrationInventory, MigrationInventoryError, MigrationPreflightReliance,
-    MigrationProject, MigrationProjectConsumer, MigrationProjectInventory, MigrationProjectSource,
-    MigrationSourceKind, inventory_migration_consumer_file, inventory_migration_consumer_source,
-    inventory_migration_file, inventory_migration_source,
+    MIGRATION_INVENTORY_SCHEMA_VERSION, MigrationAuxiliaryInventory, MigrationAuxiliaryKind,
+    MigrationConstruct, MigrationConsumerInventory, MigrationConsumerKind,
+    MigrationConsumerObservation, MigrationConsumerObservationKind, MigrationDependency,
+    MigrationDependencyKind, MigrationDependencyResolution, MigrationDisposition,
+    MigrationInventory, MigrationInventoryError, MigrationPreflightReliance, MigrationProject,
+    MigrationProjectAuxiliary, MigrationProjectConsumer, MigrationProjectInventory,
+    MigrationProjectSource, MigrationSourceKind, inventory_migration_auxiliary_file,
+    inventory_migration_auxiliary_source, inventory_migration_consumer_file,
+    inventory_migration_consumer_source, inventory_migration_file, inventory_migration_source,
 };
 
 /// A zero-based byte offset plus a human-readable source position.

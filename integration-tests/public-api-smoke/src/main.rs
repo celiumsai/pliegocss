@@ -25,12 +25,14 @@ use pliego_css_ownership::{
 };
 use pliego_css_source::{
     MIGRATION_INVENTORY_SCHEMA_VERSION, ApplicationComponent, ApplicationRoute,
-    ApplicationTopology, MigrationConsumerInventory, MigrationConsumerKind,
+    ApplicationTopology, MigrationAuxiliaryInventory, MigrationAuxiliaryKind,
+    MigrationConsumerInventory, MigrationConsumerKind,
     MigrationConsumerObservation, MigrationConsumerObservationKind, MigrationDependency,
     MigrationDependencyKind, MigrationDependencyResolution, MigrationDisposition,
     MigrationInventory, MigrationInventoryError, MigrationPreflightReliance, MigrationProject,
-    MigrationProjectConsumer, MigrationProjectInventory, MigrationProjectSource,
-    MigrationSourceKind, inventory_migration_consumer_file,
+    MigrationProjectAuxiliary, MigrationProjectConsumer, MigrationProjectInventory,
+    MigrationProjectSource, MigrationSourceKind, inventory_migration_auxiliary_file,
+    inventory_migration_auxiliary_source, inventory_migration_consumer_file,
     inventory_migration_consumer_source, inventory_migration_file, inventory_migration_source,
 };
 use pliego_css_usage::{
@@ -152,6 +154,8 @@ fn exercise_migration_inventory_surface() {
         MigrationProjectInventory::dependencies;
     let _project_consumers: fn(&MigrationProjectInventory) -> &[MigrationConsumerInventory] =
         MigrationProjectInventory::consumers;
+    let _project_auxiliaries: fn(&MigrationProjectInventory) -> &[MigrationAuxiliaryInventory] =
+        MigrationProjectInventory::auxiliaries;
     let _consumer_reader = inventory_migration_consumer_file;
     let consumer = inventory_migration_consumer_source(
         MigrationConsumerKind::CssModules,
@@ -175,6 +179,21 @@ fn exercise_migration_inventory_surface() {
     assert_eq!(consumer.file(), "src/Card.tsx");
     assert_eq!(consumer.source_sha256().len(), 64);
     assert_eq!(consumer.observations().len(), 2);
+    let _auxiliary_reader = inventory_migration_auxiliary_file;
+    let auxiliary = inventory_migration_auxiliary_source(
+        MigrationAuxiliaryKind::TailwindConfig,
+        "tailwind.config.js",
+        "export default {};",
+    )
+    .expect("valid Tailwind auxiliary inventory");
+    let _auxiliary_declaration = MigrationProjectAuxiliary::new(
+        MigrationAuxiliaryKind::TailwindTemplate,
+        "src/index.html",
+    );
+    assert_eq!(auxiliary.auxiliary_kind(), MigrationAuxiliaryKind::TailwindConfig);
+    assert_eq!(auxiliary.file(), "tailwind.config.js");
+    assert_eq!(auxiliary.source_bytes(), 18);
+    assert_eq!(auxiliary.source_sha256().len(), 64);
     let _dependency_surface: fn(&MigrationDependency) = |dependency| {
         let _: &str = dependency.from();
         let _: MigrationDependencyKind = dependency.kind();
