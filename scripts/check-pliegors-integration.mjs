@@ -466,6 +466,37 @@ if (!className) {
   throw new Error(`SSR output did not contain a PliegoCSS class: ${html}`);
 }
 
+const pliegoCsscExecutable = join(
+  environment.CARGO_TARGET_DIR,
+  "debug",
+  process.platform === "win32" ? "pliego-cssc.exe" : "pliego-cssc",
+);
+const delegatedCheck = cargoWithEnvironment([
+  "run",
+  "--quiet",
+  "--locked",
+  "--manifest-path",
+  join(pliegorsRoot, "Cargo.toml"),
+  "-p",
+  "pliego-cli",
+  "--bin",
+  "pliego",
+  "--",
+  "css",
+  "check",
+  "--seed",
+], {
+  CARGO_TARGET_DIR: join(fixtureRoot, "target"),
+  PLIEGO_CSSC: pliegoCsscExecutable,
+  RUSTUP_TOOLCHAIN: "1.85.0",
+}, fixtureRoot);
+if (
+  !delegatedCheck.includes("semantic style(s)") ||
+  !delegatedCheck.includes("PLIEGO css check: delegated to pliego-cssc")
+) {
+  throw new Error("PliegoRS did not preserve the delegated PliegoCSS check contract");
+}
+
 cargo([
   "run",
   "--quiet",
