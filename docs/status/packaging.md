@@ -1,7 +1,7 @@
 # Packaging status
 
-Status: **initial LSP transport passed the complete exact-clean `67448b0` replay; no registry
-upload performed**
+Status: **initial VS Code client passed its closed-payload gate and the complete exact-clean
+`de13a9e` Rust package replay; no registry or Marketplace upload performed**
 
 The publishable workspace boundary has six dependency waves. `pliego-css-usage` and
 `pliego-css-control` follow `pliego-css-build` because direct and optional Cargo dependencies both
@@ -18,6 +18,28 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## Initial VS Code client clean replay — 2026-07-17
+
+The exact clean `de13a9e` Debian WSL2 gate packaged and extracted all sixteen Rust archives with
+native Linux Node 24.14.0 and Cargo 1.96, compiled the complete extracted graph in release mode,
+and executed the Rust 1.85 downstream consumer. `pliego-css-lsp` measured 14,825 compressed bytes
+(46,615 bytes of margin, SHA-256
+`4427f463b1fa902877dce44de73b15524471574d18da94fb69f561914f2787b9`). The tight archives
+remained below the fixed ceiling: `pliego-cssc` measured 61,329 bytes (111 bytes of margin,
+SHA-256 `eef97741fbf4afe3dc7aafc686b21357df5a2194b0350609b17b956b42831752`),
+`pliego-css-control` 61,077 (363 bytes), `pliego-css-build` 59,914 (1,526 bytes), and
+`pliego-css-source` 56,782 (4,658 bytes). Publication remained disabled and the 61,440-byte
+ceiling was not raised.
+
+The versioned `integration:vscode` gate built and tested the client, enumerated the VSCE payload,
+and packaged a 103,378-byte VSIX containing exactly `LICENSE`, `README.md`,
+`dist/extension.js`, and `package.json`. The bundled client was 446,011 bytes. It downloads no
+server, rejects virtual and untrusted workspaces, and requires explicit local `pliego-css-lsp` and
+`pliego-cssc` paths. The observed VSIX SHA-256 was
+`d1f544fd709b950668f016664f94789f2b0a2175d2da88402d98414539790a51`; VSCE embeds ZIP
+timestamps, so this is an integrity record for that run, not a reproducible-build claim. A real
+VS Code extension-host session and Marketplace publication remain separate blockers.
 
 ## Initial LSP transport clean replay — 2026-07-16
 
