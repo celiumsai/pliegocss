@@ -154,6 +154,15 @@ function send(message) {
   child.stdin.write(body);
 }
 
+async function waitForOutput(fragment, timeoutMs = 5000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (Buffer.concat(output).includes(Buffer.from(fragment))) return;
+    await new Promise((resolveDelay) => setTimeout(resolveDelay, 25));
+  }
+  fail(`LSP did not emit ${JSON.stringify(fragment)} within ${timeoutMs} ms`);
+}
+
 const uri = pathToFileURL(resolve(workspace, "src", "view.rs")).href;
 const rootUri = pathToFileURL(workspace).href;
 const cursor = text.indexOf("gap") + 3;
@@ -215,7 +224,19 @@ send({
   method: "textDocument/formatting",
   params: { textDocument: { uri }, options: { tabSize: 4, insertSpaces: true } },
 });
-await new Promise((resolveDelay) => setTimeout(resolveDelay, 500));
+await waitForOutput("unknown utility `unknown-thing`");
+const pcxVersion = 11;
+const pcxText =
+  'fn view(){let _=pcx!("flex",if a{"opacity-50"}else{"block"},if b{"opacity-50"}else{"grid"});}';
+send({
+  jsonrpc: "2.0",
+  method: "textDocument/didChange",
+  params: {
+    textDocument: { uri, version: pcxVersion },
+    contentChanges: [{ text: pcxText }],
+  },
+});
+await waitForOutput('"code":"PCX003"');
 send({ jsonrpc: "2.0", id: 7, method: "shutdown", params: null });
 send({ jsonrpc: "2.0", method: "exit", params: null });
 child.stdin.end();
@@ -264,7 +285,14 @@ const semanticMessages = published.filter((message) =>
   message.params?.diagnostics?.some((diagnostic) => diagnostic.code === "PCS001"),
 );
 if (semanticMessages.length !== 1 || semanticMessages[0].params.version !== finalVersion) {
-  fail("debounce published a stale or duplicate semantic diagnostic result");
+  fail(
+    `debounce published a stale or duplicate semantic diagnostic result: ${JSON.stringify(
+      semanticMessages.map((message) => ({
+        version: message.params?.version,
+        diagnostics: message.params?.diagnostics,
+      })),
+    )}`,
+  );
 }
 const semantic = semanticMessages[0].params.diagnostics.find(
   (diagnostic) => diagnostic.code === "PCS001",
@@ -277,6 +305,29 @@ if (
   semantic.range?.end?.character !== invalidText.indexOf("unknown-thing") + "unknown-thing".length
 ) {
   fail("compiler semantic diagnostic did not map to the exact Rust source range");
+}
+const pcxMessages = published.filter((message) =>
+  message.params?.diagnostics?.some((diagnostic) => diagnostic.code === "PCX003"),
+);
+if (pcxMessages.length !== 1 || pcxMessages[0].params.version !== pcxVersion) {
+  fail("pcx cross-clause diagnostics were stale, missing, or duplicated");
+}
+const pcxDiagnostic = pcxMessages[0].params.diagnostics.find(
+  (diagnostic) => diagnostic.code === "PCX003",
+);
+if (!pcxDiagnostic?.message?.includes("independent clauses 1 and 2")) {
+  fail("pcx diagnostic did not preserve the compiler message");
+}
+if (
+  pcxDiagnostic.range?.start?.character !== pcxText.lastIndexOf('"opacity-50"') ||
+  pcxDiagnostic.range?.end?.character !==
+    pcxText.lastIndexOf('"opacity-50"') + '"opacity-50"'.length
+) {
+  fail(
+    `pcx diagnostic did not map to the exact conflicting branch literal: ${JSON.stringify(
+      pcxDiagnostic.range,
+    )}`,
+  );
 }
 if (byId.get(2)?.result?.[0]?.newText !== '"flex gap-4"') {
   fail("formatting did not return the canonical whole literal");
@@ -322,6 +373,9 @@ process.stdout.write(
     semanticVersion: semanticMessages[0].params.version,
     staleSemanticResults: 0,
     protocolResponsiveDuringDebounce: true,
+    pcxDiagnostic: pcxDiagnostic.code,
+    pcxVersion: pcxMessages[0].params.version,
+    pcxRange: pcxDiagnostic.range,
     formattingEdits: byId.get(2).result.length,
     completion: item.label,
     completionRange: item.textEdit.range,

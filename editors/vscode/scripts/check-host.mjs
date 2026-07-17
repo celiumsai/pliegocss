@@ -68,7 +68,7 @@ process.stdout.write(
     schemaVersion: 1,
     vscode: "1.105.1",
     extension: "celiums.pliegocss-vscode",
-    diagnostics: "compiler-backed",
+    diagnostics: "compiler-backed-pcs-and-pcx",
     definition: "project-index-to-physical-css",
     serverDownload: false,
   }, null, 2)}\n`,

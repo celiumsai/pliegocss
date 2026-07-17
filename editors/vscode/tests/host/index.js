@@ -76,6 +76,29 @@ async function run() {
     diagnostic.range.end.character,
     invalid.indexOf("unknown-thing") + "unknown-thing".length,
   );
+
+  const pcx =
+    'fn view(){let _=pcx!("flex",if a{"opacity-50"}else{"block"},if b{"opacity-50"}else{"grid"});}';
+  const pcxEdit = new vscode.WorkspaceEdit();
+  pcxEdit.replace(
+    sourceUri,
+    new vscode.Range(document.positionAt(0), document.positionAt(document.getText().length)),
+    pcx,
+  );
+  assert.equal(await vscode.workspace.applyEdit(pcxEdit), true);
+  const pcxDiagnostic = await waitFor(
+    () => {
+      const values = vscode.languages.getDiagnostics(sourceUri);
+      return values.find((value) => value.code === "PCX003");
+    },
+    "pcx cross-clause diagnostic",
+  );
+  assert.match(pcxDiagnostic.message, /independent clauses 1 and 2/);
+  assert.equal(pcxDiagnostic.range.start.character, pcx.lastIndexOf('"opacity-50"'));
+  assert.equal(
+    pcxDiagnostic.range.end.character,
+    pcx.lastIndexOf('"opacity-50"') + '"opacity-50"'.length,
+  );
 }
 
 module.exports = { run };

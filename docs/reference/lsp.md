@@ -78,6 +78,11 @@ replaces the complete literal token with a newly escaped ordinary Rust string.
 - Full-buffer changes replace the pending semantic job for that URI and restart a 150 ms debounce.
   Due jobs run on a dedicated worker instead of the JSON-RPC thread. A result is published only
   when its document version still matches the open buffer, so an in-flight stale result is discarded.
+- Multi-clause `pcx!` invocations are projected into one bounded synthetic Rust source containing
+  only visible utility literals. The worker delegates that document to same-version
+  `pliego-cssc check --source`, accepts only compiler `PCX003` cross-clause findings, and maps the
+  synthetic branch range back to the original complete Rust literal token. The temporary source is
+  created exclusively and removed after the compiler exits; it is never written into the project.
 - Formatting returns edits only; it never writes a source file. The editor remains responsible for
   applying the version-bound edit set.
 - Definition consumes Project Index schema 1 or 2 instead of scanning repository structure. It
@@ -89,9 +94,10 @@ The current diagnostic pass covers Rust parsing, macro extraction, PliegoCSS syn
 formatting, and theme-aware compiler validation of every bounded individual literal. Local findings
 publish immediately; uncached compiler checks are debounced and run serially in the background.
 Version cancellation is cooperative at the publication boundary: PliegoCSS discards stale results
-but does not forcibly terminate a compiler process that already started. Cross-literal `pcx!`
-composition equality and a frozen negative corpus remain necessary before claiming complete
-CLI/editor diagnostic equality.
+but does not forcibly terminate a compiler process that already started. Compiler-backed `PCX003`
+parity now covers semantic overlaps and exact duplicates across independently selectable clauses.
+A frozen negative corpus and broader diagnostic-equality matrix remain necessary before claiming
+complete CLI/editor diagnostic equality.
 
 ## Current non-goals
 
@@ -114,7 +120,9 @@ to select the exact physical declaration in its verified stylesheet.
 It then sends a burst of full-buffer versions ending in an unknown utility, requires the protocol
 to answer a formatting request before semantic publication, and accepts exactly one version-10
 `PCS001` result with the compiler's message and exact UTF-16 range. No stale semantic result may
-survive the version check.
+survive the version check. A subsequent version 11 contains an exact semantic duplicate across two
+independent `pcx!` clauses; the gate requires one compiler `PCX003` mapped to the complete literal
+token in the second clause.
 
 ## VS Code client candidate
 
@@ -148,4 +156,5 @@ The first run downloads the exact VS Code 1.105.1 test runtime through the offic
 harness; later runs reuse the ignored local cache. The gate builds external Rust 1.85 server and
 compiler binaries, loads the development extension in a real workspace host, follows Go to
 Definition to the exact physical CSS range, edits the Rust buffer, and requires the compiler-backed
-`PCS001` diagnostic. The extension itself still downloads no server or compiler.
+`PCS001` diagnostic followed by the exact cross-clause `PCX003` diagnostic. The extension itself
+still downloads no server or compiler.

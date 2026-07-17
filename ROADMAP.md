@@ -275,8 +275,10 @@ ETA: 3–5 días
   navegación Project Index desde la API del extension host.
 - [x] Ejecutar diagnósticos semánticos tras debounce de 150 ms fuera del protocolo y descartar
   resultados de versiones obsoletas; el gate de ráfaga pasa en Windows y Debian.
+- [x] Delegar conflictos cross-clause `pcx!` a `check --source`, remapear `PCX003` al branch literal
+  original y ejercerlo en el proceso LSP y VS Code 1.105.1 reales.
 - [ ] Añadir otro cliente de editor, cancelación forzosa del compilador en curso cuando aporte valor
-  y paridad diagnóstica completa para composición `pcx!` CLI/LSP.
+  y corpus/evidencia completa de paridad diagnóstica CLI/LSP.
 - [x] Mejorar diagnósticos usando los cinco fixtures reales.
 - [x] Crear documentación de CLI, configuración y troubleshooting; editor setup sigue abierto.
 - [x] Ejecutar doctests y ejemplos del workspace desde el workflow de CI.

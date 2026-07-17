@@ -117,9 +117,11 @@ The workspace is unreleased at `0.0.0`; syntax and crate boundaries may still ch
   transport now provides completion, hover, syntax/format diagnostics, bounded compiler-backed
   semantic checks with a 150 ms debounce, stale-version rejection, whole-literal formatting, and
   opt-in integrity-verified Project Index navigation
-  to final CSS declarations; an unreleased
+  to final CSS declarations. Cross-clause `pcx!` conflicts are delegated to the same compiler
+  source-check path and mapped back to the original Rust branch token; an unreleased
   VS Code client packages that transport without embedded binaries. A pinned VS Code 1.105.1
-  extension-host gate now exercises compiler diagnostics and Project Index definition end to end;
+  extension-host gate now exercises `PCS001`, cross-clause `PCX003`, and Project Index definition
+  end to end;
   additional editors and complete semantic diagnostic parity remain open.
 - `pliego-css-config` implements the versioned DTCG 2025.10 format bridge, a bounded same-document
   Resolver profile, and the canonical token graph with aliases, derived values, deprecations,

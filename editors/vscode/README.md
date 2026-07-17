@@ -16,5 +16,6 @@ Only the first local workspace folder is currently used as the native process wo
 Virtual and untrusted workspaces are explicitly unsupported.
 
 `pnpm integration:vscode-host` launches the development extension in pinned VS Code 1.105.1 and
-exercises real diagnostics plus Project Index definition. Its first run downloads that editor test
+exercises real `PCS001`/cross-clause `PCX003` diagnostics plus Project Index definition. Its first
+run downloads that editor test
 runtime; this is test infrastructure and does not change the extension's no-server-download policy.

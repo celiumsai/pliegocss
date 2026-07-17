@@ -4,9 +4,14 @@
 
 use std::collections::BTreeMap;
 use std::ffi::OsString;
+use std::fmt::Write as _;
+use std::fs::{OpenOptions, remove_file};
 use std::io::{self, BufRead, BufReader, Write};
-use std::path::PathBuf;
-use std::process::Command;
+#[cfg(unix)]
+use std::os::unix::fs::OpenOptionsExt;
+use std::path::{Path, PathBuf};
+use std::process::{Command, Output};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::mpsc::{self, Receiver, RecvTimeoutError, Sender};
 use std::thread;
 use std::time::{Duration, Instant};
@@ -21,6 +26,7 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 const MAX_SEMANTIC_CACHE_ITEMS: usize = 4_096;
 const MAX_SEMANTIC_CHECKS_PER_DOCUMENT: usize = 256;
 const SEMANTIC_DEBOUNCE: Duration = Duration::from_millis(150);
+static TEMP_SOURCE_COUNTER: AtomicU64 = AtomicU64::new(0);
 
 /// Exact process and theme selection used by delegated tooling requests.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -162,7 +168,7 @@ impl SemanticEngine {
         }
     }
 
-    fn findings(&mut self, root: &PathBuf, style: &str) -> Result<&[Value], String> {
+    fn findings(&mut self, root: &Path, style: &str) -> Result<&[Value], String> {
         if !self.cache.contains_key(style) {
             if self.cache.len() >= MAX_SEMANTIC_CACHE_ITEMS {
                 self.cache.clear();
@@ -177,7 +183,23 @@ impl SemanticEngine {
             .map_err(Clone::clone)
     }
 
-    fn run_check(&self, root: &PathBuf, style: &str) -> Result<Vec<Value>, String> {
+    fn pcx_findings(&mut self, root: &Path, source: &str) -> Result<&[Value], String> {
+        let key = format!("\0pcx:{source}");
+        if !self.cache.contains_key(&key) {
+            if self.cache.len() >= MAX_SEMANTIC_CACHE_ITEMS {
+                self.cache.clear();
+            }
+            let result = self.run_source_check(root, source);
+            self.cache.insert(key.clone(), result);
+        }
+        self.cache
+            .get(&key)
+            .expect("pcx semantic result inserted")
+            .as_deref()
+            .map_err(Clone::clone)
+    }
+
+    fn run_check(&self, root: &Path, style: &str) -> Result<Vec<Value>, String> {
         let mut process = Command::new(&self.config.compiler);
         process
             .arg("--diagnostic-format")
@@ -194,27 +216,91 @@ impl SemanticEngine {
         let output = process
             .output()
             .map_err(|error| format!("cannot run pliego-cssc check: {error}"))?;
-        if output.status.success() {
-            if !output.stderr.is_empty() {
-                return Err("successful pliego-cssc check wrote stderr".into());
+        parse_check_output(&output)
+    }
+
+    fn run_source_check(&self, root: &Path, source: &str) -> Result<Vec<Value>, String> {
+        let temporary = TemporarySource::create(source)?;
+        let mut process = Command::new(&self.config.compiler);
+        process
+            .arg("--diagnostic-format")
+            .arg("json")
+            .arg("check")
+            .arg("--source")
+            .arg(&temporary.path)
+            .current_dir(root);
+        if self.config.seed {
+            process.arg("--seed");
+        } else if let Some(config) = &self.config.config {
+            process.arg("--config").arg(config);
+        }
+        let output = process
+            .output()
+            .map_err(|error| format!("cannot run pliego-cssc source check: {error}"))?;
+        parse_check_output(&output)
+    }
+}
+
+fn parse_check_output(output: &Output) -> Result<Vec<Value>, String> {
+    if output.status.success() {
+        if !output.stderr.is_empty() {
+            return Err("successful pliego-cssc check wrote stderr".into());
+        }
+        return Ok(Vec::new());
+    }
+    let document: Value = serde_json::from_slice(&output.stderr)
+        .map_err(|error| format!("invalid pliego-cssc diagnostic JSON: {error}"))?;
+    if document.get("schemaVersion") != Some(&json!(1))
+        || document.get("command") != Some(&json!("check"))
+    {
+        return Err("unsupported pliego-cssc diagnostic schema".into());
+    }
+    let diagnostics = document
+        .get("diagnostics")
+        .and_then(Value::as_array)
+        .ok_or("pliego-cssc diagnostic document has no diagnostics")?;
+    if diagnostics.is_empty() {
+        return Err("failed pliego-cssc check returned no diagnostics".into());
+    }
+    Ok(diagnostics.clone())
+}
+
+struct TemporarySource {
+    path: PathBuf,
+}
+
+impl TemporarySource {
+    fn create(source: &str) -> Result<Self, String> {
+        for _ in 0..16 {
+            let id = TEMP_SOURCE_COUNTER.fetch_add(1, Ordering::Relaxed);
+            let path =
+                std::env::temp_dir().join(format!("pliegocss-lsp-{}-{id}.rs", std::process::id()));
+            let mut options = OpenOptions::new();
+            options.write(true).create_new(true);
+            #[cfg(unix)]
+            options.mode(0o600);
+            match options.open(&path) {
+                Ok(mut file) => {
+                    if let Err(error) = file.write_all(source.as_bytes()) {
+                        drop(file);
+                        let _ = remove_file(&path);
+                        return Err(format!("cannot write temporary Rust source: {error}"));
+                    }
+                    return Ok(Self { path });
+                }
+                Err(error) if error.kind() == io::ErrorKind::AlreadyExists => {}
+                Err(error) => {
+                    return Err(format!("cannot create temporary Rust source: {error}"));
+                }
             }
-            return Ok(Vec::new());
         }
-        let document: Value = serde_json::from_slice(&output.stderr)
-            .map_err(|error| format!("invalid pliego-cssc diagnostic JSON: {error}"))?;
-        if document.get("schemaVersion") != Some(&json!(1))
-            || document.get("command") != Some(&json!("check"))
-        {
-            return Err("unsupported pliego-cssc diagnostic schema".into());
-        }
-        let diagnostics = document
-            .get("diagnostics")
-            .and_then(Value::as_array)
-            .ok_or("pliego-cssc diagnostic document has no diagnostics")?;
-        if diagnostics.is_empty() {
-            return Err("failed pliego-cssc check returned no diagnostics".into());
-        }
-        Ok(diagnostics.clone())
+        Err("cannot allocate a unique temporary Rust source path".into())
+    }
+}
+
+impl Drop for TemporarySource {
+    fn drop(&mut self) {
+        let _ = remove_file(&self.path);
     }
 }
 
@@ -589,12 +675,182 @@ fn semantic_document_diagnostics(engine: &mut SemanticEngine, job: &SemanticJob)
             semantic_limit_reported = true;
         }
     });
+    if !semantic_limit_reported {
+        values.extend(pcx_document_diagnostics(engine, job, &report));
+    }
     values
+}
+
+struct SyntheticPcxSource {
+    source: String,
+    ranges: BTreeMap<(usize, usize), SourceRange>,
+    fallback: SourceRange,
+}
+
+fn synthetic_pcx_source(report: &ScanReport) -> Result<Option<SyntheticPcxSource>, String> {
+    let mut source = String::from("fn __pliegocss_lsp_pcx() {");
+    let mut actual_ranges = Vec::new();
+    let mut fallback = None;
+    for invocation in &report.invocations {
+        let InvocationKind::Pcx(pcx) = &invocation.kind else {
+            continue;
+        };
+        if pcx.clauses.len() < 2 {
+            continue;
+        }
+        fallback.get_or_insert(invocation.range);
+        source.push_str("let _=pcx!(");
+        write!(source, "{:?}", pcx.base.value).expect("writing to String cannot fail");
+        for clause in &pcx.clauses {
+            source.push_str(",match (){");
+            for branch in &clause.branches {
+                source.push_str("_=>");
+                write!(source, "{:?}", branch.style.value).expect("writing to String cannot fail");
+                source.push(',');
+                actual_ranges.push(branch.style.range);
+            }
+            source.push('}');
+        }
+        source.push_str(");");
+    }
+    source.push('}');
+    let Some(fallback) = fallback else {
+        return Ok(None);
+    };
+    let synthetic = scan_source_named("pliegocss-lsp-pcx.rs", &source)
+        .map_err(|error| format!("cannot scan synthetic pcx source: {error}"))?;
+    if !synthetic.diagnostics.is_empty() {
+        return Err("synthetic pcx source produced scanner diagnostics".into());
+    }
+    let mut synthetic_ranges = Vec::new();
+    for invocation in &synthetic.invocations {
+        let InvocationKind::Pcx(pcx) = &invocation.kind else {
+            return Err("synthetic source produced a non-pcx invocation".into());
+        };
+        for clause in &pcx.clauses {
+            synthetic_ranges.extend(clause.branches.iter().map(|branch| branch.style.range));
+        }
+    }
+    if synthetic_ranges.len() != actual_ranges.len() {
+        return Err("synthetic pcx literal mapping is incomplete".into());
+    }
+    let ranges = synthetic_ranges
+        .into_iter()
+        .zip(actual_ranges)
+        .map(|(synthetic, actual)| ((synthetic.start.byte, synthetic.end.byte), actual))
+        .collect();
+    Ok(Some(SyntheticPcxSource {
+        source,
+        ranges,
+        fallback,
+    }))
+}
+
+fn pcx_document_diagnostics(
+    engine: &mut SemanticEngine,
+    job: &SemanticJob,
+    report: &ScanReport,
+) -> Vec<Value> {
+    let synthetic = match synthetic_pcx_source(report) {
+        Ok(Some(synthetic)) => synthetic,
+        Ok(None) => return Vec::new(),
+        Err(error) => {
+            return vec![diagnostic(
+                &job.text,
+                report.invocations[0].range,
+                "PCL001",
+                &format!("compiler-backed pcx diagnostics unavailable: {error}"),
+                1,
+            )];
+        }
+    };
+    let findings = match engine.pcx_findings(&job.root, &synthetic.source) {
+        Ok(findings) => findings,
+        Err(error) => {
+            return vec![diagnostic(
+                &job.text,
+                synthetic.fallback,
+                "PCL001",
+                &format!("compiler-backed pcx diagnostics unavailable: {error}"),
+                1,
+            )];
+        }
+    };
+    let mut diagnostics = Vec::new();
+    for finding in findings {
+        if finding.get("code") != Some(&json!("PCX003")) {
+            continue;
+        }
+        match pcx_diagnostic(&job.text, &synthetic, finding) {
+            Ok(value) => diagnostics.push(value),
+            Err(error) => {
+                return vec![diagnostic(
+                    &job.text,
+                    synthetic.fallback,
+                    "PCL001",
+                    &format!("invalid compiler pcx diagnostic: {error}"),
+                    1,
+                )];
+            }
+        }
+    }
+    diagnostics
+}
+
+fn pcx_diagnostic(
+    source: &str,
+    synthetic: &SyntheticPcxSource,
+    finding: &Value,
+) -> Result<Value, String> {
+    let origin = finding
+        .get("origin")
+        .ok_or("missing pcx diagnostic origin")?;
+    if string_field(origin, "kind")? != "rust"
+        || string_field(origin, "label")? != "pcx-cross-clause-conflict"
+    {
+        return Err("pcx diagnostic has an unexpected origin".into());
+    }
+    let range = finding.get("range").ok_or("missing pcx diagnostic range")?;
+    let start = usize::try_from(
+        range
+            .get("byteStart")
+            .and_then(Value::as_u64)
+            .ok_or("missing pcx range start")?,
+    )
+    .map_err(|_| "pcx range start is too large")?;
+    let end = usize::try_from(
+        range
+            .get("byteEnd")
+            .and_then(Value::as_u64)
+            .ok_or("missing pcx range end")?,
+    )
+    .map_err(|_| "pcx range end is too large")?;
+    let actual = synthetic
+        .ranges
+        .get(&(start, end))
+        .ok_or("pcx diagnostic range has no source mapping")?;
+    let severity = match string_field(finding, "severity")? {
+        "error" => 1,
+        "warning" => 2,
+        _ => return Err("unsupported pcx diagnostic severity".into()),
+    };
+    let mut value = lsp_diagnostic(
+        &source_range_to_lsp(source, *actual),
+        string_field(finding, "code")?,
+        string_field(finding, "message")?,
+        severity,
+    );
+    value["data"] = json!({
+        "category":finding.get("category").cloned().unwrap_or(Value::Null),
+        "suggestion":finding.get("suggestion").cloned().unwrap_or(Value::Null),
+        "replacement":Value::Null
+    });
+    Ok(value)
 }
 
 fn semantic_diagnostics(
     engine: &mut SemanticEngine,
-    root: &PathBuf,
+    root: &Path,
     source: &str,
     literal: &StyleLiteral,
 ) -> Vec<Value> {
@@ -1194,6 +1450,36 @@ mod tests {
         };
         let whole = semantic_diagnostic(escaped, literal, &finding).unwrap();
         assert_eq!(whole["range"], source_range_to_lsp(escaped, literal.range));
+    }
+
+    #[test]
+    fn synthetic_pcx_ranges_map_back_to_the_original_branch_token() {
+        let source = concat!(
+            "fn x(){let _=pcx!(\"flex\",",
+            "if a { r#\"opacity-50\"# } else { \"block\" },",
+            "if b { \"opacity-50\" } else { \"grid\" });}"
+        );
+        let report = scan_source_named("x.rs", source).unwrap();
+        let synthetic = synthetic_pcx_source(&report).unwrap().unwrap();
+        let expected_start = source.rfind("\"opacity-50\"").unwrap();
+        let expected_end = expected_start + "\"opacity-50\"".len();
+        let ((start, end), _) = synthetic
+            .ranges
+            .iter()
+            .find(|(_, actual)| actual.start.byte == expected_start)
+            .expect("mapped second-clause branch");
+        let finding = json!({
+            "code":"PCX003","category":"composition","severity":"error",
+            "message":"independent clauses 1 and 2 overlap",
+            "suggestion":"use one match",
+            "origin":{"kind":"rust","label":"pcx-cross-clause-conflict"},
+            "range":{"byteStart":start,"byteEnd":end}
+        });
+        let value = pcx_diagnostic(source, &synthetic, &finding).unwrap();
+        assert_eq!(
+            value["range"],
+            byte_range_to_lsp(source, expected_start..expected_end)
+        );
     }
 
     #[test]
