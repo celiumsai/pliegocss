@@ -1,6 +1,6 @@
 # Packaging status
 
-Status: **CSS Modules require bindings passed the complete exact-clean `20d0fac` replay; no
+Status: **CSS Modules binding aliases passed the complete exact-clean `69a0cbb` replay; no
 registry upload performed**
 
 The publishable workspace boundary has six dependency waves. `pliego-css-usage` and
@@ -18,6 +18,24 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## CSS Modules binding-alias clean replay — 2026-07-16
+
+The exact clean `69a0cbb` Debian WSL2 gate passed 37 source tests, strict source Clippy, the complete
+public API smoke with Rust 1.85, and the three-case migration corpus with one exact alias seam. It
+then packaged and extracted all fifteen archives with Cargo 1.96 and compiled the extracted graph in
+release mode. Publication remained disabled, the worktree was clean, and the fixed 61,440-byte
+ceiling was not raised.
+
+| Package | Compressed bytes | Remaining margin | SHA-256 |
+|---|---:|---:|---|
+| `pliego-css-source` | 46,490 | 14,950 | `0d61793ab5a04ceb8fd61ce240073017d990accc996b71a9d493c958a4a5ad10` |
+| `pliego-cssc` | 61,379 | 61 | `c3d1d4ea179b0c461d9cbcf5285b5dfe74653b1c73de52cea7043dddec8de4e8` |
+
+Simple `const|let|var alias = binding` declarations now emit typed alias observations and propagate
+the exact CSS Modules target to alias dot/quoted-bracket usages without adding a false dynamic class
+usage. Scope/shadowing, alias chains, destructuring, crawling, and real-project evidence remain open,
+so R0.8 is not closed. The CLI package remains closed to additive feature growth.
 
 ## CSS Modules require-binding clean replay — 2026-07-16
 
