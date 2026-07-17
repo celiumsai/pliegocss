@@ -51,6 +51,15 @@ exact-site declarations. `source_unit` is an explicit adapter attestation that e
 PliegoCSS call in that unit belongs to the component; `site` is the narrower exact-range seam. It
 does not infer routes, components, islands, Cargo reachability, or bundle boundaries from filenames.
 
+## Source formatting inspection
+
+Exact-version tools can call `inspect_utility_format` with an explicit file inventory and canonical
+value callback. The result contains exact before/after snapshots plus `FMT001`-compatible findings;
+the function never writes files. It rejects unsupported macro inputs and overlapping/stale ranges,
+escapes complete replacement literals as valid Rust, and reparses/rescans every proposed document.
+`pliego-cssc fmt --source ... --apply` owns locking, second-snapshot validation, permission
+preservation, and rollback-capable publication over those prepared bytes.
+
 ## Migration source inventory
 
 Exact-version tooling can conservatively inventory one explicit Sass, Tailwind CSS v4 entry, or CSS

@@ -59,7 +59,8 @@ use pliego_css_ownership::{
 use pliego_css_parser::{format_style_list, parse_named_candidate, parse_style_list};
 use pliego_css_source::{
     InvocationKind, MigrationProject, MigrationSourceKind, PcxSelection, ScanDiagnostic,
-    ScanReport, SourceRange, StyleLiteral, inventory_migration_file, scan_file, scan_source_named,
+    ScanReport, SourceRange, StyleLiteral, UtilityFormatError, UtilityFormatFinding,
+    inspect_utility_format, inventory_migration_file, scan_file, scan_source_named,
 };
 use pliego_css_theme::{THEME_ID_FORMAT_VERSION, ThemeRegistry};
 use pliego_css_usage::{
@@ -315,6 +316,7 @@ struct UtilityFormatArgs {
     sources: Vec<PathBuf>,
     output: Option<PathBuf>,
     check: bool,
+    apply: bool,
 }
 
 #[derive(Debug, Eq, PartialEq)]
@@ -760,66 +762,44 @@ struct ExplainDocument {
     utilities: Vec<ExplainedUtility>,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
-struct FormatFinding {
-    file: String,
-    role: String,
-    range: SourceRange,
-    actual: String,
-    expected: String,
-}
-
-impl FormatFinding {
-    fn human(&self) -> String {
-        format!(
-            "FMT001: {} at {}:{}:{} [bytes {}..{}): expected {:?}, found {:?}",
-            self.role,
-            self.file,
-            self.range.start.line,
-            self.range.start.column + 1,
-            self.range.start.byte,
-            self.range.end.byte,
-            self.expected,
-            self.actual,
-        )
-    }
-
-    fn diagnostic(&self) -> CliDiagnostic {
-        CliDiagnostic {
-            code: "FMT001".into(),
-            category: "format".into(),
-            severity: "error".into(),
-            message: format!("{} utility literal is not canonically formatted", self.role),
-            suggestion: Some(format!(
-                "expected {:?}, found {:?}",
-                self.expected, self.actual
-            )),
-            origin: Some(CliDiagnosticOrigin {
-                kind: "rust".into(),
-                label: self.role.clone(),
-            }),
-            range: Some(diagnostic_range_from_source(&self.file, self.range)),
-            style_range: None,
-            replacement: Some(CliReplacement {
-                kind: "decoded-style-value".into(),
-                value: self.expected.clone(),
-            }),
-        }
+fn format_finding_diagnostic(finding: &UtilityFormatFinding) -> CliDiagnostic {
+    CliDiagnostic {
+        code: "FMT001".into(),
+        category: "format".into(),
+        severity: "error".into(),
+        message: format!(
+            "{} utility literal is not canonically formatted",
+            finding.role
+        ),
+        suggestion: Some(format!(
+            "expected {:?}, found {:?}",
+            finding.expected, finding.actual
+        )),
+        origin: Some(CliDiagnosticOrigin {
+            kind: "rust".into(),
+            label: finding.role.clone(),
+        }),
+        range: Some(diagnostic_range_from_source(&finding.file, finding.range)),
+        style_range: None,
+        replacement: Some(CliReplacement {
+            kind: "decoded-style-value".into(),
+            value: finding.expected.clone(),
+        }),
     }
 }
 
-fn format_failure(findings: &[FormatFinding]) -> CliFailure {
+fn format_failure(findings: &[UtilityFormatFinding]) -> CliFailure {
     CliFailure {
         human: format!(
             "formatting drift detected in {} Rust utility literal(s):\n{}",
             findings.len(),
             findings
                 .iter()
-                .map(FormatFinding::human)
+                .map(UtilityFormatFinding::human)
                 .collect::<Vec<_>>()
                 .join("\n")
         ),
-        diagnostics: findings.iter().map(FormatFinding::diagnostic).collect(),
+        diagnostics: findings.iter().map(format_finding_diagnostic).collect(),
     }
 }
 
@@ -3813,6 +3793,13 @@ fn parse_utility_format_arguments(arguments: &[String]) -> Result<Command, Strin
                 parsed.check = true;
                 index += 1;
             }
+            "--apply" => {
+                if parsed.apply {
+                    return Err("duplicate `--apply`".into());
+                }
+                parsed.apply = true;
+                index += 1;
+            }
             option => return Err(format!("unknown fmt option `{option}`")),
         }
     }
@@ -3825,14 +3812,20 @@ fn parse_utility_format_arguments(arguments: &[String]) -> Result<Command, Strin
                 .into(),
         );
     }
-    if parsed.check && parsed.output.is_some() {
-        return Err("`--check` conflicts with `--output`".into());
+    if (parsed.check || parsed.apply) && parsed.output.is_some() {
+        return Err("`--output` conflicts with check/apply".into());
+    }
+    if parsed.check && parsed.apply {
+        return Err("`--check` conflicts with `--apply`".into());
     }
     if let (Some(input), Some(output)) = (&parsed.input, &parsed.output) {
         validate_path_roles(&[("--input", input)], &[("--output", output)])?;
     }
-    if !parsed.sources.is_empty() && (!parsed.check || parsed.output.is_some()) {
-        return Err("`fmt --source` is read-only and requires `--check`".into());
+    if !parsed.sources.is_empty() && (parsed.check == parsed.apply || parsed.output.is_some()) {
+        return Err("choose `--check` or `--apply`".into());
+    }
+    if parsed.apply && parsed.sources.is_empty() {
+        return Err("`--apply` requires `--source`".into());
     }
     Ok(Command::Format(parsed))
 }
@@ -6520,7 +6513,7 @@ fn run_catalog(arguments: &CatalogArgs) -> Result<(), String> {
 
 fn run_utility_formatter(arguments: &UtilityFormatArgs) -> Result<(), CliFailure> {
     if !arguments.sources.is_empty() {
-        return check_rust_utility_format(&arguments.sources);
+        return run_rust_utility_format(&arguments.sources, arguments.apply);
     }
     if let Some(input) = &arguments.input {
         let source = fs::read_to_string(input).map_err(|error| {
@@ -6577,90 +6570,65 @@ fn run_utility_formatter(arguments: &UtilityFormatArgs) -> Result<(), CliFailure
     publish_formatted(arguments.output.as_deref(), &rendered).map_err(Into::into)
 }
 
-fn check_rust_utility_format(sources: &[PathBuf]) -> Result<(), CliFailure> {
+fn run_rust_utility_format(sources: &[PathBuf], apply: bool) -> Result<(), CliFailure> {
     let files = expand_source_paths(sources)?;
-    let mut checked = 0;
-    let mut drift = Vec::new();
-    for path in &files {
-        let report = scan_file(path).map_err(|error| CliFailure::tool(error.to_string()))?;
-        if !report.diagnostics.is_empty() {
-            return Err(scan_failure(&report.diagnostics));
-        }
-        for invocation in &report.invocations {
-            match &invocation.kind {
-                InvocationKind::Pc(pc) => inspect_rust_format_literal(
-                    &invocation.source,
-                    "pc",
-                    &pc.style,
-                    &mut checked,
-                    &mut drift,
-                )?,
-                InvocationKind::Pcx(pcx) => {
-                    inspect_rust_format_literal(
-                        &invocation.source,
-                        "pcx base",
-                        &pcx.base,
-                        &mut checked,
-                        &mut drift,
-                    )?;
-                    for (clause_index, clause) in pcx.clauses.iter().enumerate() {
-                        for (branch_index, branch) in clause.branches.iter().enumerate() {
-                            inspect_rust_format_literal(
-                                &invocation.source,
-                                &format!(
-                                    "pcx clause {} branch {}",
-                                    clause_index + 1,
-                                    branch_index + 1
-                                ),
-                                &branch.style,
-                                &mut checked,
-                                &mut drift,
-                            )?;
-                        }
-                    }
-                }
+    let inspection =
+        inspect_utility_format(&files, format_utility_source).map_err(|error| match error {
+            UtilityFormatError::Diagnostics(diagnostics) => scan_failure(&diagnostics),
+            UtilityFormatError::Format {
+                file,
+                role,
+                range,
+                error,
+            } => {
+                let human = format!("{error} in {file}");
+                style_literal_failure(error, human, &file, range, &role)
             }
-        }
-    }
-    if drift.is_empty() {
+            error => CliFailure::tool(error.to_string()),
+        })?;
+    if inspection.findings.is_empty() {
         println!(
-            "ok: {checked} Rust utility literal(s) are formatted across {} file(s)",
-            files.len()
+            "ok: {} Rust utility literal(s) are formatted across {} file(s)",
+            inspection.checked, inspection.files
         );
         Ok(())
+    } else if apply {
+        publish_utility_rewrites(&inspection.rewrites).map_err(CliFailure::tool)?;
+        println!("fixed");
+        Ok(())
     } else {
-        Err(format_failure(&drift))
+        Err(format_failure(&inspection.findings))
     }
 }
 
-fn inspect_rust_format_literal(
-    file: &str,
-    role: &str,
-    literal: &StyleLiteral,
-    checked: &mut usize,
-    drift: &mut Vec<FormatFinding>,
-) -> Result<(), CliFailure> {
-    *checked += 1;
-    let expected = format_utility_source(&literal.value).map_err(|error| {
-        let human = format!(
-            "{error} at {file}:{}:{} [bytes {}..{})",
-            literal.range.start.line,
-            literal.range.start.column + 1,
-            literal.range.start.byte,
-            literal.range.end.byte
-        );
-        style_literal_failure(error, human, file, literal.range, role)
-    })?;
-    if literal.value != expected {
-        drift.push(FormatFinding {
-            file: file.to_owned(),
-            role: role.to_owned(),
-            range: literal.range,
-            actual: literal.value.clone(),
-            expected,
-        });
+fn publish_utility_rewrites(
+    rewrites: &[pliego_css_source::UtilityFormatRewrite],
+) -> Result<(), String> {
+    let destinations = publication_destinations(rewrites.iter().map(|item| item.path.as_path()))?;
+    let _locks = acquire_publication_locks(&destinations)?;
+    for rewrite in rewrites {
+        if fs::read(&rewrite.path)
+            .map_err(|error| format!("read `{}`: {error}", rewrite.path.display()))?
+            != rewrite.before
+        {
+            return Err(format!("`{}` changed", rewrite.path.display()));
+        }
     }
-    Ok(())
+    let mut writes = Vec::with_capacity(rewrites.len());
+    for rewrite in rewrites {
+        let permissions = fs::metadata(&rewrite.path)
+            .map_err(|error| format!("stat `{}`: {error}", rewrite.path.display()))?
+            .permissions();
+        let write = prepare_atomic_write(&rewrite.path, &rewrite.after)?;
+        if let Some(temporary) = &write.temporary {
+            fs::set_permissions(temporary, permissions)
+                .map_err(|error| format!("chmod `{}`: {error}", rewrite.path.display()))?;
+        }
+        writes.push(write);
+    }
+    commit_prepared_locked_with(writes, |_, temporary, destination| {
+        fs::rename(temporary, destination)
+    })
 }
 
 fn format_utility_source(source: &str) -> Result<String, Diagnostic> {

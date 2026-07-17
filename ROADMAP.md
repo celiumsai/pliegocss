@@ -260,7 +260,8 @@ ETA: 3–5 días
   `--compose` y otras opciones marcadas explícitamente pueden repetirse.
 - [x] Añadir un smoke downstream local bajo Rust 1.85 que compile la API candidata, configure un
   tema y cruce identidades/formatos con los comandos one-shot de `pliego-cssc` desde otro CWD.
-- [ ] Aplicar fixes de formato sobre Rust de forma opt-in y collision-safe.
+- [x] Aplicar fixes de formato sobre Rust de forma opt-in y collision-safe, con snapshots exactos,
+  reparse/rescan completo y publicación multiarchivo rollback-capable.
 - [x] Exponer manifest para integración con editor.
 - [x] Diseñar contratos mínimos de autocompletado/hover con `catalog` JSON y `explain` JSON.
 - [ ] Implementar transporte LSP y clientes de editor sobre esos contratos.

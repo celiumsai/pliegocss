@@ -245,7 +245,8 @@ fixture acotado.
   duplicados fallen cerrados; solo las opciones documentadas como repeatables admiten repetición.
 - [x] Añadir un smoke downstream local con Rust 1.85 para `Style`/`StyleId`, `pc!`, `pcx!`, el bridge
   `theme!`, los documentos CLI versionados y la igualdad de identidad Rust/CLI desde un CWD externo.
-- [ ] Añadir aplicación opt-in de fixes seguros desde tooling de editor.
+- [x] Añadir aplicación opt-in y collision-safe de fixes de formato Rust; el transporte de editor
+  reutilizará este motor, pero sigue pendiente.
 - [x] Completar documentación inicial de CLI, configuración y troubleshooting.
 
 ### Gate semanal

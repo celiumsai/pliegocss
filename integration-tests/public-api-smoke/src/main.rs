@@ -33,6 +33,7 @@ use pliego_css_source::{
     MigrationInventory, MigrationInventoryError, MigrationPreflightReliance, MigrationProject,
     MigrationProjectAuxiliary, MigrationProjectConsumer, MigrationProjectInventory,
     MigrationProjectSource, MigrationSourceKind, discover_migration_project,
+    inspect_utility_format,
     inventory_migration_auxiliary_file,
     inventory_migration_auxiliary_source, inventory_migration_consumer_file,
     inventory_migration_consumer_source, inventory_migration_file, inventory_migration_source,
@@ -442,12 +443,22 @@ fn exercise_application_collector_surface() {
     }));
 }
 
+fn exercise_source_formatting_surface() {
+    let inspection = inspect_utility_format(&[], |value| Ok::<_, String>(value.to_owned()))
+        .expect("empty source-format inspection");
+    assert_eq!(inspection.files, 0);
+    assert_eq!(inspection.checked, 0);
+    assert!(inspection.findings.is_empty());
+    assert!(inspection.rewrites.is_empty());
+}
+
 fn main() {
     exercise_repair_tooling_surface();
     exercise_migration_inventory_surface();
     exercise_ownership_adapter_surface();
     exercise_usage_adapter_surface();
     exercise_application_collector_surface();
+    exercise_source_formatting_surface();
     require_style_traits::<Style>();
     require_id_traits::<StyleId>();
     assert_eq!(EMPTY_ID_BITS, 0);

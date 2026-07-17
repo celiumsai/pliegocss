@@ -32,7 +32,7 @@ pliego-cssc [--diagnostic-format human|json] explain-cascade --input FILE.css --
 pliego-cssc [--diagnostic-format human|json] plan --findings FILE.json --proposal FILE.json --source-root DIR [--format text|json]
 pliego-cssc [--diagnostic-format human|json] fix --plan FILE.json --findings FILE.json --source-root DIR --dry-run [--format text|json]
 pliego-cssc [--diagnostic-format human|json] fmt (--style "utilities" ...|--input styles.txt) [--output formatted.txt|--check]
-pliego-cssc [--diagnostic-format human|json] fmt --source file-or-directory ... --check
+pliego-cssc [--diagnostic-format human|json] fmt --source file-or-directory ... (--check|--apply)
 pliego-cssc --version
 ```
 
@@ -980,6 +980,7 @@ pliego-cssc fmt --style "  dark:hover:-mt-[2rem]!   [&>p]:block  "
 pliego-cssc fmt --input styles.txt --output formatted.txt
 pliego-cssc fmt --input styles.txt --check
 pliego-cssc fmt --source src --check
+pliego-cssc fmt --source src --apply
 ```
 
 Choose either repeatable `--style` or one `--input`, not both. `--output` and `--check` are mutually
@@ -991,13 +992,21 @@ unsuccessfully on drift.
 
 `fmt` is syntax-only: a well-shaped unknown utility passed through `--style` remains printable. In a
 line document, a leading `#` is a comment rather than a utility. Use `pliego-cssc check` with the
-intended theme as the semantic linter. This initial command never rewrites Rust source literals;
-source-aware fixes belong to future editor tooling.
+intended theme as the semantic linter. Rust source remains read-only unless `--apply` is explicit.
 
-Repeatable `--source` is read-only and requires `--check`. It traverses Rust files with the same rules
-as compilation, checks every `pc!` literal plus the base and each branch literal of `pcx!`, and emits
-stable `FMT001` findings with file, line, column, byte range, actual text, and canonical replacement.
-Constructed/non-literal macro inputs remain scanner errors. The command never changes a `.rs` file.
+Repeatable `--source` requires exactly one of `--check` or `--apply`. Both traverse Rust files with
+the same rules as compilation and inspect every `pc!` literal plus the base and each branch literal
+of `pcx!`. Check mode emits stable `FMT001` findings with file, line, column, byte range, actual text,
+and canonical replacement without changing a file.
+
+Apply mode first snapshots every input, validates non-overlapping complete literal-token ranges,
+escapes each canonical decoded value as valid Rust, reparses and rescans every complete result, then
+locks and revalidates all snapshots before any write. Changed files publish as one rollback-capable
+group through same-directory temporary and backup files while preserving permissions. A concurrent
+source change, duplicate/case-folded destination, symlink, overlapping/stale range, post-rewrite
+scanner error, or publication failure leaves the original group intact. The advisory lock prevents
+cooperating PliegoCSS writers from racing; termination between filesystem renames is not claimed to
+be crash-atomic. Constructed/non-literal macro inputs remain scanner errors.
 
 ## Reachability pruning
 

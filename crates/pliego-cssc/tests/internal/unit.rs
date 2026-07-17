@@ -1681,6 +1681,7 @@ fn diagnostic_json_has_a_stable_shape_and_retains_typed_style_failures() {
         sources: Vec::new(),
         output: None,
         check: false,
+        apply: false,
     })
     .expect_err("must reject");
     assert_eq!(
@@ -2546,6 +2547,7 @@ fn parses_formatter_inputs_and_exclusive_output_modes() {
             sources: Vec::new(),
             output: None,
             check: true,
+            apply: false,
         }))
     );
     assert_eq!(
@@ -2562,6 +2564,7 @@ fn parses_formatter_inputs_and_exclusive_output_modes() {
             sources: Vec::new(),
             output: Some(PathBuf::from("formatted.txt")),
             check: false,
+            apply: false,
         }))
     );
     assert!(parse_arguments(os(&["fmt", "--style", "flex", "--input", "x"])).is_err());
@@ -2576,9 +2579,23 @@ fn parses_formatter_inputs_and_exclusive_output_modes() {
             sources: vec![PathBuf::from("src"), PathBuf::from("tests")],
             output: None,
             check: true,
+            apply: false,
+        }))
+    );
+    assert_eq!(
+        parse_arguments(os(&["fmt", "--source", "src", "--apply"])),
+        Ok(Command::Format(UtilityFormatArgs {
+            styles: Vec::new(),
+            input: None,
+            sources: vec![PathBuf::from("src")],
+            output: None,
+            check: false,
+            apply: true,
         }))
     );
     assert!(parse_arguments(os(&["fmt", "--source", "src"])).is_err());
+    assert!(parse_arguments(os(&["fmt", "--source", "src", "--check", "--apply"])).is_err());
+    assert!(parse_arguments(os(&["fmt", "--style", "flex", "--apply"])).is_err());
     assert!(parse_arguments(os(&["fmt"])).is_err());
 }
 
@@ -2664,7 +2681,8 @@ fn source_formatter_reports_pc_and_each_pcx_literal_without_rewriting_rust() {
 }"#;
     fs::write(&source, unformatted).expect("write unformatted Rust source");
 
-    let error = check_rust_utility_format(std::slice::from_ref(&source)).expect_err("must reject");
+    let error =
+        run_rust_utility_format(std::slice::from_ref(&source), false).expect_err("must reject");
     assert!(error.contains("formatting drift detected in 3 Rust utility literal(s)"));
     assert!(error.contains("FMT001: pc at"));
     assert!(error.contains("FMT001: pcx base at"));
@@ -2690,16 +2708,42 @@ fn source_formatter_reports_pc_and_each_pcx_literal_without_rewriting_rust() {
         unformatted
     );
 
-    fs::write(
-        &source,
+    run_rust_utility_format(std::slice::from_ref(&source), true).expect("apply source fixes");
+    assert_eq!(
+        fs::read_to_string(&source).expect("formatted source"),
         r#"fn view(active: bool) {
     let _ = pc!("flex gap-4");
     let _ = pcx!("grid gap-4", if active { "block" } else { "hidden" });
-}"#,
-    )
-    .expect("write formatted Rust source");
-    check_rust_utility_format(&[source]).expect("formatted Rust source passes");
+}"#
+    );
+    run_rust_utility_format(&[source], false).expect("formatted Rust source passes");
 
+    fs::remove_dir_all(directory).expect("remove temporary directory");
+}
+
+#[test]
+fn source_formatter_rejects_stale_snapshots_before_any_publication() {
+    let directory = temp_dir("rust-utility-format-stale");
+    let first = directory.join("first.rs");
+    let second = directory.join("second.rs");
+    fs::write(&first, "old first").expect("write first source");
+    fs::write(&second, "changed second").expect("write second source");
+    let rewrites = vec![
+        pliego_css_source::UtilityFormatRewrite {
+            path: first.clone(),
+            before: b"old first".to_vec(),
+            after: b"new first".to_vec(),
+        },
+        pliego_css_source::UtilityFormatRewrite {
+            path: second.clone(),
+            before: b"old second".to_vec(),
+            after: b"new second".to_vec(),
+        },
+    ];
+    let error = publish_utility_rewrites(&rewrites).expect_err("stale snapshot must fail");
+    assert!(error.contains("changed"));
+    assert_eq!(fs::read(&first).expect("first source"), b"old first");
+    assert_eq!(fs::read(&second).expect("second source"), b"changed second");
     fs::remove_dir_all(directory).expect("remove temporary directory");
 }
 

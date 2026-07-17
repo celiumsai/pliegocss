@@ -108,7 +108,8 @@ The workspace is unreleased at `0.0.0`; syntax and crate boundaries may still ch
   plus a portable source-to-output Project Index for
   bundle outputs, and an exact-snapshot watch loop
   with per-file Rust scan and theme-scoped semantic-IR caching are implemented. The CLI
-  also exposes generated catalog JSON, style explanations, read-only formatting diagnostics, and a
+  also exposes generated catalog JSON, style explanations, read-only formatting diagnostics,
+  opt-in collision-safe Rust literal fixes, and a
   structured JSON error envelope as process-level editor contracts. Its read-only CSS audit accepts
   optional versioned budgets for canonical bytes, rules, selectors, specificity, and semantic
   duplication with explicit ownership, deltas, and reviewed exceptions. Declarative schema-1/schema-2
