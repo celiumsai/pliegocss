@@ -96,7 +96,9 @@ publish immediately; uncached compiler checks are debounced and run serially in 
 Version cancellation is cooperative at the publication boundary: PliegoCSS discards stale results
 but does not forcibly terminate a compiler process that already started. Compiler-backed `PCX003`
 parity now covers semantic overlaps and exact duplicates across independently selectable clauses.
-A frozen negative corpus and broader diagnostic-equality matrix remain necessary before claiming
+The versioned seven-case negative corpus freezes code, message, and exact range equality for
+representative parser, compiler, scanner, formatting, and composition failures. Broader code,
+severity, suggestion, replacement, and configuration coverage remains necessary before claiming
 complete CLI/editor diagnostic equality.
 
 ## Current non-goals
@@ -122,7 +124,9 @@ to answer a formatting request before semantic publication, and accepts exactly 
 `PCS001` result with the compiler's message and exact UTF-16 range. No stale semantic result may
 survive the version check. A subsequent version 11 contains an exact semantic duplicate across two
 independent `pcx!` clauses; the gate requires one compiler `PCX003` mapped to the complete literal
-token in the second clause.
+token in the second clause. Finally, diagnostic corpus schema 1 applies seven additional buffer
+versions and compares each frozen code, message, and byte/UTF-16 range against the CLI or shared
+formatter contract. See [the corpus contract](./lsp-diagnostic-corpus.md).
 
 ## VS Code client candidate
 

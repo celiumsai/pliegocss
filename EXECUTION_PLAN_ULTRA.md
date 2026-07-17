@@ -251,8 +251,10 @@ fixture acotado.
   rango sintético al literal Rust original, con gate de proceso y Extension Host real.
 - [x] Añadir cliente Neovim sobre LSP built-in, payload cerrado sin binarios y hosts reales 0.12.4
   Windows/Debian con definition, `PCS001` y `PCX003`.
-- [ ] Añadir cancelación forzosa del child ya iniciado cuando sea justificable, corpus negativo
-  congelado y evidencia completa de igualdad CLI/LSP.
+- [x] Congelar corpus diagnóstico schema 1 de siete casos con igualdad exacta código/mensaje/rango
+  CLI/LSP en Windows y Debian.
+- [ ] Añadir cancelación forzosa del child ya iniciado cuando sea justificable y evidencia completa
+  de igualdad CLI/LSP para todos los códigos, severidades, sugerencias y fixes.
 - [x] Añadir formatter determinista y `--check` para utilidades explícitas y archivos line-oriented.
 - [x] Añadir diagnósticos y reemplazos read-only sobre literales Rust.
 - [x] Añadir envelope JSON estable para diagnósticos de comandos one-shot.

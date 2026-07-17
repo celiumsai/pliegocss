@@ -1,6 +1,6 @@
 import { spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -11,6 +11,9 @@ const target = process.env.CARGO_TARGET_DIR
   : resolve(ROOT, "target");
 const lsp = resolve(target, "debug", `pliego-css-lsp${executable}`);
 const compiler = resolve(target, "debug", `pliego-cssc${executable}`);
+const diagnosticCorpus = JSON.parse(
+  readFileSync(resolve(ROOT, "integration-tests", "lsp-diagnostics", "corpus.json"), "utf8"),
+);
 
 function fail(message) {
   throw new Error(message);
@@ -24,6 +27,13 @@ const build = spawnSync(
 if (build.error) fail(`cannot build LSP gate: ${build.error.message}`);
 if (build.status !== 0) fail(`${build.stdout}${build.stderr}`.trim());
 if (!existsSync(lsp) || !existsSync(compiler)) fail("LSP gate binaries are missing");
+if (
+  diagnosticCorpus.kind !== "pliegocss-lsp-diagnostic-corpus" ||
+  diagnosticCorpus.schemaVersion !== 1 ||
+  !Array.isArray(diagnosticCorpus.cases)
+) {
+  fail("unsupported LSP diagnostic corpus schema");
+}
 
 const workspace = resolve(target, "lsp-integration-workspace");
 if (!workspace.startsWith(`${target}${sep}`)) fail("unsafe LSP fixture path");
@@ -135,6 +145,44 @@ writeFileSync(resolve(workspace, "out", "app.manifest.json"), manifest);
 writeFileSync(resolve(workspace, "out", "pliego.index.json"), JSON.stringify(index));
 writeFileSync(resolve(workspace, "out", "pliego.assets.json"), "x");
 
+for (const item of diagnosticCorpus.cases) {
+  if (!/^[a-z0-9-]+$/.test(item.id) || !["style", "source", "format"].includes(item.kind)) {
+    fail("diagnostic corpus contains an invalid id or kind");
+  }
+  if (item.kind === "format") continue;
+  const argumentsList = ["--diagnostic-format", "json", "check"];
+  if (item.kind === "style") {
+    argumentsList.push("--style", item.style);
+  } else {
+    const sourcePath = resolve(workspace, `${item.id}.rs`);
+    writeFileSync(sourcePath, item.source);
+    argumentsList.push("--source", sourcePath);
+  }
+  argumentsList.push("--seed");
+  const checked = spawnSync(compiler, argumentsList, {
+    cwd: workspace,
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  if (checked.error || checked.status === 0) {
+    fail(`CLI diagnostic corpus case ${item.id} did not fail as required`);
+  }
+  const document = JSON.parse(checked.stderr);
+  if (document.schemaVersion !== 1 || document.diagnostics?.length !== 1) {
+    fail(`CLI diagnostic corpus case ${item.id} returned an unsupported envelope`);
+  }
+  const finding = document.diagnostics[0];
+  if (finding.code !== item.code || finding.message !== item.message) {
+    fail(`CLI diagnostic corpus case ${item.id} drifted`);
+  }
+  const range = item.kind === "style" ? finding.styleRange : finding.range;
+  const expectedStart = item.kind === "style" ? item.styleStart : item.sourceStart;
+  const expectedEnd = item.kind === "style" ? item.styleEnd : item.sourceEnd;
+  if (range?.byteStart !== expectedStart || range?.byteEnd !== expectedEnd) {
+    fail(`CLI diagnostic corpus range ${item.id} drifted`);
+  }
+}
+
 const child = spawn(
   lsp,
   ["--pliego-cssc", compiler, "--seed", "--project-index", "out/pliego.index.json"],
@@ -154,10 +202,10 @@ function send(message) {
   child.stdin.write(body);
 }
 
-async function waitForOutput(fragment, timeoutMs = 5000) {
+async function waitForOutput(fragment, offset = 0, timeoutMs = 5000) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
-    if (Buffer.concat(output).includes(Buffer.from(fragment))) return;
+    if (Buffer.concat(output).subarray(offset).includes(Buffer.from(fragment))) return;
     await new Promise((resolveDelay) => setTimeout(resolveDelay, 25));
   }
   fail(`LSP did not emit ${JSON.stringify(fragment)} within ${timeoutMs} ms`);
@@ -237,6 +285,24 @@ send({
   },
 });
 await waitForOutput('"code":"PCX003"');
+const corpusRuns = [];
+let corpusVersion = 12;
+for (const item of diagnosticCorpus.cases) {
+  const sourceText =
+    item.kind === "style" ? `fn view(){let _=pc!("${item.style}");}` : item.source;
+  const offset = Buffer.concat(output).length;
+  send({
+    jsonrpc: "2.0",
+    method: "textDocument/didChange",
+    params: {
+      textDocument: { uri, version: corpusVersion },
+      contentChanges: [{ text: sourceText }],
+    },
+  });
+  await waitForOutput(`"code":"${item.code}"`, offset);
+  corpusRuns.push({ item, sourceText, version: corpusVersion });
+  corpusVersion += 1;
+}
 send({ jsonrpc: "2.0", id: 7, method: "shutdown", params: null });
 send({ jsonrpc: "2.0", method: "exit", params: null });
 child.stdin.end();
@@ -281,8 +347,10 @@ if (byId.get(1)?.result?.capabilities?.definitionProvider !== true) {
 if (published[0]?.params?.diagnostics?.[0]?.code !== "FMT001") {
   fail("didOpen did not publish FMT001");
 }
-const semanticMessages = published.filter((message) =>
-  message.params?.diagnostics?.some((diagnostic) => diagnostic.code === "PCS001"),
+const semanticMessages = published.filter(
+  (message) =>
+    message.params?.version === finalVersion &&
+    message.params?.diagnostics?.some((diagnostic) => diagnostic.code === "PCS001"),
 );
 if (semanticMessages.length !== 1 || semanticMessages[0].params.version !== finalVersion) {
   fail(
@@ -306,8 +374,10 @@ if (
 ) {
   fail("compiler semantic diagnostic did not map to the exact Rust source range");
 }
-const pcxMessages = published.filter((message) =>
-  message.params?.diagnostics?.some((diagnostic) => diagnostic.code === "PCX003"),
+const pcxMessages = published.filter(
+  (message) =>
+    message.params?.version === pcxVersion &&
+    message.params?.diagnostics?.some((diagnostic) => diagnostic.code === "PCX003"),
 );
 if (pcxMessages.length !== 1 || pcxMessages[0].params.version !== pcxVersion) {
   fail("pcx cross-clause diagnostics were stale, missing, or duplicated");
@@ -328,6 +398,32 @@ if (
       pcxDiagnostic.range,
     )}`,
   );
+}
+for (const run of corpusRuns) {
+  const diagnostics = published
+    .filter((message) => message.params?.version === run.version)
+    .flatMap((message) => message.params?.diagnostics ?? []);
+  const codes = [...new Set(diagnostics.map((diagnostic) => diagnostic.code))];
+  if (codes.length !== 1 || codes[0] !== run.item.code) {
+    fail(`LSP diagnostic corpus case ${run.item.id} emitted ${codes.join(", ")}`);
+  }
+  const finding = diagnostics.find((diagnostic) => diagnostic.code === run.item.code);
+  if (finding?.message !== run.item.message) {
+    fail(`LSP diagnostic corpus message ${run.item.id} drifted`);
+  }
+  const relativeStart =
+    run.item.kind === "style" ? run.item.styleStart : run.item.sourceStart;
+  const relativeEnd = run.item.kind === "style" ? run.item.styleEnd : run.item.sourceEnd;
+  const contentStart =
+    run.item.kind === "style" ? run.sourceText.indexOf(`"${run.item.style}"`) + 1 : 0;
+  if (
+    finding.range?.start?.line !== 0 ||
+    finding.range?.end?.line !== 0 ||
+    finding.range?.start?.character !== contentStart + relativeStart ||
+    finding.range?.end?.character !== contentStart + relativeEnd
+  ) {
+    fail(`LSP diagnostic corpus range ${run.item.id} drifted`);
+  }
 }
 if (byId.get(2)?.result?.[0]?.newText !== '"flex gap-4"') {
   fail("formatting did not return the canonical whole literal");
@@ -376,6 +472,9 @@ process.stdout.write(
     pcxDiagnostic: pcxDiagnostic.code,
     pcxVersion: pcxMessages[0].params.version,
     pcxRange: pcxDiagnostic.range,
+    diagnosticCorpusSchema: diagnosticCorpus.schemaVersion,
+    diagnosticCorpusCases: corpusRuns.length,
+    diagnosticCorpusEquality: "code-message-range",
     formattingEdits: byId.get(2).result.length,
     completion: item.label,
     completionRange: item.textEdit.range,

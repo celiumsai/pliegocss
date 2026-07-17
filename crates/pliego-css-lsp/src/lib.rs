@@ -638,13 +638,14 @@ fn local_diagnostics(uri: &str, source: &str) -> Vec<Value> {
                     values.push(value);
                 }
             }
-            Err(error) => values.push(diagnostic(
-                source,
-                literal.range,
-                error.code.as_str(),
-                &error.message,
-                1,
-            )),
+            Err(error) => {
+                let range =
+                    semantic_source_range(source, literal, error.span.start, error.span.end)
+                        .unwrap_or_else(|_| source_range_to_lsp(source, literal.range));
+                let mut value = lsp_diagnostic(&range, error.code.as_str(), &error.message, 1);
+                value["data"] = json!({"suggestion":error.suggestion});
+                values.push(value);
+            }
         }
     });
     values

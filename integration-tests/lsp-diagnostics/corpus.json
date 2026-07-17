@@ -1,0 +1,69 @@
+{
+  "kind": "pliegocss-lsp-diagnostic-corpus",
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "unknown-utility",
+      "kind": "style",
+      "style": "flex unknown-thing",
+      "code": "PCS001",
+      "message": "unknown utility `unknown-thing`",
+      "styleStart": 5,
+      "styleEnd": 18
+    },
+    {
+      "id": "incomplete-variant",
+      "kind": "style",
+      "style": "flex:",
+      "code": "PCS002",
+      "message": "variant chain must end with a utility",
+      "styleStart": 4,
+      "styleEnd": 5
+    },
+    {
+      "id": "wrong-token-domain",
+      "kind": "style",
+      "style": "text-spacing",
+      "code": "PCS004",
+      "message": "value is outside this utility domain; expected font-size or color token",
+      "styleStart": 5,
+      "styleEnd": 12
+    },
+    {
+      "id": "semantic-conflict",
+      "kind": "style",
+      "style": "p-4 p-2",
+      "code": "PCS005",
+      "message": "utilities assign conflicting values in the same condition",
+      "styleStart": 4,
+      "styleEnd": 7
+    },
+    {
+      "id": "duplicate-variant",
+      "kind": "style",
+      "style": "hover:hover:block",
+      "code": "PCS012",
+      "message": "variant is duplicated",
+      "styleStart": 6,
+      "styleEnd": 11
+    },
+    {
+      "id": "malformed-pcx-base",
+      "kind": "source",
+      "source": "fn view(){let _=pcx!(dynamic,if a{\"block\"}else{\"hidden\"});}",
+      "code": "PSC002",
+      "message": "`pcx!` base must be a visible Rust string literal",
+      "sourceStart": 21,
+      "sourceEnd": 28
+    },
+    {
+      "id": "format-drift",
+      "kind": "format",
+      "source": "fn view(){let _=pc!(\" flex   gap-4 \");}",
+      "code": "FMT001",
+      "message": "pc utility literal should be \"flex gap-4\"",
+      "sourceStart": 20,
+      "sourceEnd": 36
+    }
+  ]
+}
