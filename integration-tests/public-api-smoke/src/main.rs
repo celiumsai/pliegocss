@@ -25,7 +25,7 @@ use pliego_css_ownership::{
 };
 use pliego_css_source::{
     MIGRATION_INVENTORY_SCHEMA_VERSION, ApplicationComponent, ApplicationRoute,
-    ApplicationTopology, MigrationAuxiliaryInventory, MigrationAuxiliaryKind,
+    ApplicationTopology, MigrationAuxiliaryInventory, MigrationAuxiliaryKind, ScanDiagnostic,
     MigrationAuxiliaryObservation, MigrationAuxiliaryObservationKind, MigrationConsumerInventory,
     MigrationConsumerKind,
     MigrationConsumerObservation, MigrationConsumerObservationKind, MigrationDependency,
@@ -33,7 +33,7 @@ use pliego_css_source::{
     MigrationInventory, MigrationInventoryError, MigrationPreflightReliance, MigrationProject,
     MigrationProjectAuxiliary, MigrationProjectConsumer, MigrationProjectInventory,
     MigrationProjectSource, MigrationSourceKind, discover_migration_project,
-    inspect_utility_format,
+    inspect_utility_format, scan_source_named,
     inventory_migration_auxiliary_file,
     inventory_migration_auxiliary_source, inventory_migration_consumer_file,
     inventory_migration_consumer_source, inventory_migration_file, inventory_migration_source,
@@ -452,6 +452,13 @@ fn exercise_source_formatting_surface() {
     assert!(inspection.rewrites.is_empty());
 }
 
+fn exercise_typed_parse_diagnostic_surface() {
+    let error = scan_source_named("invalid.rs", "fn {").expect_err("invalid Rust source");
+    let diagnostic: ScanDiagnostic = error.into();
+    assert_eq!(diagnostic.code, "PCR001");
+    assert_eq!(diagnostic.source, "invalid.rs");
+}
+
 fn main() {
     exercise_repair_tooling_surface();
     exercise_migration_inventory_surface();
@@ -459,6 +466,7 @@ fn main() {
     exercise_usage_adapter_surface();
     exercise_application_collector_surface();
     exercise_source_formatting_surface();
+    exercise_typed_parse_diagnostic_surface();
     require_style_traits::<Style>();
     require_id_traits::<StyleId>();
     assert_eq!(EMPTY_ID_BITS, 0);

@@ -111,7 +111,8 @@ engine must preserve the literal's raw/escaped representation or re-encode it co
 ## Fallback codes
 
 - `PCR001` means that a Rust source unit could not be parsed. It retains the parser message and the
-  most specific source range available from `syn`; it is not an untyped tool failure.
+  most specific source range available from `syn`; `pliego-css-source` owns the typed conversion so
+  CLI and editor adapters do not reclassify it independently. It is not an untyped tool failure.
 
 - `PCL001` means invalid CLI invocation, including an unknown option or unsupported JSON watch mode.
 - `PCL002` means an I/O, configuration, emission, publication, or other tool failure that does not

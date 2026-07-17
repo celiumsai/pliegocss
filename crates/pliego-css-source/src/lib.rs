@@ -254,6 +254,17 @@ impl fmt::Display for SourceParseError {
 
 impl std::error::Error for SourceParseError {}
 
+impl From<SourceParseError> for ScanDiagnostic {
+    fn from(error: SourceParseError) -> Self {
+        Self {
+            code: "PCR001",
+            message: error.message,
+            source: error.source,
+            range: error.range,
+        }
+    }
+}
+
 /// Failure to read or parse a Rust source file.
 #[derive(Debug)]
 pub enum ScanFileError {
@@ -1000,6 +1011,16 @@ mod tests {
             report.diagnostics[0].message,
             "`pcx!` requires at least one conditional clause"
         );
+    }
+
+    #[test]
+    fn rust_parse_error_converts_to_typed_scanner_diagnostic() {
+        let error = scan_source_named("src/lib.rs", "fn {").expect_err("invalid Rust");
+        let diagnostic = ScanDiagnostic::from(error);
+        assert_eq!(diagnostic.code, "PCR001");
+        assert_eq!(diagnostic.source, "src/lib.rs");
+        assert_eq!(diagnostic.range.start.byte, 3);
+        assert_eq!(diagnostic.range.end.byte, 3);
     }
 
     #[test]

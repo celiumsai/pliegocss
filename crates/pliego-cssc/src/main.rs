@@ -5447,12 +5447,7 @@ fn candidates_from_line_source(path: &Path, source: &str) -> Result<Vec<Candidat
 
 fn candidates_from_rust(theme: &ThemeRegistry, path: &Path) -> Result<Vec<Candidate>, CliFailure> {
     let report = scan_file(path).map_err(|error| match error {
-        ScanFileError::Parse(error) => scan_failure(&[ScanDiagnostic {
-            code: "PCR001",
-            message: error.message,
-            source: error.source,
-            range: error.range,
-        }]),
+        ScanFileError::Parse(error) => scan_failure(&[error.into()]),
         error @ ScanFileError::Read { .. } => CliFailure::tool(error.to_string()),
     })?;
     candidates_from_scan_report(theme, &report)
