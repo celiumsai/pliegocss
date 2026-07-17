@@ -171,6 +171,7 @@ struct MigrationProjectSummary {
     consumer_imports: usize,
     static_consumer_usages: usize,
     dynamic_consumer_usages: usize,
+    consumer_aliases: usize,
     tailwind_configs: usize,
     tailwind_plugins: usize,
     tailwind_templates: usize,
@@ -361,6 +362,8 @@ pub enum MigrationConsumerObservationKind {
     Import,
     /// Property or bracket access through the imported binding.
     ClassUsage,
+    /// One simple lexical alias of an imported CSS Modules binding.
+    BindingAlias,
 }
 
 /// One exact import or class usage observed in a migration consumer.
@@ -372,6 +375,7 @@ pub struct MigrationConsumerObservation {
     byte_end: usize,
     disposition: MigrationDisposition,
     binding: Option<String>,
+    alias: Option<String>,
     specifier: Option<String>,
     target: Option<String>,
     class_name: Option<String>,
@@ -647,6 +651,12 @@ impl MigrationConsumerObservation {
     #[must_use]
     pub fn binding(&self) -> Option<&str> {
         self.binding.as_deref()
+    }
+
+    /// Returns the declared alias for a binding-alias observation.
+    #[must_use]
+    pub fn alias(&self) -> Option<&str> {
+        self.alias.as_deref()
     }
 
     /// Returns the exact import specifier when available.
@@ -1023,18 +1033,9 @@ fn migration_project_summary(
         sources: sources.len(),
         consumers: consumers.len(),
         auxiliaries: auxiliaries.len(),
-        sass_sources: sources
-            .iter()
-            .filter(|source| source.source_kind == MigrationSourceKind::Sass)
-            .count(),
-        tailwind_sources: sources
-            .iter()
-            .filter(|source| source.source_kind == MigrationSourceKind::Tailwind)
-            .count(),
-        css_modules_sources: sources
-            .iter()
-            .filter(|source| source.source_kind == MigrationSourceKind::CssModules)
-            .count(),
+        sass_sources: count_source_kind(sources, MigrationSourceKind::Sass),
+        tailwind_sources: count_source_kind(sources, MigrationSourceKind::Tailwind),
+        css_modules_sources: count_source_kind(sources, MigrationSourceKind::CssModules),
         constructs: sources.iter().map(|source| source.summary.constructs).sum(),
         dynamic: sources.iter().map(|source| source.summary.dynamic).sum(),
         unsupported: sources
@@ -1063,11 +1064,10 @@ fn migration_project_summary(
             .iter()
             .filter(|dependency| dependency.resolution == MigrationDependencyResolution::Dynamic)
             .count(),
-        consumer_imports: consumers
-            .iter()
-            .flat_map(|consumer| &consumer.observations)
-            .filter(|observation| observation.kind == MigrationConsumerObservationKind::Import)
-            .count(),
+        consumer_imports: count_consumer_observation_kind(
+            consumers,
+            MigrationConsumerObservationKind::Import,
+        ),
         static_consumer_usages: consumers
             .iter()
             .flat_map(|consumer| &consumer.observations)
@@ -1084,6 +1084,10 @@ fn migration_project_summary(
                     && observation.disposition == MigrationDisposition::Dynamic
             })
             .count(),
+        consumer_aliases: count_consumer_observation_kind(
+            consumers,
+            MigrationConsumerObservationKind::BindingAlias,
+        ),
         tailwind_configs: auxiliaries
             .iter()
             .filter(|item| item.auxiliary_kind == MigrationAuxiliaryKind::TailwindConfig)
@@ -1117,6 +1121,24 @@ fn migration_project_summary(
             .filter(|item| item.kind == MigrationAuxiliaryObservationKind::PluginApi)
             .count(),
     }
+}
+
+fn count_source_kind(sources: &[MigrationInventory], kind: MigrationSourceKind) -> usize {
+    sources
+        .iter()
+        .filter(|source| source.source_kind == kind)
+        .count()
+}
+
+fn count_consumer_observation_kind(
+    consumers: &[MigrationConsumerInventory],
+    kind: MigrationConsumerObservationKind,
+) -> usize {
+    consumers
+        .iter()
+        .flat_map(|consumer| &consumer.observations)
+        .filter(|observation| observation.kind == kind)
+        .count()
 }
 
 impl fmt::Display for MigrationProjectInventory {
@@ -2084,6 +2106,7 @@ fn scan_css_modules_consumer(
             byte_end: end,
             disposition,
             binding: binding.clone(),
+            alias: None,
             specifier: Some(specifier),
             target: target.clone(),
             class_name: None,
@@ -2093,18 +2116,85 @@ fn scan_css_modules_consumer(
         }
     }
     scan_css_modules_requires(file, source, &masks.code, &mut observations, &mut bindings)?;
+    let mut usage_bindings = Vec::new();
     for (binding, target, import_start, import_end) in bindings {
+        let mut excluded = Vec::new();
+        excluded.push(import_start..import_end);
+        for (alias, range) in scan_consumer_binding_aliases(
+            source,
+            &masks.code,
+            binding.as_str(),
+            target.as_deref(),
+            import_start..import_end,
+            &mut observations,
+        ) {
+            excluded.push(range.clone());
+            usage_bindings.push((alias, target.clone(), vec![range]));
+        }
+        usage_bindings.push((binding, target, excluded));
+    }
+    for (binding, target, excluded) in usage_bindings {
         scan_consumer_binding_usages(
             source,
             &masks.code,
             &masks.template,
             binding.as_str(),
             target.as_deref(),
-            import_start..import_end,
+            &excluded,
             &mut observations,
         );
     }
     Ok(observations)
+}
+
+fn scan_consumer_binding_aliases(
+    source: &str,
+    code: &[bool],
+    binding: &str,
+    target: Option<&str>,
+    import_range: std::ops::Range<usize>,
+    output: &mut Vec<MigrationConsumerObservation>,
+) -> Vec<(String, std::ops::Range<usize>)> {
+    let bytes = source.as_bytes();
+    let mut aliases = Vec::new();
+    for start in 0..bytes.len() {
+        if import_range.contains(&start)
+            || !code[start]
+            || !bytes[start..].starts_with(binding.as_bytes())
+            || is_identifier(start.checked_sub(1).and_then(|i| bytes.get(i)).copied())
+            || is_identifier(bytes.get(start + binding.len()).copied())
+        {
+            continue;
+        }
+        let statement_start = consumer_statement_start(bytes, start);
+        let Some(alias) = require_binding(&source[statement_start..start]) else {
+            continue;
+        };
+        let mut end = start + binding.len();
+        while bytes.get(end).is_some_and(u8::is_ascii_whitespace) {
+            end += 1;
+        }
+        if !matches!(bytes.get(end), None | Some(b';' | b'\n' | b'\r')) {
+            continue;
+        }
+        if bytes.get(end) == Some(&b';') {
+            end += 1;
+        }
+        let range = statement_start..end;
+        output.push(MigrationConsumerObservation {
+            kind: MigrationConsumerObservationKind::BindingAlias,
+            byte_start: statement_start,
+            byte_end: end,
+            disposition: MigrationDisposition::Static,
+            binding: Some(binding.into()),
+            alias: Some(alias.clone()),
+            specifier: None,
+            target: target.map(str::to_owned),
+            class_name: None,
+        });
+        aliases.push((alias, range));
+    }
+    aliases
 }
 
 fn scan_css_modules_requires(
@@ -2147,6 +2237,7 @@ fn scan_css_modules_requires(
                 MigrationDisposition::Dynamic
             },
             binding: binding.clone(),
+            alias: None,
             specifier: Some(specifier),
             target: target.clone(),
             class_name: None,
@@ -2263,13 +2354,13 @@ fn scan_consumer_binding_usages(
     template: &[bool],
     binding: &str,
     target: Option<&str>,
-    import_range: std::ops::Range<usize>,
+    excluded_ranges: &[std::ops::Range<usize>],
     output: &mut Vec<MigrationConsumerObservation>,
 ) {
     let bytes = source.as_bytes();
     let binding_bytes = binding.as_bytes();
     for start in 0..bytes.len() {
-        if import_range.contains(&start)
+        if excluded_ranges.iter().any(|range| range.contains(&start))
             || (!code[start] && !template[start])
             || !bytes[start..].starts_with(binding_bytes)
             || is_identifier(
@@ -2289,6 +2380,7 @@ fn scan_consumer_binding_usages(
                 byte_end: start + binding_bytes.len(),
                 disposition: MigrationDisposition::Dynamic,
                 binding: Some(binding.into()),
+                alias: None,
                 specifier: None,
                 target: target.map(str::to_owned),
                 class_name: None,
@@ -2339,6 +2431,7 @@ fn scan_consumer_binding_usages(
             byte_end: end,
             disposition,
             binding: Some(binding.into()),
+            alias: None,
             specifier: None,
             target: target.map(str::to_owned),
             class_name,
@@ -3578,6 +3671,38 @@ require("./side-effect.module.css");
         assert!(usages.iter().all(|item| {
             item.disposition() == MigrationDisposition::Static && item.class_name().is_some()
         }));
+    }
+
+    #[test]
+    fn propagates_one_level_css_modules_binding_aliases() {
+        let source = r#"import styles from "./card.module.css";
+const cx = styles;
+const card = cx.card;
+consume(styles);
+"#;
+        let inventory = inventory_migration_consumer_source(
+            MigrationConsumerKind::CssModules,
+            "src/Card.tsx",
+            source,
+        )
+        .unwrap();
+        let alias = inventory
+            .observations()
+            .iter()
+            .find(|item| item.kind() == MigrationConsumerObservationKind::BindingAlias)
+            .unwrap();
+        assert_eq!(alias.binding(), Some("styles"));
+        assert_eq!(alias.alias(), Some("cx"));
+        assert_eq!(alias.target(), Some("src/card.module.css"));
+        let usages = inventory
+            .observations()
+            .iter()
+            .filter(|item| item.kind() == MigrationConsumerObservationKind::ClassUsage)
+            .collect::<Vec<_>>();
+        assert_eq!(usages.len(), 2);
+        assert_eq!(usages[0].binding(), Some("cx"));
+        assert_eq!(usages[0].class_name(), Some("card"));
+        assert_eq!(usages[1].disposition(), MigrationDisposition::Dynamic);
     }
 
     #[test]

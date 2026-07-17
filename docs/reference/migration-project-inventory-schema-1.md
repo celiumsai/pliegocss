@@ -99,6 +99,7 @@ The canonical document uses two-space JSON and one trailing LF:
     "consumerImports": 1,
     "staticConsumerUsages": 2,
     "dynamicConsumerUsages": 1,
+    "consumerAliases": 1,
     "tailwindConfigs": 1,
     "tailwindPlugins": 1,
     "tailwindTemplates": 1,
@@ -200,6 +201,11 @@ marks computed brackets, binding escape, named/dynamic imports, or binding text 
 literals as dynamic. An unbound static CommonJS require remains a dynamic import observation.
 Escaped/calculated require arguments and typed/destructured declarations are not guessed. Comments
 and ordinary quoted strings cannot create usage observations.
+
+One-level `const|let|var alias = binding` declarations emit a `binding-alias` observation with
+`binding`, `alias`, exact byte range, and the inherited target. Subsequent dot and quoted-bracket
+uses of that alias are classified normally. The alias declaration is excluded from class-usage
+counts. Scope/shadowing analysis, alias chains, destructuring, and expression aliases remain open.
 
 Every relative import target must normalize to a declared `css-modules` source; missing or mistyped
 targets fail the complete snapshot. Package imports remain visible without a local target. This is a

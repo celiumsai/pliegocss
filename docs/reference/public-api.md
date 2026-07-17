@@ -249,7 +249,8 @@ link-like path components;
 the consumer layer additionally exposes `MigrationProjectConsumer`, `MigrationConsumerKind`,
 `MigrationConsumerInventory`, `MigrationConsumerObservation`,
 `MigrationConsumerObservationKind`, `inventory_migration_consumer_source`, and
-`inventory_migration_consumer_file` for declared CSS Modules JS/TS consumers; the auxiliary layer
+`inventory_migration_consumer_file` for declared CSS Modules JS/TS consumers, including explicit
+`BindingAlias` observations and the `alias()` getter; the auxiliary layer
 exposes `MigrationProjectAuxiliary`, `MigrationAuxiliaryKind`, `MigrationAuxiliaryInventory`,
 `MigrationAuxiliaryObservation`, `MigrationAuxiliaryObservationKind`,
 `inventory_migration_auxiliary_source`, and `inventory_migration_auxiliary_file` for exact Tailwind

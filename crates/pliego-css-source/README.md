@@ -85,6 +85,9 @@ modules are lexically validated but never executed. Declared JS/TS CSS Modules c
 to exact sources and inventory static property/bracket class usage plus conservative dynamic binding
 usage without executing a bundler. Default/namespace ESM, TypeScript import-equals, and simple
 `const|let|var` CommonJS require bindings share the same exact target/linking contract.
+One-level `const|let|var alias = binding` declarations are retained explicitly and propagate that
+target to alias property/bracket usage; scope analysis, shadowing, chains, and destructuring remain
+outside the lexical contract.
 Declared templates additionally inventory exact literal `class`/`className` candidates and retain
 expression/interpolation attributes as dynamic observations; this is tag-aware lexical inspection,
 not arbitrary template-language execution.

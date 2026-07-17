@@ -172,6 +172,7 @@ fn exercise_migration_inventory_surface() {
         let _: usize = observation.byte_start();
         let _: usize = observation.byte_end();
         let _: Option<&str> = observation.binding();
+        let _: Option<&str> = observation.alias();
         let _: Option<&str> = observation.specifier();
         let _: Option<&str> = observation.target();
         let _: Option<&str> = observation.class_name();
@@ -180,6 +181,7 @@ fn exercise_migration_inventory_surface() {
     assert_eq!(consumer.file(), "src/Card.tsx");
     assert_eq!(consumer.source_sha256().len(), 64);
     assert_eq!(consumer.observations().len(), 2);
+    let _: MigrationConsumerObservationKind = MigrationConsumerObservationKind::BindingAlias;
     let _auxiliary_reader = inventory_migration_auxiliary_file;
     let auxiliary = inventory_migration_auxiliary_source(
         MigrationAuxiliaryKind::TailwindConfig,
