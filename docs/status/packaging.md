@@ -1,7 +1,7 @@
 # Packaging status
 
-Status: **read-only migration project CLI passed the complete exact-clean `dde0d69` replay; no
-registry upload performed**
+Status: **versioned cross-toolchain migration fixture passed the complete exact-clean `29268cf`
+replay; no registry upload performed**
 
 The publishable workspace boundary has six dependency waves. `pliego-css-usage` and
 `pliego-css-control` follow `pliego-css-build` because direct and optional Cargo dependencies both
@@ -18,6 +18,24 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## Cross-toolchain migration fixture clean replay — 2026-07-16
+
+The exact clean `29268cf` Debian WSL2 gate packaged and extracted all fifteen archives with Cargo
+1.96, compiled the extracted graph in release mode, and passed the registry-shaped downstream
+consumer with Rust 1.85. The versioned CLI integration fixture passed independently under Debian
+WSL2 and covers six declared sources across Sass, Tailwind CSS v4, and CSS Modules. Publication
+remained disabled and the fixed 61,440-byte ceiling was not raised.
+
+| Package | Compressed bytes | Remaining margin | SHA-256 |
+|---|---:|---:|---|
+| `pliego-css-source` | 36,794 | 24,646 | `7743a3af168ccecafa01f945959b26f6303bd4c7d14f644fe5d2c40959d2cad9` |
+| `pliego-cssc` | 61,382 | 58 | `b559613dba5a4f7288f15ee3c6b91cecc8f1ca35585e78f804f01db70011400d` |
+
+This freezes resolved Sass/CSS/CSS Modules edges, local composition, package/built-in external
+references, extensionless Sass unresolved lookup, and an unsupported plugin seam in one real file
+tree. It is a representative contract fixture, not yet the required corpus of migrated
+applications. The CLI package remains effectively closed to additive growth.
 
 ## Migration project CLI clean replay — 2026-07-16
 
