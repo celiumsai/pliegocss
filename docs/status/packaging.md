@@ -1,6 +1,6 @@
 # Packaging status
 
-Status: **real-project discovery diagnostics passed the complete exact-clean `cb198aa` replay; no
+Status: **the reviewed public migration corpus passed the complete exact-clean `d6a0e06` replay; no
 registry upload performed**
 
 The publishable workspace boundary has six dependency waves. `pliego-css-usage` and
@@ -18,6 +18,25 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## Reviewed public migration corpus clean replay — 2026-07-16
+
+The exact clean `d6a0e06` Debian WSL2 gate cloned and verified three official MIT revisions,
+reviewed 119 materialized files, and reproduced 104 true-positive file-role tuples with zero false
+positives or negatives. The authored migration corpus also remained green. The package replay then
+packaged and extracted all fifteen archives with Cargo 1.96 and compiled the extracted graph plus
+the Rust 1.85 public consumer in release mode. Publication remained disabled, the worktree was
+clean, and the fixed 61,440-byte ceiling was not raised.
+
+| Package | Compressed bytes | Remaining margin | SHA-256 |
+|---|---:|---:|---|
+| `pliego-css-source` | 52,383 | 9,057 | `40842e8a32b8bc879090c7292b9b494735239b9e7f2b19bac9f00b8eeca13af8` |
+| `pliego-cssc` | 61,384 | 56 | `9c606cd0e6ca69fde5933130d7bddd1ef4000f1d9e95ed67948dc4a4fee04df7` |
+
+The precision/recall claim is confined to emitted file-role discovery on those reviewed files.
+Semantic observation accuracy, original-toolchain resolution, migration outcomes, representative
+scale, and the wider product diagnostic corpus remain open; R0.8 is still partial. The CLI package
+remains closed to additive feature growth.
 
 ## Real-project discovery diagnostic clean replay — 2026-07-16
 
