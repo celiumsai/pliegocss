@@ -1,7 +1,7 @@
 # Packaging status
 
-Status: **PliegoRS mainline integration and from-empty guide passed the complete exact-clean
-`254ae3c` replay; no registry upload performed**
+Status: **PliegoRS CSS-check delegation passed the complete exact-clean `f899ae5` replay; no
+registry upload performed**
 
 The publishable workspace boundary has six dependency waves. `pliego-css-usage` and
 `pliego-css-control` follow `pliego-css-build` because direct and optional Cargo dependencies both
@@ -18,6 +18,25 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## PliegoRS CSS-check delegation clean replay — 2026-07-16
+
+The exact clean `f899ae5` Debian WSL2 gate packaged and extracted all fifteen archives with native
+Node 24.14.0 and Cargo 1.96, compiled the extracted graph in release mode, and executed the complete
+Rust 1.85 downstream consumer. Publication remained disabled and the fixed 61,440-byte ceiling was
+not raised. Git for Windows was exposed through a temporary WSL shim only for the clean-worktree
+query; package and consumer work used Linux Node and Cargo.
+
+| Package | Compressed bytes | Remaining margin | SHA-256 |
+|---|---:|---:|---|
+| `pliego-css-source` | 53,580 | 7,860 | `2b5057f691fc4a6db61d2abab166c1864d764a36f333aab880af0591118b16eb` |
+| `pliego-css-control` | 61,073 | 367 | `015538862ececad26349526bfb3eda73932462e2227350291bafed235ea03134` |
+| `pliego-cssc` | 61,394 | 46 | `c061c9d921b2167d67e3ad054941078eedc2305bf4539efdf798e3336e4e787b` |
+
+The pinned cross-repository gate also executed upstream `pliego css check --seed` against the
+fixture through a separately built `pliego-cssc`, while the exact upstream PliegoRS commit passed 47
+unit tests, 15 CLI contract tests, its native watcher E2E, and strict Clippy on Debian with Rust
+1.85. The CLI and control packages remain closed to additive feature growth.
 
 ## PliegoRS mainline integration and guide clean replay — 2026-07-16
 
