@@ -1,5 +1,6 @@
 //! Internal CLI behavior tests.
 use super::*;
+use pliego_css_build::artifacts::optimize_css;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 fn os(arguments: &[&str]) -> Vec<OsString> {
@@ -3770,7 +3771,7 @@ fn warm_source_cache_matches_cold_compilation_across_tree_and_theme_mutations() 
         ),
         (0, 1, 0, 1)
     );
-    assert_eq!(cache.fragments.len(), 1);
+    assert_eq!(cache.css.0.len(), 1);
     let mut previous = initial.snapshot;
 
     fs::write(&first_source, "fn a(){ let _ = pc!(\"grid\"); }")
@@ -3801,7 +3802,7 @@ fn warm_source_cache_matches_cold_compilation_across_tree_and_theme_mutations() 
         ),
         (1, 1, 1, 1)
     );
-    assert_eq!(cache.fragments.len(), 2);
+    assert_eq!(cache.css.0.len(), 2);
     previous = added.snapshot;
 
     fs::write(
@@ -3882,7 +3883,8 @@ fn warm_source_cache_matches_cold_compilation_across_tree_and_theme_mutations() 
         .collect::<Vec<_>>();
     assert!(origin_files.contains(&renamed_source.to_str().expect("UTF-8 path")));
     assert!(!origin_files.contains(&second_source.to_str().expect("UTF-8 path")));
-    assert_eq!(cache.fragments.len(), 2);
+    assert_eq!(cache.css.0.len(), 2);
+    assert_eq!(cache.css.1.hits(), 2);
     previous = renamed.snapshot;
 
     fs::remove_file(&first_source).expect("remove first source");
@@ -3900,7 +3902,7 @@ fn warm_source_cache_matches_cold_compilation_across_tree_and_theme_mutations() 
     assert!(
         matches!(&removed.outcome, WatchOutcome::Compiled(artifact) if !artifact.css.contains("display:grid"))
     );
-    assert_eq!(cache.fragments.len(), 1);
+    assert_eq!(cache.css.0.len(), 1);
     previous = removed.snapshot;
 
     fs::write(&invalid_source, "fn bad( {").expect("add invalid Rust source");

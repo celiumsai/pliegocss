@@ -3,8 +3,9 @@
 `pliego-css-compiler` lowers parsed PliegoCSS utilities into typed semantic IR, detects conflicts,
 derives theme-scoped `StyleId` values, and emits deterministic CSS.
 
-The hidden incremental cache reuses raw fragments by canonical semantic stream. Callers still run
-final whole-artifact optimization, so cache reuse does not alter CSS bytes or cascade order.
+The hidden incremental cache reuses raw fragments by canonical semantic stream. The build-artifact
+layer can also reuse final output for byte-identical raw CSS; changed raw CSS still receives
+whole-artifact optimization, so cache reuse does not alter CSS bytes or cascade order.
 
 ```rust
 use pliego_css_compiler::{emit_css, lower_style};

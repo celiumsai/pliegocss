@@ -2,7 +2,32 @@
 //! Exact CSS-output optimizer contracts.
 
 use lightningcss::targets::Targets;
-use pliego_css_build::artifacts::{optimize_css, optimize_css_with_trace};
+use pliego_css_build::artifacts::{FixedCssOutputCache, optimize_css, optimize_css_with_trace};
+
+#[test]
+fn fixed_settings_cache_skips_only_exact_raw_stylesheets() {
+    let mut cache = FixedCssOutputCache::default();
+    let first = cache
+        .optimize("a{color:red}", Targets::default(), true)
+        .expect("initial optimization");
+    let repeated = cache
+        .optimize("a{color:red}", Targets::default(), true)
+        .expect("cached optimization");
+    assert_eq!(first, repeated);
+    assert_eq!(cache.hits(), 1);
+
+    let changed = cache
+        .optimize("a{color:blue}", Targets::default(), true)
+        .expect("changed optimization");
+    assert_ne!(changed, first);
+    assert_eq!(cache.hits(), 1);
+
+    let reformatted = cache
+        .optimize("a{color:blue}", Targets::default(), false)
+        .expect("format change optimization");
+    assert_ne!(reformatted, changed);
+    assert_eq!(cache.hits(), 1);
+}
 
 #[test]
 fn optimization_and_trace_share_the_same_final_css() {

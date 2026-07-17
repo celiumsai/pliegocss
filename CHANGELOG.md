@@ -447,8 +447,9 @@ pre-1.0 compatibility policy.
 
 - Watch now retains emitted raw CSS fragments by canonical semantic stream, reuses unchanged
   fragments across source-only revisions, invalidates through theme-scoped identity, and prunes
-  styles absent from the complete snapshot. Final Lightning CSS optimization still processes the
-  complete artifact and remains an explicit F6 optimization target.
+  styles absent from the complete snapshot. A fixed-settings final-output cache skips Lightning CSS
+  only when the assembled raw stylesheet is byte-identical; changed input still runs the complete
+  optimizer and warm/cold artifact bytes remain the oracle.
 
 ### Known release blockers
 

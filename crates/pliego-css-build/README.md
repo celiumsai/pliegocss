@@ -33,7 +33,9 @@ Call `theme!` once per package. The macro tracks the exact theme or Resolver fil
 theme source and Resolver inputs for matching CSS.
 
 The non-default `artifacts` feature exposes the bounded manifest/trace/Asset Plan, finding 1.0.0,
-standard-CSS audit, compatibility, and budget contracts used by `pliego-cssc`. See
+standard-CSS audit, compatibility, budget, and exact final-output cache contracts used by
+`pliego-cssc`. The cache reuses output only when raw CSS, browser targets, and formatting are all
+unchanged. See
 `docs/reference/audit-command.md`, `docs/reference/finding-schema-1.md`, and
 `docs/reference/budget-policy.md` in a release checkout.
 

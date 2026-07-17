@@ -2,6 +2,55 @@ use lightningcss::rules::{CssRule, CssRuleList};
 use lightningcss::stylesheet::{ParserOptions, PrinterOptions, StyleSheet};
 use lightningcss::targets::Targets;
 
+/// Reuses final CSS when raw input is unchanged within one fixed-settings run.
+#[doc(hidden)]
+#[derive(Default)]
+pub struct FixedCssOutputCache {
+    source: String,
+    output: String,
+    targets: Targets,
+    minify: bool,
+    initialized: bool,
+    hits: usize,
+}
+
+impl FixedCssOutputCache {
+    /// Optimizes changed input or returns the previous exact output.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when changed CSS cannot be parsed or printed by Lightning CSS.
+    pub fn optimize(
+        &mut self,
+        css: &str,
+        targets: Targets,
+        minify: bool,
+    ) -> Result<String, String> {
+        if self.initialized
+            && self.source == css
+            && self.targets == targets
+            && self.minify == minify
+        {
+            self.hits += 1;
+            return Ok(self.output.clone());
+        }
+        let output = optimize_css(css, targets, minify)?;
+        self.source.clear();
+        self.source.push_str(css);
+        self.output.clone_from(&output);
+        self.targets = targets;
+        self.minify = minify;
+        self.initialized = true;
+        Ok(output)
+    }
+
+    /// Returns the cumulative number of exact raw-input hits.
+    #[must_use]
+    pub const fn hits(&self) -> usize {
+        self.hits
+    }
+}
+
 /// Optimizes emitted CSS with deterministic adjacent-media merging.
 ///
 /// # Errors

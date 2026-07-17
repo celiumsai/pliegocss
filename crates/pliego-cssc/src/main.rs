@@ -29,14 +29,14 @@ use pliego_css_agent::{
 use pliego_css_build::artifacts::{
     AssetPlanBundle, AssetRuleSelection, CatalogOutputFormat, CompatibilityProfile, Finding,
     FindingCause, FindingDocument, FindingSeverity, FindingSource, FindingTool,
-    FindingVerification, GraphOrigin, GraphStyle as ManifestGraphStyle, MAX_DOCUMENT_BYTES,
-    ManifestGraph, ProjectIndexDocument, ReachabilityDocument, ReachabilityIndex, TraceDeclaration,
-    TraceRule, TraceStyle, audit_standard_css, audit_standard_css_with_budgets, build_asset_plan,
-    build_compatibility_policy, build_manifest_graph, build_manifest_graph_with_physical,
-    build_physical_projection, build_project_index, css_layer_finding_source,
-    evaluate_budget_observation_findings, optimize_css, optimize_css_with_trace,
-    parse_reachability_document, render_catalog, sha256_hex, utility_domain_name,
-    utility_form_name, validate_asset_bundle_id,
+    FindingVerification, FixedCssOutputCache, GraphOrigin, GraphStyle as ManifestGraphStyle,
+    MAX_DOCUMENT_BYTES, ManifestGraph, ProjectIndexDocument, ReachabilityDocument,
+    ReachabilityIndex, TraceDeclaration, TraceRule, TraceStyle, audit_standard_css,
+    audit_standard_css_with_budgets, build_asset_plan, build_compatibility_policy,
+    build_manifest_graph, build_manifest_graph_with_physical, build_physical_projection,
+    build_project_index, css_layer_finding_source, evaluate_budget_observation_findings,
+    optimize_css_with_trace, parse_reachability_document, render_catalog, sha256_hex,
+    utility_domain_name, utility_form_name, validate_asset_bundle_id,
 };
 use pliego_css_cascade::{CascadeExplanation, CascadeStatus, explain_stylesheet_cascade};
 use pliego_css_compiler::{
@@ -90,6 +90,7 @@ const FILE_ATTRIBUTE_REPARSE_POINT: u32 = 0x400;
 const USAGE: &str = include_str!("../README.md");
 
 type TargetContract = CompatibilityProfile;
+type CssCaches = (CssFragmentCache, FixedCssOutputCache);
 
 #[cfg(all(test, not(feature = "package-verify")))]
 const fn version(major: u32, minor: u32, patch: u32) -> u32 {
@@ -978,7 +979,7 @@ struct CachedRustSemantics {
 #[derive(Default)]
 struct RustScanCache {
     entries: BTreeMap<String, CachedRustScan>,
-    fragments: CssFragmentCache,
+    css: CssCaches,
 }
 
 fn main() -> ExitCode {
@@ -2845,7 +2846,7 @@ fn compile_bundle_group(
             plan.targets,
             plan.format,
             bundle_graph,
-            &mut CssFragmentCache::default(),
+            &mut CssCaches::default(),
         )
         .map_err(CliFailure::compilation)?;
         if arguments.control {
@@ -5636,7 +5637,7 @@ fn compile_candidates_with_manifest(
         targets,
         format,
         graph,
-        &mut CssFragmentCache::default(),
+        &mut CssCaches::default(),
     )
     .map_err(CliFailure::compilation)
 }
@@ -5696,7 +5697,7 @@ fn compile_resolved_candidates(
         targets,
         format,
         ArtifactGraphOptions::default(),
-        &mut CssFragmentCache::default(),
+        &mut CssCaches::default(),
     )
 }
 
@@ -5708,7 +5709,7 @@ fn compile_resolved_candidates_with_manifest(
     targets: TargetContract,
     format: CssFormat,
     graph: ArtifactGraphOptions<'_>,
-    fragment_cache: &mut CssFragmentCache,
+    cache: &mut CssCaches,
 ) -> Result<CompiledArtifact, String> {
     if graph.physical_trace && graph.reachability.is_none() {
         return Err("physical CSS trace requires reachability".into());
@@ -5832,21 +5833,24 @@ fn compile_resolved_candidates_with_manifest(
             ));
             output.push_str(&css);
         } else {
-            let (css, _) = fragment_cache
+            let (css, _) = cache
+                .0
                 .emit(stream, theme, semantic)
                 .map_err(|error| error.to_string())?;
             output.push_str(css);
         }
         output.push('\n');
     }
-    fragment_cache.retain(semantic_styles.keys());
+    cache.0.retain(semantic_styles.keys());
     let (mut css, trace_input) = if graph.physical_trace {
         let (css, trace_input) =
             optimize_css_with_trace(&output, targets.lightning(), format.is_minified())?;
         (css, Some(trace_input))
     } else {
         (
-            optimize_css(&output, targets.lightning(), format.is_minified())?,
+            cache
+                .1
+                .optimize(&output, targets.lightning(), format.is_minified())?,
             None,
         )
     };
@@ -6920,7 +6924,7 @@ fn compile_watch_snapshot(
             pruning: arguments.pruning,
             ..ArtifactGraphOptions::default()
         },
-        &mut cache.fragments,
+        &mut cache.css,
     )
 }
 

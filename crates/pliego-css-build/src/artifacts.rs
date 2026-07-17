@@ -31,7 +31,7 @@ pub use audit::{
 #[cfg(feature = "catalog")]
 pub use catalog::{CatalogOutputFormat, render_catalog, utility_domain_name, utility_form_name};
 #[cfg(feature = "artifacts")]
-pub use css_output::{optimize_css, optimize_css_with_trace};
+pub use css_output::{FixedCssOutputCache, optimize_css, optimize_css_with_trace};
 #[cfg(feature = "usage-artifacts")]
 pub use finding::{
     FINDING_SCHEMA_VERSION, Finding, FindingCause, FindingContractError, FindingDocument,
