@@ -1,6 +1,6 @@
 # Packaging status
 
-Status: **Tailwind config/plugin seam inventory passed the complete exact-clean `8de2db4` replay; no
+Status: **migration contract corpus passed the complete exact-clean `44f6c09` replay; no
 registry upload performed**
 
 The publishable workspace boundary has six dependency waves. `pliego-css-usage` and
@@ -18,6 +18,24 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## Migration contract-corpus clean replay — 2026-07-16
+
+The exact clean `44f6c09` Debian WSL2 gate passed all three authored contract cases, proved every
+fixture unchanged, packaged and extracted all fifteen archives with Cargo 1.96, compiled the
+extracted graph in release mode, and passed the registry-shaped downstream consumer with Rust 1.85.
+Publication remained disabled, the worktree was clean, and the fixed 61,440-byte ceiling was not
+raised.
+
+| Package | Compressed bytes | Remaining margin | SHA-256 |
+|---|---:|---:|---|
+| `pliego-css-source` | 44,825 | 16,615 | `1c1455ccc058c0de394c820b3169eb6dbe8683c5ae5cd1fe1bd3db120496d340` |
+| `pliego-cssc` | 61,384 | 56 | `734b6f6ff6b7bfdc93e100435251d9767289e4b427b6eaa4a64f9a6297152321` |
+
+The corpus freezes focused Sass, Tailwind auxiliary/template/config-plugin, and CSS Modules consumer
+contracts through the real read-only CLI. Its provenance is `authored-contract`; it is not a
+reviewed real-project corpus and supplies no migration precision/recall claim. R0.8 remains open.
+The CLI package remains closed to additive feature growth.
 
 ## Tailwind config/plugin seam clean replay — 2026-07-16
 
