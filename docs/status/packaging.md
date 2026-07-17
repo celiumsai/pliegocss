@@ -1464,6 +1464,20 @@ disabled, and the CLI margin is explicitly considered tight rather than availabl
 but excludes `tests/**` from the registry archive. No runtime source, README, or license file is
 omitted; the separation preserves compressed-size margin without weakening local verification.
 
+Commit `f0c6e07` passed the exact clean Debian WSL2 package gate after adding opt-in theme-variable
+pruning. Native Linux Node 24.14.0 and Cargo 1.96 produced all seventeen archives in an isolated
+Linux target; the extracted all-feature workspace compiled in release mode and the twelve-package
+registry-shaped Rust 1.85 consumer preserved exact DTCG, TOML, and StyleId output. The tight
+archives were `pliego-cssc` 61,155 bytes (285 bytes of margin, SHA-256
+`135b4613b8fbc84cd121075c04d9fa0e9e187543fd89d45893a361a054434e0d`),
+`pliego-css-control` 61,077 bytes (363 bytes, SHA-256
+`7a8b1c6045f49e124e41b3bee9a2a727b9ad2a4a3281a7663f9a5be824463771`),
+`pliego-css-compiler` 60,430 bytes (1,010 bytes, SHA-256
+`0116a5e9da04487a98816012a4f63711c518cb9f941174b5ebc24242e4fd09e9`), and
+`pliego-css-build` 60,371 bytes (1,069 bytes, SHA-256
+`7c9332ba831bee0be2f5e3c85fd0751e967a55534c326dffeab9f2c29bf013dc`). The worktree was clean,
+publication remained disabled, and the fixed 61,440-byte ceiling was not raised.
+
 The gate distinguishes development evidence from release evidence. A run with `--allow-dirty` can
 inspect work in progress, but the final gate rejects a dirty tree and must be rerun on the exact
 release commit. Neither form performs a registry upload.
