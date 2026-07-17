@@ -1,6 +1,6 @@
 # Packaging status
 
-Status: **CSS Modules destructuring passed the complete exact-clean `444fa6d` replay; no
+Status: **multi-role migration files passed the complete exact-clean `bcf908f` replay; no
 registry upload performed**
 
 The publishable workspace boundary has six dependency waves. `pliego-css-usage` and
@@ -18,6 +18,25 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## Multi-role migration-file clean replay — 2026-07-16
+
+The exact clean `bcf908f` Debian WSL2 gate passed 39 source tests, strict source Clippy, the complete
+public API smoke with Rust 1.85, and the three-case migration corpus with one TSX file serving as
+both CSS Modules consumer and Tailwind template. It then packaged and extracted all fifteen
+archives with Cargo 1.96 and compiled the extracted graph in release mode. Publication remained
+disabled, the worktree was clean, and the fixed 61,440-byte ceiling was not raised.
+
+| Package | Compressed bytes | Remaining margin | SHA-256 |
+|---|---:|---:|---|
+| `pliego-css-source` | 47,784 | 13,656 | `515449bb1950d789e229aaa32ac5f72d9207229a924e069dc85b5f2952580ab3` |
+| `pliego-cssc` | 61,382 | 58 | `0e664f53470dbc37e47ce75fb990e1615b07c7dd394ef08576407f20360b1c95` |
+
+Distinct roles over one physical file now produce independent typed observations over the same
+bounded file while duplicate declarations remain rejected within each role. This removes a real
+structural blocker for future discovery of TSX/JSX files, but does not itself crawl, infer roles, or
+provide real-project evidence; R0.8 remains open. The CLI package remains closed to additive
+feature growth.
 
 ## CSS Modules destructuring clean replay — 2026-07-16
 
