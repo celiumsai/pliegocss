@@ -1,6 +1,6 @@
 # Packaging status
 
-Status: **multi-role migration files passed the complete exact-clean `bcf908f` replay; no
+Status: **typed migration discovery passed the complete exact-clean `7b72ee9` replay; no
 registry upload performed**
 
 The publishable workspace boundary has six dependency waves. `pliego-css-usage` and
@@ -18,6 +18,25 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## Typed migration-discovery clean replay — 2026-07-16
+
+The exact clean `7b72ee9` Debian WSL2 gate passed 42 source tests including Unix symlink rejection,
+strict source Clippy/rustdoc, the complete public API smoke with Rust 1.85, and the three-case
+migration corpus. It then packaged and extracted all fifteen archives with Cargo 1.96 and compiled
+the extracted graph in release mode. Publication remained disabled, the worktree was clean, and the
+fixed 61,440-byte ceiling was not raised.
+
+| Package | Compressed bytes | Remaining margin | SHA-256 |
+|---|---:|---:|---|
+| `pliego-css-source` | 51,473 | 9,967 | `793fa9d17904e1e88b78a7aa00b3d303dd049cd3abf49b5ffa3038b333653abb` |
+| `pliego-cssc` | 61,382 | 58 | `990b505ba46ee44ff9212f33b781b2be93ed05e0fb30617c9c9b218df0412ca9` |
+
+The library can now discover an uncollected typed project beneath one relative root with canonical
+ordering, closed ignores, no-follow traversal, 32-level/65,536-entry/256-MiB bounds, conservative
+role evidence, and exact linked Tailwind auxiliaries. This does not add a CLI discovery command,
+framework/toolchain resolution, arbitrary glob expansion, or real-project precision/recall proof;
+R0.8 remains open. The CLI package remains closed to additive feature growth.
 
 ## Multi-role migration-file clean replay — 2026-07-16
 
