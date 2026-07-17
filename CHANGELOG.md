@@ -51,6 +51,9 @@ pre-1.0 compatibility policy.
 - Explicit one-level CSS Modules binding aliases for `const|let|var alias = binding`. The alias
   declaration has its own typed observation and subsequent dot/quoted-bracket usages inherit the
   exact source target without turning the declaration into a false dynamic class usage.
+- Typed CSS Modules destructuring observations for exact shorthand and renamed members. Computed,
+  rest, default, nested, empty, and otherwise ambiguous patterns emit one fail-closed dynamic seam
+  for the complete declaration; no partial static classes or duplicate binding usages are invented.
 - Explicit Tailwind config, plugin, and template auxiliaries in migration project declarations.
   Every auxiliary is read twice through the bounded no-link file boundary and retained by exact
   bytes/SHA-256. Relative `@config`, `@plugin`, and exact-file `@source` seams resolve only to the

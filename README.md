@@ -62,11 +62,12 @@ The workspace is unreleased at `0.0.0`; syntax and crate boundaries may still ch
   origins, reports specificity escalation, and returns `browser-required` with stable blockers for
   potentially matching dynamic/conditional/nested/scoped/imported/runtime constructs. This is a
   single-stylesheet static slice, not full browser cascade or computed-style emulation.
-- `pliego-css-source` now emits canonical migration inventory schema 1 for one explicit Sass,
-  Tailwind CSS v4 entry, or CSS Modules source. It binds exact bytes/hash/spans, distinguishes
-  static, dynamic, and unsupported constructs, and reports Tailwind Preflight reliance without
-  executing Sass, JavaScript, plugins, configs, or imports. This is the first R0.8 library slice;
-  project/template graphs and CLI integration remain open and no perfect-migration claim is made.
+- `pliego-css-source` and `pliego-cssc` now emit canonical migration inventory schema 1 for closed,
+  explicitly typed Sass, Tailwind CSS v4, CSS Modules, consumer, and auxiliary sets. The snapshot
+  binds exact bytes/hash/spans, resolves only declared conservative edges, records template and
+  CSS Modules usage seams (including one-level aliases and simple destructuring), and never executes
+  Sass, JavaScript, plugins, configs, or imports. Repository crawling, toolchain-specific semantics,
+  and real-project precision/recall evidence remain open; no perfect-migration claim is made.
 - `pliego-cssc plan`, `fix --dry-run`, and explicitly authorized `fix --apply` now implement the
   bounded agent-repair boundary. Closed
   schema-1.0.0 proposals accept only exact edits tied to verified, unexcepted, low-risk finding

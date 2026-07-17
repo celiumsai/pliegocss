@@ -45,7 +45,8 @@
         "resolvedDependencies": 1,
         "consumerImports": 2,
         "consumerAliases": 1,
-        "staticConsumerUsages": 3,
+        "consumerDestructures": 1,
+        "staticConsumerUsages": 4,
         "dynamicConsumerUsages": 1
       },
       "requiredDependencies": [

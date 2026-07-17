@@ -30,7 +30,7 @@ Current frozen expectations include:
 - literal and dynamic template candidate counts;
 - closed Tailwind config-key and plugin-API seam counts;
 - CSS Modules composition, ESM/CommonJS/TypeScript import forms, static class usage, and dynamic
-  class usage, including one-level binding-alias propagation.
+  class usage, including one-level binding-alias propagation and one renamed destructured class.
 
 Adding a case requires a unique ID, a project declaration, explicit summary expectations, at least
 one required dependency seam when dependencies are in scope, and the same authored-contract claim

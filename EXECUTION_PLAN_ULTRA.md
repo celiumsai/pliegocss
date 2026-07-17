@@ -425,7 +425,8 @@ Toda optimización tiene benchmark; ninguna complejidad entra solamente por intu
   quedan como seams lexicales unsupported. Consumidores
   CSS Modules JS/TS declarados ya enlazan ESM, TypeScript import-equals y CommonJS simple, y
   clasifican usos static/dynamic; alias simples de un nivel ya propagan target sin falso dynamic.
-  Faltan destructuring, chains/scope de aliases y un corpus de proyectos
+  Destructuring simple shorthand/renamed ya retiene clase y alias; computed/rest/default/nested
+  queda como una observación dynamic completa. Faltan chains/scope de aliases y un corpus de proyectos
   reales para cerrar. Un harness versionado ya
   congela tres casos authored-contract y verifica seams/resúmenes/inmutabilidad vía CLI; no cuenta
   como evidencia real de precision/recall.

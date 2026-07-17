@@ -100,6 +100,7 @@ The canonical document uses two-space JSON and one trailing LF:
     "staticConsumerUsages": 2,
     "dynamicConsumerUsages": 1,
     "consumerAliases": 1,
+    "consumerDestructures": 1,
     "tailwindConfigs": 1,
     "tailwindPlugins": 1,
     "tailwindTemplates": 1,
@@ -199,18 +200,28 @@ TypeScript import-equals, and simple `const|let|var binding = require(...)` impo
 `.module.css`, exact `binding.className` and `binding["class-name"]` accesses, and
 marks computed brackets, binding escape, named/dynamic imports, or binding text inside template
 literals as dynamic. An unbound static CommonJS require remains a dynamic import observation.
-Escaped/calculated require arguments and typed/destructured declarations are not guessed. Comments
-and ordinary quoted strings cannot create usage observations.
+Escaped/calculated require arguments are not guessed. Comments and ordinary quoted strings cannot
+create usage observations.
 
 One-level `const|let|var alias = binding` declarations emit a `binding-alias` observation with
 `binding`, `alias`, exact byte range, and the inherited target. Subsequent dot and quoted-bracket
 uses of that alias are classified normally. The alias declaration is excluded from class-usage
-counts. Scope/shadowing analysis, alias chains, destructuring, and expression aliases remain open.
+counts. Scope/shadowing analysis, alias chains, and expression aliases remain open.
+
+Simple `const|let|var { className, original: local } = binding` declarations emit one
+`destructured-class` observation per exact member. `className` retains the CSS Modules export,
+`alias` retains the local binding, and the target is inherited from the import. Each exact member
+counts as a static consumer usage. If any member uses a computed key, rest, a default, or a nested
+pattern, the scanner emits one dynamic `destructured-class` observation for the complete declaration
+and does not retain partial static guesses. Empty patterns are dynamic too. Type annotations,
+expression right-hand sides, destructuring through an alias, scope/shadowing, and later reads of the
+destructured local are not semantically analyzed. The complete declaration range is excluded from
+ordinary binding-use scanning, so it cannot also create a false `class-usage` observation.
 
 Every relative import target must normalize to a declared `css-modules` source; missing or mistyped
 targets fail the complete snapshot. Package imports remain visible without a local target. This is a
 lexical migration inventory, not JavaScript execution, TypeScript type analysis, bundler alias
-resolution, destructuring semantics, or proof that an exported CSS class exists.
+resolution, complete destructuring semantics, or proof that an exported CSS class exists.
 
 ## Tailwind auxiliary boundary
 

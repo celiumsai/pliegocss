@@ -521,7 +521,9 @@ directory. Missing or mistyped exact local dependencies fail the complete comman
 unresolved, and dynamic seams stay explicit. Declared CSS Modules JS/TS consumers add exact ESM,
 TypeScript import-equals, and simple CommonJS imports, static class accesses, and conservative
 dynamic-usage observations. Simple one-level binding aliases propagate the same target and remain
-separate from class-usage counts. Declared Tailwind configs,
+separate from class-usage counts. Simple destructuring retains shorthand and renamed class exports;
+computed, rest, default, nested, typed, or otherwise ambiguous patterns fail closed as dynamic
+without partial guesses. Declared Tailwind configs,
 plugins, and templates add exact content identities and resolve matching relative `@config`,
 `@plugin`, and exact-file `@source` seams. Literal template `class`/`className` values emit exact
 class candidates while expressions remain dynamic, without executing JavaScript or template code.

@@ -161,7 +161,7 @@ fn exercise_migration_inventory_surface() {
     let consumer = inventory_migration_consumer_source(
         MigrationConsumerKind::CssModules,
         "src/Card.tsx",
-        "import styles from \"./card.module.css\"; const card = styles.card;",
+        "import styles from \"./card.module.css\"; const { title: heading } = styles; const card = styles.card;",
     )
     .expect("valid CSS Modules consumer inventory");
     let _consumer_declaration =
@@ -180,8 +180,9 @@ fn exercise_migration_inventory_surface() {
     assert_eq!(consumer.consumer_kind(), MigrationConsumerKind::CssModules);
     assert_eq!(consumer.file(), "src/Card.tsx");
     assert_eq!(consumer.source_sha256().len(), 64);
-    assert_eq!(consumer.observations().len(), 2);
+    assert_eq!(consumer.observations().len(), 3);
     let _: MigrationConsumerObservationKind = MigrationConsumerObservationKind::BindingAlias;
+    let _: MigrationConsumerObservationKind = MigrationConsumerObservationKind::DestructuredClass;
     let _auxiliary_reader = inventory_migration_auxiliary_file;
     let auxiliary = inventory_migration_auxiliary_source(
         MigrationAuxiliaryKind::TailwindConfig,

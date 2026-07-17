@@ -349,8 +349,9 @@ también requiere E0–E4 y todos los Must de R0 en el contrato estratégico.
   plugins y templates declarados ya tienen identidad bytes/hash y linking relativo tipado. Faltan
   crawling, resolución específica del toolchain e inspección semántica profunda de auxiliares;
   templates ya exponen candidatos `class`/`className` literales y expresiones dynamic,
-  mientras keys de config y APIs de plugin comunes quedan visibles como unsupported,
-  destructuring/chains/scope de aliases y fixtures
+  mientras keys de config y APIs de plugin comunes quedan visibles como unsupported. Destructuring
+  simple shorthand/renamed ya queda tipado y patrones computed/rest/default/nested fallan como una
+  observación dynamic completa; faltan chains/scope de aliases y fixtures
   de migración reales antes de escribir la guía completa. El corpus contractual de tres casos y su
   runner CLI ya están versionados, pero no sustituyen proyectos reales revisados.
 - [ ] Crear tutorial completo, how-to guides y referencia de API.

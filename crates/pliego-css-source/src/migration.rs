@@ -172,6 +172,7 @@ struct MigrationProjectSummary {
     static_consumer_usages: usize,
     dynamic_consumer_usages: usize,
     consumer_aliases: usize,
+    consumer_destructures: usize,
     tailwind_configs: usize,
     tailwind_plugins: usize,
     tailwind_templates: usize,
@@ -364,6 +365,8 @@ pub enum MigrationConsumerObservationKind {
     ClassUsage,
     /// One simple lexical alias of an imported CSS Modules binding.
     BindingAlias,
+    /// One destructured class export, or one fail-closed dynamic destructuring seam.
+    DestructuredClass,
 }
 
 /// One exact import or class usage observed in a migration consumer.
@@ -653,7 +656,7 @@ impl MigrationConsumerObservation {
         self.binding.as_deref()
     }
 
-    /// Returns the declared alias for a binding-alias observation.
+    /// Returns the declared local alias for binding aliases or destructured classes.
     #[must_use]
     pub fn alias(&self) -> Option<&str> {
         self.alias.as_deref()
@@ -1068,25 +1071,15 @@ fn migration_project_summary(
             consumers,
             MigrationConsumerObservationKind::Import,
         ),
-        static_consumer_usages: consumers
-            .iter()
-            .flat_map(|consumer| &consumer.observations)
-            .filter(|observation| {
-                observation.kind == MigrationConsumerObservationKind::ClassUsage
-                    && observation.disposition == MigrationDisposition::Static
-            })
-            .count(),
-        dynamic_consumer_usages: consumers
-            .iter()
-            .flat_map(|consumer| &consumer.observations)
-            .filter(|observation| {
-                observation.kind == MigrationConsumerObservationKind::ClassUsage
-                    && observation.disposition == MigrationDisposition::Dynamic
-            })
-            .count(),
+        static_consumer_usages: count_consumer_usages(consumers, MigrationDisposition::Static),
+        dynamic_consumer_usages: count_consumer_usages(consumers, MigrationDisposition::Dynamic),
         consumer_aliases: count_consumer_observation_kind(
             consumers,
             MigrationConsumerObservationKind::BindingAlias,
+        ),
+        consumer_destructures: count_consumer_observation_kind(
+            consumers,
+            MigrationConsumerObservationKind::DestructuredClass,
         ),
         tailwind_configs: auxiliaries
             .iter()
@@ -1138,6 +1131,23 @@ fn count_consumer_observation_kind(
         .iter()
         .flat_map(|consumer| &consumer.observations)
         .filter(|observation| observation.kind == kind)
+        .count()
+}
+
+fn count_consumer_usages(
+    consumers: &[MigrationConsumerInventory],
+    disposition: MigrationDisposition,
+) -> usize {
+    consumers
+        .iter()
+        .flat_map(|consumer| &consumer.observations)
+        .filter(|observation| {
+            matches!(
+                observation.kind,
+                MigrationConsumerObservationKind::ClassUsage
+                    | MigrationConsumerObservationKind::DestructuredClass
+            ) && observation.disposition == disposition
+        })
         .count()
 }
 
@@ -2120,6 +2130,14 @@ fn scan_css_modules_consumer(
     for (binding, target, import_start, import_end) in bindings {
         let mut excluded = Vec::new();
         excluded.push(import_start..import_end);
+        excluded.extend(scan_consumer_binding_destructures(
+            source,
+            &masks.code,
+            binding.as_str(),
+            target.as_deref(),
+            import_start..import_end,
+            &mut observations,
+        ));
         for (alias, range) in scan_consumer_binding_aliases(
             source,
             &masks.code,
@@ -2133,7 +2151,18 @@ fn scan_css_modules_consumer(
         }
         usage_bindings.push((binding, target, excluded));
     }
-    for (binding, target, excluded) in usage_bindings {
+    scan_all_consumer_binding_usages(source, masks, usage_bindings, &mut observations);
+    observations.sort_by_key(|observation| (observation.byte_start, observation.byte_end));
+    Ok(observations)
+}
+
+fn scan_all_consumer_binding_usages(
+    source: &str,
+    masks: &LexicalMasks,
+    bindings: Vec<(String, Option<String>, Vec<std::ops::Range<usize>>)>,
+    output: &mut Vec<MigrationConsumerObservation>,
+) {
+    for (binding, target, excluded) in bindings {
         scan_consumer_binding_usages(
             source,
             &masks.code,
@@ -2141,10 +2170,145 @@ fn scan_css_modules_consumer(
             binding.as_str(),
             target.as_deref(),
             &excluded,
-            &mut observations,
+            output,
         );
     }
-    Ok(observations)
+}
+
+enum ConsumerDestructure {
+    Static(Vec<(String, String, std::ops::Range<usize>)>),
+    Dynamic,
+}
+
+fn scan_consumer_binding_destructures(
+    source: &str,
+    code: &[bool],
+    binding: &str,
+    target: Option<&str>,
+    import_range: std::ops::Range<usize>,
+    output: &mut Vec<MigrationConsumerObservation>,
+) -> Vec<std::ops::Range<usize>> {
+    let bytes = source.as_bytes();
+    let mut declarations = Vec::new();
+    for start in 0..bytes.len() {
+        if import_range.contains(&start)
+            || !code[start]
+            || !bytes[start..].starts_with(binding.as_bytes())
+            || is_identifier(start.checked_sub(1).and_then(|i| bytes.get(i)).copied())
+            || is_identifier(bytes.get(start + binding.len()).copied())
+        {
+            continue;
+        }
+        let statement_start = consumer_statement_start(bytes, start);
+        let Some(end) = simple_binding_statement_end(bytes, start + binding.len()) else {
+            continue;
+        };
+        let prefix = &source[statement_start..start];
+        let Some(destructure) = parse_consumer_destructure(prefix, statement_start) else {
+            continue;
+        };
+        let declaration_range = statement_start..end;
+        match destructure {
+            ConsumerDestructure::Static(members) => {
+                for (class_name, alias, range) in members {
+                    output.push(MigrationConsumerObservation {
+                        kind: MigrationConsumerObservationKind::DestructuredClass,
+                        byte_start: range.start,
+                        byte_end: range.end,
+                        disposition: MigrationDisposition::Static,
+                        binding: Some(binding.into()),
+                        alias: Some(alias),
+                        specifier: None,
+                        target: target.map(str::to_owned),
+                        class_name: Some(class_name),
+                    });
+                }
+            }
+            ConsumerDestructure::Dynamic => output.push(MigrationConsumerObservation {
+                kind: MigrationConsumerObservationKind::DestructuredClass,
+                byte_start: declaration_range.start,
+                byte_end: declaration_range.end,
+                disposition: MigrationDisposition::Dynamic,
+                binding: Some(binding.into()),
+                alias: None,
+                specifier: None,
+                target: target.map(str::to_owned),
+                class_name: None,
+            }),
+        }
+        declarations.push(declaration_range);
+    }
+    declarations
+}
+
+fn simple_binding_statement_end(bytes: &[u8], mut cursor: usize) -> Option<usize> {
+    while matches!(bytes.get(cursor), Some(b' ' | b'\t')) {
+        cursor += 1;
+    }
+    match bytes.get(cursor) {
+        None | Some(b'\n' | b'\r') => Some(cursor),
+        Some(b';') => Some(cursor + 1),
+        _ => None,
+    }
+}
+
+fn parse_consumer_destructure(prefix: &str, offset: usize) -> Option<ConsumerDestructure> {
+    let equals = prefix.rfind('=')?;
+    if !prefix[equals + 1..].trim().is_empty() {
+        return None;
+    }
+    let declaration = prefix[..equals].trim();
+    let body = ["const", "let", "var"]
+        .iter()
+        .find_map(|keyword| declaration.strip_prefix(keyword))?
+        .trim();
+    if !body.starts_with('{') || !body.ends_with('}') {
+        return None;
+    }
+    let body_start = prefix.find('{')? + 1;
+    let body_end = prefix[..equals].rfind('}')?;
+    let members = &prefix[body_start..body_end];
+    if members.trim().is_empty() {
+        return Some(ConsumerDestructure::Dynamic);
+    }
+    let mut parsed = Vec::new();
+    let mut relative = 0;
+    for raw in members.split(',') {
+        let leading = raw.len() - raw.trim_start().len();
+        let member = raw.trim();
+        let range_start = offset + body_start + relative + leading;
+        let range = range_start..range_start + member.len();
+        let Some((class_name, alias)) = parse_consumer_destructure_member(member) else {
+            return Some(ConsumerDestructure::Dynamic);
+        };
+        parsed.push((class_name, alias, range));
+        relative += raw.len() + 1;
+    }
+    Some(ConsumerDestructure::Static(parsed))
+}
+
+fn parse_consumer_destructure_member(member: &str) -> Option<(String, String)> {
+    if member.contains(['[', ']', '{', '}', '=', '.']) {
+        return None;
+    }
+    let mut parts = member.split(':');
+    let class_name = parts.next()?.trim();
+    let alias = parts.next().map_or(class_name, str::trim);
+    if parts.next().is_some()
+        || !valid_consumer_identifier(class_name)
+        || !valid_consumer_identifier(alias)
+    {
+        return None;
+    }
+    Some((class_name.into(), alias.into()))
+}
+
+fn valid_consumer_identifier(value: &str) -> bool {
+    let mut bytes = value.bytes();
+    bytes
+        .next()
+        .is_some_and(|byte| byte.is_ascii_alphabetic() || matches!(byte, b'_' | b'$'))
+        && bytes.all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'$'))
 }
 
 fn scan_consumer_binding_aliases(
@@ -3703,6 +3867,56 @@ consume(styles);
         assert_eq!(usages[0].binding(), Some("cx"));
         assert_eq!(usages[0].class_name(), Some("card"));
         assert_eq!(usages[1].disposition(), MigrationDisposition::Dynamic);
+    }
+
+    #[test]
+    fn inventories_css_modules_destructuring_fail_closed() {
+        let source = r#"import styles from "./card.module.css";
+const { card, title: heading } = styles;
+const { [key]: computed } = styles;
+const { card: withDefault = fallback } = styles;
+const { ...rest } = styles;
+const { nested: { item } } = styles;
+"#;
+        let inventory = inventory_migration_consumer_source(
+            MigrationConsumerKind::CssModules,
+            "src/Card.tsx",
+            source,
+        )
+        .unwrap();
+        let destructures = inventory
+            .observations()
+            .iter()
+            .filter(|item| item.kind() == MigrationConsumerObservationKind::DestructuredClass)
+            .collect::<Vec<_>>();
+        assert_eq!(destructures.len(), 6);
+        assert_eq!(destructures[0].class_name(), Some("card"));
+        assert_eq!(destructures[0].alias(), Some("card"));
+        assert_eq!(destructures[1].class_name(), Some("title"));
+        assert_eq!(destructures[1].alias(), Some("heading"));
+        assert!(
+            destructures[..2]
+                .iter()
+                .all(|item| item.disposition() == MigrationDisposition::Static)
+        );
+        assert!(destructures[2..].iter().all(|item| {
+            item.disposition() == MigrationDisposition::Dynamic
+                && item.class_name().is_none()
+                && item.alias().is_none()
+        }));
+        assert_eq!(
+            inventory
+                .observations()
+                .iter()
+                .filter(|item| item.kind() == MigrationConsumerObservationKind::ClassUsage)
+                .count(),
+            0
+        );
+        assert!(destructures.iter().all(|observation| {
+            source
+                .get(observation.byte_start()..observation.byte_end())
+                .is_some()
+        }));
     }
 
     #[test]
