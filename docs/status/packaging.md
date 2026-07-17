@@ -1,6 +1,6 @@
 # Packaging status
 
-Status: **CLI migration discovery passed the complete exact-clean `7be9780` replay; no
+Status: **real-project discovery diagnostics passed the complete exact-clean `cb198aa` replay; no
 registry upload performed**
 
 The publishable workspace boundary has six dependency waves. `pliego-css-usage` and
@@ -18,6 +18,25 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## Real-project discovery diagnostic clean replay — 2026-07-16
+
+The exact clean `cb198aa` Debian WSL2 gate passed 43 source tests including Unix symlink rejection,
+five black-box migration CLI tests, strict source/CLI Clippy, the complete public API smoke with
+Rust 1.85, and the authored migration corpus. It then packaged and extracted all fifteen archives
+with Cargo 1.96 and compiled the extracted graph in release mode. Publication remained disabled,
+the worktree was clean, and the fixed 61,440-byte ceiling was not raised.
+
+| Package | Compressed bytes | Remaining margin | SHA-256 |
+|---|---:|---:|---|
+| `pliego-css-source` | 52,379 | 9,061 | `2bafded0f43441ef138720e05c0885d3015c436475bec34e8886dbd323fc01c7` |
+| `pliego-cssc` | 61,390 | 50 | `0fe6383b15b3789c0de150e4d2ee4a32621627d711ab110261d137f8dffd3c7a` |
+
+Directory discovery now qualifies candidate failures with the portable project path, avoids
+parsing scripts that contain no CSS Modules evidence, and ignores non-tag comparisons plus
+comments while scanning Tailwind templates. These changes were driven by pinned public-project
+probes, but this gate does not yet publish a reproducible licensed corpus or precision/recall
+metrics; R0.8 remains open. The CLI package remains closed to additive feature growth.
 
 ## CLI migration-discovery clean replay — 2026-07-16
 
