@@ -1,6 +1,6 @@
 # Packaging status
 
-Status: **CSS Modules binding aliases passed the complete exact-clean `69a0cbb` replay; no
+Status: **CSS Modules destructuring passed the complete exact-clean `444fa6d` replay; no
 registry upload performed**
 
 The publishable workspace boundary has six dependency waves. `pliego-css-usage` and
@@ -18,6 +18,26 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## CSS Modules destructuring clean replay — 2026-07-16
+
+The exact clean `444fa6d` Debian WSL2 gate passed 38 source tests, strict source Clippy, the complete
+public API smoke with Rust 1.85, and the three-case migration corpus with one renamed destructured
+class. It then packaged and extracted all fifteen archives with Cargo 1.96 and compiled the
+extracted graph in release mode. Publication remained disabled, the worktree was clean, and the
+fixed 61,440-byte ceiling was not raised.
+
+| Package | Compressed bytes | Remaining margin | SHA-256 |
+|---|---:|---:|---|
+| `pliego-css-source` | 47,719 | 13,721 | `2ed298174b2592e310748cb9c809c51a8203d24c08336996773b063d5ed693e3` |
+| `pliego-cssc` | 61,389 | 51 | `e03c7ae3a538988c2bfcd320e8cc7edf36c5b6b2fc2b704b9d25fc5e2f5fa77f` |
+
+Simple shorthand and renamed destructuring now emit typed class/alias observations with exact
+member ranges and inherited targets. Computed keys, rest, defaults, nested patterns, empty patterns,
+and otherwise ambiguous declarations collapse to one dynamic observation instead of partial static
+guesses. Type annotations, destructuring through aliases, scope/shadowing, alias chains, crawling,
+and real-project evidence remain open, so R0.8 is not closed. The CLI package remains closed to
+additive feature growth.
 
 ## CSS Modules binding-alias clean replay — 2026-07-16
 
