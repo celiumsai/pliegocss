@@ -347,7 +347,8 @@ también requiere E0–E4 y todos los Must de R0 en el contrato estratégico.
   emite el snapshot por stdout. Un fixture cross-toolchain versionado cubre las tres familias y las
   clasificaciones de edge; `@config`/`@plugin`/`@source` ya quedan visibles sin ejecución. Configs,
   plugins y templates declarados ya tienen identidad bytes/hash y linking relativo tipado. Faltan
-  crawling, resolución específica del toolchain e inspección semántica profunda de auxiliares,
+  crawling, resolución específica del toolchain e inspección semántica profunda de auxiliares;
+  templates ya exponen candidatos `class`/`className` literales y expresiones dynamic,
   consumers/aliases avanzados y fixtures
   de migración reales antes de escribir la guía completa.
 - [ ] Crear tutorial completo, how-to guides y referencia de API.

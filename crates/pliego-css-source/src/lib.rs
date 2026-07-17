@@ -36,10 +36,11 @@ pub use application::{
 };
 pub use migration::{
     MIGRATION_INVENTORY_SCHEMA_VERSION, MigrationAuxiliaryInventory, MigrationAuxiliaryKind,
-    MigrationConstruct, MigrationConsumerInventory, MigrationConsumerKind,
-    MigrationConsumerObservation, MigrationConsumerObservationKind, MigrationDependency,
-    MigrationDependencyKind, MigrationDependencyResolution, MigrationDisposition,
-    MigrationInventory, MigrationInventoryError, MigrationPreflightReliance, MigrationProject,
+    MigrationAuxiliaryObservation, MigrationAuxiliaryObservationKind, MigrationConstruct,
+    MigrationConsumerInventory, MigrationConsumerKind, MigrationConsumerObservation,
+    MigrationConsumerObservationKind, MigrationDependency, MigrationDependencyKind,
+    MigrationDependencyResolution, MigrationDisposition, MigrationInventory,
+    MigrationInventoryError, MigrationPreflightReliance, MigrationProject,
     MigrationProjectAuxiliary, MigrationProjectConsumer, MigrationProjectInventory,
     MigrationProjectSource, MigrationSourceKind, inventory_migration_auxiliary_file,
     inventory_migration_auxiliary_source, inventory_migration_consumer_file,

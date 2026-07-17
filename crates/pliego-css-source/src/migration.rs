@@ -174,6 +174,8 @@ struct MigrationProjectSummary {
     tailwind_configs: usize,
     tailwind_plugins: usize,
     tailwind_templates: usize,
+    static_template_candidates: usize,
+    dynamic_template_candidates: usize,
 }
 
 #[derive(Serialize)]
@@ -323,6 +325,26 @@ pub struct MigrationAuxiliaryInventory {
     file: String,
     source_bytes: usize,
     source_sha256: String,
+    observations: Vec<MigrationAuxiliaryObservation>,
+}
+
+/// Kind of conservative observation retained from a Tailwind auxiliary.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum MigrationAuxiliaryObservationKind {
+    /// One class candidate or dynamic class-bearing attribute from a template tag.
+    ClassCandidate,
+}
+
+/// One exact observation derived from a declared Tailwind auxiliary.
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct MigrationAuxiliaryObservation {
+    kind: MigrationAuxiliaryObservationKind,
+    byte_start: usize,
+    byte_end: usize,
+    disposition: MigrationDisposition,
+    value: Option<String>,
 }
 
 /// Kind of exact observation retained from a migration consumer.
@@ -549,6 +571,44 @@ impl MigrationAuxiliaryInventory {
     #[must_use]
     pub fn source_sha256(&self) -> &str {
         &self.source_sha256
+    }
+
+    /// Returns exact observations in source byte order.
+    #[must_use]
+    pub fn observations(&self) -> &[MigrationAuxiliaryObservation] {
+        &self.observations
+    }
+}
+
+impl MigrationAuxiliaryObservation {
+    /// Returns the observation kind.
+    #[must_use]
+    pub const fn kind(&self) -> MigrationAuxiliaryObservationKind {
+        self.kind
+    }
+
+    /// Returns the conservative static classification.
+    #[must_use]
+    pub const fn disposition(&self) -> MigrationDisposition {
+        self.disposition
+    }
+
+    /// Returns the zero-based inclusive byte start.
+    #[must_use]
+    pub const fn byte_start(&self) -> usize {
+        self.byte_start
+    }
+
+    /// Returns the zero-based exclusive byte end.
+    #[must_use]
+    pub const fn byte_end(&self) -> usize {
+        self.byte_end
+    }
+
+    /// Returns the exact static class candidate, or `None` for a dynamic attribute.
+    #[must_use]
+    pub fn value(&self) -> Option<&str> {
+        self.value.as_deref()
     }
 }
 
@@ -1029,6 +1089,16 @@ fn migration_project_summary(
         tailwind_templates: auxiliaries
             .iter()
             .filter(|item| item.auxiliary_kind == MigrationAuxiliaryKind::TailwindTemplate)
+            .count(),
+        static_template_candidates: auxiliaries
+            .iter()
+            .flat_map(|item| &item.observations)
+            .filter(|item| item.disposition == MigrationDisposition::Static)
+            .count(),
+        dynamic_template_candidates: auxiliaries
+            .iter()
+            .flat_map(|item| &item.observations)
+            .filter(|item| item.disposition == MigrationDisposition::Dynamic)
             .count(),
     }
 }
@@ -1567,14 +1637,25 @@ pub fn inventory_migration_auxiliary_source(
             "migration auxiliary must be NUL-free and at most 16 MiB",
         ));
     }
-    if auxiliary_kind != MigrationAuxiliaryKind::TailwindTemplate {
+    let mut observations = if auxiliary_kind == MigrationAuxiliaryKind::TailwindTemplate {
+        scan_tailwind_template(source)?
+    } else {
         lexical_masks(source)?;
+        Vec::new()
+    };
+    observations.sort_by_key(|item| (item.byte_start, item.byte_end));
+    observations.dedup();
+    if observations.len() > MAX_CONSTRUCTS {
+        return Err(MigrationInventoryError::new(
+            "migration auxiliary exceeds 65,535 observations",
+        ));
     }
     Ok(MigrationAuxiliaryInventory {
         auxiliary_kind,
         file: file.into(),
         source_bytes: source.len(),
         source_sha256: format!("{:x}", Sha256::digest(source.as_bytes())),
+        observations,
     })
 }
 
@@ -1593,6 +1674,201 @@ pub fn inventory_migration_auxiliary_file(
         MigrationInventoryError::new(format!("migration auxiliary is not valid UTF-8: {error}"))
     })?;
     inventory_migration_auxiliary_source(auxiliary_kind, &logical, source)
+}
+
+fn scan_tailwind_template(
+    source: &str,
+) -> Result<Vec<MigrationAuxiliaryObservation>, MigrationInventoryError> {
+    let bytes = source.as_bytes();
+    let mut observations = Vec::new();
+    let mut cursor = 0;
+    while let Some(offset) = bytes[cursor..].iter().position(|byte| *byte == b'<') {
+        let start = cursor + offset;
+        if bytes[start..].starts_with(b"<!--") {
+            let Some(end) = source[start + 4..].find("-->") else {
+                return Err(MigrationInventoryError::new(
+                    "migration template contains an unterminated comment",
+                ));
+            };
+            cursor = start + 4 + end + 3;
+            continue;
+        }
+        let end = template_tag_end(bytes, start + 1)?;
+        scan_template_tag(source, start + 1, end, &mut observations)?;
+        cursor = end + 1;
+    }
+    Ok(observations)
+}
+
+fn template_tag_end(bytes: &[u8], mut cursor: usize) -> Result<usize, MigrationInventoryError> {
+    let mut quote = None;
+    let mut escaped = false;
+    let mut braces = 0_usize;
+    while cursor < bytes.len() {
+        let byte = bytes[cursor];
+        if let Some(active) = quote {
+            if escaped {
+                escaped = false;
+            } else if byte == b'\\' {
+                escaped = true;
+            } else if byte == active {
+                quote = None;
+            }
+        } else {
+            match byte {
+                b'\'' | b'"' | b'`' => quote = Some(byte),
+                b'{' => braces = braces.saturating_add(1),
+                b'}' => braces = braces.saturating_sub(1),
+                b'>' if braces == 0 => return Ok(cursor),
+                _ => {}
+            }
+        }
+        cursor += 1;
+    }
+    Err(MigrationInventoryError::new(
+        "migration template contains an unterminated tag",
+    ))
+}
+
+fn scan_template_tag(
+    source: &str,
+    start: usize,
+    end: usize,
+    observations: &mut Vec<MigrationAuxiliaryObservation>,
+) -> Result<(), MigrationInventoryError> {
+    let bytes = source.as_bytes();
+    let mut cursor = start;
+    while cursor < end {
+        let Some((name_start, name_end)) = template_class_attribute(bytes, cursor, end) else {
+            break;
+        };
+        cursor = name_end;
+        while cursor < end && bytes[cursor].is_ascii_whitespace() {
+            cursor += 1;
+        }
+        if bytes.get(cursor) != Some(&b'=') {
+            continue;
+        }
+        cursor += 1;
+        while cursor < end && bytes[cursor].is_ascii_whitespace() {
+            cursor += 1;
+        }
+        let (value_start, value_end, next) = template_attribute_value(bytes, cursor, end)?;
+        push_template_candidates(source, value_start, value_end, observations);
+        cursor = next.max(name_start + 1);
+    }
+    Ok(())
+}
+
+fn template_class_attribute(bytes: &[u8], mut cursor: usize, end: usize) -> Option<(usize, usize)> {
+    let mut quote = None;
+    let mut escaped = false;
+    let mut braces = 0_usize;
+    while cursor < end {
+        let byte = bytes[cursor];
+        if let Some(active) = quote {
+            if escaped {
+                escaped = false;
+            } else if byte == b'\\' {
+                escaped = true;
+            } else if byte == active {
+                quote = None;
+            }
+        } else {
+            match byte {
+                b'\'' | b'"' | b'`' => quote = Some(byte),
+                b'{' => braces = braces.saturating_add(1),
+                b'}' => braces = braces.saturating_sub(1),
+                _ if braces == 0 => {
+                    for name in [b"className".as_slice(), b"class".as_slice()] {
+                        if bytes[cursor..end].starts_with(name)
+                            && (cursor == 0 || !is_template_attribute_byte(bytes[cursor - 1]))
+                            && (cursor + name.len() == end
+                                || !is_template_attribute_byte(bytes[cursor + name.len()]))
+                        {
+                            return Some((cursor, cursor + name.len()));
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+        cursor += 1;
+    }
+    None
+}
+
+const fn is_template_attribute_byte(byte: u8) -> bool {
+    byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'-' | b':')
+}
+
+fn template_attribute_value(
+    bytes: &[u8],
+    start: usize,
+    end: usize,
+) -> Result<(usize, usize, usize), MigrationInventoryError> {
+    let Some(first) = bytes.get(start).copied() else {
+        return Ok((start, start, start));
+    };
+    if matches!(first, b'\'' | b'"') {
+        let mut cursor = start + 1;
+        while cursor < end && bytes[cursor] != first {
+            if bytes[cursor] == b'\\' {
+                cursor += 1;
+            }
+            cursor += 1;
+        }
+        if cursor == end {
+            return Err(MigrationInventoryError::new(
+                "migration template contains an unterminated class attribute",
+            ));
+        }
+        return Ok((start + 1, cursor, cursor + 1));
+    }
+    if first == b'{' {
+        let mut cursor = start + 1;
+        let mut depth = 1_usize;
+        while cursor < end && depth > 0 {
+            depth += usize::from(bytes[cursor] == b'{');
+            depth = depth.saturating_sub(usize::from(bytes[cursor] == b'}'));
+            cursor += 1;
+        }
+        return Ok((start, cursor, cursor));
+    }
+    let value_end = bytes[start..end]
+        .iter()
+        .position(u8::is_ascii_whitespace)
+        .map_or(end, |offset| start + offset);
+    Ok((start, value_end, value_end))
+}
+
+fn push_template_candidates(
+    source: &str,
+    start: usize,
+    end: usize,
+    observations: &mut Vec<MigrationAuxiliaryObservation>,
+) {
+    let value = &source[start..end];
+    if value.contains(['{', '}', '$', '`']) {
+        observations.push(MigrationAuxiliaryObservation {
+            kind: MigrationAuxiliaryObservationKind::ClassCandidate,
+            byte_start: start,
+            byte_end: end,
+            disposition: MigrationDisposition::Dynamic,
+            value: None,
+        });
+        return;
+    }
+    for candidate in value.split_whitespace() {
+        let offset = candidate.as_ptr() as usize - value.as_ptr() as usize;
+        observations.push(MigrationAuxiliaryObservation {
+            kind: MigrationAuxiliaryObservationKind::ClassCandidate,
+            byte_start: start + offset,
+            byte_end: start + offset + candidate.len(),
+            disposition: MigrationDisposition::Static,
+            value: Some(candidate.into()),
+        });
+    }
 }
 
 fn validate_auxiliary_path(
@@ -2867,7 +3143,11 @@ $color: red;
         .unwrap();
         fs::write(&config, "export default { theme: {} };\n").unwrap();
         fs::write(&plugin, "export default function plugin() {}\n").unwrap();
-        fs::write(&template, "<main class=\"grid\"></main>\n").unwrap();
+        fs::write(
+            &template,
+            "<main title=\"class='ignored'\" class=\"grid gap-4\" className={active ? 'x' : 'y'}></main>\n<!-- <div class=\"ignored\"> -->\n",
+        )
+        .unwrap();
         let inventory = MigrationProject::new()
             .source(MigrationProjectSource::new(
                 MigrationSourceKind::Tailwind,
@@ -2921,24 +3201,42 @@ $color: red;
                 .iter()
                 .all(|item| { item.source_bytes() > 0 && item.source_sha256().len() == 64 })
         );
+        let template_inventory = inventory
+            .auxiliaries()
+            .iter()
+            .find(|item| item.auxiliary_kind() == MigrationAuxiliaryKind::TailwindTemplate)
+            .unwrap();
+        assert_eq!(template_inventory.observations().len(), 3);
+        assert_eq!(template_inventory.observations()[0].value(), Some("grid"));
+        assert_eq!(template_inventory.observations()[1].value(), Some("gap-4"));
+        assert_eq!(template_inventory.observations()[2].value(), None);
         let document: serde_json::Value = serde_json::from_slice(inventory.as_bytes()).unwrap();
         assert_eq!(document["summary"]["auxiliaries"], 3);
         assert_eq!(document["summary"]["tailwindConfigs"], 1);
         assert_eq!(document["summary"]["tailwindPlugins"], 1);
         assert_eq!(document["summary"]["tailwindTemplates"], 1);
-        let mistyped = MigrationProject::new()
-            .source(MigrationProjectSource::new(
-                MigrationSourceKind::Tailwind,
-                css.to_string_lossy().into_owned(),
-            ))
-            .auxiliary(MigrationProjectAuxiliary::new(
-                MigrationAuxiliaryKind::TailwindPlugin,
-                config.to_string_lossy().into_owned(),
-            ))
-            .collect()
-            .unwrap_err();
-        assert!(mistyped.to_string().contains("requires tailwind-config"));
+        assert_eq!(document["summary"]["staticTemplateCandidates"], 2);
+        assert_eq!(document["summary"]["dynamicTemplateCandidates"], 1);
         fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
+    fn tailwind_auxiliary_resolution_rejects_a_declared_wrong_kind() {
+        let sources = std::collections::BTreeMap::new();
+        let auxiliaries = std::collections::BTreeMap::from([(
+            "src/tailwind.config.js",
+            MigrationAuxiliaryKind::TailwindPlugin,
+        )]);
+        let error = classify_dependency(
+            "src/app.css",
+            MigrationSourceKind::Tailwind,
+            MigrationDependencyKind::TailwindConfig,
+            "./tailwind.config.js",
+            &sources,
+            &auxiliaries,
+        )
+        .unwrap_err();
+        assert!(error.to_string().contains("requires tailwind-config"));
     }
 
     #[test]

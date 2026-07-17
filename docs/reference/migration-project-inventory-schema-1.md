@@ -101,7 +101,9 @@ The canonical document uses two-space JSON and one trailing LF:
     "dynamicConsumerUsages": 1,
     "tailwindConfigs": 1,
     "tailwindPlugins": 1,
-    "tailwindTemplates": 1
+    "tailwindTemplates": 1,
+    "staticTemplateCandidates": 4,
+    "dynamicTemplateCandidates": 1
   },
   "sources": [
     {
@@ -144,7 +146,8 @@ The canonical document uses two-space JSON and one trailing LF:
       "auxiliaryKind": "tailwind-config",
       "file": "tailwind.config.js",
       "sourceBytes": 42,
-      "sourceSha256": "<64 lowercase hex characters>"
+      "sourceSha256": "<64 lowercase hex characters>",
+      "observations": []
     }
   ]
 }
@@ -203,7 +206,10 @@ resolution, destructuring semantics, or proof that an exported CSS class exists.
 `tailwind-config` and `tailwind-plugin` accept JavaScript/TypeScript module extensions. They pass
 bounded lexical-state validation, then retain exact UTF-8 byte count and SHA-256.
 `tailwind-template` accepts common HTML/component/template extensions and retains the same exact
-identity without pretending to parse every template language.
+identity. Its tag-aware lexical scanner extracts whitespace-separated literal candidates from exact
+`class` and `className` attributes with byte spans. Expression, interpolation, or template-literal
+values remain a single dynamic observation. HTML comments, attribute strings, and text outside tags
+do not create candidates. This is not a complete parser for every accepted template language.
 
 Relative `@config`, `@plugin`, and exact-file `@source` specifiers normalize from their containing
 CSS file and resolve only when the target is declared with the required auxiliary kind. A declared

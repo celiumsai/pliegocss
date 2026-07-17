@@ -419,8 +419,9 @@ Toda optimización tiene benchmark; ninguna complejidad entra solamente por intu
   unresolved más el seam de plugin unsupported. El core ya retiene `@config`, `@plugin` y `@source`
   como observaciones external/unresolved/dynamic sin ejecutarlas. Configs, plugins y templates
   explícitos ya se fijan por bytes/hash y enlazan seams relativos del tipo exacto; no se ejecuta JS
-  ni template code. Faltan crawling de proyecto, resolución específica Sass/bundlers e inspección
-  semántica profunda de esos auxiliares. Consumidores
+  ni template code. Templates declarados ya clasifican candidatos literales exactos y atributos
+  con expresión como dynamic. Faltan crawling de proyecto, resolución específica Sass/bundlers e
+  inspección semántica profunda de configs/plugins y dialectos de template. Consumidores
   CSS Modules JS/TS declarados ya enlazan imports exactos y clasifican usos static/dynamic; faltan
   sintaxis/aliases avanzados y un corpus de proyectos reales para cerrar.
 - [ ] Entrevistar 10–15 developers/equipos y reunir 20 incidentes reales anonimizados.

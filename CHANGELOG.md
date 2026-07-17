@@ -47,6 +47,10 @@ pre-1.0 compatibility policy.
   bytes/SHA-256. Relative `@config`, `@plugin`, and exact-file `@source` seams resolve only to the
   declared auxiliary kind; glob/directory discovery remains unresolved. Configuration and plugins
   are lexically validated but never executed.
+- Conservative Tailwind template observations for literal `class`/`className` attributes inside
+  markup tags. Exact whitespace-separated candidates retain byte spans; expressions and
+  interpolation remain one dynamic observation. HTML comments, unrelated attribute strings, and
+  text outside tags do not create candidates.
 - Closed post-change verification through the dedicated `pliego-css-agent verify` executable,
   repair-check policy and Verification Receipt schemas 1.2.0 with canonical 1.0.0/1.1.0 read
   support. Built-in `standard-css-audit`, `token-graph-integrity`, and `css-budget-audit` kinds

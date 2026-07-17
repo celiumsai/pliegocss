@@ -251,8 +251,9 @@ the consumer layer additionally exposes `MigrationProjectConsumer`, `MigrationCo
 `MigrationConsumerObservationKind`, `inventory_migration_consumer_source`, and
 `inventory_migration_consumer_file` for declared CSS Modules JS/TS consumers; the auxiliary layer
 exposes `MigrationProjectAuxiliary`, `MigrationAuxiliaryKind`, `MigrationAuxiliaryInventory`,
+`MigrationAuxiliaryObservation`, `MigrationAuxiliaryObservationKind`,
 `inventory_migration_auxiliary_source`, and `inventory_migration_auxiliary_file` for exact Tailwind
-config/plugin/template content identity and typed relative seam linking;
+config/plugin/template identity, typed relative seam linking, and conservative template candidates;
 `inventory_migration_file` additionally enforces a bounded regular project-relative file and rejects
 symlink/reparse-point components before reading. The bridge does not execute
 Sass/Tailwind/plugins/configs, crawl undeclared sources, discover consumers/templates, or promise a codemod.

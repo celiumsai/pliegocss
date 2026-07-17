@@ -26,7 +26,8 @@ use pliego_css_ownership::{
 use pliego_css_source::{
     MIGRATION_INVENTORY_SCHEMA_VERSION, ApplicationComponent, ApplicationRoute,
     ApplicationTopology, MigrationAuxiliaryInventory, MigrationAuxiliaryKind,
-    MigrationConsumerInventory, MigrationConsumerKind,
+    MigrationAuxiliaryObservation, MigrationAuxiliaryObservationKind, MigrationConsumerInventory,
+    MigrationConsumerKind,
     MigrationConsumerObservation, MigrationConsumerObservationKind, MigrationDependency,
     MigrationDependencyKind, MigrationDependencyResolution, MigrationDisposition,
     MigrationInventory, MigrationInventoryError, MigrationPreflightReliance, MigrationProject,
@@ -194,6 +195,21 @@ fn exercise_migration_inventory_surface() {
     assert_eq!(auxiliary.file(), "tailwind.config.js");
     assert_eq!(auxiliary.source_bytes(), 18);
     assert_eq!(auxiliary.source_sha256().len(), 64);
+    assert!(auxiliary.observations().is_empty());
+    let template = inventory_migration_auxiliary_source(
+        MigrationAuxiliaryKind::TailwindTemplate,
+        "src/index.html",
+        "<div class=\"grid gap-2\"></div>",
+    )
+    .expect("valid Tailwind template inventory");
+    let _auxiliary_observation_surface: fn(&MigrationAuxiliaryObservation) = |observation| {
+        let _: MigrationAuxiliaryObservationKind = observation.kind();
+        let _: MigrationDisposition = observation.disposition();
+        let _: usize = observation.byte_start();
+        let _: usize = observation.byte_end();
+        let _: Option<&str> = observation.value();
+    };
+    assert_eq!(template.observations().len(), 2);
     let _dependency_surface: fn(&MigrationDependency) = |dependency| {
         let _: &str = dependency.from();
         let _: MigrationDependencyKind = dependency.kind();

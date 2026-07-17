@@ -84,6 +84,9 @@ exact-file `@source` seams link only to the declared auxiliary kind. Configurati
 modules are lexically validated but never executed. Declared JS/TS CSS Modules consumers can be linked
 to exact sources and inventory static property/bracket class usage plus conservative dynamic binding
 usage without executing a bundler.
+Declared templates additionally inventory exact literal `class`/`className` candidates and retain
+expression/interpolation attributes as dynamic observations; this is tag-aware lexical inspection,
+not arbitrary template-language execution.
 `MigrationProject::from_json` accepts the same closed declaration as bounded schema-1 JSON so it can
 be reviewed and checked into a project without introducing repository crawling or source execution;
 `MigrationProject::from_file` adds the bounded regular-file and no-link path boundary used by
