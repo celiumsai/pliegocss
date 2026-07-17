@@ -93,12 +93,23 @@ export function verifyPliegorsContract(root, contractPath) {
   ) {
     throw new Error("PliegoRS contract schema or canonical surfaces drifted");
   }
-  const revision = git(root, ["rev-parse", "HEAD"], "utf8").trim();
+  const observed = inspectPliegorsContract(root);
+  const { revision, sourceSha256 } = observed;
   if (revision !== contract.revision) {
     throw new Error(
       `PliegoRS contract revision drifted; expected ${contract.revision}, got ${revision}`,
     );
   }
+  if (sourceSha256 !== contract.sourceSha256) {
+    throw new Error(
+      `PliegoRS contract source drifted; expected ${contract.sourceSha256}, got ${sourceSha256}`,
+    );
+  }
+  return observed;
+}
+
+export function inspectPliegorsContract(root) {
+  const revision = git(root, ["rev-parse", "HEAD"], "utf8").trim();
   const dirty = dirtySurfaceStatus(root);
   if (dirty.length > 0) {
     const status = dirty.toString("utf8").replaceAll("\0", "\n").trim();
@@ -106,11 +117,8 @@ export function verifyPliegorsContract(root, contractPath) {
       `PliegoRS contract surfaces have uncommitted changes; use a clean checkout:\n${status}`,
     );
   }
-  const sourceSha256 = committedSurfaceSha256(root, revision);
-  if (sourceSha256 !== contract.sourceSha256) {
-    throw new Error(
-      `PliegoRS contract source drifted; expected ${contract.sourceSha256}, got ${sourceSha256}`,
-    );
-  }
-  return { revision, sourceSha256 };
+  return {
+    revision,
+    sourceSha256: committedSurfaceSha256(root, revision),
+  };
 }

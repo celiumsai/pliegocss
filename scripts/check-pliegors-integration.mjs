@@ -970,6 +970,7 @@ const expectedFiles = [
   "assets/route-visit.css",
   "assets/shared.css",
   "index.html",
+  "pliego.graph.json",
   "visit/index.html",
 ];
 const physicalFiles = filesBelow(sitePath)
@@ -996,6 +997,15 @@ for (const file of ledgerFiles) {
   if (file.bytes !== bytes.length || file.sha256 !== digest) {
     throw new Error(`PliegoRS ledger integrity failed for ${file.path}`);
   }
+}
+const buildGraph = JSON.parse(readFileSync(join(sitePath, "pliego.graph.json"), "utf8"));
+if (
+  buildGraph.graphVersion !== "1.0.0" ||
+  buildGraph.projectId !== "pliegocss-pliegors-smoke" ||
+  JSON.stringify(buildGraph.artifacts?.map((artifact) => artifact.path)) !==
+    JSON.stringify(expectedFiles.filter((file) => file !== "pliego.graph.json"))
+) {
+  throw new Error("PliegoRS causal build graph drifted");
 }
 const deployedBundles = bundles.filter((bundle) => bundle.name !== "unreachable");
 for (const bundle of deployedBundles) {
