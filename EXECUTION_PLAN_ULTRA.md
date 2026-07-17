@@ -420,7 +420,8 @@ Toda optimización tiene benchmark; ninguna complejidad entra solamente por intu
   como observaciones external/unresolved/dynamic sin ejecutarlas. Configs, plugins y templates
   explícitos ya se fijan por bytes/hash y enlazan seams relativos del tipo exacto; no se ejecuta JS
   ni template code. Templates declarados ya clasifican candidatos literales exactos y atributos
-  con expresión como dynamic. Faltan crawling de proyecto, resolución específica Sass/bundlers e
+  con expresión como dynamic. El crawling de proyecto y la resolución Sass relativa de
+  archivos/partials/index/import-only ya están implementados; faltan load paths/importers, bundlers e
   inspección semántica profunda de configs/plugins y dialectos de template; keys/APIs comunes ya
   quedan como seams lexicales unsupported. Consumidores
   CSS Modules JS/TS declarados ya enlazan ESM, TypeScript import-equals y CommonJS simple, y

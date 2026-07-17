@@ -35,8 +35,10 @@ JSON with trailing LF and empty stderr, and proves the Git checkout remains clea
 
 The selected semantic observations were 9,062 Sass constructs with 144 dependencies in Bootstrap,
 six static Tailwind candidates in two templates, and one exact CSS Modules import plus one static
-class use in Next.js. Those counts are regression expectations, not separately annotated semantic
-precision measurements.
+class use in Next.js. All 144 Bootstrap dependencies resolve to declared Sass sources through the
+closed relative file/partial/index/import-only rules; three representative exact edges are frozen
+in the manifest. Those counts are regression expectations, not complete separately annotated
+semantic precision measurements.
 
 ## Claim boundary
 
@@ -46,6 +48,6 @@ construct, dependency resolution against an original toolchain, arbitrary templa
 codemod output, visual equivalence, developer resolution time, or generalize to all projects.
 
 This corpus supplies reproducible real-project evidence for R0.8, but R0.8 remains partial while
-toolchain-specific resolution, broader syntax, migration outcomes, and a larger representative
+configured load paths/importers, broader syntax, migration outcomes, and a larger representative
 sample are open. Diagnostic precision/recall across the complete product and the incident/interview
 requirements also remain open.

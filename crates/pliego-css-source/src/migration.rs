@@ -1402,6 +1402,14 @@ fn classify_dependency(
     declared: &std::collections::BTreeMap<&str, MigrationSourceKind>,
     declared_auxiliaries: &std::collections::BTreeMap<&str, MigrationAuxiliaryKind>,
 ) -> Result<(MigrationDependencyResolution, Option<String>), MigrationInventoryError> {
+    if matches!(
+        kind,
+        MigrationDependencyKind::SassUse
+            | MigrationDependencyKind::SassForward
+            | MigrationDependencyKind::SassImport
+    ) {
+        return classify_sass_dependency(from, kind, specifier, declared);
+    }
     if !specifier.starts_with("./") && !specifier.starts_with("../") {
         return Ok((MigrationDependencyResolution::External, None));
     }
@@ -1446,18 +1454,10 @@ fn classify_dependency(
     let expected = match kind {
         MigrationDependencyKind::SassUse
         | MigrationDependencyKind::SassForward
-        | MigrationDependencyKind::SassImport => match extension {
-            Some(extension)
-                if extension.eq_ignore_ascii_case("scss")
-                    || extension.eq_ignore_ascii_case("sass") =>
-            {
-                MigrationSourceKind::Sass
-            }
-            Some(extension) if extension.eq_ignore_ascii_case("css") => {
-                return Ok((MigrationDependencyResolution::External, None));
-            }
-            _ => return Ok((MigrationDependencyResolution::Unresolved, None)),
-        },
+        | MigrationDependencyKind::SassImport
+        | MigrationDependencyKind::TailwindConfig
+        | MigrationDependencyKind::TailwindPlugin
+        | MigrationDependencyKind::TailwindSource => unreachable!("classified above"),
         MigrationDependencyKind::TailwindImport | MigrationDependencyKind::TailwindReference => {
             match extension {
                 Some(extension) if extension.eq_ignore_ascii_case("css") => {
@@ -1466,9 +1466,6 @@ fn classify_dependency(
                 _ => return Ok((MigrationDependencyResolution::Unresolved, None)),
             }
         }
-        MigrationDependencyKind::TailwindConfig
-        | MigrationDependencyKind::TailwindPlugin
-        | MigrationDependencyKind::TailwindSource => unreachable!("classified above"),
         MigrationDependencyKind::CssModulesComposes
         | MigrationDependencyKind::CssModulesImport
         | MigrationDependencyKind::CssModulesValue => {
@@ -1493,6 +1490,140 @@ fn classify_dependency(
         )));
     }
     Ok((MigrationDependencyResolution::Resolved, Some(target)))
+}
+
+fn classify_sass_dependency(
+    from: &str,
+    kind: MigrationDependencyKind,
+    specifier: &str,
+    declared: &std::collections::BTreeMap<&str, MigrationSourceKind>,
+) -> Result<(MigrationDependencyResolution, Option<String>), MigrationInventoryError> {
+    if specifier.contains('\\') || specifier.contains(['?', '#']) {
+        return Ok((MigrationDependencyResolution::Unresolved, None));
+    }
+    let lower = specifier.to_ascii_lowercase();
+    let extension = sass_specifier_extension(specifier);
+    if lower.starts_with("sass:")
+        || lower.starts_with("http:")
+        || lower.starts_with("https:")
+        || lower.starts_with("//")
+        || lower.starts_with('/')
+        || extension.as_deref() == Some("css")
+    {
+        return Ok((MigrationDependencyResolution::External, None));
+    }
+
+    for tier in sass_candidate_tiers(kind, specifier) {
+        let mut matches = std::collections::BTreeMap::new();
+        for candidate in tier {
+            let target = normalize_relative_target(from, candidate.as_str())?;
+            if let Some(actual) = declared.get(target.as_str()).copied() {
+                matches.insert(target, actual);
+            }
+        }
+        if matches.len() > 1 {
+            return Err(MigrationInventoryError::new(format!(
+                "Sass dependency `{specifier}` from `{from}` is ambiguous across declared sources: {}",
+                matches.keys().cloned().collect::<Vec<_>>().join(", ")
+            )));
+        }
+        if let Some((target, actual)) = matches.into_iter().next() {
+            if actual != MigrationSourceKind::Sass {
+                return Err(MigrationInventoryError::new(format!(
+                    "migration dependency `{specifier}` from `{from}` requires sass target `{target}`, but it is declared as {}",
+                    actual.as_str()
+                )));
+            }
+            return Ok((MigrationDependencyResolution::Resolved, Some(target)));
+        }
+    }
+
+    let explicit_relative = specifier.starts_with("./") || specifier.starts_with("../");
+    let explicit_sass_extension = matches!(extension.as_deref(), Some("scss" | "sass"));
+    if explicit_relative && explicit_sass_extension {
+        let target = normalize_relative_target(from, specifier)?;
+        return Err(MigrationInventoryError::new(format!(
+            "migration dependency `{specifier}` from `{from}` resolves to undeclared local source `{target}`"
+        )));
+    }
+    if explicit_relative {
+        Ok((MigrationDependencyResolution::Unresolved, None))
+    } else {
+        Ok((MigrationDependencyResolution::External, None))
+    }
+}
+
+fn sass_candidate_tiers(kind: MigrationDependencyKind, specifier: &str) -> Vec<Vec<String>> {
+    let extension = sass_specifier_extension(specifier);
+    let mut tiers = Vec::new();
+    if matches!(extension.as_deref(), Some("scss" | "sass")) {
+        if kind == MigrationDependencyKind::SassImport {
+            tiers.push(sass_file_candidates(specifier, true));
+        }
+        tiers.push(sass_file_candidates(specifier, false));
+        return tiers;
+    }
+    if extension.is_some() {
+        return tiers;
+    }
+    if kind == MigrationDependencyKind::SassImport {
+        tiers.push(sass_extension_candidates(specifier, ".import"));
+        tiers.push(sass_index_candidates(specifier, ".import"));
+    }
+    tiers.push(sass_extension_candidates(specifier, ""));
+    tiers.push(sass_index_candidates(specifier, ""));
+    tiers
+}
+
+fn sass_specifier_extension(specifier: &str) -> Option<String> {
+    specifier.rsplit('/').next().and_then(|name| {
+        name.rsplit_once('.')
+            .filter(|(stem, extension)| !stem.is_empty() && !extension.is_empty())
+            .map(|(_, extension)| extension.to_ascii_lowercase())
+    })
+}
+
+fn sass_file_candidates(specifier: &str, import_only: bool) -> Vec<String> {
+    let (stem, extension) = specifier
+        .rsplit_once('.')
+        .expect("Sass file candidates require a validated extension");
+    let suffix = if import_only {
+        format!(".import.{extension}")
+    } else {
+        format!(".{extension}")
+    };
+    let direct = format!("{stem}{suffix}");
+    vec![direct.clone(), sass_partial_path(direct.as_str())]
+}
+
+fn sass_extension_candidates(specifier: &str, infix: &str) -> Vec<String> {
+    ["scss", "sass"]
+        .into_iter()
+        .flat_map(|extension| {
+            let direct = format!("{specifier}{infix}.{extension}");
+            [direct.clone(), sass_partial_path(direct.as_str())]
+        })
+        .collect()
+}
+
+fn sass_index_candidates(specifier: &str, infix: &str) -> Vec<String> {
+    let base = specifier.trim_end_matches('/');
+    ["scss", "sass"]
+        .into_iter()
+        .map(|extension| format!("{base}/_index{infix}.{extension}"))
+        .collect()
+}
+
+fn sass_partial_path(path: &str) -> String {
+    let (directory, file) = path.rsplit_once('/').unwrap_or(("", path));
+    if file.starts_with('_') {
+        return path.to_owned();
+    }
+    if directory.is_empty() {
+        format!("_{file}")
+    } else {
+        format!("{directory}/_{file}")
+    }
 }
 
 pub(crate) fn normalize_relative_target(
@@ -3607,6 +3738,99 @@ $color: red;
                 .iter()
                 .any(|target| target.ends_with("styles/base.module.css"))
         );
+        fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
+    fn project_inventory_resolves_sass_partials_indexes_and_import_only_files() {
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let directory = PathBuf::from(format!(
+            ".migration-sass-resolution-test-{}-{nonce}",
+            std::process::id()
+        ));
+        fs::create_dir_all(directory.join("foundation")).unwrap();
+        let app = directory.join("app.scss");
+        let tokens = directory.join("_tokens.scss");
+        let index = directory.join("foundation/_index.scss");
+        let legacy_import = directory.join("_legacy.import.scss");
+        let legacy_module = directory.join("_legacy.scss");
+        fs::write(
+            &app,
+            "@use \"tokens\";\n@forward \"foundation\";\n@import \"legacy\";\n",
+        )
+        .unwrap();
+        fs::write(&tokens, "$brand: red;\n").unwrap();
+        fs::write(&index, "$space: 1rem;\n").unwrap();
+        fs::write(&legacy_import, "$legacy: import-only;\n").unwrap();
+        fs::write(&legacy_module, "$legacy: module;\n").unwrap();
+        let source = |path: &Path| {
+            MigrationProjectSource::new(
+                MigrationSourceKind::Sass,
+                path.to_string_lossy().into_owned(),
+            )
+        };
+        let inventory = MigrationProject::new()
+            .source(source(&app))
+            .source(source(&tokens))
+            .source(source(&index))
+            .source(source(&legacy_import))
+            .source(source(&legacy_module))
+            .collect()
+            .unwrap();
+        assert_eq!(inventory.dependencies().len(), 3);
+        assert!(inventory.dependencies().iter().all(|dependency| {
+            dependency.resolution() == MigrationDependencyResolution::Resolved
+        }));
+        assert_eq!(
+            inventory.dependencies()[0].target(),
+            Some(tokens.to_string_lossy().replace('\\', "/").as_str())
+        );
+        assert_eq!(
+            inventory.dependencies()[1].target(),
+            Some(index.to_string_lossy().replace('\\', "/").as_str())
+        );
+        assert_eq!(
+            inventory.dependencies()[2].target(),
+            Some(legacy_import.to_string_lossy().replace('\\', "/").as_str())
+        );
+        fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
+    fn project_inventory_rejects_ambiguous_sass_partial_resolution() {
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let directory = PathBuf::from(format!(
+            ".migration-sass-ambiguity-test-{}-{nonce}",
+            std::process::id()
+        ));
+        fs::create_dir(&directory).unwrap();
+        let app = directory.join("app.scss");
+        let direct = directory.join("tokens.scss");
+        let partial = directory.join("_tokens.scss");
+        fs::write(&app, "@use \"tokens\";\n").unwrap();
+        fs::write(&direct, "$direct: true;\n").unwrap();
+        fs::write(&partial, "$partial: true;\n").unwrap();
+        let source = |path: &Path| {
+            MigrationProjectSource::new(
+                MigrationSourceKind::Sass,
+                path.to_string_lossy().into_owned(),
+            )
+        };
+        let error = MigrationProject::new()
+            .source(source(&app))
+            .source(source(&direct))
+            .source(source(&partial))
+            .collect()
+            .unwrap_err();
+        assert!(error.to_string().contains("is ambiguous"));
+        assert!(error.to_string().contains("_tokens.scss"));
+        assert!(error.to_string().contains("tokens.scss"));
         fs::remove_dir_all(directory).unwrap();
     }
 

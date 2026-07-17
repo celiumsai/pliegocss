@@ -1,7 +1,8 @@
 # Migration project inventory schema 1
 
-Status: **explicit snapshots plus bounded typed library/CLI discovery and a reviewed public
-file-role corpus implemented; toolchain-specific resolution and broader syntax remain open**
+Status: **explicit snapshots plus bounded typed library/CLI discovery, closed relative Sass
+resolution, and a reviewed public file-role corpus implemented; configured toolchains and broader
+syntax remain open**
 
 `MigrationProject` declares a closed set of Sass, Tailwind CSS v4 entry, and CSS Modules files. It
 does not crawl the repository or infer source kind from filenames. Collection sorts the declaration
@@ -218,21 +219,29 @@ The project layer observes these bounded constructs:
 | `css-modules-composes` | local, global, and quoted `from` composition |
 | `css-modules-import`, `css-modules-value` | ICSS import/value seams |
 
-Resolution is intentionally narrower than Sass, PostCSS, bundler, or Node resolution:
+Resolution is intentionally narrower than complete Sass, PostCSS, bundler, or Node resolution:
 
-- `resolved`: an explicit `./` or `../` specifier normalizes inside the project and names a
-  declared source or exact Tailwind auxiliary of the expected kind;
+- `resolved`: a supported specifier normalizes inside the project and names a declared source or
+  exact Tailwind auxiliary of the expected kind. Sass first checks the containing directory even
+  without `./`, supports exact `.scss`/`.sass`, extensionless files, `_partial` files, directory
+  `_index` files, and `.import.scss`/`.import.sass` precedence for legacy `@import`; multiple
+  declared matches in one precedence tier fail as ambiguous;
 - `local`: CSS Modules `composes` has no `from` and targets its containing source;
 - `external`: a package, Sass built-in, URL, browser-absolute path, `global`, or relative Sass CSS
   import is owned outside this declared source graph;
-- `unresolved`: static syntax is visible, but extensionless Sass lookup, query/fragment syntax, or
-  another source-toolchain-specific rule would be required. Undeclared Tailwind auxiliaries plus
-  glob/directory `@source` discovery remain here;
+- `unresolved`: static syntax is visible, but query/fragment syntax, an undeclared explicit-relative
+  extensionless Sass target, a configured load path/importer, or another source-toolchain-specific
+  rule would be required. Undeclared Tailwind auxiliaries plus glob/directory `@source` discovery
+  remain here;
 - `dynamic`: interpolation or syntax that cannot expose one safe static specifier.
 
 An exact supported local path is an integrity claim: if its normalized target is absent from the
 declared set, has the wrong source kind, or escapes the project root, collection fails. PliegoCSS
-does not silently reinterpret that edge as external and does not guess Sass partials/index files.
+does not silently reinterpret that edge as external. Sass package/load-path fallback remains
+`external` when no declared relative candidate matches; no configured importer is executed.
+The closed candidate order follows Sass's documented relative lookup, partial, index, and
+[legacy import-only](https://sass-lang.com/documentation/at-rules/import/#import-only-files)
+conventions while deliberately omitting configurable importer execution.
 
 ## CSS Modules consumer boundary
 
@@ -299,14 +308,14 @@ plugins stay `external`, inline sources stay `dynamic`, and glob/directory disco
 - any byte or derived-inventory difference between passes fails instead of mixing revisions.
 
 This is a confirmed declared-file snapshot, not an atomic filesystem transaction. It does not prove
-that an intermediate revision never existed, crawl undeclared sources, reproduce toolchain-specific
-resolution, discover undeclared templates/consumers, evaluate Tailwind configuration/plugins, or
-reproduce arbitrary JavaScript/bundler semantics. Those surfaces and a real migration corpus remain
-required before R0.8 can close.
+that an intermediate revision never existed, crawl transitive dependencies beyond the discovered
+set, execute configured Sass load paths/importers, evaluate Tailwind configuration/plugins, or
+reproduce arbitrary JavaScript/bundler semantics. Those surfaces plus broader semantic and
+migration-outcome evidence remain required before R0.8 can close.
 
 The versioned `integration-tests/migration-project` fixture exercises all three source families in
 one declaration, including exact resolved Sass/CSS/CSS Modules targets, local CSS Modules
-composition, package/built-in external edges, extensionless Sass unresolved lookup, and an
+composition, package/built-in external edges, explicit-relative missing Sass lookup, and an
 unsupported Tailwind plugin seam. It is a representative cross-toolchain contract fixture, not yet
 a corpus of real migrated applications. Its declared TSX consumer freezes two static CSS Modules
 class usages and one computed dynamic usage. Its declared Tailwind config, plugin, and HTML

@@ -242,7 +242,9 @@ The exact-version bridge consists of `MIGRATION_INVENTORY_SCHEMA_VERSION`,
 declared-file snapshot. It emits canonical schema-1 JSON, records dynamic/unsupported syntax, and
 derives conservative dependency observations for Sass module/import seams, CSS import/reference,
 Tailwind config/plugin/source seams, and CSS Modules/ICSS composition. Exact supported local targets fail closed unless declared with the
-expected kind; extensionless or dynamic resolution remains explicit without toolchain emulation;
+expected kind; Sass resolves declared relative files, partials, indexes, and legacy import-only
+files with ambiguity rejection, while configured load paths/importers and dynamic resolution remain
+explicit without toolchain execution;
 `MigrationProject::from_json` parses a bounded, closed, reviewable schema-1 declaration without
 reading source files; `MigrationProject::from_file` adds safe regular-file loading without following
 link-like path components;
@@ -259,7 +261,8 @@ exposes `MigrationProjectAuxiliary`, `MigrationAuxiliaryKind`, `MigrationAuxilia
 config/plugin/template identity, typed relative seam linking, and conservative template candidates;
 `inventory_migration_file` additionally enforces a bounded regular project-relative file and rejects
 symlink/reparse-point components before reading. The bridge does not execute
-Sass/Tailwind/plugins/configs, crawl undeclared sources, discover consumers/templates, or promise a codemod.
+Sass/Tailwind/plugins/configs, crawl transitive dependencies outside the bounded discovery set, or
+promise a codemod.
 This tooling bridge is not part of the minimal application/build-script SemVer surface.
 
 ## CLI and document surface

@@ -18,11 +18,15 @@ pre-1.0 compatibility policy.
   candidate files, and selects only
   evidence-backed Sass, CSS Modules, Tailwind, consumer, template, config, plugin, and exact-source
   roles. `migration-project-inventory DIRECTORY` exposes the same path through the existing CLI and
-  performs normal two-pass collection; toolchain-specific resolution and real-project
+  performs normal two-pass collection; configured load paths/importers and broader semantic
   precision/recall remain open.
 - File-qualified migration discovery and collection failures, so malformed source, consumer, or
   auxiliary syntax identifies the exact project-relative candidate instead of returning only the
   underlying lexical error.
+- Deterministic Sass-relative resolution for extensionless files, partials, index files, and legacy
+  import-only files. Relative lookup does not require `./`, import-only candidates precede normal
+  candidates for `@import`, and ambiguous declared candidates fail closed. The pinned Bootstrap
+  corpus now resolves all 144 observed Sass dependencies without load paths or importer execution.
 - A network-gated reviewed public migration corpus with exact MIT license digests and immutable
   revision pins for Bootstrap Sass, Tailwind's Vite playground, and Next.js basic CSS Modules. Its
   Debian WSL2 gate compares emitted file-role tuples against 119 reviewed files: 104 true positives,
@@ -45,8 +49,8 @@ pre-1.0 compatibility policy.
   composition; exact supported local targets fail closed unless declared with the expected kind,
   while external, unresolved, local, and dynamic edges remain explicit. The read-only
   `pliego-cssc migration-project-inventory` command loads a closed declaration and emits the
-  canonical project snapshot only to stdout. Graph crawling, source-toolchain-specific resolution,
-  transitive crawling, toolchain-specific semantics, and real-project corpus remain open.
+  canonical project snapshot only to stdout. Configured load paths/importers, transitive dependency
+  crawling, broader toolchain semantics, and migration outcomes remain open.
 - Bounded closed schema-1 JSON declarations through `MigrationProject::from_json`, allowing the
   typed source set to be reviewed and checked into a project before canonical collection. Unknown
   fields, unsupported versions, unsafe/kind-incompatible paths, oversized documents, and source

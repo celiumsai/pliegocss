@@ -19,11 +19,35 @@
         "sassSources": 99,
         "constructs": 9062,
         "dependencies": 144,
-        "externalDependencies": 119,
-        "unresolvedDependencies": 25,
+        "resolvedDependencies": 144,
+        "externalDependencies": 0,
+        "unresolvedDependencies": 0,
         "dynamic": 2984,
         "unsupported": 144
       },
+      "expectedDependencies": [
+        {
+          "from": "scss/_forms.scss",
+          "kind": "sass-import",
+          "specifier": "forms/labels",
+          "resolution": "resolved",
+          "target": "scss/forms/_labels.scss"
+        },
+        {
+          "from": "scss/bootstrap.scss",
+          "kind": "sass-import",
+          "specifier": "mixins/banner",
+          "resolution": "resolved",
+          "target": "scss/mixins/_banner.scss"
+        },
+        {
+          "from": "scss/bootstrap.scss",
+          "kind": "sass-import",
+          "specifier": "utilities/api",
+          "resolution": "resolved",
+          "target": "scss/utilities/_api.scss"
+        }
+      ],
       "gold": {
         "rules": [
           { "role": "source:sass", "prefix": "scss/", "suffix": ".scss" }

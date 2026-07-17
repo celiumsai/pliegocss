@@ -201,6 +201,12 @@ try {
         fail(`${entry.id}: summary.${key}=${document.summary?.[key]}, expected ${expected}`);
       }
     }
+    for (const expected of entry.expectedDependencies ?? []) {
+      const found = document.dependencies?.some((dependency) =>
+        Object.entries(expected).every(([key, value]) => dependency[key] === value),
+      );
+      if (!found) fail(`${entry.id}: missing dependency ${JSON.stringify(expected)}`);
+    }
 
     const predicted = predictedRoles(document);
     const gold = goldRoles(entry, projectRoot);

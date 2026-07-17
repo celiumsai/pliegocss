@@ -534,6 +534,9 @@ class candidates while expressions remain dynamic, without executing JavaScript 
 The same physical component may be declared in distinct roles, such as CSS Modules consumer and
 Tailwind template; duplicate entries remain rejected within each role.
 Discovery classification and collection errors name the exact portable candidate path.
+Declared Sass sources resolve containing-directory URLs without requiring `./`, including exact
+`.scss`/`.sass`, extensionless files, partials, directory indexes, and legacy import-only files;
+ambiguity fails closed, while configured load paths and importers are not executed.
 The inventory also records a closed set of config keys and plugin registration API calls as
 unsupported lexical seams; this does not claim that their bodies can be migrated. See the
 [migration project inventory schema 1](./migration-project-inventory-schema-1.md).

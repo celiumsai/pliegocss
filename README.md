@@ -70,9 +70,10 @@ The workspace is unreleased at `0.0.0`; syntax and crate boundaries may still ch
   uncollected declaration from evidence-backed file roles, and the existing project-inventory CLI
   accepts that directory mode. A network-gated corpus pins Bootstrap, Tailwind's Vite playground,
   and Next.js basic CSS Modules with verified MIT bytes; its 119 reviewed files yield 104/104 exact
-  file-role tuples with zero false positives or negatives. That result is bounded to role discovery:
-  toolchain-specific semantics, broader syntax, migration outcomes, and representative scale remain
-  open, and no perfect-migration claim is made.
+  file-role tuples with zero false positives or negatives. Bootstrap's 144 Sass import seams also
+  resolve through bounded relative file/partial/index/import-only rules. Those results remain
+  bounded: configured load paths/importers, broader syntax, migration outcomes, and representative
+  scale are open, and no perfect-migration claim is made.
 - `pliego-cssc plan`, `fix --dry-run`, and explicitly authorized `fix --apply` now implement the
   bounded agent-repair boundary. Closed
   schema-1.0.0 proposals accept only exact edits tied to verified, unexcepted, low-risk finding
