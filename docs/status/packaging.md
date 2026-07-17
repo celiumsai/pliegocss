@@ -1,7 +1,7 @@
 # Packaging status
 
-Status: **confirmed migration project snapshots passed the complete exact-clean `992c33e` replay; no registry
-upload performed**
+Status: **declared migration dependency resolution passed the complete exact-clean `270eaa2`
+replay; no registry upload performed**
 
 The publishable workspace boundary has six dependency waves. `pliego-css-usage` and
 `pliego-css-control` follow `pliego-css-build` because direct and optional Cargo dependencies both
@@ -18,6 +18,25 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## Declared migration dependency clean replay — 2026-07-16
+
+The exact clean `270eaa2` Debian WSL2 gate packaged and extracted all fifteen archives with Cargo
+1.96, compiled the extracted graph in release mode, and passed the registry-shaped downstream
+consumer with Rust 1.85. The consumer compile-checks the dependency DTOs, classifications, byte
+ranges, targets, and immutable project accessor. Publication remained disabled and the fixed
+61,440-byte ceiling was not raised.
+
+| Package | Compressed bytes | Remaining margin | SHA-256 |
+|---|---:|---:|---|
+| `pliego-css-source` | 35,781 | 25,659 | `35b6a5e764ea556ca2358f8329870007c4d96fccdedf663c616b56b4d7c024e6` |
+| `pliego-cssc` | 61,256 | 184 | `4f1c1239df6870928d909b7aa2ca90a77678cf8f24a9c85b7d13fa3e6b5eed42` |
+
+This closes packaging for conservative dependency observations across declared Sass, Tailwind/CSS,
+and CSS Modules sources. Exact supported local targets fail closed when absent or mistyped;
+external, unresolved, local, and dynamic observations remain explicit. It does not close project
+CLI/crawling, source-toolchain-specific resolution, configs/plugins/templates, downstream
+composition consumers, real migration fixtures, registry publication, or R0.8 completion.
 
 ## Confirmed migration project snapshot clean replay — 2026-07-16
 
