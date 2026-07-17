@@ -1,7 +1,7 @@
 # Packaging status
 
-Status: **cross-clause `pcx!` diagnostics, the pinned VS Code extension host, closed VSIX, and the
-complete exact-clean `2e3539c` Rust package replay passed; no registry or Marketplace upload
+Status: **the VS Code and Neovim clients, cross-clause `pcx!` diagnostics, and the complete
+exact-clean `6f28e66` Rust package replay passed; no registry or editor Marketplace upload
 performed**
 
 The publishable workspace boundary has six dependency waves. `pliego-css-usage` and
@@ -19,6 +19,29 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## Neovim built-in-LSP client clean replay — 2026-07-17
+
+The exact clean `6f28e66` Debian WSL2 gate packaged and extracted all sixteen Rust archives with
+native Linux Node 24.14.0 and Cargo 1.96, compiled the complete extracted graph in release mode,
+and executed the Rust 1.85 downstream consumer. `pliego-css-lsp` measured 25,468 compressed bytes
+(35,972 bytes of margin, SHA-256
+`a6914832e8d4c7a313f729e2b08d9248fb6fb108f55084de4ae28e524c371d3d`). Tight archives
+remained below the fixed ceiling: `pliego-cssc` measured 61,341 bytes (99 bytes of margin,
+SHA-256 `3baa7a10c082c6060cc7965a283e02dbe1e3d04754430a79397c46b47c8b641f`),
+`pliego-css-control` 61,078 (362 bytes), `pliego-css-build` 59,916 (1,524 bytes), and
+`pliego-css-source` 56,781 (4,659 bytes). Publication remained disabled and the 61,440-byte
+ceiling was not raised.
+
+The closed Neovim client payload contains only `README.md` and `lua/pliegocss/init.lua`, totals
+3,466 bytes, requires explicit executable server/compiler paths, and contains no download surface.
+The gate hash-verifies and caches only its editor test runtime. Official Neovim 0.12.4 passed on
+Windows x64 from `nvim-win64.zip` SHA-256
+`9fc3572829ffd13debb6e32555da2c8cc02555568260a9fc4cf1f65bbcca319c` and on Debian x86-64
+from `nvim-linux-x86_64.tar.gz` SHA-256
+`012bf3fcac5ade43914df3f174668bf64d05e049a4f032a388c027b1ebd78628`. Both built-in-LSP hosts
+opened a file-backed Rust buffer, followed Project Index definition to the exact physical CSS range,
+and observed compiler-backed `PCS001` plus cross-clause `PCX003`.
 
 ## Cross-clause pcx LSP clean replay — 2026-07-17
 
