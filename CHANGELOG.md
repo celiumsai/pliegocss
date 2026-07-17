@@ -31,6 +31,11 @@ pre-1.0 compatibility policy.
   pinned VS Code 1.105.1 extension-host gate opens a real Rust document, follows the physical CSS
   definition, edits the buffer, and observes exact compiler-backed `PCS001` and cross-clause
   `PCX003` diagnostics.
+- An unreleased 3,466-byte Neovim client candidate using only the editor's built-in LSP API and
+  explicit external binaries. Its closed Lua/README payload has no download surface. Pinned official
+  Neovim 0.12.4 Windows and Linux hosts verify Project Index definition plus exact `PCS001` and
+  cross-clause `PCX003` diagnostics; downloaded editor archives are hash-verified gate fixtures,
+  not client behavior.
 - Bounded typed migration discovery through `discover_migration_project`. The library walks one
   project-relative root in canonical order, ignores only `.git`/`node_modules`/`target`, rejects
   link-like or non-regular paths, caps traversal at 32 levels, 65,536 entries, and 256 MiB of

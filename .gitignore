@@ -13,5 +13,6 @@
 /integration-tests/pliegors-smoke/.pliegocss-gate/
 /integration-tests/pliegors-dev-loop/target/
 /integration-tests/public-api-smoke/target/
+/editors/neovim/.nvim-test/
 *.profraw
 *.pliego.lock

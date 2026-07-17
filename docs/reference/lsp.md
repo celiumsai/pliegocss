@@ -102,8 +102,8 @@ complete CLI/editor diagnostic equality.
 ## Current non-goals
 
 This candidate does not yet provide incremental document changes, workspace folders, code actions,
-semantic tokens, forceful child-process cancellation, another editor client, or a hosted
-multi-editor matrix. Those remain release gates; the existence
+semantic tokens, forceful child-process cancellation, or a hosted multi-editor matrix. Those remain
+release gates; the existence
 of the stdio server and initial VS Code package does not close the full F6 editor-tooling task.
 
 Run the reproducible local process gate with:
@@ -158,3 +158,24 @@ compiler binaries, loads the development extension in a real workspace host, fol
 Definition to the exact physical CSS range, edits the Rust buffer, and requires the compiler-backed
 `PCS001` diagnostic followed by the exact cross-clause `PCX003` diagnostic. The extension itself
 still downloads no server or compiler.
+
+## Neovim client candidate
+
+The unreleased module under `editors/neovim` uses Neovim's built-in LSP client. It requires explicit
+external server/compiler paths and accepts the same discover/seed/config theme modes plus an optional
+Project Index. Its `FileType` autocmd starts only for Rust buffers; invalid paths or modes fail before
+spawning a server. The 3,466-byte client payload is exactly `README.md` plus
+`lua/pliegocss/init.lua` and contains no download surface.
+
+Run the real second-editor gate with:
+
+```console
+pnpm integration:neovim
+```
+
+The gate pins Neovim 0.12.4 and verifies the official archive SHA-256 before extraction into an
+ignored test cache. Windows x64 uses `nvim-win64.zip`; Debian x86-64 uses
+`nvim-linux-x86_64.tar.gz`. In both hosts Neovim opens a file-backed Rust buffer, starts the external
+PliegoCSS binaries, follows Project Index definition to the physical CSS range, then observes exact
+`PCS001` and cross-clause `PCX003` diagnostics. Runtime download belongs only to the test harness;
+the Lua client never downloads Neovim or PliegoCSS binaries.

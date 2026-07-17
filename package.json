@@ -40,6 +40,7 @@
     "integration:lsp": "node ./scripts/check-lsp-integration.mjs",
     "integration:vscode": "node ./scripts/check-vscode-client.mjs",
     "integration:vscode-host": "pnpm --filter pliegocss-vscode test:host",
+    "integration:neovim": "node ./scripts/check-neovim-client.mjs",
     "integration:pliegors": "node ./scripts/check-pliegors-integration.mjs",
     "integration:pliegors-browser": "node ./scripts/check-pliegors-browser.mjs",
     "integration:pliegors-dev": "node ./scripts/check-pliegors-dev-loop.mjs"

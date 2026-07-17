@@ -277,10 +277,11 @@ ETA: 3–5 días
   resultados de versiones obsoletas; el gate de ráfaga pasa en Windows y Debian.
 - [x] Delegar conflictos cross-clause `pcx!` a `check --source`, remapear `PCX003` al branch literal
   original y ejercerlo en el proceso LSP y VS Code 1.105.1 reales.
-- [ ] Añadir otro cliente de editor, cancelación forzosa del compilador en curso cuando aporte valor
-  y corpus/evidencia completa de paridad diagnóstica CLI/LSP.
+- [x] Añadir cliente Neovim built-in LSP sin binarios embebidos y gate real 0.12.4 en Windows/Debian.
+- [ ] Añadir cancelación forzosa del compilador en curso cuando aporte valor y corpus/evidencia
+  completa de paridad diagnóstica CLI/LSP.
 - [x] Mejorar diagnósticos usando los cinco fixtures reales.
-- [x] Crear documentación de CLI, configuración y troubleshooting; editor setup sigue abierto.
+- [x] Crear documentación de CLI, configuración, troubleshooting y setup inicial VS Code/Neovim.
 - [x] Ejecutar doctests y ejemplos del workspace desde el workflow de CI.
 
 ### Gate

@@ -249,8 +249,10 @@ fixture acotado.
   de resultados obsoletos, con ráfaga reproducible Windows/Debian.
 - [x] Reusar `check --source` para detectar `PCX003` entre cláusulas independientes y remapear el
   rango sintético al literal Rust original, con gate de proceso y Extension Host real.
-- [ ] Añadir otro cliente, cancelación forzosa del child ya iniciado cuando sea justificable,
-  corpus negativo congelado y evidencia completa de igualdad CLI/LSP.
+- [x] Añadir cliente Neovim sobre LSP built-in, payload cerrado sin binarios y hosts reales 0.12.4
+  Windows/Debian con definition, `PCS001` y `PCX003`.
+- [ ] Añadir cancelación forzosa del child ya iniciado cuando sea justificable, corpus negativo
+  congelado y evidencia completa de igualdad CLI/LSP.
 - [x] Añadir formatter determinista y `--check` para utilidades explícitas y archivos line-oriented.
 - [x] Añadir diagnósticos y reemplazos read-only sobre literales Rust.
 - [x] Añadir envelope JSON estable para diagnósticos de comandos one-shot.
