@@ -1,6 +1,6 @@
 # Packaging status
 
-Status: **incremental fragment caching and the complete exact-clean `2ad7a3d` Rust package replay
+Status: **exact final-output caching and the complete exact-clean `e3cb04c` Rust package replay
 passed; no registry or editor Marketplace upload performed**
 
 The publishable workspace boundary has six dependency waves. `pliego-css-usage` and
@@ -18,6 +18,23 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## Exact final-output cache clean replay — 2026-07-17
+
+The exact clean `e3cb04c` Debian WSL2 gate packaged and extracted all sixteen archives, compiled
+the complete registry-shaped graph in release mode, and executed the Rust 1.85 downstream
+consumer. Watch now bypasses Lightning CSS only when raw CSS, browser targets, and formatting are
+all unchanged; each changed key still runs complete optimization, and physical trace remains on
+the trace-producing optimizer path.
+
+`pliego-cssc` measured 61,376 compressed bytes (64 bytes of margin, SHA-256
+`8a7040a0f14ea54617bdf3f2097b6aedc0261bf7aa8fb4b6214c0b8ebfa6c872`). Other tight archives
+remained below the fixed 61,440-byte ceiling: `pliego-css-control` measured 61,070 bytes (370
+bytes of margin), `pliego-css-build` 60,323 (1,117 bytes), `pliego-css-compiler` 59,892 (1,548
+bytes), and `pliego-css-source` 57,364 (4,076 bytes). Publication remained disabled and the ceiling
+was not raised. Windows passed the targeted cache test, CLI warm/cold oracle, strict Clippy, and
+documentation gate; its temporary downstream build was blocked by Application Control, so the
+complete clean package replay used native Linux Node, Cargo, and target artifacts in Debian WSL2.
 
 ## Incremental fragment-cache clean replay — 2026-07-17
 
