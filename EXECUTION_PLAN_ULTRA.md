@@ -416,9 +416,10 @@ Toda optimización tiene benchmark; ninguna complejidad entra solamente por intu
   toolchain. El mismo source set puede persistirse como declaración JSON schema 1 cerrada y acotada.
   El CLI read-only ya carga esa declaración con límites/no-follow y emite el snapshot canónico solo
   por stdout. Un fixture versionado cruza las tres familias y congela resolved/local/external/
-  unresolved más el seam de plugin unsupported. Faltan crawling de proyecto, resolución específica
-  Sass/bundlers, templates/config/plugins, composition consumers y un corpus de proyectos reales
-  para cerrar.
+  unresolved más el seam de plugin unsupported. El core ya retiene `@config`, `@plugin` y `@source`
+  como observaciones external/unresolved/dynamic sin ejecutarlas. Faltan crawling de proyecto,
+  resolución específica Sass/bundlers, inspección de templates/config/plugins, composition
+  consumers y un corpus de proyectos reales para cerrar.
 - [ ] Entrevistar 10–15 developers/equipos y reunir 20 incidentes reales anonimizados.
 - [ ] Medir precision/recall, falsos positivos, excepciones y tiempo de resolución por categoría.
 - [ ] Ejecutar la matriz hosted Windows/Linux/macOS, evidencia nativa ARM64 y el pipeline Cloudflare.

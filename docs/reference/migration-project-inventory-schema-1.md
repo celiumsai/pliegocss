@@ -121,6 +121,8 @@ The project layer observes these bounded constructs:
 | --- | --- |
 | `sass-use`, `sass-forward`, `sass-import` | Sass module/import seams; every quoted legacy import-list specifier is retained |
 | `tailwind-import`, `tailwind-reference` | CSS imports and Tailwind references |
+| `tailwind-config`, `tailwind-plugin` | Legacy configuration and plugin ownership seams |
+| `tailwind-source` | Template/discovery path or dynamic inline-source seam |
 | `css-modules-composes` | local, global, and quoted `from` composition |
 | `css-modules-import`, `css-modules-value` | ICSS import/value seams |
 
@@ -132,7 +134,8 @@ Resolution is intentionally narrower than Sass, PostCSS, bundler, or Node resolu
 - `external`: a package, Sass built-in, URL, browser-absolute path, `global`, or relative Sass CSS
   import is owned outside this declared source graph;
 - `unresolved`: static syntax is visible, but extensionless Sass lookup, query/fragment syntax, or
-  another source-toolchain-specific rule would be required;
+  another source-toolchain-specific rule would be required. Relative Tailwind config/plugin paths
+  and static `@source` paths remain here until auxiliary files can be declared and inspected;
 - `dynamic`: interpolation or syntax that cannot expose one safe static specifier.
 
 An exact supported local path is an integrity claim: if its normalized target is absent from the

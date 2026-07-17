@@ -164,9 +164,9 @@ fn inventories_the_versioned_cross_toolchain_project_fixture() {
     assert_eq!(document["summary"]["sassSources"], 2);
     assert_eq!(document["summary"]["tailwindSources"], 2);
     assert_eq!(document["summary"]["cssModulesSources"], 2);
-    assert_eq!(document["summary"]["dependencies"], 7);
+    assert_eq!(document["summary"]["dependencies"], 8);
     assert_eq!(document["summary"]["resolvedDependencies"], 4);
-    assert_eq!(document["summary"]["externalDependencies"], 2);
+    assert_eq!(document["summary"]["externalDependencies"], 3);
     assert_eq!(document["summary"]["unresolvedDependencies"], 1);
     assert_eq!(document["summary"]["dynamicDependencies"], 0);
     assert_eq!(document["summary"]["unsupported"], 1);
@@ -188,4 +188,9 @@ fn inventories_the_versioned_cross_toolchain_project_fixture() {
             edge["kind"] == "css-modules-composes" && edge["resolution"] == "local"
         })
     );
+    assert!(dependencies.iter().any(|edge| {
+        edge["kind"] == "tailwind-plugin"
+            && edge["specifier"] == "@acme/tailwind-plugin"
+            && edge["resolution"] == "external"
+    }));
 }

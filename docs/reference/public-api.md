@@ -241,7 +241,7 @@ The exact-version bridge consists of `MIGRATION_INVENTORY_SCHEMA_VERSION`,
 `MigrationDependencyKind`, and `MigrationDependencyResolution` for a confirmed, canonically ordered
 declared-file snapshot. It emits canonical schema-1 JSON, records dynamic/unsupported syntax, and
 derives conservative dependency observations for Sass module/import seams, CSS import/reference,
-and CSS Modules/ICSS composition. Exact supported local targets fail closed unless declared with the
+Tailwind config/plugin/source seams, and CSS Modules/ICSS composition. Exact supported local targets fail closed unless declared with the
 expected kind; extensionless or dynamic resolution remains explicit without toolchain emulation;
 `MigrationProject::from_json` parses a bounded, closed, reviewable schema-1 declaration without
 reading source files; `MigrationProject::from_file` adds safe regular-file loading without following

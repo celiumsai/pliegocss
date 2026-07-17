@@ -33,6 +33,10 @@ pre-1.0 compatibility policy.
 - A versioned cross-toolchain migration-project fixture covering Sass, Tailwind CSS v4, and CSS
   Modules together, with exact assertions for resolved, local, external, unresolved, and unsupported
   seams through the public CLI.
+- Project dependency observations for Tailwind `@config`, `@plugin`, and `@source`. Package-owned
+  plugins are external, relative config/plugin and static source-discovery paths remain unresolved,
+  and inline/dynamic sources remain dynamic; PliegoCSS records these seams without executing or
+  pretending to understand their JavaScript/toolchain semantics.
 - Closed post-change verification through the dedicated `pliego-css-agent verify` executable,
   repair-check policy and Verification Receipt schemas 1.2.0 with canonical 1.0.0/1.1.0 read
   support. Built-in `standard-css-audit`, `token-graph-integrity`, and `css-budget-audit` kinds

@@ -289,6 +289,12 @@ pub enum MigrationDependencyKind {
     TailwindImport,
     /// Tailwind `@reference`.
     TailwindReference,
+    /// Tailwind `@config` seam.
+    TailwindConfig,
+    /// Tailwind `@plugin` seam.
+    TailwindPlugin,
+    /// Tailwind `@source` template/discovery seam.
+    TailwindSource,
     /// CSS Modules `composes: ... from ...`.
     CssModulesComposes,
     /// ICSS `:import(...)`.
@@ -654,6 +660,9 @@ fn dependency_kind(kind: &str) -> Option<MigrationDependencyKind> {
         "sass-import" => Some(MigrationDependencyKind::SassImport),
         "tailwind-import" => Some(MigrationDependencyKind::TailwindImport),
         "tailwind-reference" => Some(MigrationDependencyKind::TailwindReference),
+        "tailwind-config" => Some(MigrationDependencyKind::TailwindConfig),
+        "tailwind-plugin" => Some(MigrationDependencyKind::TailwindPlugin),
+        "tailwind-source" => Some(MigrationDependencyKind::TailwindSource),
         "css-modules-composes" => Some(MigrationDependencyKind::CssModulesComposes),
         "css-modules-import" => Some(MigrationDependencyKind::CssModulesImport),
         "css-modules-value" => Some(MigrationDependencyKind::CssModulesValue),
@@ -803,8 +812,17 @@ fn classify_dependency(
     specifier: &str,
     declared: &std::collections::BTreeMap<&str, MigrationSourceKind>,
 ) -> Result<(MigrationDependencyResolution, Option<String>), MigrationInventoryError> {
+    if kind == MigrationDependencyKind::TailwindSource {
+        return Ok((MigrationDependencyResolution::Unresolved, None));
+    }
     if !specifier.starts_with("./") && !specifier.starts_with("../") {
         return Ok((MigrationDependencyResolution::External, None));
+    }
+    if matches!(
+        kind,
+        MigrationDependencyKind::TailwindConfig | MigrationDependencyKind::TailwindPlugin
+    ) {
+        return Ok((MigrationDependencyResolution::Unresolved, None));
     }
     if specifier.contains('\\') || specifier.contains(['?', '#']) {
         return Ok((MigrationDependencyResolution::Unresolved, None));
@@ -837,6 +855,9 @@ fn classify_dependency(
                 _ => return Ok((MigrationDependencyResolution::Unresolved, None)),
             }
         }
+        MigrationDependencyKind::TailwindConfig
+        | MigrationDependencyKind::TailwindPlugin
+        | MigrationDependencyKind::TailwindSource => unreachable!("classified before extension"),
         MigrationDependencyKind::CssModulesComposes
         | MigrationDependencyKind::CssModulesImport
         | MigrationDependencyKind::CssModulesValue => {
@@ -1918,6 +1939,59 @@ $color: red;
         assert_eq!(
             inventory.dependencies()[4].specifier(),
             Some("second-package")
+        );
+        fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
+    fn project_inventory_exposes_tailwind_config_plugin_and_template_seams() {
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let directory = PathBuf::from(format!(
+            ".migration-tailwind-seams-test-{}-{nonce}",
+            std::process::id()
+        ));
+        fs::create_dir(&directory).unwrap();
+        let css = directory.join("app.css");
+        fs::write(
+            &css,
+            "@config \"./tailwind.config.js\";\n@plugin \"@acme/plugin\";\n@source \"../templates/**/*.html\";\n@source inline(\"grid flex\");\n",
+        )
+        .unwrap();
+        let inventory = MigrationProject::new()
+            .source(MigrationProjectSource::new(
+                MigrationSourceKind::Tailwind,
+                css.to_string_lossy().into_owned(),
+            ))
+            .collect()
+            .unwrap();
+        let resolutions = inventory
+            .dependencies()
+            .iter()
+            .map(MigrationDependency::resolution)
+            .collect::<Vec<_>>();
+        assert_eq!(
+            resolutions,
+            [
+                MigrationDependencyResolution::Unresolved,
+                MigrationDependencyResolution::External,
+                MigrationDependencyResolution::Unresolved,
+                MigrationDependencyResolution::Dynamic,
+            ]
+        );
+        assert_eq!(
+            inventory.dependencies()[0].kind(),
+            MigrationDependencyKind::TailwindConfig
+        );
+        assert_eq!(
+            inventory.dependencies()[1].kind(),
+            MigrationDependencyKind::TailwindPlugin
+        );
+        assert_eq!(
+            inventory.dependencies()[2].kind(),
+            MigrationDependencyKind::TailwindSource
         );
         fs::remove_dir_all(directory).unwrap();
     }
