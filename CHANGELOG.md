@@ -37,6 +37,10 @@ pre-1.0 compatibility policy.
   plugins are external, relative config/plugin and static source-discovery paths remain unresolved,
   and inline/dynamic sources remain dynamic; PliegoCSS records these seams without executing or
   pretending to understand their JavaScript/toolchain semantics.
+- Declared CSS Modules consumers for JavaScript and TypeScript module extensions. Project snapshots
+  bind default/namespace `.module.css` imports to declared CSS Modules sources, retain exact dot and
+  quoted-bracket class usage, classify computed/binding-escape/template usage as dynamic, and reject
+  missing or mistyped local targets without executing JavaScript, TypeScript, or bundlers.
 - Closed post-change verification through the dedicated `pliego-css-agent verify` executable,
   repair-check policy and Verification Receipt schemas 1.2.0 with canonical 1.0.0/1.1.0 read
   support. Built-in `standard-css-audit`, `token-graph-integrity`, and `css-budget-audit` kinds

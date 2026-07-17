@@ -25,11 +25,13 @@ use pliego_css_ownership::{
 };
 use pliego_css_source::{
     MIGRATION_INVENTORY_SCHEMA_VERSION, ApplicationComponent, ApplicationRoute,
-    ApplicationTopology, MigrationDependency, MigrationDependencyKind,
-    MigrationDependencyResolution, MigrationDisposition, MigrationInventory,
-    MigrationInventoryError, MigrationPreflightReliance, MigrationProject,
-    MigrationProjectInventory, MigrationProjectSource, MigrationSourceKind,
-    inventory_migration_file, inventory_migration_source,
+    ApplicationTopology, MigrationConsumerInventory, MigrationConsumerKind,
+    MigrationConsumerObservation, MigrationConsumerObservationKind, MigrationDependency,
+    MigrationDependencyKind, MigrationDependencyResolution, MigrationDisposition,
+    MigrationInventory, MigrationInventoryError, MigrationPreflightReliance, MigrationProject,
+    MigrationProjectConsumer, MigrationProjectInventory, MigrationProjectSource,
+    MigrationSourceKind, inventory_migration_consumer_file,
+    inventory_migration_consumer_source, inventory_migration_file, inventory_migration_source,
 };
 use pliego_css_usage::{
     AssetRuleSelection as UsageRuleSelection, UsageCandidateInput, UsageObservationCoverage,
@@ -148,6 +150,31 @@ fn exercise_migration_inventory_surface() {
     ) -> Result<MigrationProjectInventory, MigrationInventoryError> = MigrationProject::collect;
     let _project_dependencies: fn(&MigrationProjectInventory) -> &[MigrationDependency] =
         MigrationProjectInventory::dependencies;
+    let _project_consumers: fn(&MigrationProjectInventory) -> &[MigrationConsumerInventory] =
+        MigrationProjectInventory::consumers;
+    let _consumer_reader = inventory_migration_consumer_file;
+    let consumer = inventory_migration_consumer_source(
+        MigrationConsumerKind::CssModules,
+        "src/Card.tsx",
+        "import styles from \"./card.module.css\"; const card = styles.card;",
+    )
+    .expect("valid CSS Modules consumer inventory");
+    let _consumer_declaration =
+        MigrationProjectConsumer::new(MigrationConsumerKind::CssModules, "src/Card.tsx");
+    let _consumer_surface: fn(&MigrationConsumerObservation) = |observation| {
+        let _: MigrationConsumerObservationKind = observation.kind();
+        let _: MigrationDisposition = observation.disposition();
+        let _: usize = observation.byte_start();
+        let _: usize = observation.byte_end();
+        let _: Option<&str> = observation.binding();
+        let _: Option<&str> = observation.specifier();
+        let _: Option<&str> = observation.target();
+        let _: Option<&str> = observation.class_name();
+    };
+    assert_eq!(consumer.consumer_kind(), MigrationConsumerKind::CssModules);
+    assert_eq!(consumer.file(), "src/Card.tsx");
+    assert_eq!(consumer.source_sha256().len(), 64);
+    assert_eq!(consumer.observations().len(), 2);
     let _dependency_surface: fn(&MigrationDependency) = |dependency| {
         let _: &str = dependency.from();
         let _: MigrationDependencyKind = dependency.kind();

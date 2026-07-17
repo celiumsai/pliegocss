@@ -1,13 +1,14 @@
 # Migration project inventory schema 1
 
-Status: **explicit confirmed source snapshot and conservative declared-source dependency edges
-implemented; templates, configs, plugins, transitive discovery, and composition consumers remain
-open**
+Status: **explicit source snapshot, conservative dependencies, and declared CSS Modules consumers
+implemented; templates, config/plugin contents, transitive discovery, and broader consumer syntax
+remain open**
 
 `MigrationProject` declares a closed set of Sass, Tailwind CSS v4 entry, and CSS Modules files. It
 does not crawl the repository or infer source kind from filenames. Collection sorts the declaration
-set canonically, rejects duplicate paths and more than 4,096 sources, inventories every regular
-file twice, and publishes bytes only when both complete reads agree.
+set canonically, rejects duplicate/cross-role paths and more than 4,096 combined sources and
+consumers, inventories every regular file twice, and publishes bytes only when both complete reads
+agree.
 
 The same closed input set can be checked into the project as schema-1 JSON and parsed with
 `MigrationProject::from_json`:
@@ -19,6 +20,9 @@ The same closed input set can be checked into the project as schema-1 JSON and p
     { "sourceKind": "sass", "file": "src/legacy.scss" },
     { "sourceKind": "tailwind", "file": "src/app.css" },
     { "sourceKind": "css-modules", "file": "src/card.module.css" }
+  ],
+  "consumers": [
+    { "consumerKind": "css-modules", "file": "src/Card.tsx" }
   ]
 }
 ```
@@ -37,7 +41,8 @@ pliego-cssc migration-project-inventory migration.project.json > migration.inven
 
 ```rust,no_run
 use pliego_css_source::{
-    MigrationProject, MigrationProjectSource, MigrationSourceKind,
+    MigrationConsumerKind, MigrationProject, MigrationProjectConsumer, MigrationProjectSource,
+    MigrationSourceKind,
 };
 
 let snapshot = MigrationProject::new()
@@ -53,6 +58,10 @@ let snapshot = MigrationProject::new()
         MigrationSourceKind::CssModules,
         "src/card.module.css",
     ))
+    .consumer(MigrationProjectConsumer::new(
+        MigrationConsumerKind::CssModules,
+        "src/Card.tsx",
+    ))
     .collect()?;
 std::fs::write("migration.inventory.json", snapshot.as_bytes())?;
 # Ok::<(), Box<dyn std::error::Error>>(())
@@ -65,6 +74,7 @@ The canonical document uses two-space JSON and one trailing LF:
   "schemaVersion": 1,
   "summary": {
     "sources": 3,
+    "consumers": 1,
     "sassSources": 1,
     "tailwindSources": 1,
     "cssModulesSources": 1,
@@ -75,7 +85,10 @@ The canonical document uses two-space JSON and one trailing LF:
     "resolvedDependencies": 1,
     "externalDependencies": 1,
     "unresolvedDependencies": 1,
-    "dynamicDependencies": 0
+    "dynamicDependencies": 0,
+    "consumerImports": 1,
+    "staticConsumerUsages": 2,
+    "dynamicConsumerUsages": 1
   },
   "sources": [
     {
@@ -102,6 +115,15 @@ The canonical document uses two-space JSON and one trailing LF:
       "specifier": "./theme.css",
       "resolution": "resolved",
       "target": "src/theme.css"
+    }
+  ],
+  "consumers": [
+    {
+      "consumerKind": "css-modules",
+      "file": "src/Card.tsx",
+      "sourceBytes": 80,
+      "sourceSha256": "<64 lowercase hex characters>",
+      "observations": []
     }
   ]
 }
@@ -142,24 +164,40 @@ An exact supported local path is an integrity claim: if its normalized target is
 declared set, has the wrong source kind, or escapes the project root, collection fails. PliegoCSS
 does not silently reinterpret that edge as external and does not guess Sass partials/index files.
 
+## CSS Modules consumer boundary
+
+Declared `js`, `jsx`, `ts`, `tsx`, `mjs`, and `cjs` consumers are read through the same bounded
+regular-file/no-link boundary and inventoried twice. The scanner retains default and namespace
+imports ending in `.module.css`, exact `binding.className` and `binding["class-name"]` accesses, and
+marks computed brackets, binding escape, named/dynamic imports, or binding text inside template
+literals as dynamic. Comments and ordinary quoted strings cannot create usage observations.
+
+Every relative import target must normalize to a declared `css-modules` source; missing or mistyped
+targets fail the complete snapshot. Package imports remain visible without a local target. This is a
+lexical migration inventory, not JavaScript execution, TypeScript type analysis, bundler alias
+resolution, destructuring semantics, or proof that an exported CSS class exists.
+
 ## Security and consistency boundary
 
-- every path is explicit, project-relative, UTF-8, kind-compatible, and duplicate-free;
+- every source and consumer path is explicit, project-relative, UTF-8, kind-compatible, and
+  duplicate-free across both sets;
 - every component is inspected and symbolic links or Windows reparse points are rejected;
 - the final file is opened with no-follow semantics, must remain regular, and is bounded to 16 MiB;
 - malformed UTF-8, comments, strings, dependency targets, or per-file defensive limits fail the
   whole snapshot;
-- all sources are inventoried in one canonical order and then inventoried again in that same order;
+- all sources and consumers are inventoried in canonical order and then inventoried again in that
+  same order;
 - any byte or derived-inventory difference between passes fails instead of mixing revisions.
 
 This is a confirmed declared-file snapshot, not an atomic filesystem transaction. It does not prove
 that an intermediate revision never existed, crawl undeclared sources, reproduce toolchain-specific
-resolution, discover templates or JavaScript consumers, evaluate Tailwind configuration/plugins, or
-identify downstream CSS Modules composition consumers. Those surfaces and real-project fixtures
-remain required before R0.8 can close.
+resolution, discover undeclared templates/consumers, evaluate Tailwind configuration/plugins, or
+reproduce arbitrary JavaScript/bundler semantics. Those surfaces and a real migration corpus remain
+required before R0.8 can close.
 
 The versioned `integration-tests/migration-project` fixture exercises all three source families in
 one declaration, including exact resolved Sass/CSS/CSS Modules targets, local CSS Modules
 composition, package/built-in external edges, extensionless Sass unresolved lookup, and an
 unsupported Tailwind plugin seam. It is a representative cross-toolchain contract fixture, not yet
-a corpus of real migrated applications.
+a corpus of real migrated applications. Its declared TSX consumer freezes two static CSS Modules
+class usages and one computed dynamic usage.

@@ -164,12 +164,16 @@ fn inventories_the_versioned_cross_toolchain_project_fixture() {
     assert_eq!(document["summary"]["sassSources"], 2);
     assert_eq!(document["summary"]["tailwindSources"], 2);
     assert_eq!(document["summary"]["cssModulesSources"], 2);
+    assert_eq!(document["summary"]["consumers"], 1);
     assert_eq!(document["summary"]["dependencies"], 8);
     assert_eq!(document["summary"]["resolvedDependencies"], 4);
     assert_eq!(document["summary"]["externalDependencies"], 3);
     assert_eq!(document["summary"]["unresolvedDependencies"], 1);
     assert_eq!(document["summary"]["dynamicDependencies"], 0);
     assert_eq!(document["summary"]["unsupported"], 1);
+    assert_eq!(document["summary"]["consumerImports"], 1);
+    assert_eq!(document["summary"]["staticConsumerUsages"], 2);
+    assert_eq!(document["summary"]["dynamicConsumerUsages"], 1);
     let dependencies = document["dependencies"]
         .as_array()
         .expect("dependency observations");

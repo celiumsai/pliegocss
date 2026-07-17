@@ -80,8 +80,9 @@ and CSS Modules/ICSS dependency observations. Exact supported local targets must
 declared set with the expected kind; package and built-in references stay external, while dynamic or
 toolchain-specific resolution remains visible without guessing. Tailwind config, plugin, and source
 discovery seams are also retained as external, unresolved, or dynamic observations. It does not
-crawl imports, inspect those auxiliary files, or yet inventory template and downstream
-composition-consumer usage.
+crawl imports or inspect those auxiliary files. Declared JS/TS CSS Modules consumers can be linked
+to exact sources and inventory static property/bracket class usage plus conservative dynamic binding
+usage without executing a bundler.
 `MigrationProject::from_json` accepts the same closed declaration as bounded schema-1 JSON so it can
 be reviewed and checked into a project without introducing repository crawling or source execution;
 `MigrationProject::from_file` adds the bounded regular-file and no-link path boundary used by

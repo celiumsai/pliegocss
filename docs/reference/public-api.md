@@ -246,6 +246,10 @@ expected kind; extensionless or dynamic resolution remains explicit without tool
 `MigrationProject::from_json` parses a bounded, closed, reviewable schema-1 declaration without
 reading source files; `MigrationProject::from_file` adds safe regular-file loading without following
 link-like path components;
+the consumer layer additionally exposes `MigrationProjectConsumer`, `MigrationConsumerKind`,
+`MigrationConsumerInventory`, `MigrationConsumerObservation`,
+`MigrationConsumerObservationKind`, `inventory_migration_consumer_source`, and
+`inventory_migration_consumer_file` for declared CSS Modules JS/TS consumers;
 `inventory_migration_file` additionally enforces a bounded regular project-relative file and rejects
 symlink/reparse-point components before reading. The bridge does not execute
 Sass/Tailwind/plugins/configs, crawl undeclared sources, discover consumers, or promise a codemod.

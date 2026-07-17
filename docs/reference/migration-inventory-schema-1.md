@@ -120,7 +120,8 @@ class mappings.
 
 This single-file output is lexical inventory, not a full language parser, dependency graph,
 migration plan, codemod, or compatibility proof. The separate declared-project schema derives
-conservative dependency observations from these constructs without changing this per-file document.
+conservative dependency observations from these constructs and can bind declared CSS Modules JS/TS
+consumer imports/usages without changing this per-file document.
 R0.8 remains partial until the project-input surface inventories utilities and arbitrary values from
 templates, config/plugin graphs, source-toolchain-specific Sass resolution, CSS Modules/JavaScript
 composition consumers, and classified unsupported/dynamic constructs across complete real-project

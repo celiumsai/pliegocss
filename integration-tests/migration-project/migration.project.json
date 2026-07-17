@@ -7,5 +7,8 @@
     { "sourceKind": "tailwind", "file": "styles/theme.css" },
     { "sourceKind": "css-modules", "file": "styles/card.module.css" },
     { "sourceKind": "css-modules", "file": "styles/base.module.css" }
+  ],
+  "consumers": [
+    { "consumerKind": "css-modules", "file": "components/Card.tsx" }
   ]
 }

@@ -155,6 +155,7 @@ struct MigrationInventoryDocument<'a> {
 #[serde(rename_all = "camelCase")]
 struct MigrationProjectSummary {
     sources: usize,
+    consumers: usize,
     sass_sources: usize,
     tailwind_sources: usize,
     css_modules_sources: usize,
@@ -166,6 +167,9 @@ struct MigrationProjectSummary {
     external_dependencies: usize,
     unresolved_dependencies: usize,
     dynamic_dependencies: usize,
+    consumer_imports: usize,
+    static_consumer_usages: usize,
+    dynamic_consumer_usages: usize,
 }
 
 #[derive(Serialize)]
@@ -175,6 +179,7 @@ struct MigrationProjectDocument<'a> {
     summary: MigrationProjectSummary,
     sources: Vec<MigrationInventoryDocument<'a>>,
     dependencies: &'a [MigrationDependency],
+    consumers: &'a [MigrationConsumerInventory],
 }
 
 /// Canonical read-only inventory for one migration source.
@@ -261,17 +266,76 @@ pub struct MigrationProjectSource {
     file: String,
 }
 
+/// Explicit consumer family inspected by a migration project snapshot.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum MigrationConsumerKind {
+    /// JavaScript/TypeScript module consuming CSS Modules exports.
+    CssModules,
+}
+
+/// Explicit consumer declaration for a migration project snapshot.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MigrationProjectConsumer {
+    consumer_kind: MigrationConsumerKind,
+    file: String,
+}
+
+/// Kind of exact observation retained from a migration consumer.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum MigrationConsumerObservationKind {
+    /// Static default/namespace import of a CSS Modules source.
+    Import,
+    /// Property or bracket access through the imported binding.
+    ClassUsage,
+}
+
+/// One exact import or class usage observed in a migration consumer.
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct MigrationConsumerObservation {
+    kind: MigrationConsumerObservationKind,
+    byte_start: usize,
+    byte_end: usize,
+    disposition: MigrationDisposition,
+    binding: Option<String>,
+    specifier: Option<String>,
+    target: Option<String>,
+    class_name: Option<String>,
+}
+
+/// Canonical read-only inventory for one declared migration consumer.
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct MigrationConsumerInventory {
+    consumer_kind: MigrationConsumerKind,
+    file: String,
+    source_bytes: usize,
+    source_sha256: String,
+    observations: Vec<MigrationConsumerObservation>,
+}
+
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 struct MigrationProjectDeclaration {
     schema_version: u8,
     sources: Vec<MigrationProjectDeclarationSource>,
+    #[serde(default)]
+    consumers: Vec<MigrationProjectDeclarationConsumer>,
 }
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 struct MigrationProjectDeclarationSource {
     source_kind: MigrationSourceKind,
+    file: String,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+struct MigrationProjectDeclarationConsumer {
+    consumer_kind: MigrationConsumerKind,
     file: String,
 }
 
@@ -387,10 +451,98 @@ impl MigrationProjectSource {
     }
 }
 
+impl MigrationProjectConsumer {
+    /// Declares one consumer kind and portable project-relative path.
+    #[must_use]
+    pub fn new(consumer_kind: MigrationConsumerKind, file: impl Into<String>) -> Self {
+        Self {
+            consumer_kind,
+            file: file.into(),
+        }
+    }
+}
+
+impl MigrationConsumerObservation {
+    /// Returns the observation kind.
+    #[must_use]
+    pub const fn kind(&self) -> MigrationConsumerObservationKind {
+        self.kind
+    }
+
+    /// Returns the conservative static classification.
+    #[must_use]
+    pub const fn disposition(&self) -> MigrationDisposition {
+        self.disposition
+    }
+
+    /// Returns the zero-based inclusive byte start.
+    #[must_use]
+    pub const fn byte_start(&self) -> usize {
+        self.byte_start
+    }
+
+    /// Returns the zero-based exclusive byte end.
+    #[must_use]
+    pub const fn byte_end(&self) -> usize {
+        self.byte_end
+    }
+
+    /// Returns the imported local binding when available.
+    #[must_use]
+    pub fn binding(&self) -> Option<&str> {
+        self.binding.as_deref()
+    }
+
+    /// Returns the exact import specifier when available.
+    #[must_use]
+    pub fn specifier(&self) -> Option<&str> {
+        self.specifier.as_deref()
+    }
+
+    /// Returns the normalized declared CSS Modules target when available.
+    #[must_use]
+    pub fn target(&self) -> Option<&str> {
+        self.target.as_deref()
+    }
+
+    /// Returns the statically visible class export when available.
+    #[must_use]
+    pub fn class_name(&self) -> Option<&str> {
+        self.class_name.as_deref()
+    }
+}
+
+impl MigrationConsumerInventory {
+    /// Returns the consumer family.
+    #[must_use]
+    pub const fn consumer_kind(&self) -> MigrationConsumerKind {
+        self.consumer_kind
+    }
+
+    /// Returns the portable logical path.
+    #[must_use]
+    pub fn file(&self) -> &str {
+        &self.file
+    }
+
+    /// Returns the exact input SHA-256.
+    #[must_use]
+    pub fn source_sha256(&self) -> &str {
+        &self.source_sha256
+    }
+
+    /// Returns observations in exact byte order.
+    #[must_use]
+    pub fn observations(&self) -> &[MigrationConsumerObservation] {
+        &self.observations
+    }
+}
+
 /// Closed, explicit input set for one confirmed migration project snapshot.
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct MigrationProject {
     sources: Vec<MigrationProjectSource>,
+    consumers: Vec<MigrationProjectConsumer>,
 }
 
 impl MigrationProject {
@@ -399,6 +551,7 @@ impl MigrationProject {
     pub const fn new() -> Self {
         Self {
             sources: Vec::new(),
+            consumers: Vec::new(),
         }
     }
 
@@ -409,7 +562,7 @@ impl MigrationProject {
     /// # Errors
     ///
     /// Returns [`MigrationInventoryError`] for input above 1 MiB, malformed or non-schema-1 JSON,
-    /// unknown fields, more than 4,096 sources, or unsafe/kind-incompatible source paths.
+    /// unknown fields, more than 4,096 combined entries, or unsafe/kind-incompatible paths.
     pub fn from_json(bytes: &[u8]) -> Result<Self, MigrationInventoryError> {
         if bytes.len() > MAX_PROJECT_DOCUMENT_BYTES {
             return Err(MigrationInventoryError::new(
@@ -427,9 +580,9 @@ impl MigrationProject {
                 "migration project declaration schemaVersion must be 1",
             ));
         }
-        if declaration.sources.len() > MAX_PROJECT_SOURCES {
+        if declaration.sources.len() + declaration.consumers.len() > MAX_PROJECT_SOURCES {
             return Err(MigrationInventoryError::new(
-                "migration project exceeds 4,096 sources",
+                "migration project exceeds 4,096 sources and consumers",
             ));
         }
         let mut project = Self::new();
@@ -438,6 +591,13 @@ impl MigrationProject {
             project
                 .sources
                 .push(MigrationProjectSource::new(source.source_kind, source.file));
+        }
+        for consumer in declaration.consumers {
+            validate_consumer_path(consumer.consumer_kind, consumer.file.as_str())?;
+            project.consumers.push(MigrationProjectConsumer::new(
+                consumer.consumer_kind,
+                consumer.file,
+            ));
         }
         Ok(project)
     }
@@ -465,7 +625,14 @@ impl MigrationProject {
         self
     }
 
-    /// Reads every source twice and emits a canonical project snapshot only when both reads agree.
+    /// Adds one explicit consumer. Collection sorts declarations canonically.
+    #[must_use]
+    pub fn consumer(mut self, consumer: MigrationProjectConsumer) -> Self {
+        self.consumers.push(consumer);
+        self
+    }
+
+    /// Reads every source and consumer twice and emits only when both complete inventories agree.
     ///
     /// # Errors
     ///
@@ -477,9 +644,9 @@ impl MigrationProject {
                 "migration project requires at least one source",
             ));
         }
-        if self.sources.len() > MAX_PROJECT_SOURCES {
+        if self.sources.len() + self.consumers.len() > MAX_PROJECT_SOURCES {
             return Err(MigrationInventoryError::new(
-                "migration project exceeds 4,096 sources",
+                "migration project exceeds 4,096 sources and consumers",
             ));
         }
         self.sources.sort_by(|left, right| {
@@ -493,6 +660,27 @@ impl MigrationProject {
                     pair[0].file
                 )));
             }
+        }
+        self.consumers.sort_by(|left, right| {
+            (left.file.as_str(), left.consumer_kind as u8)
+                .cmp(&(right.file.as_str(), right.consumer_kind as u8))
+        });
+        for pair in self.consumers.windows(2) {
+            if pair[0].file == pair[1].file {
+                return Err(MigrationInventoryError::new(format!(
+                    "migration project consumer `{}` is declared more than once",
+                    pair[0].file
+                )));
+            }
+        }
+        if self.sources.iter().any(|source| {
+            self.consumers
+                .iter()
+                .any(|consumer| consumer.file == source.file)
+        }) {
+            return Err(MigrationInventoryError::new(
+                "migration project path cannot be both a source and consumer",
+            ));
         }
         let first = self
             .sources
@@ -508,12 +696,32 @@ impl MigrationProject {
                 inventory_migration_file(source.source_kind, Path::new(source.file.as_str()))
             })
             .collect::<Result<Vec<_>, _>>()?;
-        if first != second {
+        let first_consumers = self
+            .consumers
+            .iter()
+            .map(|consumer| {
+                inventory_migration_consumer_file(
+                    consumer.consumer_kind,
+                    Path::new(consumer.file.as_str()),
+                )
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        let second_consumers = self
+            .consumers
+            .iter()
+            .map(|consumer| {
+                inventory_migration_consumer_file(
+                    consumer.consumer_kind,
+                    Path::new(consumer.file.as_str()),
+                )
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        if first != second || first_consumers != second_consumers {
             return Err(MigrationInventoryError::new(
                 "migration project changed while its snapshot was being collected",
             ));
         }
-        MigrationProjectInventory::from_sources(first)
+        MigrationProjectInventory::from_parts(first, first_consumers)
     }
 }
 
@@ -523,14 +731,20 @@ pub struct MigrationProjectInventory {
     summary: MigrationProjectSummary,
     sources: Vec<MigrationInventory>,
     dependencies: Vec<MigrationDependency>,
+    consumers: Vec<MigrationConsumerInventory>,
     bytes: Vec<u8>,
 }
 
 impl MigrationProjectInventory {
-    fn from_sources(sources: Vec<MigrationInventory>) -> Result<Self, MigrationInventoryError> {
+    fn from_parts(
+        sources: Vec<MigrationInventory>,
+        mut consumers: Vec<MigrationConsumerInventory>,
+    ) -> Result<Self, MigrationInventoryError> {
         let dependencies = derive_project_dependencies(&sources)?;
+        resolve_consumer_targets(&sources, &mut consumers)?;
         let summary = MigrationProjectSummary {
             sources: sources.len(),
+            consumers: consumers.len(),
             sass_sources: sources
                 .iter()
                 .filter(|source| source.source_kind == MigrationSourceKind::Sass)
@@ -578,11 +792,33 @@ impl MigrationProjectInventory {
                     dependency.resolution == MigrationDependencyResolution::Dynamic
                 })
                 .count(),
+            consumer_imports: consumers
+                .iter()
+                .flat_map(|consumer| &consumer.observations)
+                .filter(|observation| observation.kind == MigrationConsumerObservationKind::Import)
+                .count(),
+            static_consumer_usages: consumers
+                .iter()
+                .flat_map(|consumer| &consumer.observations)
+                .filter(|observation| {
+                    observation.kind == MigrationConsumerObservationKind::ClassUsage
+                        && observation.disposition == MigrationDisposition::Static
+                })
+                .count(),
+            dynamic_consumer_usages: consumers
+                .iter()
+                .flat_map(|consumer| &consumer.observations)
+                .filter(|observation| {
+                    observation.kind == MigrationConsumerObservationKind::ClassUsage
+                        && observation.disposition == MigrationDisposition::Dynamic
+                })
+                .count(),
         };
         let mut inventory = Self {
             summary,
             sources,
             dependencies,
+            consumers,
             bytes: Vec::new(),
         };
         let document = MigrationProjectDocument {
@@ -590,6 +826,7 @@ impl MigrationProjectInventory {
             summary,
             sources: inventory.sources.iter().map(inventory_document).collect(),
             dependencies: &inventory.dependencies,
+            consumers: &inventory.consumers,
         };
         inventory.bytes = serde_json::to_vec_pretty(&document).map_err(|error| {
             MigrationInventoryError::new(format!(
@@ -610,6 +847,12 @@ impl MigrationProjectInventory {
     #[must_use]
     pub fn dependencies(&self) -> &[MigrationDependency] {
         &self.dependencies
+    }
+
+    /// Returns declared consumer inventories in canonical path order.
+    #[must_use]
+    pub fn consumers(&self) -> &[MigrationConsumerInventory] {
+        &self.consumers
     }
 
     /// Returns the total number of recorded constructs.
@@ -651,6 +894,37 @@ fn derive_project_dependencies(
         }
     }
     Ok(dependencies)
+}
+
+fn resolve_consumer_targets(
+    sources: &[MigrationInventory],
+    consumers: &mut [MigrationConsumerInventory],
+) -> Result<(), MigrationInventoryError> {
+    let declared = sources
+        .iter()
+        .map(|source| (source.file.as_str(), source.source_kind))
+        .collect::<std::collections::BTreeMap<_, _>>();
+    for consumer in consumers {
+        for observation in &consumer.observations {
+            let Some(target) = observation.target.as_deref() else {
+                continue;
+            };
+            let Some(kind) = declared.get(target).copied() else {
+                return Err(MigrationInventoryError::new(format!(
+                    "CSS Modules consumer `{}` references undeclared local source `{target}`",
+                    consumer.file
+                )));
+            };
+            if kind != MigrationSourceKind::CssModules {
+                return Err(MigrationInventoryError::new(format!(
+                    "CSS Modules consumer `{}` requires css-modules target `{target}`, but it is declared as {}",
+                    consumer.file,
+                    kind.as_str()
+                )));
+            }
+        }
+    }
+    Ok(())
 }
 
 fn dependency_kind(kind: &str) -> Option<MigrationDependencyKind> {
@@ -1015,6 +1289,324 @@ pub fn inventory_migration_file(
     inventory_migration_source(source_kind, &logical, source)
 }
 
+/// Inventories one exact JavaScript/TypeScript migration consumer without executing it.
+///
+/// # Errors
+///
+/// Returns [`MigrationInventoryError`] for unsafe/kind-incompatible paths, oversized or malformed
+/// input, unterminated lexical state, defensive-limit overflow, or unsafe relative module targets.
+pub fn inventory_migration_consumer_source(
+    consumer_kind: MigrationConsumerKind,
+    file: &str,
+    source: &str,
+) -> Result<MigrationConsumerInventory, MigrationInventoryError> {
+    validate_consumer_path(consumer_kind, file)?;
+    if source.len() > MAX_SOURCE_BYTES || source.contains('\0') {
+        return Err(MigrationInventoryError::new(
+            "migration consumer must be NUL-free and at most 16 MiB",
+        ));
+    }
+    let masks = lexical_masks(source)?;
+    let mut observations = scan_css_modules_consumer(file, source, &masks)?;
+    observations.sort_by(|left, right| {
+        (left.byte_start, left.byte_end, left.kind as u8).cmp(&(
+            right.byte_start,
+            right.byte_end,
+            right.kind as u8,
+        ))
+    });
+    observations.dedup();
+    if observations.len() > MAX_CONSTRUCTS {
+        return Err(MigrationInventoryError::new(
+            "migration consumer exceeds 65,535 observations",
+        ));
+    }
+    Ok(MigrationConsumerInventory {
+        consumer_kind,
+        file: file.into(),
+        source_bytes: source.len(),
+        source_sha256: format!("{:x}", Sha256::digest(source.as_bytes())),
+        observations,
+    })
+}
+
+/// Reads and inventories one bounded regular migration consumer without following links.
+///
+/// # Errors
+///
+/// Returns [`MigrationInventoryError`] when the path/file boundary or consumer source is invalid.
+pub fn inventory_migration_consumer_file(
+    consumer_kind: MigrationConsumerKind,
+    file: &Path,
+) -> Result<MigrationConsumerInventory, MigrationInventoryError> {
+    let (logical, bytes) = read_regular_project_file(file, MAX_SOURCE_BYTES, "migration consumer")?;
+    let source = std::str::from_utf8(&bytes).map_err(|error| {
+        MigrationInventoryError::new(format!("migration consumer is not valid UTF-8: {error}"))
+    })?;
+    inventory_migration_consumer_source(consumer_kind, &logical, source)
+}
+
+fn validate_consumer_path(
+    consumer_kind: MigrationConsumerKind,
+    file: &str,
+) -> Result<(), MigrationInventoryError> {
+    if !is_portable_source_path(file) {
+        return Err(MigrationInventoryError::new(
+            "migration consumer requires a portable project-relative file",
+        ));
+    }
+    let extension = Path::new(file)
+        .extension()
+        .and_then(std::ffi::OsStr::to_str)
+        .unwrap_or_default();
+    let accepted = match consumer_kind {
+        MigrationConsumerKind::CssModules => matches!(
+            extension.to_ascii_lowercase().as_str(),
+            "js" | "jsx" | "ts" | "tsx" | "mjs" | "cjs"
+        ),
+    };
+    if !accepted {
+        return Err(MigrationInventoryError::new(format!(
+            "css-modules consumer inventory does not accept `{file}`"
+        )));
+    }
+    Ok(())
+}
+
+fn scan_css_modules_consumer(
+    file: &str,
+    source: &str,
+    masks: &LexicalMasks,
+) -> Result<Vec<MigrationConsumerObservation>, MigrationInventoryError> {
+    let bytes = source.as_bytes();
+    let mut observations = Vec::new();
+    let mut bindings = Vec::new();
+    for start in 0..bytes.len() {
+        if !masks.code[start]
+            || !bytes[start..].starts_with(b"import")
+            || is_identifier(
+                start
+                    .checked_sub(1)
+                    .and_then(|index| bytes.get(index))
+                    .copied(),
+            )
+            || is_identifier(bytes.get(start + 6).copied())
+        {
+            continue;
+        }
+        let end = consumer_import_end(source, &masks.code, start);
+        let syntax = &source[start..end];
+        let Some(specifier) =
+            quoted_dependency_specifier(MigrationDependencyKind::CssModulesImport, syntax)
+        else {
+            continue;
+        };
+        if !specifier.to_ascii_lowercase().ends_with(".module.css") {
+            continue;
+        }
+        let target = if specifier.starts_with("./") || specifier.starts_with("../") {
+            Some(normalize_relative_target(file, specifier.as_str())?)
+        } else {
+            None
+        };
+        let prelude = syntax.split(['\'', '"']).next().unwrap_or_default().trim();
+        let dynamic_import = prelude
+            .strip_prefix("import")
+            .is_some_and(|suffix| suffix.trim_start().starts_with('('));
+        let binding = (!dynamic_import).then(|| import_binding(prelude)).flatten();
+        let disposition = if dynamic_import || (prelude.contains('{') && binding.is_none()) {
+            MigrationDisposition::Dynamic
+        } else {
+            MigrationDisposition::Static
+        };
+        observations.push(MigrationConsumerObservation {
+            kind: MigrationConsumerObservationKind::Import,
+            byte_start: start,
+            byte_end: end,
+            disposition,
+            binding: binding.clone(),
+            specifier: Some(specifier),
+            target: target.clone(),
+            class_name: None,
+        });
+        if let Some(binding) = binding {
+            bindings.push((binding, target, start, end));
+        }
+    }
+    for (binding, target, import_start, import_end) in bindings {
+        scan_consumer_binding_usages(
+            source,
+            &masks.code,
+            &masks.template,
+            binding.as_str(),
+            target.as_deref(),
+            import_start..import_end,
+            &mut observations,
+        );
+    }
+    Ok(observations)
+}
+
+fn import_binding(prelude: &str) -> Option<String> {
+    let body = prelude.strip_prefix("import")?.trim();
+    let declaration = body.strip_suffix("from")?.trim();
+    let candidate = if let Some(namespace) = declaration.strip_prefix('*') {
+        namespace.trim().strip_prefix("as")?.trim()
+    } else {
+        declaration.split(',').next()?.trim()
+    };
+    (!candidate.is_empty()
+        && candidate
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'$')))
+    .then(|| candidate.to_owned())
+}
+
+fn consumer_import_end(source: &str, code: &[bool], start: usize) -> usize {
+    let bytes = source.as_bytes();
+    for index in start + 6..bytes.len() {
+        if code[index] && bytes[index] == b';' {
+            return index + 1;
+        }
+        if code[index] && bytes[index] == b'\n' {
+            return index;
+        }
+    }
+    bytes.len()
+}
+
+fn scan_consumer_binding_usages(
+    source: &str,
+    code: &[bool],
+    template: &[bool],
+    binding: &str,
+    target: Option<&str>,
+    import_range: std::ops::Range<usize>,
+    output: &mut Vec<MigrationConsumerObservation>,
+) {
+    let bytes = source.as_bytes();
+    let binding_bytes = binding.as_bytes();
+    for start in 0..bytes.len() {
+        if import_range.contains(&start)
+            || (!code[start] && !template[start])
+            || !bytes[start..].starts_with(binding_bytes)
+            || is_identifier(
+                start
+                    .checked_sub(1)
+                    .and_then(|index| bytes.get(index))
+                    .copied(),
+            )
+            || is_identifier(bytes.get(start + binding_bytes.len()).copied())
+        {
+            continue;
+        }
+        if template[start] {
+            output.push(MigrationConsumerObservation {
+                kind: MigrationConsumerObservationKind::ClassUsage,
+                byte_start: start,
+                byte_end: start + binding_bytes.len(),
+                disposition: MigrationDisposition::Dynamic,
+                binding: Some(binding.into()),
+                specifier: None,
+                target: target.map(str::to_owned),
+                class_name: None,
+            });
+            continue;
+        }
+        let mut cursor = start + binding_bytes.len();
+        while bytes.get(cursor).is_some_and(u8::is_ascii_whitespace) {
+            cursor += 1;
+        }
+        let (end, disposition, class_name) = match bytes.get(cursor) {
+            Some(b'.') => {
+                cursor += 1;
+                while bytes.get(cursor).is_some_and(u8::is_ascii_whitespace) {
+                    cursor += 1;
+                }
+                let class_start = cursor;
+                while bytes
+                    .get(cursor)
+                    .is_some_and(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'$'))
+                {
+                    cursor += 1;
+                }
+                if cursor == class_start {
+                    (
+                        start + binding_bytes.len(),
+                        MigrationDisposition::Dynamic,
+                        None,
+                    )
+                } else {
+                    (
+                        cursor,
+                        MigrationDisposition::Static,
+                        source.get(class_start..cursor).map(str::to_owned),
+                    )
+                }
+            }
+            Some(b'[') => scan_consumer_bracket_usage(source, cursor),
+            _ => (
+                start + binding_bytes.len(),
+                MigrationDisposition::Dynamic,
+                None,
+            ),
+        };
+        output.push(MigrationConsumerObservation {
+            kind: MigrationConsumerObservationKind::ClassUsage,
+            byte_start: start,
+            byte_end: end,
+            disposition,
+            binding: Some(binding.into()),
+            specifier: None,
+            target: target.map(str::to_owned),
+            class_name,
+        });
+    }
+}
+
+fn scan_consumer_bracket_usage(
+    source: &str,
+    bracket: usize,
+) -> (usize, MigrationDisposition, Option<String>) {
+    let bytes = source.as_bytes();
+    let mut cursor = bracket + 1;
+    while bytes.get(cursor).is_some_and(u8::is_ascii_whitespace) {
+        cursor += 1;
+    }
+    if matches!(bytes.get(cursor), Some(b'\'' | b'"')) {
+        let quote = bytes[cursor];
+        let class_start = cursor + 1;
+        cursor = class_start;
+        while let Some(byte) = bytes.get(cursor) {
+            if *byte == b'\\' {
+                return (cursor + 1, MigrationDisposition::Dynamic, None);
+            }
+            if *byte == quote {
+                let class_name = source.get(class_start..cursor).map(str::to_owned);
+                cursor += 1;
+                while bytes.get(cursor).is_some_and(u8::is_ascii_whitespace) {
+                    cursor += 1;
+                }
+                if bytes.get(cursor) == Some(&b']')
+                    && class_name.as_deref().is_some_and(|v| !v.is_empty())
+                {
+                    return (cursor + 1, MigrationDisposition::Static, class_name);
+                }
+                return (cursor, MigrationDisposition::Dynamic, None);
+            }
+            cursor += 1;
+        }
+    }
+    let limit = (bracket + MAX_SYNTAX_BYTES).min(bytes.len());
+    while cursor < limit && bytes[cursor] != b']' {
+        cursor += 1;
+    }
+    if cursor < bytes.len() && bytes[cursor] == b']' {
+        cursor += 1;
+    }
+    (cursor, MigrationDisposition::Dynamic, None)
+}
+
 fn read_regular_project_file(
     file: &Path,
     max_bytes: usize,
@@ -1167,6 +1759,7 @@ fn validate_input(
 struct LexicalMasks {
     code: Vec<bool>,
     uncommented: Vec<bool>,
+    template: Vec<bool>,
 }
 
 #[derive(Clone, Copy, Eq, PartialEq)]
@@ -1174,6 +1767,7 @@ enum LexicalState {
     Code,
     SingleQuote,
     DoubleQuote,
+    Backtick,
     LineComment,
     BlockComment,
 }
@@ -1182,6 +1776,7 @@ fn lexical_masks(source: &str) -> Result<LexicalMasks, MigrationInventoryError> 
     let bytes = source.as_bytes();
     let mut code = vec![true; bytes.len()];
     let mut uncommented = vec![true; bytes.len()];
+    let mut template = vec![false; bytes.len()];
     let mut state = LexicalState::Code;
     let mut escaped = false;
     let mut index = 0;
@@ -1214,16 +1809,25 @@ fn lexical_masks(source: &str) -> Result<LexicalMasks, MigrationInventoryError> 
                     code[index] = false;
                     state = LexicalState::DoubleQuote;
                 }
+                (b'`', _) => {
+                    code[index] = false;
+                    template[index] = true;
+                    state = LexicalState::Backtick;
+                }
                 _ => {}
             },
-            LexicalState::SingleQuote | LexicalState::DoubleQuote => {
+            LexicalState::SingleQuote | LexicalState::DoubleQuote | LexicalState::Backtick => {
                 code[index] = false;
+                if state == LexicalState::Backtick {
+                    template[index] = true;
+                }
                 if escaped {
                     escaped = false;
                 } else if bytes[index] == b'\\' {
                     escaped = true;
                 } else if (state == LexicalState::SingleQuote && bytes[index] == b'\'')
                     || (state == LexicalState::DoubleQuote && bytes[index] == b'"')
+                    || (state == LexicalState::Backtick && bytes[index] == b'`')
                 {
                     state = LexicalState::Code;
                 }
@@ -1252,10 +1856,14 @@ fn lexical_masks(source: &str) -> Result<LexicalMasks, MigrationInventoryError> 
         index += 1;
     }
     match state {
-        LexicalState::Code | LexicalState::LineComment => Ok(LexicalMasks { code, uncommented }),
-        LexicalState::SingleQuote | LexicalState::DoubleQuote => Err(MigrationInventoryError::new(
-            "migration source contains an unterminated string",
-        )),
+        LexicalState::Code | LexicalState::LineComment => Ok(LexicalMasks {
+            code,
+            uncommented,
+            template,
+        }),
+        LexicalState::SingleQuote | LexicalState::DoubleQuote | LexicalState::Backtick => Err(
+            MigrationInventoryError::new("migration source contains an unterminated string"),
+        ),
         LexicalState::BlockComment => Err(MigrationInventoryError::new(
             "migration source contains an unterminated block comment",
         )),
@@ -1993,6 +2601,118 @@ $color: red;
             inventory.dependencies()[2].kind(),
             MigrationDependencyKind::TailwindSource
         );
+        fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
+    fn inventories_css_modules_consumer_imports_static_and_dynamic_usages() {
+        let source = r#"import styles from "./card.module.css";
+import { cardClass } from "./named.module.css";
+const lazy = import("./lazy.module.css");
+const card = styles.card;
+const title = styles["title-name"];
+const selected = styles[key];
+consume(styles);
+const template = `${styles.card}`;
+const text = "styles.ignored";
+// styles.comment
+"#;
+        let inventory = inventory_migration_consumer_source(
+            MigrationConsumerKind::CssModules,
+            "src/Card.tsx",
+            source,
+        )
+        .unwrap();
+        assert_eq!(inventory.observations().len(), 8);
+        assert_eq!(
+            inventory.observations()[0].kind(),
+            MigrationConsumerObservationKind::Import
+        );
+        assert_eq!(inventory.observations()[0].binding(), Some("styles"));
+        assert_eq!(
+            inventory.observations()[0].target(),
+            Some("src/card.module.css")
+        );
+        let static_classes = inventory
+            .observations()
+            .iter()
+            .filter_map(MigrationConsumerObservation::class_name)
+            .collect::<Vec<_>>();
+        assert_eq!(static_classes, ["card", "title-name"]);
+        assert_eq!(
+            inventory
+                .observations()
+                .iter()
+                .filter(|observation| {
+                    observation.kind() == MigrationConsumerObservationKind::ClassUsage
+                        && observation.disposition() == MigrationDisposition::Dynamic
+                })
+                .count(),
+            3
+        );
+        assert_eq!(
+            inventory
+                .observations()
+                .iter()
+                .filter(|observation| {
+                    observation.kind() == MigrationConsumerObservationKind::Import
+                        && observation.disposition() == MigrationDisposition::Dynamic
+                })
+                .count(),
+            2
+        );
+        assert!(inventory.observations().iter().all(|observation| {
+            observation.byte_start() < observation.byte_end()
+                && source
+                    .get(observation.byte_start()..observation.byte_end())
+                    .is_some()
+        }));
+    }
+
+    #[test]
+    fn project_inventory_links_declared_css_modules_consumers_fail_closed() {
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let directory = PathBuf::from(format!(
+            ".migration-consumer-project-test-{}-{nonce}",
+            std::process::id()
+        ));
+        fs::create_dir(&directory).unwrap();
+        let module = directory.join("card.module.css");
+        let consumer = directory.join("Card.tsx");
+        fs::write(&module, ".card { display: block; }\n").unwrap();
+        fs::write(
+            &consumer,
+            "import styles from \"./card.module.css\";\nexport const card = styles.card;\n",
+        )
+        .unwrap();
+        let project = MigrationProject::new()
+            .source(MigrationProjectSource::new(
+                MigrationSourceKind::CssModules,
+                module.to_string_lossy().into_owned(),
+            ))
+            .consumer(MigrationProjectConsumer::new(
+                MigrationConsumerKind::CssModules,
+                consumer.to_string_lossy().into_owned(),
+            ));
+        let inventory = project.clone().collect().unwrap();
+        assert_eq!(inventory.consumers().len(), 1);
+        assert_eq!(inventory.consumers()[0].observations().len(), 2);
+        let document: serde_json::Value = serde_json::from_slice(inventory.as_bytes()).unwrap();
+        assert_eq!(document["summary"]["consumers"], 1);
+        assert_eq!(document["summary"]["consumerImports"], 1);
+        assert_eq!(document["summary"]["staticConsumerUsages"], 1);
+        assert_eq!(document["summary"]["dynamicConsumerUsages"], 0);
+
+        fs::write(
+            &consumer,
+            "import styles from \"./missing.module.css\";\nexport const card = styles.card;\n",
+        )
+        .unwrap();
+        let missing = project.collect().unwrap_err();
+        assert!(missing.to_string().contains("undeclared local source"));
         fs::remove_dir_all(directory).unwrap();
     }
 }
