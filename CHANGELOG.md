@@ -20,10 +20,13 @@ pre-1.0 compatibility policy.
   declaration ranges before returning source-to-final-CSS definition links. Bounded per-literal
   semantic diagnostics now reuse `pliego-cssc check` schema 1 and project exact compiler ranges into
   UTF-16. A 150 ms per-document debounce moves compiler work off the protocol loop and rejects stale
-  results by document version. Multi-clause `pcx!` buffers are projected to one bounded literal-only
-  synthetic Rust source so same-version `check --source` owns `PCX003` semantics; findings map back
-  to the exact original branch token. Forceful child-process cancellation and the complete frozen
-  CLI/LSP parity corpus remain open.
+  results by document version. A per-URI version registry now forcefully terminates and reaps the
+  direct compiler child when its snapshot becomes stale, while concurrent stdout/stderr readers
+  prevent bounded process pipes from blocking cancellation. Multi-clause `pcx!` buffers are
+  projected to one bounded literal-only synthetic Rust source so same-version `check --source` owns
+  `PCX003` semantics; findings map back
+  to the exact original branch token. Complete CLI/LSP parity across all diagnostic codes,
+  severities, suggestions, and fixes remains open.
 - An unreleased VS Code client candidate that connects file-backed Rust documents to explicit
   external `pliego-css-lsp` and `pliego-cssc` binaries. It supports discover/seed/config theme
   modes, optional Project Index navigation, fail-closed machine-overridable paths, configuration

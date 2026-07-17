@@ -11,6 +11,7 @@ const target = process.env.CARGO_TARGET_DIR
   : resolve(ROOT, "target");
 const lsp = resolve(target, "debug", `pliego-css-lsp${executable}`);
 const compiler = resolve(target, "debug", `pliego-cssc${executable}`);
+const cancellationProxy = resolve(target, `lsp-cancellation-proxy${executable}`);
 const diagnosticCorpus = JSON.parse(
   readFileSync(resolve(ROOT, "integration-tests", "lsp-diagnostics", "corpus.json"), "utf8"),
 );
@@ -27,6 +28,19 @@ const build = spawnSync(
 if (build.error) fail(`cannot build LSP gate: ${build.error.message}`);
 if (build.status !== 0) fail(`${build.stdout}${build.stderr}`.trim());
 if (!existsSync(lsp) || !existsSync(compiler)) fail("LSP gate binaries are missing");
+const proxyBuild = spawnSync(
+  "rustc",
+  [
+    "+1.85",
+    resolve(ROOT, "integration-tests", "lsp-diagnostics", "cancellation-proxy.rs"),
+    "-o",
+    cancellationProxy,
+  ],
+  { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
+);
+if (proxyBuild.error) fail(`cannot build cancellation proxy: ${proxyBuild.error.message}`);
+if (proxyBuild.status !== 0) fail(`${proxyBuild.stdout}${proxyBuild.stderr}`.trim());
+if (!existsSync(cancellationProxy)) fail("LSP cancellation proxy is missing");
 if (
   diagnosticCorpus.kind !== "pliegocss-lsp-diagnostic-corpus" ||
   diagnosticCorpus.schemaVersion !== 1 ||
@@ -185,10 +199,15 @@ for (const item of diagnosticCorpus.cases) {
 
 const child = spawn(
   lsp,
-  ["--pliego-cssc", compiler, "--seed", "--project-index", "out/pliego.index.json"],
+  ["--pliego-cssc", cancellationProxy, "--seed", "--project-index", "out/pliego.index.json"],
   {
     cwd: workspace,
     stdio: ["pipe", "pipe", "pipe"],
+    env: {
+      ...process.env,
+      PLIEGOCSS_REAL_COMPILER: compiler,
+      PLIEGOCSS_CANCELLATION_MARKER: resolve(workspace, "cancellation.pid"),
+    },
   },
 );
 const output = [];
@@ -209,6 +228,25 @@ async function waitForOutput(fragment, offset = 0, timeoutMs = 5000) {
     await new Promise((resolveDelay) => setTimeout(resolveDelay, 25));
   }
   fail(`LSP did not emit ${JSON.stringify(fragment)} within ${timeoutMs} ms`);
+}
+
+async function waitForFile(path, timeoutMs = 5000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (existsSync(path)) return;
+    await new Promise((resolveDelay) => setTimeout(resolveDelay, 10));
+  }
+  fail(`LSP cancellation child did not create ${path} within ${timeoutMs} ms`);
+}
+
+function processIsAlive(pid) {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    if (error?.code === "ESRCH") return false;
+    throw error;
+  }
 }
 
 const uri = pathToFileURL(resolve(workspace, "src", "view.rs")).href;
@@ -273,7 +311,42 @@ send({
   params: { textDocument: { uri }, options: { tabSize: 4, insertSpaces: true } },
 });
 await waitForOutput("unknown utility `unknown-thing`");
-const pcxVersion = 11;
+const cancellationMarker = resolve(workspace, "cancellation.pid");
+const cancellationVersion = 11;
+send({
+  jsonrpc: "2.0",
+  method: "textDocument/didChange",
+  params: {
+    textDocument: { uri, version: cancellationVersion },
+    contentChanges: [{ text: 'fn view(){let _=pc!("cancel-me");}' }],
+  },
+});
+await waitForFile(cancellationMarker);
+const cancelledPid = Number(readFileSync(cancellationMarker, "utf8").trim());
+if (!Number.isSafeInteger(cancelledPid) || cancelledPid <= 0) {
+  fail("cancellation proxy wrote an invalid process id");
+}
+const recoveryVersion = 12;
+const recoveryText = 'fn view(){let _=pc!("unknown-after-cancel");}';
+const recoveryOffset = Buffer.concat(output).length;
+const cancellationStarted = Date.now();
+send({
+  jsonrpc: "2.0",
+  method: "textDocument/didChange",
+  params: {
+    textDocument: { uri, version: recoveryVersion },
+    contentChanges: [{ text: recoveryText }],
+  },
+});
+await waitForOutput("unknown utility `unknown-after-cancel`", recoveryOffset, 5000);
+const cancellationLatencyMs = Date.now() - cancellationStarted;
+const processDeadline = Date.now() + 2000;
+while (Date.now() < processDeadline && processIsAlive(cancelledPid)) {
+  await new Promise((resolveDelay) => setTimeout(resolveDelay, 10));
+}
+if (processIsAlive(cancelledPid)) fail("stale semantic compiler child remained alive");
+
+const pcxVersion = 13;
 const pcxText =
   'fn view(){let _=pcx!("flex",if a{"opacity-50"}else{"block"},if b{"opacity-50"}else{"grid"});}';
 send({
@@ -286,7 +359,7 @@ send({
 });
 await waitForOutput('"code":"PCX003"');
 const corpusRuns = [];
-let corpusVersion = 12;
+let corpusVersion = 14;
 for (const item of diagnosticCorpus.cases) {
   const sourceText =
     item.kind === "style" ? `fn view(){let _=pc!("${item.style}");}` : item.source;
@@ -399,6 +472,22 @@ if (
     )}`,
   );
 }
+const cancelledVersionMessages = published.filter(
+  (message) =>
+    message.params?.version === cancellationVersion &&
+    message.params?.diagnostics?.some((diagnostic) => diagnostic.code === "PCL001"),
+);
+if (cancelledVersionMessages.length !== 0) {
+  fail("cancelled semantic process leaked a tooling diagnostic");
+}
+const recoveryMessages = published.filter(
+  (message) =>
+    message.params?.version === recoveryVersion &&
+    message.params?.diagnostics?.some((diagnostic) => diagnostic.code === "PCS001"),
+);
+if (recoveryMessages.length !== 1) {
+  fail("semantic worker did not recover after forceful cancellation");
+}
 for (const run of corpusRuns) {
   const diagnostics = published
     .filter((message) => message.params?.version === run.version)
@@ -469,6 +558,9 @@ process.stdout.write(
     semanticVersion: semanticMessages[0].params.version,
     staleSemanticResults: 0,
     protocolResponsiveDuringDebounce: true,
+    forcefulCancellation: true,
+    cancelledCompilerPid: cancelledPid,
+    cancellationRecoveryMs: cancellationLatencyMs,
     pcxDiagnostic: pcxDiagnostic.code,
     pcxVersion: pcxMessages[0].params.version,
     pcxRange: pcxDiagnostic.range,

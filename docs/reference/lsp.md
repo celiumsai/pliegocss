@@ -76,8 +76,10 @@ replaces the complete literal token with a newly escaped ordinary Rust string.
   is capped at 256 semantic literal checks. Exceeding that boundary emits `PCL002` rather than
   starting an unbounded number of compiler processes.
 - Full-buffer changes replace the pending semantic job for that URI and restart a 150 ms debounce.
-  Due jobs run on a dedicated worker instead of the JSON-RPC thread. A result is published only
-  when its document version still matches the open buffer, so an in-flight stale result is discarded.
+  Due jobs run on a dedicated worker instead of the JSON-RPC thread. A per-URI version registry
+  terminates and reaps the direct compiler child when its snapshot becomes stale; cancelled work is
+  neither cached nor published. Stdout and stderr are drained concurrently so a full process pipe
+  cannot prevent cancellation.
 - Multi-clause `pcx!` invocations are projected into one bounded synthetic Rust source containing
   only visible utility literals. The worker delegates that document to same-version
   `pliego-cssc check --source`, accepts only compiler `PCX003` cross-clause findings, and maps the
@@ -93,8 +95,9 @@ replaces the complete literal token with a newly escaped ordinary Rust string.
 The current diagnostic pass covers Rust parsing, macro extraction, PliegoCSS syntax, canonical
 formatting, and theme-aware compiler validation of every bounded individual literal. Local findings
 publish immediately; uncached compiler checks are debounced and run serially in the background.
-Version cancellation is cooperative at the publication boundary: PliegoCSS discards stale results
-but does not forcibly terminate a compiler process that already started. Compiler-backed `PCX003`
+Cancellation is scoped to the direct `pliego-cssc` child for one URI/version; PliegoCSS does not
+claim arbitrary descendant process-tree termination for a replacement compiler executable.
+Compiler-backed `PCX003`
 parity now covers semantic overlaps and exact duplicates across independently selectable clauses.
 The versioned seven-case negative corpus freezes code, message, and exact range equality for
 representative parser, compiler, scanner, formatting, and composition failures. Broader code,
@@ -104,7 +107,7 @@ complete CLI/editor diagnostic equality.
 ## Current non-goals
 
 This candidate does not yet provide incremental document changes, workspace folders, code actions,
-semantic tokens, forceful child-process cancellation, or a hosted multi-editor matrix. Those remain
+semantic tokens, or a hosted multi-editor matrix. Those remain
 release gates; the existence
 of the stdio server and initial VS Code package does not close the full F6 editor-tooling task.
 
@@ -122,7 +125,9 @@ to select the exact physical declaration in its verified stylesheet.
 It then sends a burst of full-buffer versions ending in an unknown utility, requires the protocol
 to answer a formatting request before semantic publication, and accepts exactly one version-10
 `PCS001` result with the compiler's message and exact UTF-16 range. No stale semantic result may
-survive the version check. A subsequent version 11 contains an exact semantic duplicate across two
+survive the version check. The gate then starts a 30-second blocking compiler proxy, replaces that
+document version, proves the stale PID exits, and requires a fresh compiler result within five
+seconds. A subsequent version 13 contains an exact semantic duplicate across two
 independent `pcx!` clauses; the gate requires one compiler `PCX003` mapped to the complete literal
 token in the second clause. Finally, diagnostic corpus schema 1 applies seven additional buffer
 versions and compares each frozen code, message, and byte/UTF-16 range against the CLI or shared

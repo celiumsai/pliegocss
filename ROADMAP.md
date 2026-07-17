@@ -280,8 +280,10 @@ ETA: 3–5 días
 - [x] Añadir cliente Neovim built-in LSP sin binarios embebidos y gate real 0.12.4 en Windows/Debian.
 - [x] Congelar corpus diagnóstico schema 1 de siete casos y comparar código/mensaje/rango exactos
   entre CLI, formatter y LSP en Windows/Debian.
-- [ ] Añadir cancelación forzosa del compilador en curso cuando aporte valor y evidencia completa
-  de paridad diagnóstica CLI/LSP.
+- [x] Cancelar y recolectar el child directo del compilador cuando una nueva versión por URI vuelve
+  obsoleto su snapshot; un proxy real de 30 segundos prueba terminación y recuperación en Windows y
+  Debian.
+- [ ] Completar paridad diagnóstica CLI/LSP para todos los códigos, severidades, sugerencias y fixes.
 - [x] Mejorar diagnósticos usando los cinco fixtures reales.
 - [x] Crear documentación de CLI, configuración, troubleshooting y setup inicial VS Code/Neovim.
 - [x] Ejecutar doctests y ejemplos del workspace desde el workflow de CI.

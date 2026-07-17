@@ -6,13 +6,14 @@ use std::collections::BTreeMap;
 use std::ffi::OsString;
 use std::fmt::Write as _;
 use std::fs::{OpenOptions, remove_file};
-use std::io::{self, BufRead, BufReader, Write};
+use std::io::{self, BufRead, BufReader, Read, Write};
 #[cfg(unix)]
 use std::os::unix::fs::OpenOptionsExt;
 use std::path::{Path, PathBuf};
-use std::process::{Command, Output};
+use std::process::{Command, Output, Stdio};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::mpsc::{self, Receiver, RecvTimeoutError, Sender};
+use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -26,6 +27,7 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 const MAX_SEMANTIC_CACHE_ITEMS: usize = 4_096;
 const MAX_SEMANTIC_CHECKS_PER_DOCUMENT: usize = 256;
 const SEMANTIC_DEBOUNCE: Duration = Duration::from_millis(150);
+const SEMANTIC_PROCESS_POLL: Duration = Duration::from_millis(10);
 static TEMP_SOURCE_COUNTER: AtomicU64 = AtomicU64::new(0);
 
 /// Exact process and theme selection used by delegated tooling requests.
@@ -168,12 +170,20 @@ impl SemanticEngine {
         }
     }
 
-    fn findings(&mut self, root: &Path, style: &str) -> Result<&[Value], String> {
+    fn findings(
+        &mut self,
+        root: &Path,
+        style: &str,
+        cancellation: &Cancellation,
+        job: &SemanticJob,
+    ) -> Result<Option<&[Value]>, String> {
         if !self.cache.contains_key(style) {
             if self.cache.len() >= MAX_SEMANTIC_CACHE_ITEMS {
                 self.cache.clear();
             }
-            let result = self.run_check(root, style);
+            let Some(result) = self.run_check(root, style, cancellation, job)? else {
+                return Ok(None);
+            };
             self.cache.insert(style.to_owned(), result);
         }
         self.cache
@@ -181,15 +191,24 @@ impl SemanticEngine {
             .expect("semantic result inserted")
             .as_deref()
             .map_err(Clone::clone)
+            .map(Some)
     }
 
-    fn pcx_findings(&mut self, root: &Path, source: &str) -> Result<&[Value], String> {
+    fn pcx_findings(
+        &mut self,
+        root: &Path,
+        source: &str,
+        cancellation: &Cancellation,
+        job: &SemanticJob,
+    ) -> Result<Option<&[Value]>, String> {
         let key = format!("\0pcx:{source}");
         if !self.cache.contains_key(&key) {
             if self.cache.len() >= MAX_SEMANTIC_CACHE_ITEMS {
                 self.cache.clear();
             }
-            let result = self.run_source_check(root, source);
+            let Some(result) = self.run_source_check(root, source, cancellation, job)? else {
+                return Ok(None);
+            };
             self.cache.insert(key.clone(), result);
         }
         self.cache
@@ -197,9 +216,16 @@ impl SemanticEngine {
             .expect("pcx semantic result inserted")
             .as_deref()
             .map_err(Clone::clone)
+            .map(Some)
     }
 
-    fn run_check(&self, root: &Path, style: &str) -> Result<Vec<Value>, String> {
+    fn run_check(
+        &self,
+        root: &Path,
+        style: &str,
+        cancellation: &Cancellation,
+        job: &SemanticJob,
+    ) -> Result<Option<Result<Vec<Value>, String>>, String> {
         let mut process = Command::new(&self.config.compiler);
         process
             .arg("--diagnostic-format")
@@ -213,13 +239,19 @@ impl SemanticEngine {
         } else if let Some(config) = &self.config.config {
             process.arg("--config").arg(config);
         }
-        let output = process
-            .output()
-            .map_err(|error| format!("cannot run pliego-cssc check: {error}"))?;
-        parse_check_output(&output)
+        let Some(output) = cancellable_output(&mut process, cancellation, job)? else {
+            return Ok(None);
+        };
+        Ok(Some(parse_check_output(&output)))
     }
 
-    fn run_source_check(&self, root: &Path, source: &str) -> Result<Vec<Value>, String> {
+    fn run_source_check(
+        &self,
+        root: &Path,
+        source: &str,
+        cancellation: &Cancellation,
+        job: &SemanticJob,
+    ) -> Result<Option<Result<Vec<Value>, String>>, String> {
         let temporary = TemporarySource::create(source)?;
         let mut process = Command::new(&self.config.compiler);
         process
@@ -234,11 +266,92 @@ impl SemanticEngine {
         } else if let Some(config) = &self.config.config {
             process.arg("--config").arg(config);
         }
-        let output = process
-            .output()
-            .map_err(|error| format!("cannot run pliego-cssc source check: {error}"))?;
-        parse_check_output(&output)
+        let Some(output) = cancellable_output(&mut process, cancellation, job)? else {
+            return Ok(None);
+        };
+        Ok(Some(parse_check_output(&output)))
     }
+}
+
+type Cancellation = Arc<Mutex<BTreeMap<String, i64>>>;
+
+fn semantic_job_is_current(cancellation: &Cancellation, job: &SemanticJob) -> bool {
+    cancellation
+        .lock()
+        .map(|versions| versions.get(&job.uri) == Some(&job.version))
+        .unwrap_or(false)
+}
+
+fn cancellable_output(
+    process: &mut Command,
+    cancellation: &Cancellation,
+    job: &SemanticJob,
+) -> Result<Option<Output>, String> {
+    if !semantic_job_is_current(cancellation, job) {
+        return Ok(None);
+    }
+    process.stdout(Stdio::piped()).stderr(Stdio::piped());
+    let mut child = process
+        .spawn()
+        .map_err(|error| format!("cannot run pliego-cssc check: {error}"))?;
+    let mut stdout = child
+        .stdout
+        .take()
+        .ok_or("pliego-cssc stdout is unavailable")?;
+    let mut stderr = child
+        .stderr
+        .take()
+        .ok_or("pliego-cssc stderr is unavailable")?;
+    let stdout_reader = thread::spawn(move || {
+        let mut bytes = Vec::new();
+        stdout.read_to_end(&mut bytes).map(|_| bytes)
+    });
+    let stderr_reader = thread::spawn(move || {
+        let mut bytes = Vec::new();
+        stderr.read_to_end(&mut bytes).map(|_| bytes)
+    });
+    loop {
+        if !semantic_job_is_current(cancellation, job) {
+            if child
+                .try_wait()
+                .map_err(|error| format!("cannot poll stale pliego-cssc check: {error}"))?
+                .is_none()
+            {
+                child
+                    .kill()
+                    .map_err(|error| format!("cannot cancel stale pliego-cssc check: {error}"))?;
+            }
+            child
+                .wait()
+                .map_err(|error| format!("cannot reap stale pliego-cssc check: {error}"))?;
+            join_process_reader(stdout_reader, "stdout")?;
+            join_process_reader(stderr_reader, "stderr")?;
+            return Ok(None);
+        }
+        if let Some(status) = child
+            .try_wait()
+            .map_err(|error| format!("cannot poll pliego-cssc check: {error}"))?
+        {
+            let stdout = join_process_reader(stdout_reader, "stdout")?;
+            let stderr = join_process_reader(stderr_reader, "stderr")?;
+            return Ok(Some(Output {
+                status,
+                stdout,
+                stderr,
+            }));
+        }
+        thread::sleep(SEMANTIC_PROCESS_POLL);
+    }
+}
+
+fn join_process_reader(
+    reader: thread::JoinHandle<Result<Vec<u8>, io::Error>>,
+    stream: &str,
+) -> Result<Vec<u8>, String> {
+    reader
+        .join()
+        .map_err(|_| format!("pliego-cssc {stream} reader panicked"))?
+        .map_err(|error| format!("cannot read pliego-cssc {stream}: {error}"))
 }
 
 fn parse_check_output(output: &Output) -> Result<Vec<Value>, String> {
@@ -339,9 +452,15 @@ pub fn serve(
 ) -> Result<(), String> {
     let mut server = Server::new(config.clone());
     let mut pending = BTreeMap::<String, PendingSemantic>::new();
+    let cancellation = Arc::new(Mutex::new(BTreeMap::<String, i64>::new()));
     let (event_sender, events) = mpsc::channel::<ProtocolEvent>();
     let (job_sender, jobs) = mpsc::channel::<SemanticJob>();
-    spawn_semantic_worker(config, jobs, event_sender.clone());
+    spawn_semantic_worker(
+        config,
+        jobs,
+        event_sender.clone(),
+        Arc::clone(&cancellation),
+    );
 
     thread::scope(|scope| -> Result<(), String> {
         let input_sender = event_sender.clone();
@@ -386,7 +505,13 @@ pub fn serve(
                         {
                             write_message(&mut output, &notification)?;
                         }
-                        update_semantic_schedule(&server, method, &params, &mut pending)?;
+                        update_semantic_schedule(
+                            &server,
+                            method,
+                            &params,
+                            &mut pending,
+                            &cancellation,
+                        )?;
                     }
                 }
                 Some(ProtocolEvent::Semantic(result)) => {
@@ -404,6 +529,10 @@ pub fn serve(
                 None => dispatch_due_jobs(&job_sender, &mut pending)?,
             }
         }
+        cancellation
+            .lock()
+            .map_err(|_| "semantic cancellation registry is poisoned")?
+            .clear();
         drop(job_sender);
         Ok(())
     })
@@ -413,11 +542,18 @@ fn spawn_semantic_worker(
     config: ServerConfig,
     jobs: Receiver<SemanticJob>,
     events: Sender<ProtocolEvent>,
+    cancellation: Cancellation,
 ) {
     thread::spawn(move || {
         let mut engine = SemanticEngine::new(config);
         while let Ok(job) = jobs.recv() {
-            let diagnostics = semantic_document_diagnostics(&mut engine, &job);
+            if !semantic_job_is_current(&cancellation, &job) {
+                continue;
+            }
+            let Some(diagnostics) = semantic_document_diagnostics(&mut engine, &job, &cancellation)
+            else {
+                continue;
+            };
             if events
                 .send(ProtocolEvent::Semantic(SemanticResult {
                     uri: job.uri,
@@ -474,6 +610,7 @@ fn update_semantic_schedule(
     method: &str,
     params: &Value,
     pending: &mut BTreeMap<String, PendingSemantic>,
+    cancellation: &Cancellation,
 ) -> Result<(), String> {
     if matches!(method, "textDocument/didOpen" | "textDocument/didChange") {
         let uri = string_field(
@@ -481,6 +618,10 @@ fn update_semantic_schedule(
             "uri",
         )?;
         let document = server.documents.get(uri).ok_or("document is not open")?;
+        cancellation
+            .lock()
+            .map_err(|_| "semantic cancellation registry is poisoned")?
+            .insert(uri.to_owned(), document.version);
         pending.insert(
             uri.to_owned(),
             PendingSemantic {
@@ -499,6 +640,10 @@ fn update_semantic_schedule(
             "uri",
         )?;
         pending.remove(uri);
+        cancellation
+            .lock()
+            .map_err(|_| "semantic cancellation registry is poisoned")?
+            .remove(uri);
     }
     Ok(())
 }
@@ -651,19 +796,30 @@ fn local_diagnostics(uri: &str, source: &str) -> Vec<Value> {
     values
 }
 
-fn semantic_document_diagnostics(engine: &mut SemanticEngine, job: &SemanticJob) -> Vec<Value> {
+fn semantic_document_diagnostics(
+    engine: &mut SemanticEngine,
+    job: &SemanticJob,
+    cancellation: &Cancellation,
+) -> Option<Vec<Value>> {
     let Ok(report) = scan_source_named(&job.uri, &job.text) else {
-        return Vec::new();
+        return Some(Vec::new());
     };
     let mut values = Vec::new();
     let mut semantic_checks = 0;
     let mut semantic_limit_reported = false;
+    let mut cancelled = false;
     visit_literals(&report, |_, literal| {
-        if parse_style_list(&literal.value).is_err() {
+        if cancelled || parse_style_list(&literal.value).is_err() {
             return;
         }
         if semantic_checks < MAX_SEMANTIC_CHECKS_PER_DOCUMENT {
-            values.extend(semantic_diagnostics(engine, &job.root, &job.text, literal));
+            let Some(diagnostics) =
+                semantic_diagnostics(engine, &job.root, &job.text, literal, cancellation, job)
+            else {
+                cancelled = true;
+                return;
+            };
+            values.extend(diagnostics);
             semantic_checks += 1;
         } else if !semantic_limit_reported {
             values.push(diagnostic(
@@ -676,10 +832,14 @@ fn semantic_document_diagnostics(engine: &mut SemanticEngine, job: &SemanticJob)
             semantic_limit_reported = true;
         }
     });
-    if !semantic_limit_reported {
-        values.extend(pcx_document_diagnostics(engine, job, &report));
+    if cancelled {
+        return None;
     }
-    values
+    if !semantic_limit_reported {
+        let diagnostics = pcx_document_diagnostics(engine, job, &report, cancellation)?;
+        values.extend(diagnostics);
+    }
+    Some(values)
 }
 
 struct SyntheticPcxSource {
@@ -751,30 +911,32 @@ fn pcx_document_diagnostics(
     engine: &mut SemanticEngine,
     job: &SemanticJob,
     report: &ScanReport,
-) -> Vec<Value> {
+    cancellation: &Cancellation,
+) -> Option<Vec<Value>> {
     let synthetic = match synthetic_pcx_source(report) {
         Ok(Some(synthetic)) => synthetic,
-        Ok(None) => return Vec::new(),
+        Ok(None) => return Some(Vec::new()),
         Err(error) => {
-            return vec![diagnostic(
+            return Some(vec![diagnostic(
                 &job.text,
                 report.invocations[0].range,
                 "PCL001",
                 &format!("compiler-backed pcx diagnostics unavailable: {error}"),
                 1,
-            )];
+            )]);
         }
     };
-    let findings = match engine.pcx_findings(&job.root, &synthetic.source) {
-        Ok(findings) => findings,
+    let findings = match engine.pcx_findings(&job.root, &synthetic.source, cancellation, job) {
+        Ok(Some(findings)) => findings,
+        Ok(None) => return None,
         Err(error) => {
-            return vec![diagnostic(
+            return Some(vec![diagnostic(
                 &job.text,
                 synthetic.fallback,
                 "PCL001",
                 &format!("compiler-backed pcx diagnostics unavailable: {error}"),
                 1,
-            )];
+            )]);
         }
     };
     let mut diagnostics = Vec::new();
@@ -785,17 +947,17 @@ fn pcx_document_diagnostics(
         match pcx_diagnostic(&job.text, &synthetic, finding) {
             Ok(value) => diagnostics.push(value),
             Err(error) => {
-                return vec![diagnostic(
+                return Some(vec![diagnostic(
                     &job.text,
                     synthetic.fallback,
                     "PCL001",
                     &format!("invalid compiler pcx diagnostic: {error}"),
                     1,
-                )];
+                )]);
             }
         }
     }
-    diagnostics
+    Some(diagnostics)
 }
 
 fn pcx_diagnostic(
@@ -854,17 +1016,20 @@ fn semantic_diagnostics(
     root: &Path,
     source: &str,
     literal: &StyleLiteral,
-) -> Vec<Value> {
-    let findings = match engine.findings(root, &literal.value) {
-        Ok(findings) => findings,
+    cancellation: &Cancellation,
+    job: &SemanticJob,
+) -> Option<Vec<Value>> {
+    let findings = match engine.findings(root, &literal.value, cancellation, job) {
+        Ok(Some(findings)) => findings,
+        Ok(None) => return None,
         Err(error) => {
-            return vec![diagnostic(
+            return Some(vec![diagnostic(
                 source,
                 literal.range,
                 "PCL001",
                 &format!("compiler-backed diagnostics unavailable: {error}"),
                 1,
-            )];
+            )]);
         }
     };
     let mut diagnostics = Vec::with_capacity(findings.len());
@@ -872,17 +1037,17 @@ fn semantic_diagnostics(
         match semantic_diagnostic(source, literal, finding) {
             Ok(diagnostic) => diagnostics.push(diagnostic),
             Err(error) => {
-                return vec![diagnostic(
+                return Some(vec![diagnostic(
                     source,
                     literal.range,
                     "PCL001",
                     &format!("invalid compiler diagnostic: {error}"),
                     1,
-                )];
+                )]);
             }
         }
     }
-    diagnostics
+    Some(diagnostics)
 }
 
 fn semantic_diagnostic(

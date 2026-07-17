@@ -253,8 +253,9 @@ fixture acotado.
   Windows/Debian con definition, `PCS001` y `PCX003`.
 - [x] Congelar corpus diagnóstico schema 1 de siete casos con igualdad exacta código/mensaje/rango
   CLI/LSP en Windows y Debian.
-- [ ] Añadir cancelación forzosa del child ya iniciado cuando sea justificable y evidencia completa
-  de igualdad CLI/LSP para todos los códigos, severidades, sugerencias y fixes.
+- [x] Añadir cancelación forzosa y recolección del child directo ya iniciado cuando una versión por
+  URI vuelve obsoleto su snapshot, con proxy bloqueante real en Windows y Debian.
+- [ ] Completar igualdad CLI/LSP para todos los códigos, severidades, sugerencias y fixes.
 - [x] Añadir formatter determinista y `--check` para utilidades explícitas y archivos line-oriented.
 - [x] Añadir diagnósticos y reemplazos read-only sobre literales Rust.
 - [x] Añadir envelope JSON estable para diagnósticos de comandos one-shot.

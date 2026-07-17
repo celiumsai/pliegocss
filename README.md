@@ -115,7 +115,8 @@ The workspace is unreleased at `0.0.0`; syntax and crate boundaries may still ch
   duplication with explicit ownership, deltas, and reviewed exceptions. Declarative schema-1/schema-2
   bundle plans compile explicit source partitions from one snapshot. An initial standard stdio LSP
   transport now provides completion, hover, syntax/format diagnostics, bounded compiler-backed
-  semantic checks with a 150 ms debounce, stale-version rejection, whole-literal formatting, and
+  semantic checks with a 150 ms debounce, per-URI stale-version cancellation of the direct compiler
+  child, whole-literal formatting, and
   opt-in integrity-verified Project Index navigation
   to final CSS declarations. Cross-clause `pcx!` conflicts are delegated to the same compiler
   source-check path and mapped back to the original Rust branch token; an unreleased
