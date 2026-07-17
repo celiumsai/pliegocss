@@ -1,6 +1,7 @@
 # Token-usage report schema 1
 
-Status: **implemented as an opt-in bundle artifact; clean release replay pending**
+Status: **implemented as an opt-in bundle artifact; exact clean package replay green at commit
+`af9c2c5`, hosted release evidence pending**
 
 `bundle --usage-report` emits two adjacent, read-only reports:
 

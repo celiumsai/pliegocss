@@ -1,6 +1,6 @@
 # Packaging status
 
-Status: **native filesystem-event watch and the complete exact-clean `8e63039` Rust package replay
+Status: **token-usage reporting and the complete exact-clean `af9c2c5` Rust package replay
 passed; no registry or editor Marketplace upload performed**
 
 The publishable workspace boundary has seventeen crates in six dependency waves. `pliego-css-usage` and
@@ -18,6 +18,21 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## Token-usage report clean replay — 2026-07-17
+
+The exact clean `af9c2c5` Debian WSL2 gate used native Linux Node 24.14.0, Cargo 1.96, and an
+isolated Linux target. It packaged and extracted all seventeen archives, compiled the complete
+all-feature graph in release mode, and executed the twelve-package Rust 1.85 downstream consumer,
+including the public token-report parser/query surface.
+
+`pliego-cssc` measured 61,119 compressed bytes (321 bytes of margin, SHA-256
+`0068531c753aad74664892ba484dec8949d0d9435fcadd4472e80f60d18eb949`). Other tight archives
+remained below the unchanged 61,440-byte ceiling: `pliego-css-control` measured 60,966 bytes (474
+bytes of margin), `pliego-css-compiler` 60,479 (961 bytes), and `pliego-css-build` 60,259 (1,181
+bytes). The expanded `pliego-css-usage` archive measured 26,690 bytes (34,750 bytes of margin,
+SHA-256 `19246dc3ea3bf97ca4e51b051e83b28fa34f6c8b8efa2d5975e414e7a685c578`). The worktree was
+clean, publication remained disabled, and the ceiling was not raised.
 
 ## Native filesystem-event watch clean replay — 2026-07-17
 
