@@ -1,6 +1,6 @@
 # Packaging status
 
-Status: **Tailwind auxiliary inventory passed the complete exact-clean `3bd2d41` replay; no
+Status: **Tailwind template-candidate inventory passed the complete exact-clean `386973e` replay; no
 registry upload performed**
 
 The publishable workspace boundary has six dependency waves. `pliego-css-usage` and
@@ -18,6 +18,25 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## Tailwind template-candidate clean replay — 2026-07-16
+
+The exact clean `386973e` Debian WSL2 gate packaged and extracted all fifteen archives with Cargo
+1.96, compiled the extracted graph in release mode, and passed the registry-shaped downstream
+consumer with Rust 1.85. Focused Debian evidence also passed 34 source tests, the versioned CLI
+migration fixture, strict source Clippy, and the complete public API smoke. Publication remained
+disabled, the worktree was clean, and the fixed 61,440-byte ceiling was not raised.
+
+| Package | Compressed bytes | Remaining margin | SHA-256 |
+|---|---:|---:|---|
+| `pliego-css-source` | 44,084 | 17,356 | `3055cb123dfac3a0e560529ef88f3373ae2b8cc9c2049e8cbb58676d9e1af086` |
+| `pliego-cssc` | 61,378 | 62 | `56ab3f6bf26e88d26eab30fd2deed518ab7bb8e0126aaf4141e0cb7d5143753e` |
+
+Declared templates now expose exact literal `class`/`className` candidates and conservative
+dynamic observations from tag attributes. The scanner ignores HTML comments and unrelated strings,
+but remains deliberately lexical: it does not execute or fully parse JSX, Vue, Svelte, Astro, MDX,
+PHP, or application code. Config/plugin semantics, discovery crawling, a real migration corpus, and
+R0.8 remain open. The CLI package remains closed to additive feature growth.
 
 ## Tailwind auxiliary-inventory clean replay — 2026-07-16
 
