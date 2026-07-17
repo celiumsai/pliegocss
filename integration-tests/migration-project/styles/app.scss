@@ -1,0 +1,8 @@
+@use "sass:math";
+@use "./tokens.scss";
+@use "./mixins";
+
+.card {
+  gap: math.div($space, 2);
+  color: $brand;
+}

@@ -154,3 +154,9 @@ that an intermediate revision never existed, crawl undeclared sources, reproduce
 resolution, discover templates or JavaScript consumers, evaluate Tailwind configuration/plugins, or
 identify downstream CSS Modules composition consumers. Those surfaces and real-project fixtures
 remain required before R0.8 can close.
+
+The versioned `integration-tests/migration-project` fixture exercises all three source families in
+one declaration, including exact resolved Sass/CSS/CSS Modules targets, local CSS Modules
+composition, package/built-in external edges, extensionless Sass unresolved lookup, and an
+unsupported Tailwind plugin seam. It is a representative cross-toolchain contract fixture, not yet
+a corpus of real migrated applications.

@@ -1,0 +1,7 @@
+@import "tailwindcss";
+@reference "./theme.css";
+@plugin "@acme/tailwind-plugin";
+
+@utility content-auto {
+  content-visibility: auto;
+}

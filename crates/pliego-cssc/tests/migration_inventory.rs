@@ -144,3 +144,48 @@ fn inventories_a_closed_declared_project_without_mutation() {
     assert!(!directory.join("migration.inventory.json").exists());
     fs::remove_dir_all(directory).expect("remove fixture");
 }
+
+#[test]
+fn inventories_the_versioned_cross_toolchain_project_fixture() {
+    let fixture =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../integration-tests/migration-project");
+    let output = run(
+        &fixture,
+        &["migration-project-inventory", "migration.project.json"],
+    );
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let document: serde_json::Value =
+        serde_json::from_slice(&output.stdout).expect("fixture project inventory JSON");
+    assert_eq!(document["summary"]["sources"], 6);
+    assert_eq!(document["summary"]["sassSources"], 2);
+    assert_eq!(document["summary"]["tailwindSources"], 2);
+    assert_eq!(document["summary"]["cssModulesSources"], 2);
+    assert_eq!(document["summary"]["dependencies"], 7);
+    assert_eq!(document["summary"]["resolvedDependencies"], 4);
+    assert_eq!(document["summary"]["externalDependencies"], 2);
+    assert_eq!(document["summary"]["unresolvedDependencies"], 1);
+    assert_eq!(document["summary"]["dynamicDependencies"], 0);
+    assert_eq!(document["summary"]["unsupported"], 1);
+    let dependencies = document["dependencies"]
+        .as_array()
+        .expect("dependency observations");
+    assert!(dependencies.iter().any(|edge| {
+        edge["specifier"] == "./tokens.scss"
+            && edge["resolution"] == "resolved"
+            && edge["target"] == "styles/tokens.scss"
+    }));
+    assert!(
+        dependencies
+            .iter()
+            .any(|edge| { edge["specifier"] == "./mixins" && edge["resolution"] == "unresolved" })
+    );
+    assert!(
+        dependencies.iter().any(|edge| {
+            edge["kind"] == "css-modules-composes" && edge["resolution"] == "local"
+        })
+    );
+}

@@ -344,7 +344,8 @@ también requiere E0–E4 y todos los Must de R0 en el contrato estratégico.
   doble inventario canónico y deriva dependencias Sass/CSS/CSS Modules con resolución local exacta
   fail-closed y clasificaciones external/unresolved/local/dynamic; la declaración JSON schema 1
   permite persistir el mismo source set cerrado y el CLI read-only lo carga con límites/no-follow y
-  emite el snapshot por stdout. Faltan crawling y
+  emite el snapshot por stdout. Un fixture cross-toolchain versionado cubre las tres familias y las
+  clasificaciones de edge; faltan crawling y
   resolución específica del toolchain, templates/config/plugins, composition consumers y fixtures
   de migración reales antes de escribir la guía completa.
 - [ ] Crear tutorial completo, how-to guides y referencia de API.

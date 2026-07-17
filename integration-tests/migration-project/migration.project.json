@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "sources": [
+    { "sourceKind": "sass", "file": "styles/app.scss" },
+    { "sourceKind": "sass", "file": "styles/tokens.scss" },
+    { "sourceKind": "tailwind", "file": "styles/app.css" },
+    { "sourceKind": "tailwind", "file": "styles/theme.css" },
+    { "sourceKind": "css-modules", "file": "styles/card.module.css" },
+    { "sourceKind": "css-modules", "file": "styles/base.module.css" }
+  ]
+}

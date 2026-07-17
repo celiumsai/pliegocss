@@ -1,0 +1,7 @@
+.card {
+  composes: base from "./base.module.css";
+}
+
+.title {
+  composes: readable;
+}
