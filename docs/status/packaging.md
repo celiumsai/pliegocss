@@ -1,6 +1,6 @@
 # Packaging status
 
-Status: **migration inventory CLI passed the complete exact-clean `ba04e87` replay; no registry
+Status: **confirmed migration project snapshots passed the complete exact-clean `992c33e` replay; no registry
 upload performed**
 
 The publishable workspace boundary has six dependency waves. `pliego-css-usage` and
@@ -18,6 +18,24 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## Confirmed migration project snapshot clean replay — 2026-07-16
+
+The exact clean `992c33e` Debian WSL2 gate packaged and extracted all fifteen archives with Cargo
+1.96, compiled the archive graph in release mode, and passed the registry-shaped downstream
+consumer with Rust 1.85. The consumer compile-checks the new project declaration and immutable
+snapshot types together with the single-file migration surface. Publication remained disabled and
+the fixed 61,440-byte ceiling was not raised.
+
+| Package | Compressed bytes | Remaining margin | SHA-256 |
+|---|---:|---:|---|
+| `pliego-css-source` | 32,367 | 29,073 | `260de25e6e19d7dc58aef290aba2779e66e072dd6b77bc1673fd68bebba73f70` |
+| `pliego-cssc` | 61,266 | 174 | `cd028ee313d286def0f91719980c7a23d66fd17d7cd38cbd2cf1509f66d78492` |
+
+This closes packaging for the core declared-file snapshot: canonical input order, duplicate and
+limit rejection, per-file safe reads, and two equal complete inventory passes. It does not close
+the future project CLI or prove import/config/plugin/template/composition edges, atomic filesystem
+snapshots, real migration projects, registry publication, or R0.8 completion.
 
 ## Migration inventory CLI clean replay — 2026-07-16
 
