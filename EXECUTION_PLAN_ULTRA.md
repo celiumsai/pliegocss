@@ -239,7 +239,9 @@ fixture acotado.
   tipado Vite/Astro que produzca topología/Project Index siguen pendientes.
 - [x] Implementar transporte LSP stdio inicial para completion, hover, diagnósticos de buffer y
   formatting, negociando posiciones UTF-16 sin duplicar catálogo/explain.
-- [ ] Implementar clientes de editor, navegación Project Index y paridad semántica CLI/LSP.
+- [x] Empaquetar el cliente VS Code inicial sin descargar ni ocultar binarios nativos.
+- [ ] Añadir gate real de extension host, otro cliente, navegación Project Index y paridad semántica
+  CLI/LSP.
 - [x] Añadir formatter determinista y `--check` para utilidades explícitas y archivos line-oriented.
 - [x] Añadir diagnósticos y reemplazos read-only sobre literales Rust.
 - [x] Añadir envelope JSON estable para diagnósticos de comandos one-shot.

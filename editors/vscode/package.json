@@ -1,0 +1,99 @@
+{
+  "name": "pliegocss-vscode",
+  "displayName": "PliegoCSS",
+  "description": "PliegoCSS completion, hover, diagnostics, and Rust literal formatting through the native language server.",
+  "publisher": "celiums",
+  "version": "0.0.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/celiums/pliegocss.git"
+  },
+  "engines": {
+    "vscode": "^1.105.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters",
+    "Formatters"
+  ],
+  "keywords": [
+    "css",
+    "rust",
+    "pliegocss",
+    "pliegors"
+  ],
+  "activationEvents": [
+    "onLanguage:rust"
+  ],
+  "main": "./dist/extension.js",
+  "extensionKind": [
+    "workspace"
+  ],
+  "capabilities": {
+    "virtualWorkspaces": {
+      "supported": false
+    },
+    "untrustedWorkspaces": {
+      "supported": false
+    }
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "pliegocss.restartServer",
+        "title": "PliegoCSS: Restart Language Server"
+      }
+    ],
+    "configuration": {
+      "title": "PliegoCSS",
+      "properties": {
+        "pliegocss.server.path": {
+          "type": "string",
+          "default": "pliego-css-lsp",
+          "scope": "machine-overridable",
+          "description": "Exact path or executable name for pliego-css-lsp. The extension never downloads a server."
+        },
+        "pliegocss.compiler.path": {
+          "type": "string",
+          "default": "pliego-cssc",
+          "scope": "machine-overridable",
+          "description": "Exact path or executable name for the same-version pliego-cssc used by completion and hover."
+        },
+        "pliegocss.theme.mode": {
+          "type": "string",
+          "enum": [
+            "discover",
+            "seed",
+            "config"
+          ],
+          "default": "discover",
+          "description": "Use conventional project discovery, the deterministic seed theme, or one exact config path."
+        },
+        "pliegocss.theme.config": {
+          "type": "string",
+          "default": "pliego.theme.toml",
+          "description": "Theme path passed to --config when pliegocss.theme.mode is config."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "node ./scripts/build.mjs",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "node --test ./tests/*.test.js",
+    "check": "pnpm typecheck && pnpm test && pnpm build",
+    "package": "vsce package --no-dependencies --out ../../target/pliegocss-vscode-0.0.0.vsix"
+  },
+  "dependencies": {
+    "vscode-languageclient": "10.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.0",
+    "@types/vscode": "1.105.0",
+    "@vscode/vsce": "3.9.2",
+    "esbuild": "0.28.1",
+    "typescript": "5.9.3"
+  }
+}

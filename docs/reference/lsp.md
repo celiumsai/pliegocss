@@ -87,3 +87,23 @@ pnpm integration:lsp
 The gate builds both binaries with Rust 1.85, performs one framed stdio session, and asserts UTF-16
 initialization, `FMT001` publication, whole-literal formatting, exact completion replacement,
 compiler-backed hover CSS, clean shutdown, and zero stderr.
+
+## VS Code client candidate
+
+The unreleased client under `editors/vscode` follows the official VS Code language-client pattern
+and selects only file-backed Rust documents. Configure `pliegocss.server.path` and
+`pliegocss.compiler.path` to same-version external binaries; the extension does not download or
+update either executable. Theme mode is explicitly `discover`, `seed`, or `config`.
+
+The client runs in the workspace extension host, uses the first local workspace folder as process
+working directory, restarts on configuration changes or through **PliegoCSS: Restart Language
+Server**, and declares virtual and untrusted workspaces unsupported. Build and inspect its VSIX with:
+
+```console
+pnpm integration:vscode
+```
+
+That gate type-checks the client, tests fail-closed argument construction, bundles its production
+entry, verifies the exact four-file extension payload, packages a VSIX below 256 KiB, and confirms
+that no native server is embedded. The VSIX hash is evidence for one run, not a reproducibility
+claim because the packaging tool may encode timestamps.

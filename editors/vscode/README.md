@@ -1,0 +1,12 @@
+# PliegoCSS for VS Code
+
+This unreleased extension connects file-backed Rust documents to an externally installed
+`pliego-css-lsp` process. It provides the completion, hover, diagnostics, and formatting capabilities
+advertised by that server. The extension never downloads or updates native executables.
+
+Configure `pliegocss.server.path` and `pliegocss.compiler.path` to exact same-version binaries. Set
+`pliegocss.theme.mode` to `discover`, `seed`, or `config`; config mode also requires
+`pliegocss.theme.config`. Use **PliegoCSS: Restart Language Server** after changing external files.
+
+Only the first local workspace folder is currently used as the native process working directory.
+Virtual and untrusted workspaces are explicitly unsupported.

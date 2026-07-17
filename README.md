@@ -115,7 +115,8 @@ The workspace is unreleased at `0.0.0`; syntax and crate boundaries may still ch
   duplication with explicit ownership, deltas, and reviewed exceptions. Declarative schema-1/schema-2
   bundle plans compile explicit source partitions from one snapshot. An initial standard stdio LSP
   transport now provides completion, hover, syntax/format diagnostics, and whole-literal formatting;
-  editor packaging, Project Index navigation, and semantic diagnostic parity remain open.
+  an unreleased VS Code client packages that transport without embedded binaries. A real extension
+  host gate, additional editors, Project Index navigation, and semantic diagnostic parity remain open.
 - `pliego-css-config` implements the versioned DTCG 2025.10 format bridge, a bounded same-document
   Resolver profile, and the canonical token graph with aliases, derived values, deprecations,
   provenance, cycle rejection, and validated theme permutations. Direct CLI `--tokens` selection
