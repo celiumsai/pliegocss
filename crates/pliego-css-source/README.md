@@ -71,12 +71,15 @@ assert_eq!(inventory.constructs().len(), 2);
 Schema 1 binds the exact path, byte count, SHA-256, construct ranges, dynamic/unsupported counts,
 and Tailwind Preflight reliance. `static` means only that a lexical prelude was inventoried; it does
 not authorize transformation. `pliego-cssc migration-inventory` exposes the producer through a
-read-only stdout contract. Project/import/config/template graphs remain open.
+read-only stdout contract.
 
 For multi-file tooling, `MigrationProject` accepts only explicit typed source declarations, sorts
 them canonically, rejects duplicate paths, and inventories the complete set twice before emitting a
-schema-1 project snapshot. This confirms a stable declared-file view; it does not yet resolve import,
-template, config, plugin, or composition-consumer edges.
+schema-1 project snapshot. The project snapshot derives conservative Sass, CSS import/reference,
+and CSS Modules/ICSS dependency observations. Exact supported local targets must exist in the
+declared set with the expected kind; package and built-in references stay external, while dynamic or
+toolchain-specific resolution remains visible without guessing. It does not crawl imports or yet
+inventory template, config, plugin, or downstream composition-consumer edges.
 
 ## Stability
 

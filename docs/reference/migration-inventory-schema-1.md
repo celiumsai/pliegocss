@@ -118,8 +118,10 @@ class mappings.
 - constructs are sorted by exact byte range and kind, then deduplicated;
 - the exact source byte count and SHA-256 are always recorded.
 
-This is lexical inventory, not a full language parser, import graph, migration plan, codemod, or
-compatibility proof. R0.8 remains partial until the project-input surface inventories
-utilities and arbitrary values from templates, config/plugin graphs, Sass modules/imports, CSS
-Modules composition/JS consumers, and classified unsupported/dynamic constructs across the complete
-declared project snapshot.
+This single-file output is lexical inventory, not a full language parser, dependency graph,
+migration plan, codemod, or compatibility proof. The separate declared-project schema derives
+conservative dependency observations from these constructs without changing this per-file document.
+R0.8 remains partial until the project-input surface inventories utilities and arbitrary values from
+templates, config/plugin graphs, source-toolchain-specific Sass resolution, CSS Modules/JavaScript
+composition consumers, and classified unsupported/dynamic constructs across complete real-project
+fixtures.

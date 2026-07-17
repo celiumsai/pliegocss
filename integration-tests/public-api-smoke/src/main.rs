@@ -25,10 +25,11 @@ use pliego_css_ownership::{
 };
 use pliego_css_source::{
     MIGRATION_INVENTORY_SCHEMA_VERSION, ApplicationComponent, ApplicationRoute,
-    ApplicationTopology, MigrationDisposition, MigrationInventory, MigrationInventoryError,
-    MigrationPreflightReliance, MigrationProject, MigrationProjectInventory,
-    MigrationProjectSource, MigrationSourceKind, inventory_migration_file,
-    inventory_migration_source,
+    ApplicationTopology, MigrationDependency, MigrationDependencyKind,
+    MigrationDependencyResolution, MigrationDisposition, MigrationInventory,
+    MigrationInventoryError, MigrationPreflightReliance, MigrationProject,
+    MigrationProjectInventory, MigrationProjectSource, MigrationSourceKind,
+    inventory_migration_file, inventory_migration_source,
 };
 use pliego_css_usage::{
     AssetRuleSelection as UsageRuleSelection, UsageCandidateInput, UsageObservationCoverage,
@@ -141,6 +142,19 @@ fn exercise_migration_inventory_surface() {
     let _project_collector: fn(
         MigrationProject,
     ) -> Result<MigrationProjectInventory, MigrationInventoryError> = MigrationProject::collect;
+    let _project_dependencies: fn(&MigrationProjectInventory) -> &[MigrationDependency] =
+        MigrationProjectInventory::dependencies;
+    let _dependency_surface: fn(&MigrationDependency) = |dependency| {
+        let _: &str = dependency.from();
+        let _: MigrationDependencyKind = dependency.kind();
+        let _: MigrationDependencyResolution = dependency.resolution();
+        let _: usize = dependency.byte_start();
+        let _: usize = dependency.byte_end();
+        let _: Option<&str> = dependency.specifier();
+        let _: Option<&str> = dependency.target();
+    };
+    let _: MigrationDependencyKind = MigrationDependencyKind::SassUse;
+    let _: MigrationDependencyResolution = MigrationDependencyResolution::Resolved;
     drop(project);
     let inventory: MigrationInventory = inventory_migration_source(
         MigrationSourceKind::Tailwind,

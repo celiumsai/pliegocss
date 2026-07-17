@@ -35,7 +35,8 @@ pub use application::{
     CollectedReachability,
 };
 pub use migration::{
-    MIGRATION_INVENTORY_SCHEMA_VERSION, MigrationConstruct, MigrationDisposition,
+    MIGRATION_INVENTORY_SCHEMA_VERSION, MigrationConstruct, MigrationDependency,
+    MigrationDependencyKind, MigrationDependencyResolution, MigrationDisposition,
     MigrationInventory, MigrationInventoryError, MigrationPreflightReliance, MigrationProject,
     MigrationProjectInventory, MigrationProjectSource, MigrationSourceKind,
     inventory_migration_file, inventory_migration_source,

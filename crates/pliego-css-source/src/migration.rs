@@ -160,6 +160,11 @@ struct MigrationProjectSummary {
     constructs: usize,
     dynamic: usize,
     unsupported: usize,
+    dependencies: usize,
+    resolved_dependencies: usize,
+    external_dependencies: usize,
+    unresolved_dependencies: usize,
+    dynamic_dependencies: usize,
 }
 
 #[derive(Serialize)]
@@ -168,6 +173,7 @@ struct MigrationProjectDocument<'a> {
     schema_version: u8,
     summary: MigrationProjectSummary,
     sources: Vec<MigrationInventoryDocument<'a>>,
+    dependencies: &'a [MigrationDependency],
 }
 
 /// Canonical read-only inventory for one migration source.
@@ -252,6 +258,101 @@ impl fmt::Display for MigrationInventory {
 pub struct MigrationProjectSource {
     source_kind: MigrationSourceKind,
     file: String,
+}
+
+/// Dependency seam observed in a migration source.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum MigrationDependencyKind {
+    /// Sass `@use`.
+    SassUse,
+    /// Sass `@forward`.
+    SassForward,
+    /// Legacy Sass `@import`.
+    SassImport,
+    /// Tailwind/CSS `@import`.
+    TailwindImport,
+    /// Tailwind `@reference`.
+    TailwindReference,
+    /// CSS Modules `composes: ... from ...`.
+    CssModulesComposes,
+    /// ICSS `:import(...)`.
+    CssModulesImport,
+    /// ICSS `@value ... from ...`.
+    CssModulesValue,
+}
+
+/// Conservative resolution result for one dependency seam.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum MigrationDependencyResolution {
+    /// Exact portable relative target exists in the declared snapshot with the expected kind.
+    Resolved,
+    /// The construct refers only to the current source.
+    Local,
+    /// Package, built-in, URL, absolute browser path, or otherwise external reference.
+    External,
+    /// Static syntax is visible but requires source-toolchain-specific resolution.
+    Unresolved,
+    /// Dynamic syntax prevents a static specifier.
+    Dynamic,
+}
+
+/// One canonical dependency observation derived from an exact source construct.
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct MigrationDependency {
+    from: String,
+    kind: MigrationDependencyKind,
+    byte_start: usize,
+    byte_end: usize,
+    specifier: Option<String>,
+    resolution: MigrationDependencyResolution,
+    target: Option<String>,
+}
+
+impl MigrationDependency {
+    /// Returns the source containing this dependency.
+    #[must_use]
+    pub fn from(&self) -> &str {
+        &self.from
+    }
+
+    /// Returns the dependency family.
+    #[must_use]
+    pub const fn kind(&self) -> MigrationDependencyKind {
+        self.kind
+    }
+
+    /// Returns the conservative resolution result.
+    #[must_use]
+    pub const fn resolution(&self) -> MigrationDependencyResolution {
+        self.resolution
+    }
+
+    /// Returns the zero-based inclusive byte start in the containing source.
+    #[must_use]
+    pub const fn byte_start(&self) -> usize {
+        self.byte_start
+    }
+
+    /// Returns the zero-based exclusive byte end in the containing source.
+    #[must_use]
+    pub const fn byte_end(&self) -> usize {
+        self.byte_end
+    }
+
+    /// Returns the exact observed specifier when statically available.
+    #[must_use]
+    pub fn specifier(&self) -> Option<&str> {
+        self.specifier.as_deref()
+    }
+
+    /// Returns the normalized declared target for resolved or local edges.
+    #[must_use]
+    pub fn target(&self) -> Option<&str> {
+        self.target.as_deref()
+    }
 }
 
 impl MigrationProjectSource {
@@ -344,11 +445,13 @@ impl MigrationProject {
 pub struct MigrationProjectInventory {
     summary: MigrationProjectSummary,
     sources: Vec<MigrationInventory>,
+    dependencies: Vec<MigrationDependency>,
     bytes: Vec<u8>,
 }
 
 impl MigrationProjectInventory {
     fn from_sources(sources: Vec<MigrationInventory>) -> Result<Self, MigrationInventoryError> {
+        let dependencies = derive_project_dependencies(&sources)?;
         let summary = MigrationProjectSummary {
             sources: sources.len(),
             sass_sources: sources
@@ -369,16 +472,47 @@ impl MigrationProjectInventory {
                 .iter()
                 .map(|source| source.summary.unsupported)
                 .sum(),
+            dependencies: dependencies.len(),
+            resolved_dependencies: dependencies
+                .iter()
+                .filter(|dependency| {
+                    matches!(
+                        dependency.resolution,
+                        MigrationDependencyResolution::Resolved
+                            | MigrationDependencyResolution::Local
+                    )
+                })
+                .count(),
+            external_dependencies: dependencies
+                .iter()
+                .filter(|dependency| {
+                    dependency.resolution == MigrationDependencyResolution::External
+                })
+                .count(),
+            unresolved_dependencies: dependencies
+                .iter()
+                .filter(|dependency| {
+                    dependency.resolution == MigrationDependencyResolution::Unresolved
+                })
+                .count(),
+            dynamic_dependencies: dependencies
+                .iter()
+                .filter(|dependency| {
+                    dependency.resolution == MigrationDependencyResolution::Dynamic
+                })
+                .count(),
         };
         let mut inventory = Self {
             summary,
             sources,
+            dependencies,
             bytes: Vec::new(),
         };
         let document = MigrationProjectDocument {
             schema_version: MIGRATION_INVENTORY_SCHEMA_VERSION,
             summary,
             sources: inventory.sources.iter().map(inventory_document).collect(),
+            dependencies: &inventory.dependencies,
         };
         inventory.bytes = serde_json::to_vec_pretty(&document).map_err(|error| {
             MigrationInventoryError::new(format!(
@@ -395,6 +529,12 @@ impl MigrationProjectInventory {
         &self.sources
     }
 
+    /// Returns dependency observations in canonical source and byte order.
+    #[must_use]
+    pub fn dependencies(&self) -> &[MigrationDependency] {
+        &self.dependencies
+    }
+
     /// Returns the total number of recorded constructs.
     #[must_use]
     pub const fn construct_count(&self) -> usize {
@@ -406,6 +546,269 @@ impl MigrationProjectInventory {
     pub fn as_bytes(&self) -> &[u8] {
         &self.bytes
     }
+}
+
+fn derive_project_dependencies(
+    sources: &[MigrationInventory],
+) -> Result<Vec<MigrationDependency>, MigrationInventoryError> {
+    let declared = sources
+        .iter()
+        .map(|source| (source.file.as_str(), source.source_kind))
+        .collect::<std::collections::BTreeMap<_, _>>();
+    let mut dependencies = Vec::new();
+    for source in sources {
+        for construct in &source.constructs {
+            let Some(kind) = dependency_kind(construct.kind.as_str()) else {
+                continue;
+            };
+            dependencies.extend(observe_dependencies(source, construct, kind, &declared)?);
+        }
+    }
+    Ok(dependencies)
+}
+
+fn dependency_kind(kind: &str) -> Option<MigrationDependencyKind> {
+    match kind {
+        "sass-use" => Some(MigrationDependencyKind::SassUse),
+        "sass-forward" => Some(MigrationDependencyKind::SassForward),
+        "sass-import" => Some(MigrationDependencyKind::SassImport),
+        "tailwind-import" => Some(MigrationDependencyKind::TailwindImport),
+        "tailwind-reference" => Some(MigrationDependencyKind::TailwindReference),
+        "css-modules-composes" => Some(MigrationDependencyKind::CssModulesComposes),
+        "css-modules-import" => Some(MigrationDependencyKind::CssModulesImport),
+        "css-modules-value" => Some(MigrationDependencyKind::CssModulesValue),
+        _ => None,
+    }
+}
+
+fn observe_dependencies(
+    source: &MigrationInventory,
+    construct: &MigrationConstruct,
+    kind: MigrationDependencyKind,
+    declared: &std::collections::BTreeMap<&str, MigrationSourceKind>,
+) -> Result<Vec<MigrationDependency>, MigrationInventoryError> {
+    let dependency = MigrationDependency {
+        from: source.file.clone(),
+        kind,
+        byte_start: construct.byte_start,
+        byte_end: construct.byte_end,
+        specifier: None,
+        resolution: MigrationDependencyResolution::Unresolved,
+        target: None,
+    };
+    if construct.disposition == MigrationDisposition::Dynamic || construct.syntax.contains("#{") {
+        return Ok(vec![MigrationDependency {
+            resolution: MigrationDependencyResolution::Dynamic,
+            ..dependency
+        }]);
+    }
+    if kind == MigrationDependencyKind::CssModulesComposes {
+        let Some(from) = keyword_suffix(&construct.syntax, "from") else {
+            return Ok(vec![MigrationDependency {
+                resolution: MigrationDependencyResolution::Local,
+                target: Some(source.file.clone()),
+                ..dependency
+            }]);
+        };
+        if from.trim_start().starts_with("global") {
+            return Ok(vec![MigrationDependency {
+                specifier: Some("global".into()),
+                resolution: MigrationDependencyResolution::External,
+                ..dependency
+            }]);
+        }
+    }
+    let specifiers = if kind == MigrationDependencyKind::SassImport {
+        quoted_dependency_specifiers(&construct.syntax)
+    } else {
+        quoted_dependency_specifier(kind, &construct.syntax).map(|specifier| vec![specifier])
+    };
+    let Some(specifiers) = specifiers else {
+        if construct.syntax.contains('\\') {
+            return Ok(vec![MigrationDependency {
+                resolution: MigrationDependencyResolution::Dynamic,
+                ..dependency
+            }]);
+        }
+        return Ok(vec![dependency]);
+    };
+    specifiers
+        .into_iter()
+        .map(|specifier| {
+            let (resolution, target) = classify_dependency(
+                source.file.as_str(),
+                source.source_kind,
+                kind,
+                specifier.as_str(),
+                declared,
+            )?;
+            Ok(MigrationDependency {
+                specifier: Some(specifier),
+                resolution,
+                target,
+                ..dependency.clone()
+            })
+        })
+        .collect()
+}
+
+fn keyword_suffix<'a>(syntax: &'a str, keyword: &str) -> Option<&'a str> {
+    syntax.match_indices(keyword).find_map(|(index, _)| {
+        let before = index
+            .checked_sub(1)
+            .and_then(|value| syntax.as_bytes().get(value));
+        let after = syntax.as_bytes().get(index + keyword.len()).copied();
+        if !is_identifier(before.copied()) && !is_identifier(after) {
+            Some(&syntax[index + keyword.len()..])
+        } else {
+            None
+        }
+    })
+}
+
+fn quoted_dependency_specifier(kind: MigrationDependencyKind, syntax: &str) -> Option<String> {
+    let scope = match kind {
+        MigrationDependencyKind::CssModulesComposes | MigrationDependencyKind::CssModulesValue => {
+            keyword_suffix(syntax, "from")?
+        }
+        _ => syntax,
+    };
+    let bytes = scope.as_bytes();
+    let start = bytes.iter().position(|byte| matches!(byte, b'\'' | b'"'))?;
+    let quote = bytes[start];
+    let mut index = start + 1;
+    while index < bytes.len() {
+        if bytes[index] == b'\\' {
+            return None;
+        }
+        if bytes[index] == quote {
+            return scope.get(start + 1..index).map(str::to_owned);
+        }
+        index += 1;
+    }
+    None
+}
+
+fn quoted_dependency_specifiers(syntax: &str) -> Option<Vec<String>> {
+    let bytes = syntax.as_bytes();
+    let mut specifiers = Vec::new();
+    let mut index = 0;
+    while index < bytes.len() {
+        if !matches!(bytes[index], b'\'' | b'"') {
+            index += 1;
+            continue;
+        }
+        let quote = bytes[index];
+        let start = index + 1;
+        index = start;
+        while index < bytes.len() && bytes[index] != quote {
+            if bytes[index] == b'\\' {
+                return None;
+            }
+            index += 1;
+        }
+        if index == bytes.len() {
+            return None;
+        }
+        specifiers.push(syntax.get(start..index)?.to_owned());
+        index += 1;
+    }
+    (!specifiers.is_empty()).then_some(specifiers)
+}
+
+fn classify_dependency(
+    from: &str,
+    source_kind: MigrationSourceKind,
+    kind: MigrationDependencyKind,
+    specifier: &str,
+    declared: &std::collections::BTreeMap<&str, MigrationSourceKind>,
+) -> Result<(MigrationDependencyResolution, Option<String>), MigrationInventoryError> {
+    if !specifier.starts_with("./") && !specifier.starts_with("../") {
+        return Ok((MigrationDependencyResolution::External, None));
+    }
+    if specifier.contains('\\') || specifier.contains(['?', '#']) {
+        return Ok((MigrationDependencyResolution::Unresolved, None));
+    }
+    let extension = specifier.rsplit('/').next().and_then(|name| {
+        name.rsplit_once('.')
+            .filter(|(stem, extension)| !stem.is_empty() && !extension.is_empty())
+            .map(|(_, extension)| extension)
+    });
+    let expected = match kind {
+        MigrationDependencyKind::SassUse
+        | MigrationDependencyKind::SassForward
+        | MigrationDependencyKind::SassImport => match extension {
+            Some(extension)
+                if extension.eq_ignore_ascii_case("scss")
+                    || extension.eq_ignore_ascii_case("sass") =>
+            {
+                MigrationSourceKind::Sass
+            }
+            Some(extension) if extension.eq_ignore_ascii_case("css") => {
+                return Ok((MigrationDependencyResolution::External, None));
+            }
+            _ => return Ok((MigrationDependencyResolution::Unresolved, None)),
+        },
+        MigrationDependencyKind::TailwindImport | MigrationDependencyKind::TailwindReference => {
+            match extension {
+                Some(extension) if extension.eq_ignore_ascii_case("css") => {
+                    MigrationSourceKind::Tailwind
+                }
+                _ => return Ok((MigrationDependencyResolution::Unresolved, None)),
+            }
+        }
+        MigrationDependencyKind::CssModulesComposes
+        | MigrationDependencyKind::CssModulesImport
+        | MigrationDependencyKind::CssModulesValue => {
+            if !specifier.to_ascii_lowercase().ends_with(".module.css") {
+                return Ok((MigrationDependencyResolution::Unresolved, None));
+            }
+            MigrationSourceKind::CssModules
+        }
+    };
+    debug_assert_eq!(source_kind, expected);
+    let target = normalize_relative_target(from, specifier)?;
+    let Some(actual) = declared.get(target.as_str()).copied() else {
+        return Err(MigrationInventoryError::new(format!(
+            "migration dependency `{specifier}` from `{from}` resolves to undeclared local source `{target}`"
+        )));
+    };
+    if actual != expected {
+        return Err(MigrationInventoryError::new(format!(
+            "migration dependency `{specifier}` from `{from}` requires {} target `{target}`, but it is declared as {}",
+            expected.as_str(),
+            actual.as_str()
+        )));
+    }
+    Ok((MigrationDependencyResolution::Resolved, Some(target)))
+}
+
+fn normalize_relative_target(
+    from: &str,
+    specifier: &str,
+) -> Result<String, MigrationInventoryError> {
+    let mut components = from.split('/').collect::<Vec<_>>();
+    components.pop();
+    for component in specifier.split('/') {
+        match component {
+            "" | "." => {}
+            ".." => {
+                if components.pop().is_none() {
+                    return Err(MigrationInventoryError::new(format!(
+                        "migration dependency `{specifier}` from `{from}` escapes the project root"
+                    )));
+                }
+            }
+            value => components.push(value),
+        }
+    }
+    let target = components.join("/");
+    if !is_portable_source_path(&target) {
+        return Err(MigrationInventoryError::new(format!(
+            "migration dependency `{specifier}` from `{from}` is not portable"
+        )));
+    }
+    Ok(target)
 }
 
 /// Failure while conservatively inventorying a migration source.
@@ -787,20 +1190,14 @@ fn inventory_tailwind(
     ] {
         scan_marker(source, &masks.code, marker, kind, disposition, &mut output)?;
     }
-    let mut imports = Vec::new();
     scan_marker(
         source,
         &masks.code,
         "@import",
         "tailwind-import",
         MigrationDisposition::Static,
-        &mut imports,
+        &mut output,
     )?;
-    output.extend(
-        imports
-            .into_iter()
-            .filter(|item| item.syntax.contains("tailwindcss")),
-    );
     for item in &mut output {
         if item.kind == "tailwind-source" && item.syntax.contains("inline(") {
             item.disposition = MigrationDisposition::Dynamic;
@@ -1225,12 +1622,185 @@ $color: red;
         assert_eq!(document["summary"]["sassSources"], 1);
         assert_eq!(document["summary"]["tailwindSources"], 1);
         assert_eq!(document["summary"]["cssModulesSources"], 1);
+        assert_eq!(document["summary"]["dependencies"], 2);
+        assert_eq!(document["summary"]["resolvedDependencies"], 1);
+        assert_eq!(document["summary"]["externalDependencies"], 1);
+        assert_eq!(first.dependencies().len(), 2);
+        assert_eq!(
+            first.dependencies()[0].resolution(),
+            MigrationDependencyResolution::External
+        );
+        assert_eq!(
+            first.dependencies()[1].resolution(),
+            MigrationDependencyResolution::Local
+        );
+        assert!(
+            first.dependencies()[1]
+                .target()
+                .is_some_and(|target| target.ends_with("card.module.css"))
+        );
 
         let duplicate = MigrationProject::new()
             .source(source(MigrationSourceKind::Sass, &sass))
             .source(source(MigrationSourceKind::Sass, &sass))
             .collect();
         assert!(duplicate.is_err());
+        fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
+    fn project_inventory_resolves_exact_declared_dependency_edges() {
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let directory = PathBuf::from(format!(
+            ".migration-dependency-test-{}-{nonce}",
+            std::process::id()
+        ));
+        fs::create_dir_all(directory.join("styles")).unwrap();
+        let app_sass = directory.join("styles/app.scss");
+        let tokens_sass = directory.join("styles/tokens.scss");
+        let app_css = directory.join("styles/app.css");
+        let theme_css = directory.join("styles/theme.css");
+        let card_module = directory.join("styles/card.module.css");
+        let base_module = directory.join("styles/base.module.css");
+        fs::write(&app_sass, "@use \"./tokens.scss\";\n").unwrap();
+        fs::write(&tokens_sass, "$brand: red;\n").unwrap();
+        fs::write(&app_css, "@reference \"./theme.css\";\n").unwrap();
+        fs::write(&theme_css, "@theme { --color-brand: red; }\n").unwrap();
+        fs::write(
+            &card_module,
+            ".card { composes: base from \"./base.module.css\"; }\n",
+        )
+        .unwrap();
+        fs::write(&base_module, ".base { display: block; }\n").unwrap();
+        let source = |kind, path: &Path| {
+            MigrationProjectSource::new(kind, path.to_string_lossy().into_owned())
+        };
+        let inventory = MigrationProject::new()
+            .source(source(MigrationSourceKind::Sass, &app_sass))
+            .source(source(MigrationSourceKind::Sass, &tokens_sass))
+            .source(source(MigrationSourceKind::Tailwind, &app_css))
+            .source(source(MigrationSourceKind::Tailwind, &theme_css))
+            .source(source(MigrationSourceKind::CssModules, &card_module))
+            .source(source(MigrationSourceKind::CssModules, &base_module))
+            .collect()
+            .unwrap();
+        assert_eq!(inventory.dependencies().len(), 3);
+        assert!(inventory.dependencies().iter().all(|dependency| {
+            dependency.resolution() == MigrationDependencyResolution::Resolved
+                && dependency.specifier().is_some()
+                && dependency.target().is_some()
+                && dependency.byte_start() < dependency.byte_end()
+        }));
+        let targets = inventory
+            .dependencies()
+            .iter()
+            .map(|dependency| dependency.target().unwrap())
+            .collect::<Vec<_>>();
+        assert!(
+            targets
+                .iter()
+                .any(|target| target.ends_with("styles/tokens.scss"))
+        );
+        assert!(
+            targets
+                .iter()
+                .any(|target| target.ends_with("styles/theme.css"))
+        );
+        assert!(
+            targets
+                .iter()
+                .any(|target| target.ends_with("styles/base.module.css"))
+        );
+        fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
+    fn project_inventory_fails_closed_for_missing_or_mistyped_local_targets() {
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let directory = PathBuf::from(format!(
+            ".migration-dependency-failure-test-{}-{nonce}",
+            std::process::id()
+        ));
+        fs::create_dir(&directory).unwrap();
+        let sass = directory.join("app.scss");
+        fs::write(&sass, "@use \"./missing.scss\";\n").unwrap();
+        let source = |kind, path: &Path| {
+            MigrationProjectSource::new(kind, path.to_string_lossy().into_owned())
+        };
+        let missing = MigrationProject::new()
+            .source(source(MigrationSourceKind::Sass, &sass))
+            .collect()
+            .unwrap_err();
+        assert!(missing.to_string().contains("undeclared local source"));
+
+        let card = directory.join("card.module.css");
+        let base = directory.join("base.module.css");
+        fs::write(
+            &card,
+            ".card { composes: base from \"./base.module.css\"; }\n",
+        )
+        .unwrap();
+        fs::write(&base, ".base { display: block; }\n").unwrap();
+        let mistyped = MigrationProject::new()
+            .source(source(MigrationSourceKind::CssModules, &card))
+            .source(source(MigrationSourceKind::Tailwind, &base))
+            .collect()
+            .unwrap_err();
+        assert!(mistyped.to_string().contains("declared as tailwind"));
+        fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
+    fn project_inventory_exposes_unresolved_and_external_references_without_guessing() {
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let directory = PathBuf::from(format!(
+            ".migration-dependency-classification-test-{}-{nonce}",
+            std::process::id()
+        ));
+        fs::create_dir(&directory).unwrap();
+        let sass = directory.join("app.scss");
+        fs::write(
+            &sass,
+            "@use \"sass:math\";\n@use \"some-package\";\n@use \"./tokens\";\n@import \"first-package\", \"second-package\";\n",
+        )
+        .unwrap();
+        let inventory = MigrationProject::new()
+            .source(MigrationProjectSource::new(
+                MigrationSourceKind::Sass,
+                sass.to_string_lossy().into_owned(),
+            ))
+            .collect()
+            .unwrap();
+        assert_eq!(inventory.dependencies().len(), 5);
+        assert_eq!(
+            inventory.dependencies()[0].resolution(),
+            MigrationDependencyResolution::External
+        );
+        assert_eq!(
+            inventory.dependencies()[1].resolution(),
+            MigrationDependencyResolution::External
+        );
+        assert_eq!(
+            inventory.dependencies()[2].resolution(),
+            MigrationDependencyResolution::Unresolved
+        );
+        assert_eq!(
+            inventory.dependencies()[3].specifier(),
+            Some("first-package")
+        );
+        assert_eq!(
+            inventory.dependencies()[4].specifier(),
+            Some("second-package")
+        );
         fs::remove_dir_all(directory).unwrap();
     }
 }
