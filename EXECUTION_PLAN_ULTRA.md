@@ -428,12 +428,16 @@ Toda optimización tiene benchmark; ninguna complejidad entra solamente por intu
   Destructuring simple shorthand/renamed ya retiene clase y alias; computed/rest/default/nested
   queda como una observación dynamic completa. Un crawler de librería bounded/no-follow ya deriva
   roles con evidencia sin ejecutar toolchains y el CLI existente acepta directory mode; faltan
-  chains/scope de aliases y un corpus de proyectos
-  reales para cerrar. Un harness versionado ya
-  congela tres casos authored-contract y verifica seams/resúmenes/inmutabilidad vía CLI; no cuenta
-  como evidencia real de precision/recall.
+  chains/scope de aliases y mayor cobertura de sintaxis/toolchains para cerrar. Un harness
+  versionado congela tres casos authored-contract y verifica seams/resúmenes/inmutabilidad vía CLI.
+  Otro gate de red fija tres proyectos oficiales MIT: 119 archivos revisados producen 104 TP,
+  0 FP y 0 FN para discovery archivo–rol. Esa métrica no cubre precisión semántica, codemods ni
+  resultados de migración.
 - [ ] Entrevistar 10–15 developers/equipos y reunir 20 incidentes reales anonimizados.
-- [ ] Medir precision/recall, falsos positivos, excepciones y tiempo de resolución por categoría.
+- [x] Medir precision/recall y falsos positivos de discovery archivo–rol sobre el corpus público
+  fijado; resultado 104 TP / 0 FP / 0 FN en 119 archivos.
+- [ ] Medir precision/recall semántico, excepciones y tiempo de resolución por categoría sobre un
+  corpus representativo mayor.
 - [ ] Ejecutar la matriz hosted Windows/Linux/macOS, evidencia nativa ARM64 y el pipeline Cloudflare.
 - [x] Configurar Windows/Linux/macOS con Rust 1.85/1.96, Node 22.13 y un vector de bundles
   byte-exacto; falta evidencia hosted y el pipeline Cloudflare real.

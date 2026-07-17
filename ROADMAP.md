@@ -353,9 +353,12 @@ también requiere E0–E4 y todos los Must de R0 en el contrato estratégico.
   templates ya exponen candidatos `class`/`className` literales y expresiones dynamic,
   mientras keys de config y APIs de plugin comunes quedan visibles como unsupported. Destructuring
   simple shorthand/renamed ya queda tipado y patrones computed/rest/default/nested fallan como una
-  observación dynamic completa; faltan chains/scope de aliases y fixtures
-  de migración reales antes de escribir la guía completa. El corpus contractual de tres casos y su
-  runner CLI ya están versionados, pero no sustituyen proyectos reales revisados.
+  observación dynamic completa; faltan chains/scope de aliases y cobertura semántica/toolchain más
+  amplia antes de escribir la guía completa. El corpus contractual de tres casos y su runner CLI
+  están versionados. Un segundo gate de red fija Bootstrap, el playground Vite de Tailwind y el
+  ejemplo basic-css de Next.js con licencias MIT verificadas: 119 archivos revisados producen
+  104 TP, 0 FP y 0 FN para discovery archivo–rol. Esa evidencia no mide migración semántica,
+  codemods, resultado visual ni representatividad general.
 - [ ] Crear tutorial completo, how-to guides y referencia de API.
 - [ ] Crear guía de accesibilidad, theming y responsive design.
 - [ ] Crear documentación para contribuidores, plugins y estabilidad semántica.

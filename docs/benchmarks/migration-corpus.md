@@ -1,7 +1,7 @@
 # Migration bridge contract corpus
 
-Status: **three authored contract cases and a read-only CLI runner implemented; reviewed real-project
-evidence remains open**
+Status: **three authored contract cases and a read-only CLI runner implemented; reviewed public
+role evidence is tracked separately**
 
 The tracked `integration-tests/migration-corpus/cases.json` manifest freezes three focused migration
 bridge cases: a resolved Sass module edge, Tailwind-owned config/plugin/template auxiliaries, and a
@@ -20,8 +20,9 @@ already-built exact CLI binary.
 The manifest classification is deliberately `authored-contract`. These cases prove deterministic
 boundary behavior and prevent feature-specific fixtures from drifting independently; they are not
 anonymized production applications, developer interviews, or evidence of migration precision and
-recall. R0.8 still requires a reviewed, consented/redacted real-project corpus with provenance,
-expected findings, false-positive review, and migration-outcome measurements.
+recall. The separate [reviewed public role corpus](./migration-real-corpus.md) now supplies pinned
+MIT-project provenance plus file-role precision/recall; migration outcomes and broader diagnostic
+measurements remain open.
 
 Current frozen expectations include:
 
@@ -35,4 +36,5 @@ Current frozen expectations include:
 
 Adding a case requires a unique ID, a project declaration, explicit summary expectations, at least
 one required dependency seam when dependencies are in scope, and the same authored-contract claim
-boundary until reviewed real-project material is introduced under a separate classification.
+boundary. Public-project evidence belongs under the separate `reviewed-public-role-corpus`
+classification and must retain exact revision and license verification.

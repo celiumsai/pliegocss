@@ -33,6 +33,7 @@
     "check:agent": "cargo test --locked -p pliego-css-agent --all-targets && cargo test --locked -p pliego-cssc --test repair_plan",
     "check:repair-corpus": "node ./scripts/check-repair-corpus.mjs",
     "check:migration-corpus": "node ./scripts/check-migration-corpus.mjs",
+    "check:migration-real-corpus": "node ./scripts/check-migration-real-corpus.mjs",
     "check:packages": "node ./scripts/check-packages.mjs",
     "integration:plain-html": "node ./scripts/check-plain-html-integration.mjs",
     "integration:pliegors": "node ./scripts/check-pliegors-integration.mjs",

@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "classification": "reviewed-public-role-corpus",
+  "metricBoundary": "file-role-discovery",
+  "cases": [
+    {
+      "id": "bootstrap-sass",
+      "repository": "https://github.com/twbs/bootstrap.git",
+      "commit": "6f20e52759a0e0dee2c2f171e9357f3ccca52992",
+      "sparsePatterns": ["/scss/**", "/LICENSE", "/package.json"],
+      "projectDirectory": ".",
+      "license": {
+        "spdx": "MIT",
+        "path": "LICENSE",
+        "sha256": "bc0cd18d94c028f1c0b62ec9fdaddcb9921c1e07c29cf52dc7df8cca9daf2488"
+      },
+      "expectedSummary": {
+        "sources": 99,
+        "sassSources": 99,
+        "constructs": 9062,
+        "dependencies": 144,
+        "externalDependencies": 119,
+        "unresolvedDependencies": 25,
+        "dynamic": 2984,
+        "unsupported": 144
+      },
+      "gold": {
+        "rules": [
+          { "role": "source:sass", "prefix": "scss/", "suffix": ".scss" }
+        ],
+        "exact": []
+      }
+    },
+    {
+      "id": "tailwind-vite-playground",
+      "repository": "https://github.com/tailwindlabs/tailwindcss.git",
+      "commit": "094bf62605870311a8def6ae45c87d578b198ebf",
+      "sparsePatterns": ["/playgrounds/vite/**", "/LICENSE", "/package.json"],
+      "projectDirectory": "playgrounds/vite",
+      "license": {
+        "spdx": "MIT",
+        "path": "LICENSE",
+        "sha256": "2440b18973d1ea593550c160b89dafe3fa16fa801d77519aa6b7eb5a718be3e9"
+      },
+      "expectedSummary": {
+        "sources": 1,
+        "tailwindSources": 1,
+        "auxiliaries": 2,
+        "tailwindTemplates": 2,
+        "constructs": 1,
+        "dependencies": 1,
+        "externalDependencies": 1,
+        "staticTemplateCandidates": 6
+      },
+      "gold": {
+        "rules": [],
+        "exact": [
+          { "role": "source:tailwind", "file": "src/index.css" },
+          { "role": "auxiliary:tailwind-template", "file": "src/app.tsx" },
+          { "role": "auxiliary:tailwind-template", "file": "src/index.html" }
+        ]
+      }
+    },
+    {
+      "id": "next-basic-css-modules",
+      "repository": "https://github.com/vercel/next.js.git",
+      "commit": "e75d082512cd7633d0fd91e04ea2dafd4a29f861",
+      "sparsePatterns": ["/examples/basic-css/**", "/license.md", "/package.json"],
+      "projectDirectory": "examples/basic-css",
+      "license": {
+        "spdx": "MIT",
+        "path": "license.md",
+        "sha256": "ee765244e2d59f5234d474f62e0766fa0c8b99af967fdd4c0cb8dcb0c76ea224"
+      },
+      "expectedSummary": {
+        "sources": 1,
+        "cssModulesSources": 1,
+        "consumers": 1,
+        "consumerImports": 1,
+        "staticConsumerUsages": 1,
+        "dynamicConsumerUsages": 0,
+        "unsupported": 0
+      },
+      "gold": {
+        "rules": [],
+        "exact": [
+          { "role": "source:css-modules", "file": "styles.module.css" },
+          { "role": "consumer:css-modules", "file": "app/page.tsx" }
+        ]
+      }
+    }
+  ]
+}

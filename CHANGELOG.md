@@ -23,6 +23,11 @@ pre-1.0 compatibility policy.
 - File-qualified migration discovery and collection failures, so malformed source, consumer, or
   auxiliary syntax identifies the exact project-relative candidate instead of returning only the
   underlying lexical error.
+- A network-gated reviewed public migration corpus with exact MIT license digests and immutable
+  revision pins for Bootstrap Sass, Tailwind's Vite playground, and Next.js basic CSS Modules. Its
+  Debian WSL2 gate compares emitted file-role tuples against 119 reviewed files: 104 true positives,
+  zero false positives, and zero false negatives. The metric is explicitly limited to file-role
+  discovery and is not a semantic migration, codemod, or general project-accuracy claim.
 
 - A versioned three-case authored migration bridge corpus and read-only CLI runner covering resolved
   Sass modules, Tailwind-owned auxiliaries/template candidates/config-plugin seams, and CSS Modules

@@ -1,7 +1,7 @@
 # Migration project inventory schema 1
 
-Status: **explicit snapshots plus bounded typed library/CLI discovery implemented;
-toolchain-specific resolution, real-project evidence, and broader consumer syntax remain open**
+Status: **explicit snapshots plus bounded typed library/CLI discovery and a reviewed public
+file-role corpus implemented; toolchain-specific resolution and broader syntax remain open**
 
 `MigrationProject` declares a closed set of Sass, Tailwind CSS v4 entry, and CSS Modules files. It
 does not crawl the repository or infer source kind from filenames. Collection sorts the declaration
@@ -79,6 +79,12 @@ Any candidate or later role failure includes its portable project-relative file 
 collection and writes only the canonical inventory to stdout. It does not implement Sass load
 paths, Node or bundler aliases, Tailwind package/plugin execution, arbitrary glob expansion,
 framework-specific template semantics, or real-project precision/recall proof.
+
+The separate network-gated
+[reviewed public migration role corpus](../benchmarks/migration-real-corpus.md) measures this exact
+directory discovery surface on 119 files from three pinned MIT projects. It records 104 true
+file-role tuples with no false positives or false negatives. That evidence does not validate every
+construct or dependency observation and does not extend the collector's closed semantics.
 
 ```rust,no_run
 use pliego_css_source::{
