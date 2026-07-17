@@ -1,6 +1,6 @@
 # Packaging status
 
-Status: **verified editor onboarding and the complete exact-clean `b24c12b` Rust package replay
+Status: **incremental fragment caching and the complete exact-clean `2ad7a3d` Rust package replay
 passed; no registry or editor Marketplace upload performed**
 
 The publishable workspace boundary has six dependency waves. `pliego-css-usage` and
@@ -18,6 +18,27 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## Incremental fragment-cache clean replay — 2026-07-17
+
+The exact clean `2ad7a3d` gate packaged and extracted all sixteen archives, compiled the complete
+registry-shaped graph in release mode, and executed the Rust 1.85 downstream consumer. The new
+watch cache lives in `pliego-css-compiler`, while path/provenance helpers moved to
+`pliego-css-source` so the CLI archive remains below its fixed ceiling.
+
+`pliego-cssc` measured 61,356 compressed bytes (84 bytes of margin, SHA-256
+`1814180f0a3372bcaeb256c41213cbfc9ca68f329b61f562c627e586f9fe7dc0`). Other tight
+archives remained below the same 61,440-byte ceiling: `pliego-css-control` measured 61,067 bytes
+(373 bytes of margin), `pliego-css-build` 59,920 (1,520 bytes), `pliego-css-compiler` 59,855
+(1,585 bytes), and `pliego-css-source` 57,363 (4,077 bytes). `pliego-css-lsp` measured 26,855
+bytes. Publication remained disabled and the ceiling was not raised.
+
+Windows passed the fragment cache, CLI oracle, DTCG watch, reachability watch, strict targeted
+Clippy, rustdoc, and exact package graph. Application Control blocked two later workspace test/build
+executables, so Debian WSL2 independently ran the complete theme/source/compiler test sets, 72 CLI
+unit tests, DTCG and reachability watch suites, and strict Clippy for every changed crate. This gate
+proves raw fragment reuse with byte-identical warm/cold artifacts; it does not claim that the final
+whole-artifact Lightning CSS pass is incremental.
 
 ## Verified editor onboarding clean replay — 2026-07-17
 
