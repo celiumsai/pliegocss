@@ -1,6 +1,6 @@
 # Packaging status
 
-Status: **Tailwind template-candidate inventory passed the complete exact-clean `386973e` replay; no
+Status: **Tailwind config/plugin seam inventory passed the complete exact-clean `8de2db4` replay; no
 registry upload performed**
 
 The publishable workspace boundary has six dependency waves. `pliego-css-usage` and
@@ -18,6 +18,24 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## Tailwind config/plugin seam clean replay — 2026-07-16
+
+The exact clean `8de2db4` Debian WSL2 gate packaged and extracted all fifteen archives with Cargo
+1.96, compiled the extracted graph in release mode, and passed the registry-shaped downstream
+consumer with Rust 1.85. Focused Debian evidence also passed 35 source tests, the versioned CLI
+migration fixture, strict source Clippy, and the complete public API smoke. Publication remained
+disabled, the worktree was clean, and the fixed 61,440-byte ceiling was not raised.
+
+| Package | Compressed bytes | Remaining margin | SHA-256 |
+|---|---:|---:|---|
+| `pliego-css-source` | 44,828 | 16,612 | `cd9110b419a1bb092a180512211f202a386f1bafc15c9cb7253c4babca9375ce` |
+| `pliego-cssc` | 61,391 | 49 | `7d9ace948a99fa3f119e298b29697590fe0977dff1f070bbd624e12cbfd37b44` |
+
+Declared Tailwind config and plugin modules now expose a closed set of exact config-key and plugin
+registration-API seams. They remain `unsupported` observations: PliegoCSS does not execute modules
+or claim semantic migration of their bodies. Broader JavaScript semantics, discovery crawling, a
+real migration corpus, and R0.8 remain open. The CLI package remains closed to additive growth.
 
 ## Tailwind template-candidate clean replay — 2026-07-16
 
