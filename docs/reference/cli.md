@@ -3,7 +3,7 @@
 Status: implemented extraction, validation, inspection, declarative manual bundles, theme
 configuration, schema-4 semantic ownership, schema-5 physical tracing, bounded repair planning and
 read-only dry-run verification, opt-in unreachable-rule
-pruning, framework-neutral asset load plans, polling watch, and generated control groups with
+pruning, framework-neutral asset load plans, event-driven watch, and generated control groups with
 canonical Source Map v3 and TokenGraph artifacts, plus bounded accessibility-policy audit and
 ownership-backed package/composed-route budgets for Asset Plans; direct and bundle-plan schema-2
 DTCG selection have passed local Windows/WSL E2E, workspace, and package gates. Ownership schema 1
@@ -733,9 +733,9 @@ order. Each style retains all of its deduplicated origins. Like `check`, it reje
 
 ### `watch`
 
-`watch` polls every 100 ms and compiles after observing the same exact snapshot in two consecutive
-polls. The one-interval confirmation prevents a transient valid prefix from being published while an
-editor truncates and rewrites a file:
+`watch` uses native Windows/Linux filesystem events and compiles after observing the same exact snapshot in two
+captures separated by up to 100 ms. Events only schedule captures; the confirmation prevents a
+transient valid prefix from being published while an editor truncates and rewrites a file:
 
 ```console
 cargo run -p pliego-cssc -- watch \
@@ -744,7 +744,7 @@ cargo run -p pliego-cssc -- watch \
 ```
 
 It accepts one optional line-oriented `--input` and repeatable `--source` files or directories; at
-least one input form and exactly one `--output` are required. Each poll captures one immutable,
+least one input form and exactly one `--output` are required. Each wakeup captures one immutable,
 exact-byte snapshot containing the line input, deterministically expanded Rust source tree, and
 explicit theme or token configuration. Resolver selections are derived from immutable CLI arguments
 against those exact bytes, then bound canonically into `configHash`; JSON is never discovered. When
@@ -761,8 +761,10 @@ IR for all source units. Global `StyleId` deduplication, origin aggregation, emi
 CSS still run over the complete current candidate set. Watch reports discovered units, scan
 hits/parses, semantic hits/lowerings, and removals to standard error. A read, parse, theme, compile,
 or optimize failure does not publish the failed artifact. A write failure is retried without waiting
-for another source change. Terminate with Ctrl-C. Watch uses polling rather than filesystem events
-and does not notify a browser itself.
+for another source change. Native watches cover directory trees recursively and file parents
+non-recursively so atomic file replacement remains visible. A 2 s snapshot timeout detects missed
+or unsupported events; on unsupported platforms or when the native backend cannot initialize,
+watch reports the reason and falls back to 100 ms polling. It does not notify a browser itself.
 
 Successful compilation is write-if-changed per destination. If existing CSS or manifest bytes are
 identical, that file is not replaced; CSS and manifest can change independently when provenance

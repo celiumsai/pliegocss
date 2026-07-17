@@ -58,9 +58,10 @@ Before rebuilding, `pliego dev` requires one 500 ms quiet snapshot and restarts 
 the source/publication group changes. This coalesces a Rust edit and its generated assets into one
 successful SSE generation.
 
-Source snapshots are confirmed across two 100 ms polls before compilation. Unchanged Rust files reuse
-both their syntax scan and theme-scoped semantic IR; changing the theme retains scans and invalidates
-all semantic entries.
+Native Windows/Linux filesystem events schedule source captures; exact snapshots are confirmed across two
+captures separated by up to 100 ms before compilation. A 2 s fallback capture covers missed events,
+and backend setup failure retains 100 ms polling. Unchanged Rust files reuse both their syntax scan
+and theme-scoped semantic IR; changing the theme retains scans and invalidates all semantic entries.
 
 ## Asset ownership
 

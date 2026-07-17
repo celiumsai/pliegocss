@@ -15,7 +15,7 @@ package manifest, leaving only the exact requirement.
 
 The publication order has six dependency waves and is dependency-first:
 
-1. `pliego-css-ir`, `pliego-css-cascade`, `pliego-css-ownership`, `pliego-css-source`
+1. `pliego-css-ir`, `pliego-css-cascade`, `pliego-css-ownership`, `pliego-css-source`, `pliego-css-watch`
 2. `pliego-css-parser`, `pliego-css-theme`
 3. `pliego-css-config`, `pliego-css-compiler`
 4. `pliego-css-build`, `pliego-css-macros`

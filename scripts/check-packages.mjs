@@ -20,6 +20,7 @@ const EXPECTED_ORDER = [
   "pliego-css-cascade",
   "pliego-css-ownership",
   "pliego-css-source",
+  "pliego-css-watch",
   "pliego-css-parser",
   "pliego-css-theme",
   "pliego-css-config",

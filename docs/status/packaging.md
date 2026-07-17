@@ -3,13 +3,13 @@
 Status: **exact final-output caching and the complete exact-clean `e3cb04c` Rust package replay
 passed; no registry or editor Marketplace upload performed**
 
-The publishable workspace boundary has six dependency waves. `pliego-css-usage` and
+The publishable workspace boundary has seventeen crates in six dependency waves. `pliego-css-usage` and
 `pliego-css-control` follow `pliego-css-build` because direct and optional Cargo dependencies both
 affect registry publication order.
 
 | Wave | Packages |
 |---|---|
-| 1 | `pliego-css-ir`, `pliego-css-cascade`, `pliego-css-ownership`, `pliego-css-source` |
+| 1 | `pliego-css-ir`, `pliego-css-cascade`, `pliego-css-ownership`, `pliego-css-source`, `pliego-css-watch` |
 | 2 | `pliego-css-parser`, `pliego-css-theme` |
 | 3 | `pliego-css-config`, `pliego-css-compiler` |
 | 4 | `pliego-css-build`, `pliego-css-macros` |

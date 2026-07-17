@@ -293,10 +293,10 @@ cargo run -p pliego-cssc -- compile --style "flex flex-col gap-4 rounded-lg bord
   retaining all origins of a shared emitted style. Direct token graph nodes then describe only
   emitted styles, but `--theme` still emits its complete supported custom-property block. Token CSS
   pruning remains open.
-- Watch mode polls exact-byte snapshots of line-oriented inputs, Rust source trees, and theme
-  configuration, then caches unchanged Rust syntax reports and theme-scoped semantic IR by file.
-  Browser notification from PliegoCSS, filesystem events, incremental CSS-fragment emission, and
-  LSP/client transport remain open. The CLI already exposes catalog JSON for completion data,
+- Watch mode uses native Windows/Linux filesystem events with authoritative exact-byte fallback snapshots of
+  line-oriented inputs, Rust source trees, and theme configuration, then caches unchanged Rust
+  syntax reports, theme-scoped semantic IR, raw CSS fragments, and byte-identical final output.
+  Browser notification from PliegoCSS remains outside the compiler. The CLI already exposes catalog JSON for completion data,
   `explain --format json` for hover data, and read-only `fmt --source --check` diagnostics; PliegoRS
   development uses its existing SSE reload channel.
 - The older [initial catalog](./initial-utility-catalog.md) records the F0 plan; this page supersedes

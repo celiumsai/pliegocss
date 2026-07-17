@@ -445,6 +445,10 @@ pre-1.0 compatibility policy.
 
 ### Incremental emission
 
+- Watch now uses native Windows/Linux filesystem events to schedule authoritative exact-byte snapshots. Recursive
+  directory roots cover additions, file-parent watches survive atomic replacement, a 2 s timeout
+  catches missed events, and backend setup failure retains 100 ms polling. Snapshot confirmation,
+  not event payloads, remains the publication correctness boundary.
 - Watch now retains emitted raw CSS fragments by canonical semantic stream, reuses unchanged
   fragments across source-only revisions, invalidates through theme-scoped identity, and prunes
   styles absent from the complete snapshot. A fixed-settings final-output cache skips Lightning CSS

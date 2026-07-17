@@ -17,7 +17,6 @@ use std::os::windows::fs::OpenOptionsExt as _;
 use std::path::{Component, Path, PathBuf};
 use std::process::ExitCode;
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::thread;
 use std::time::Duration;
 
 use fs2::FileExt;
@@ -60,13 +59,18 @@ use pliego_css_parser::{format_style_list, parse_named_candidate, parse_style_li
 use pliego_css_source::{
     InvocationKind, MigrationProject, MigrationSourceKind, ScanDiagnostic, ScanFileError,
     ScanReport, SourceRange, StyleLiteral, UtilityFormatError, UtilityFormatFinding,
-    format_source_paths, format_style_failure, inspect_utility_format, inventory_migration_file,
-    is_ignored_source_directory, pcx_composition_reason, scan_file, scan_source_named,
+    expand_bundle_source_paths, expand_source_paths, format_source_paths, format_style_failure,
+    inspect_utility_format, inventory_migration_file, pcx_composition_reason, scan_file,
+    scan_source_named,
 };
 use pliego_css_theme::{THEME_ID_FORMAT_VERSION, ThemeRegistry};
 use pliego_css_usage::{
     PreparedUsageAnalysis, UsageCandidateInput, UsageSelection, UsageStyleInput,
     collect_usage_style_inputs, prepare_usage_analysis,
+};
+use pliego_css_watch::{
+    FileSnapshot as WatchFileSnapshot, WatchScheduler, confirmed as watch_snapshot_confirmed,
+    snapshot_file,
 };
 use serde::{Deserialize, Serialize};
 
@@ -83,6 +87,7 @@ use pliego_css_control::projection::{
 };
 
 const POLL_INTERVAL: Duration = Duration::from_millis(100);
+const EVENT_FALLBACK_INTERVAL: Duration = Duration::from_secs(2);
 const INSPECTION_SCHEMA_VERSION: u8 = 2;
 const EXPLAIN_SCHEMA_VERSION: u8 = 2;
 #[cfg(windows)]
@@ -827,27 +832,6 @@ struct WatchIteration {
     snapshot: WatchSnapshot,
     cache: SourceCacheStats,
     outcome: WatchOutcome,
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-struct WatchFileSnapshot {
-    path: PathBuf,
-    contents: Result<Vec<u8>, String>,
-}
-
-impl WatchFileSnapshot {
-    fn bytes(&self) -> Result<&[u8], String> {
-        self.contents.as_deref().map_err(Clone::clone)
-    }
-
-    fn utf8(&self, role: &str) -> Result<&str, String> {
-        std::str::from_utf8(self.bytes()?).map_err(|error| {
-            format!(
-                "{role} `{}` is not valid UTF-8: {error}",
-                self.path.display()
-            )
-        })
-    }
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -5264,110 +5248,6 @@ fn cli_candidates(styles: &[String], compositions: &[(String, String)]) -> Vec<C
     candidates
 }
 
-fn expand_source_paths(sources: &[PathBuf]) -> Result<Vec<PathBuf>, String> {
-    expand_source_paths_with_policy(sources, false)
-}
-
-fn expand_bundle_source_paths(sources: &[PathBuf]) -> Result<Vec<PathBuf>, String> {
-    expand_source_paths_with_policy(sources, true)
-}
-
-fn expand_source_paths_with_policy(
-    sources: &[PathBuf],
-    reject_reparse_points: bool,
-) -> Result<Vec<PathBuf>, String> {
-    let mut files = BTreeMap::<PathBuf, PathBuf>::new();
-    for source in sources {
-        collect_rust_paths(source, true, reject_reparse_points, &mut files)?;
-    }
-    Ok(files.into_values().collect())
-}
-
-fn collect_rust_paths(
-    path: &Path,
-    explicit: bool,
-    reject_reparse_points: bool,
-    files: &mut BTreeMap<PathBuf, PathBuf>,
-) -> Result<(), String> {
-    let metadata = fs::symlink_metadata(path)
-        .map_err(|error| format!("cannot inspect source `{}`: {error}", path.display()))?;
-    let file_type = metadata.file_type();
-    if file_type.is_symlink() || (reject_reparse_points && is_link_like(&metadata)) {
-        if explicit {
-            return Err(format!(
-                "source `{}` is a symbolic link; source traversal does not follow symlinks",
-                path.display()
-            ));
-        }
-        return Ok(());
-    }
-    if file_type.is_file() {
-        if !path
-            .extension()
-            .and_then(|extension| extension.to_str())
-            .is_some_and(|extension| extension.eq_ignore_ascii_case("rs"))
-        {
-            if explicit {
-                return Err(format!("source `{}` is not a Rust file", path.display()));
-            }
-            return Ok(());
-        }
-        if path.to_str().is_none() {
-            return Err(format!(
-                "source path `{}` is not valid UTF-8",
-                path.display()
-            ));
-        }
-        let canonical = fs::canonicalize(path)
-            .map_err(|error| format!("cannot canonicalize source `{}`: {error}", path.display()))?;
-        match files.entry(canonical) {
-            std::collections::btree_map::Entry::Vacant(entry) => {
-                entry.insert(path.to_path_buf());
-            }
-            std::collections::btree_map::Entry::Occupied(mut entry) => {
-                if path.as_os_str() < entry.get().as_os_str() {
-                    entry.insert(path.to_path_buf());
-                }
-            }
-        }
-        return Ok(());
-    }
-    if !file_type.is_dir() {
-        return if explicit {
-            Err(format!(
-                "source `{}` is neither a Rust file nor a directory",
-                path.display()
-            ))
-        } else {
-            Ok(())
-        };
-    }
-    if is_ignored_source_directory(path) {
-        return Ok(());
-    }
-
-    let mut entries = fs::read_dir(path)
-        .map_err(|error| format!("cannot read source directory `{}`: {error}", path.display()))?
-        .collect::<Result<Vec<_>, _>>()
-        .map_err(|error| format!("cannot read source directory `{}`: {error}", path.display()))?;
-    entries.sort_by_key(std::fs::DirEntry::file_name);
-    for entry in entries {
-        let name = entry.file_name();
-        let name = name.to_string_lossy();
-        let metadata = fs::symlink_metadata(entry.path())
-            .map_err(|error| format!("cannot inspect `{}`: {error}", entry.path().display()))?;
-        let kind = metadata.file_type();
-        if kind.is_symlink() || (reject_reparse_points && is_link_like(&metadata)) {
-            continue;
-        }
-        if kind.is_dir() && (name == "target" || name == ".git" || name.starts_with('.')) {
-            continue;
-        }
-        collect_rust_paths(&entry.path(), false, reject_reparse_points, files)?;
-    }
-    Ok(())
-}
-
 fn cli_provenance(source: &str, reason: &str) -> Provenance {
     Provenance {
         source: source.to_owned(),
@@ -6744,11 +6624,15 @@ fn watch(arguments: &WatchArgs) -> Result<(), String> {
             .map(PathBuf::as_path)
             .chain(arguments.sources.iter().map(PathBuf::as_path)),
     );
+    let (wake, mode) = WatchScheduler::new(
+        watch_event_paths(arguments),
+        POLL_INTERVAL,
+        EVENT_FALLBACK_INTERVAL,
+    );
     eprintln!(
-        "watching `{}` -> `{}` (polling every {} ms)",
+        "watching `{}` -> `{}` ({mode})",
         inputs,
-        arguments.output.display(),
-        POLL_INTERVAL.as_millis()
+        arguments.output.display()
     );
     let mut previous = None;
     let mut pending = None;
@@ -6756,7 +6640,7 @@ fn watch(arguments: &WatchArgs) -> Result<(), String> {
     loop {
         let snapshot = capture_watch_snapshot(arguments);
         if !watch_snapshot_confirmed(previous.as_ref(), &mut pending, &snapshot) {
-            thread::sleep(POLL_INTERVAL);
+            wake.wait(POLL_INTERVAL);
             continue;
         }
         let iteration =
@@ -6773,6 +6657,7 @@ fn watch(arguments: &WatchArgs) -> Result<(), String> {
                 iteration.cache.removed
             );
         }
+        let mut wait = EVENT_FALLBACK_INTERVAL;
         match iteration.outcome {
             WatchOutcome::Unchanged => {
                 pending = None;
@@ -6794,9 +6679,12 @@ fn watch(arguments: &WatchArgs) -> Result<(), String> {
                             eprintln!("warning: generated control receipt records a failed audit");
                         }
                     }
-                    Err(error) => eprintln!(
-                        "write failed; retrying without waiting for another input change: {error}"
-                    ),
+                    Err(error) => {
+                        wait = POLL_INTERVAL;
+                        eprintln!(
+                            "write failed; retrying without waiting for another input change: {error}"
+                        );
+                    }
                 }
             }
             WatchOutcome::Failed(error) => {
@@ -6805,8 +6693,24 @@ fn watch(arguments: &WatchArgs) -> Result<(), String> {
                 eprintln!("compile failed; keeping the last valid artifact: {error}");
             }
         }
-        thread::sleep(POLL_INTERVAL);
+        wake.wait(wait);
     }
+}
+
+fn watch_event_paths(arguments: &WatchArgs) -> Vec<PathBuf> {
+    arguments
+        .input
+        .iter()
+        .chain(&arguments.sources)
+        .chain(arguments.tokens.iter())
+        .chain(arguments.reachability.iter())
+        .cloned()
+        .chain(
+            (arguments.tokens.is_none())
+                .then(|| resolve_watch_theme_config(arguments).ok().flatten())
+                .flatten(),
+        )
+        .collect()
 }
 
 #[cfg(all(test, not(feature = "package-verify")))]
@@ -6841,22 +6745,6 @@ fn watch_iteration_from_snapshot(
             Ok(artifact) => WatchOutcome::Compiled(artifact),
             Err(error) => WatchOutcome::Failed(error),
         },
-    }
-}
-
-fn watch_snapshot_confirmed(
-    previous: Option<&WatchSnapshot>,
-    pending: &mut Option<WatchSnapshot>,
-    snapshot: &WatchSnapshot,
-) -> bool {
-    if previous == Some(snapshot) {
-        *pending = None;
-        true
-    } else if pending.as_ref() == Some(snapshot) {
-        true
-    } else {
-        *pending = Some(snapshot.clone());
-        false
     }
 }
 
@@ -6954,14 +6842,6 @@ fn capture_watch_snapshot(arguments: &WatchArgs) -> WatchSnapshot {
                 path: path.clone(),
                 contents: read_reachability(path),
             }),
-    }
-}
-
-fn snapshot_file(path: &Path, role: &str) -> WatchFileSnapshot {
-    WatchFileSnapshot {
-        path: path.to_path_buf(),
-        contents: fs::read(path)
-            .map_err(|error| format!("cannot read {role} `{}`: {error}", path.display())),
     }
 }
 

@@ -16,6 +16,7 @@ members = [
   "crates/pliego-css-config",
   "crates/pliego-css-theme",
   "crates/pliego-css-usage",
+  "crates/pliego-css-watch",
   "crates/pliego-cssc",
   "examples/basic",
   "examples/custom-theme",
@@ -48,6 +49,7 @@ pliego-css-parser = { path = "crates/pliego-css-parser", version = "=0.0.0" }
 pliego-css-source = { path = "crates/pliego-css-source", version = "=0.0.0" }
 pliego-css-theme = { path = "crates/pliego-css-theme", version = "=0.0.0" }
 pliego-css-usage = { path = "crates/pliego-css-usage", version = "=0.0.0" }
+pliego-css-watch = { path = "crates/pliego-css-watch", version = "=0.0.0" }
 
 [workspace.lints.rust]
 missing_docs = "warn"

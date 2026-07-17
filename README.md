@@ -171,7 +171,7 @@ The workspace is unreleased at `0.0.0`; syntax and crate boundaries may still ch
   checks, symlink/junction escape, and case-insensitive filesystem aliases. CI is configured for Ubuntu, Windows, and
   macOS on Rust 1.85/1.96 plus Node 22.13; hosted green-run evidence remains pending because this
   checkout has no configured remote.
-- The publishable boundary candidate is now sixteen exact-version crates in six dependency waves.
+- The publishable boundary candidate is now seventeen exact-version crates in six dependency waves.
   The independent cascade core sits in wave 1 and the bounded repair core in wave 5 so neither
   pushes the already-tight build or CLI archives over the fixed 61,440-byte ceiling. The latest
   exact clean `e3cb04c` replay packaged and compiled all sixteen extracted archives and passed its

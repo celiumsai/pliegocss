@@ -20,6 +20,7 @@
 mod application;
 mod discovery;
 mod formatting;
+mod inventory;
 mod migration;
 
 use std::fmt;
@@ -41,6 +42,7 @@ pub use formatting::{
     UtilityFormatError, UtilityFormatFinding, UtilityFormatInspection, UtilityFormatRewrite,
     inspect_utility_format,
 };
+pub use inventory::{expand_bundle_source_paths, expand_source_paths};
 pub use migration::{
     MIGRATION_INVENTORY_SCHEMA_VERSION, MigrationAuxiliaryInventory, MigrationAuxiliaryKind,
     MigrationAuxiliaryObservation, MigrationAuxiliaryObservationKind, MigrationConstruct,

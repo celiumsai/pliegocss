@@ -216,6 +216,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "inotify"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f37dccff2791ab604f9babef0ba14fbe0be30bd368dc541e2b08d07c8aa908f3"
+dependencies = [
+ "bitflags",
+ "inotify-sys",
+ "libc",
+]
+
+[[package]]
+name = "inotify-sys"
+version = "0.1.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c033f80b2c113cdf91ab7a33faa9cbc014726dcad99880c8609af2a370edf37d"
+dependencies = [
+ "libc",
+]
+
+[[package]]
 name = "itertools"
 version = "0.10.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -546,6 +566,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "pliego-css-watch"
+version = "0.0.0"
+dependencies = [
+ "inotify",
+ "windows-sys",
+]
+
+[[package]]
 name = "pliego-cssc"
 version = "0.0.0"
 dependencies = [
@@ -563,6 +591,7 @@ dependencies = [
  "pliego-css-source",
  "pliego-css-theme",
  "pliego-css-usage",
+ "pliego-css-watch",
  "serde",
  "serde_json",
  "toml",

@@ -215,6 +215,13 @@ fn watch_republishes_dtcg_defaults_and_keeps_the_last_valid_group() {
     });
     let initial_snapshot = snapshot(&output);
     let initial_css = fs::read(output.join("app.css")).expect("initial watch CSS");
+    wait_for("native filesystem-event startup", || {
+        fs::read_to_string(&stderr_log).ok().and_then(|stderr| {
+            stderr
+                .contains("filesystem events; snapshot fallback")
+                .then_some(())
+        })
+    });
 
     let dark_source = RESOLVER.replacen("\"default\": \"light\"", "\"default\": \"dark\"", 1);
     assert_ne!(dark_source, RESOLVER, "fixture default must change");
@@ -239,6 +246,7 @@ fn watch_republishes_dtcg_defaults_and_keeps_the_last_valid_group() {
         "resolver graph must bind defaults"
     );
 
+    let event_started = Instant::now();
     fs::write(&tokens, &dark_source).expect("publish dark resolver revision");
     let dark = wait_for("coherent dark-default DTCG watch group", || {
         let publication = read_committed_watch(root, &dark_graph)?;
@@ -246,6 +254,10 @@ fn watch_republishes_dtcg_defaults_and_keeps_the_last_valid_group() {
     });
     let dark_snapshot = snapshot(&output);
     let dark_css = fs::read(output.join("app.css")).expect("dark watch CSS");
+    assert!(
+        event_started.elapsed() < Duration::from_millis(1_500),
+        "native event wake must beat the 2 s fallback snapshot"
+    );
     assert_ne!(
         dark_css, initial_css,
         "dark default must change generated CSS"
