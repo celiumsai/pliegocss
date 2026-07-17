@@ -1,6 +1,6 @@
 # Packaging status
 
-Status: **the reviewed public migration corpus passed the complete exact-clean `d6a0e06` replay; no
+Status: **declared Sass partial resolution passed the complete exact-clean `347c6cf` replay; no
 registry upload performed**
 
 The publishable workspace boundary has six dependency waves. `pliego-css-usage` and
@@ -18,6 +18,26 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## Declared Sass partial-resolution clean replay — 2026-07-16
+
+The exact clean `347c6cf` Debian WSL2 gate passed 45 source tests including Unix symlink rejection,
+five migration CLI tests, strict source/CLI Clippy, source rustdoc with warnings denied, and the
+complete Rust 1.85 public API smoke. The network corpus then reproduced 104/104 file-role tuples and
+resolved all 144 Bootstrap Sass dependencies through the closed file/partial/index/import-only
+rules. The package replay packaged and extracted all fifteen archives with Cargo 1.96 and compiled
+the extracted graph plus downstream consumer in release mode. Publication remained disabled, the
+worktree was clean, and the fixed 61,440-byte ceiling was not raised.
+
+| Package | Compressed bytes | Remaining margin | SHA-256 |
+|---|---:|---:|---|
+| `pliego-css-source` | 53,580 | 7,860 | `cced3480ae5a92279ebfb29b31aaa252a2499485ac56336edac2168e8499b612` |
+| `pliego-cssc` | 61,395 | 45 | `2c74bed2e4b5e38c41eeb7dfa1fa1f5f7b2301ea993d2c0e3a8f5448c9154f5c` |
+
+Sass containing-directory lookup no longer requires `./`; import-only candidates precede normal
+ones for legacy `@import`, and multiple declared candidates in one tier fail closed. Configured load
+paths/importers, transitive semantic analysis, and migration outcomes remain open, so R0.8 remains
+partial. The CLI package remains closed to additive feature growth.
 
 ## Reviewed public migration corpus clean replay — 2026-07-16
 
