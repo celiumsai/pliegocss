@@ -1,8 +1,7 @@
 # Packaging status
 
-Status: **the VS Code and Neovim clients, cross-clause `pcx!` diagnostics, and the complete
-exact-clean `6f28e66` Rust package replay passed; no registry or editor Marketplace upload
-performed**
+Status: **the frozen LSP diagnostic corpus and the complete exact-clean `438be2e` Rust package
+replay passed; no registry or editor Marketplace upload performed**
 
 The publishable workspace boundary has six dependency waves. `pliego-css-usage` and
 `pliego-css-control` follow `pliego-css-build` because direct and optional Cargo dependencies both
@@ -19,6 +18,26 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## LSP diagnostic corpus clean replay — 2026-07-17
+
+The exact clean `438be2e` Debian WSL2 gate packaged and extracted all sixteen Rust archives with
+native Linux Node 24.14.0 and Cargo 1.96, compiled the complete extracted graph in release mode,
+and executed the Rust 1.85 downstream consumer. `pliego-css-lsp` measured 25,511 compressed bytes
+(35,929 bytes of margin, SHA-256
+`7f6c934bfdf0dbe0eb23d0f6c6edd623680f2349a0a3320fce654e0025fe4f99`). Tight archives
+remained below the fixed ceiling: `pliego-cssc` measured 61,338 bytes (102 bytes of margin,
+SHA-256 `1ecd7adf33e47c7af7928ddb00514b2edadb9c0e50af810dcded964d923e357b`),
+`pliego-css-control` 61,078 (362 bytes), `pliego-css-build` 59,913 (1,527 bytes), and
+`pliego-css-source` 56,781 (4,659 bytes). Publication remained disabled and the 61,440-byte
+ceiling was not raised.
+
+The Windows and Debian LSP process gates replayed diagnostic corpus schema 1 and required exact
+code, message, and UTF-16 range equality for seven representative parser, scanner, semantic, and
+formatting cases. The pinned VS Code 1.105.1 and Neovim 0.12.4 host regressions also passed after
+precise parser-span projection replaced the former whole-literal fallback where mapping is exact.
+The corpus is a representative compatibility floor; it does not yet cover every diagnostic code,
+severity, suggestion, or fix.
 
 ## Neovim built-in-LSP client clean replay — 2026-07-17
 
