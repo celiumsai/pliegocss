@@ -943,7 +943,7 @@ fn verify_asset_generation_failure_publishes_nothing(
     );
     let failed = run(
         fixture.root(),
-        &project_arguments("schema-five", "reachability.json", true, false),
+        &project_arguments("schema-five", "reachability.json", false, false),
     );
     assert_failure(
         &failed,

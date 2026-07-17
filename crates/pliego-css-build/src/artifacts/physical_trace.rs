@@ -250,7 +250,11 @@ pub fn build_physical_projection(
     validate_actual_ranges(final_css, &actual)?;
 
     let theme_producer = "producer:theme".to_owned();
-    let producers = include_theme
+    let theme_has_declarations = include_theme
+        && expected
+            .first()
+            .is_some_and(|rule| !rule.declarations.is_empty());
+    let producers = theme_has_declarations
         .then(|| PhysicalProducer {
             id: theme_producer.clone(),
             kind: "theme",

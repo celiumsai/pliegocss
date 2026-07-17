@@ -73,7 +73,7 @@ source files in the order supplied.
 | `--token-input modifier=context` | Yes | Selects one resolver context. Requires `--tokens`; duplicate/case-colliding modifiers and unknown names/values fail. |
 | `--targets baseline-widely\|modern\|none` | No | Selects a versioned compatibility profile; compile commands default to `modern`. |
 | `--format minified\|pretty` | No | Selects Lightning CSS output formatting; default is `minified`. |
-| `--theme` | Boolean | Prepends custom properties for the active registry. Compile/build/watch only. |
+| `--theme` | Boolean | Prepends active-registry custom properties; with explicit pruning, emits only variable-backed tokens consumed by retained styles. Compile/build/watch only. |
 | `--output path` | No | Writes CSS; compile/build prints CSS when omitted. |
 | `--manifest path` | No | Writes default schema 3 or explicitly selected schema 4/5 JSON. Compile/build/watch only. |
 | `--manifest-version 3\|4\|5` | No | Selects a numbered manifest contract; requires manifest output. Version 3 is the default. |
@@ -631,8 +631,9 @@ custom-property block plus the final newline when `emit-theme = true`.
 validates every complete schema-4/5 manifest against its exact CSS, requires one common application
 topology and build identity, and records every bundle's exact CSS/manifest byte counts and SHA-256
 digests. `ruleSelection` is `all-compiled` without pruning and `reachable-style-ids` with pruning.
-Routes and islands stay separate; the optional theme-emitting bundle is global and appears first in
-every root selection. The plan reports the explicit source partition and never emits URLs, links, or
+Routes and islands stay separate; an optional bundle with actual theme declarations is global and
+appears first in every root selection. A requested but empty pruned `:root{}` is not globally
+selected. The plan reports the explicit source partition and never emits URLs, links, or
 preload policy.
 
 `--project-index` is a second boolean switch with fixed destination
@@ -1027,8 +1028,10 @@ provenance to only the reachable subset.
 Pruning removes complete StyleId output, not individual declarations from a retained style. The
 schema-4/schema-5 graph emits semantic declarations and direct token nodes only for retained styles;
 schema 5 traces only the resulting physical CSS. With an empty route/island root set, CSS is one
-newline unless theme output was requested. `--theme` and bundle `emit-theme = true` always emit the
-complete supported custom-property block, so this option is not token-variable pruning.
+newline without theme output and `:root{}` plus one newline when theme output was requested. Under
+pruning, `--theme` and bundle `emit-theme = true` emit only variable-backed tokens directly consumed
+by retained semantic styles. Without pruning, the complete supported block remains byte-compatible.
+Authored CSS `var(...)` consumers outside semantic styles are not discovered.
 
 For `bundle`, classification runs independently over only the styles and origins already assigned to
 each bundle by the plan. All bundles use the same union root set, and the flag neither derives source

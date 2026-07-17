@@ -190,12 +190,12 @@ remove individual declarations from a retained style.
 The graph's semantic declarations, direct token nodes, `styleHasDeclaration`,
 `declarationUsesToken`, and `componentUsesDeclaration` edges describe only emitted styles. Supplied
 application nodes and route/island-to-component edges retain their application-topology meaning. An
-empty route/island root set therefore yields no style/declaration/token nodes and a one-newline CSS
-artifact unless theme output is enabled.
+empty route/island root set therefore yields no style/declaration/token nodes. CSS is one newline
+without theme output and `:root{}` plus one newline when theme output was requested.
 
-`--theme` is independent: it emits the complete supported custom-property block even when every
-StyleId is pruned. Schema 4 does not model those physical theme declarations, and this option does
-not implement token-variable pruning. For `bundle`, the same classification is applied separately
+With pruning enabled, `--theme` emits only variable-backed tokens directly referenced by retained
+semantic styles. Schema 4 does not model those physical theme declarations. Without pruning, theme
+emission remains the complete supported custom-property block. For `bundle`, the same classification is applied separately
 to only the styles and origins already assigned to each explicit bundle; it does not derive or alter
 the bundle partition.
 
@@ -234,4 +234,5 @@ it only when a runtime or debugging consumer needs it.
 
 The graph never infers Cargo or framework reachability and does not generate `<link>` or preload
 tags. Without `--prune-unreachable` it is evidence only. With that explicit flag it can remove whole
-unreachable StyleId rule sets, but still does not partition assets or prune theme variables.
+unreachable StyleId rule sets and their now-unused emitted theme variables, but it still does not
+partition assets, remove individual declarations, or discover arbitrary authored `var(...)` consumers.

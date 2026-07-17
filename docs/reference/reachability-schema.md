@@ -191,9 +191,10 @@ declarations.
 
 If routes and islands contribute no root components, every StyleId is removed. The CSS artifact is
 then exactly one newline when theme emission is disabled. With `--theme`, or `emit-theme = true` in a
-bundle plan, the complete supported theme custom-property block remains before the final newline.
-Theme variables are application-global under the current contract: pruning does not select or remove
-them, and it is not token-CSS pruning.
+bundle plan, it is `:root{}` plus the final newline because no retained semantic style consumes a
+variable-backed token. With non-empty roots, only directly referenced variable-backed tokens remain.
+Without pruning, the complete supported theme block remains byte-compatible. Arbitrary authored
+`var(...)` consumers are outside reachability schema 1 and cannot make a token reachable.
 
 For `bundle`, the plan first assigns source sets explicitly. Each bundle classifies only its own
 compiled styles and origins against the same union root set. This can remove rules inside a bundle;

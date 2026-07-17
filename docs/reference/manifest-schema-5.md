@@ -242,10 +242,11 @@ Compiler-generated support declarations that are caused by semantic assignments,
 shadow initializers and their composed final `box-shadow`, use semantic contribution edges. They are
 not incorrectly assigned to the theme producer.
 
-`--prune-unreachable` does not filter this synthetic theme output. If no route or island contributes
-a root component, schema 5 contains no style-produced physical rules but still traces the complete
-theme block when `--theme` or bundle `emit-theme = true` was requested. This is not token-variable
-pruning.
+With `--prune-unreachable`, synthetic theme output contains only variable-backed tokens directly
+referenced by retained semantic styles. If no route or island contributes a root component, schema
+5 contains an empty physical `:root{}` rule, no theme declarations, and no `producer:theme` node.
+Without pruning, `--theme` and bundle `emit-theme = true` retain the complete supported block.
+Authored `var(...)` consumers outside semantic styles are not part of this proof.
 
 ## Edge contract
 
@@ -385,8 +386,8 @@ metadata.
 5. Validate exact graph-1 projection and every typed physical endpoint.
 6. Require `originCoverage`, `applicationCoverage`, and `physicalCoverage` at their exact complete
    values before using the graph for route or pruning decisions.
-7. Treat theme-produced declarations as application-global unless a later version defines a
-   different explicit ownership contract.
+7. Treat any emitted theme-produced declarations as application-global; under pruning their
+   declaration set is already filtered by retained semantic token consumption.
 8. Reject unknown rule kinds, edge kinds, coverage values, or physical ID versions.
 
 ## Security and deployment

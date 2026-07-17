@@ -62,8 +62,9 @@ partial origin fails the complete analysis rather than becoming `unobserved`.
 
 `candidate` is report-only. `removed` means excluded from generated CSS by the already explicit
 `--prune-unreachable` operation; it never means authored source was edited. Source mutation,
-declaration-level pruning, token-variable pruning, and generic repair receipts remain outside this
-schema.
+declaration-level disposition, per-token usage verdicts, and generic repair receipts remain outside
+this schema. Theme-variable emission may be filtered downstream from the retained StyleId set
+without changing this report's removal unit.
 
 ## Rejected alternatives
 
@@ -81,10 +82,12 @@ class construction cannot prove global absence.
 Rejected because those frozen contracts describe emitted provenance. A pruned manifest omits the
 very complete `StyleId` universe required to explain removal.
 
-### Remove individual declarations or theme variables
+### Make individual declarations or theme variables usage-analysis units
 
 Rejected for schema 1 because shared identities, cascade behavior, fallbacks, and global theme
-contracts require a different proof boundary.
+contracts require a different proof boundary. A later compiler optimization can omit
+variable-backed tokens with no consumer among already retained complete styles without claiming a
+per-token observation verdict here.
 
 ## Consequences
 

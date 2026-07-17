@@ -211,6 +211,14 @@ fn assert_primary_pruning(fixture: &Fixture) -> Evidence {
         true,
         false,
     );
+    let themed = compile_success(
+        fixture.root(),
+        "pruned-themed-v4",
+        "reachability.json",
+        4,
+        true,
+        true,
+    );
     let route_style = style_id(style_for_site(&baseline.manifest, fixture.sites.route));
     let island_style = style_id(style_for_site(&baseline.manifest, fixture.sites.island));
     let dead_style = style_id(style_for_site(&baseline.manifest, fixture.sites.dead));
@@ -255,6 +263,11 @@ fn assert_primary_pruning(fixture: &Fixture) -> Evidence {
     );
 
     let css = css_text(&pruned.css);
+    let themed_css = css_text(&themed.css);
+    assert!(themed_css.contains("--color-accent:"));
+    assert!(themed_css.contains("--color-muted:"));
+    assert!(!themed_css.contains("--color-accent-strong:"));
+    assert!(!themed_css.contains("--font-"));
     let dead_class = class_name(style_by_id(&baseline.manifest, &dead_style));
     assert!(
         !css.contains(&format!(".{dead_class}")),
@@ -475,8 +488,7 @@ fn assert_empty_root_contract(fixture: &Fixture) {
         true,
         true,
     );
-    assert_ne!(themed.css, b"\n");
-    assert!(css_text(&themed.css).contains(":root{"));
+    assert_eq!(themed.css, b":root{}\n");
     assert!(manifest_styles(&themed.manifest).is_empty());
     assert!(graph_array(&themed.manifest, "declarations").is_empty());
     assert!(graph_array(&themed.manifest, "tokens").is_empty());
@@ -494,7 +506,7 @@ fn assert_empty_root_contract(fixture: &Fixture) {
     assert!(graph_array(&themed_v5.manifest, "declarations").is_empty());
     assert!(graph_array(&themed_v5.manifest, "tokens").is_empty());
     assert!(!graph_array(&themed_v5.manifest, "physicalRules").is_empty());
-    assert!(!graph_array(&themed_v5.manifest, "physicalDeclarations").is_empty());
+    assert!(graph_array(&themed_v5.manifest, "physicalDeclarations").is_empty());
 }
 
 fn assert_cli_guards(fixture: &Fixture) {
@@ -1074,6 +1086,7 @@ emit-theme = true
         "--reachability",
         "multi-reachability.json",
         "--prune-unreachable",
+        "--asset-plan",
     ]);
     assert_success(&run(fixture.root(), &bundle_arguments));
     assert_eq!(
@@ -1089,7 +1102,7 @@ emit-theme = true
     assert!(manifest_styles(&dead_manifest).is_empty());
     let themed_css = fs::read(fixture.root().join("bundle-multi/themed-dead.css"))
         .expect("themed dead bundle CSS must exist");
-    assert!(css_text(&themed_css).contains(":root{"));
+    assert_eq!(themed_css, b":root{}\n");
     let themed_manifest = read_json(
         fixture
             .root()
@@ -1098,6 +1111,29 @@ emit-theme = true
     assert!(manifest_styles(&themed_manifest).is_empty());
     assert!(graph_array(&themed_manifest, "declarations").is_empty());
     assert!(graph_array(&themed_manifest, "tokens").is_empty());
+    let asset_plan = read_json(fixture.root().join("bundle-multi/pliego.assets.json"));
+    let themed_bundle = asset_plan["bundles"]
+        .as_array()
+        .expect("asset bundles must be an array")
+        .iter()
+        .find(|bundle| bundle["id"] == "themed-dead")
+        .expect("themed-dead must remain in the integrity ledger");
+    assert_eq!(themed_bundle["emitsTheme"], false);
+    for field in ["routes", "islands"] {
+        for root in asset_plan[field]
+            .as_array()
+            .expect("asset roots must be arrays")
+        {
+            assert!(
+                !root["bundles"]
+                    .as_array()
+                    .expect("root bundles must be an array")
+                    .iter()
+                    .any(|bundle| bundle == "themed-dead"),
+                "empty requested-theme bundle was selected globally",
+            );
+        }
+    }
 
     let before = directory_snapshot(&fixture.root().join("bundle-multi"));
     let mut check_arguments = bundle_arguments;

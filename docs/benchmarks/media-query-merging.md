@@ -82,6 +82,5 @@ schema 3/4/5 CSS equality, `modern`/`none`, pretty/minified output, exact graph-
 fail-closed physical reconciliation for this case.
 
 This optimization does not select an atomic, grouped, or hybrid global output strategy. That wider
-comparison, automatic route/island splitting, critical CSS, and token-variable pruning remain open
-F7 work. The separate opt-in `--prune-unreachable` rule-selection contract is not measured by this
-media-merge benchmark.
+comparison, automatic route/island splitting, and critical CSS remain open F7 work. Theme-variable
+pruning is measured by the separate opt-in reachability benchmark, not by this media-merge fixture.

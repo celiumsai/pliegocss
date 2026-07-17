@@ -157,7 +157,8 @@ encode:
 | 2 | `reachable-or-retained-style-ids` | Reachability pruning retained that same reachable union plus exact bundle-qualified StyleIds admitted by a validated [usage retention schema 1](./usage-retention-schema-1.md) policy. |
 
 The value describes how the adjacent bundle artifacts were selected. It does not list removed
-StyleIds, prune individual declarations, or claim that theme variables were pruned. A retained
+StyleIds or prune individual declarations. Under a pruning selection, the compiler also removes
+variable-backed theme tokens with no direct consumer in the retained styles. A retained
 shared StyleId still carries every normalized origin and all corresponding component ownership
 edges. Policy retention does not change structural reachability: a retained dead StyleId remains
 unreachable and dead in Usage Analysis, while its complete rule set remains published.
@@ -175,7 +176,7 @@ Each `bundles[]` record has this exact contract:
 | `id` | Bundle name from the schema-1 or schema-2 bundle plan. It is 1-64 lowercase kebab-case ASCII bytes, starts with a letter, has no repeated or trailing hyphen, and is not a Windows device name. |
 | `cssFile` | Exactly `<id>.css`, relative to the directory containing `pliego.assets.json`. |
 | `manifestFile` | Exactly `<id>.manifest.json`, relative to the directory containing `pliego.assets.json`. |
-| `emitsTheme` | Whether the bundle plan requested `emit-theme = true` for this bundle. |
+| `emitsTheme` | Whether the final bundle contains at least one physical theme declaration. A requested but empty pruned `:root{}` is `false`. |
 | `cssBytes` | Exact CSS file length, including the required final newline. |
 | `cssSha256` | Lowercase SHA-256 of the exact CSS file bytes. It must also equal the digest in the adjacent manifest. |
 | `manifestBytes` | Exact manifest file length, including its final newline. |
@@ -226,21 +227,22 @@ between bundles, extract shared CSS, or derive a new partition.
 
 ## Global theme bundle
 
-Zero or one bundle may have `emitsTheme: true`. More than one is rejected as ambiguous. When it
+Zero or one bundle may have `emitsTheme: true`. More than one bundle with actual theme declarations
+is rejected as ambiguous. When a bundle actually emits theme declarations, it
 exists, the theme bundle:
 
 - is the first top-level bundle;
 - is the first bundle in every route and island selection; and
 - remains selected even when it has no active semantic component for that root.
 
-This makes the current custom-property block application-global. It does not prove that every
-deployment needs to transfer the theme bundle separately, nor does it prune individual variables.
-A plan with no theme-emitting bundle is valid; the application is then responsible for supplying
-any required custom properties by another trusted mechanism.
+This makes the emitted custom-property subset application-global. Under pruning, that subset is
+derived from direct variable-backed token consumption by retained semantic styles. Without pruning,
+it is the complete supported registry block. A plan with no theme-emitting bundle is valid; an empty
+pruned `:root{}` does not force a no-op bundle into every root selection.
 
 Manifest schema 5 independently checks `emitsTheme` against the presence of the synthetic
 `producer:theme`. Graph schema 1 does not represent physical theme declarations, so for manifest
-schema 4 the value comes from the already validated declarative bundle plan.
+schema 4 the value comes from the compiler's already determined final theme subset.
 
 ## Canonical bytes
 
@@ -338,8 +340,8 @@ printer formats are rejected rather than approximated.
   still complete.
 - A fully pruned non-theme bundle remains listed with the exact newline-only CSS and pruned manifest
   but is selected by no root.
-- A fully pruned theme bundle still contains the global theme block and is selected by every
-  declared route and island.
+- A fully pruned requested-theme bundle contains `:root{}`, reports `emitsTheme: false`, and is
+  selected by no root unless it also has active semantic ownership.
 - A schema-2 bundle selected only by retention contains the complete retained StyleId rules and
   remains in `bundles`, but receives no route or island membership merely because of that policy.
 - A shared or co-owned emitted style can make one bundle active for several components and therefore
@@ -371,7 +373,8 @@ Schema 1 deliberately does not:
 - generate URLs, public base paths, HTML `<link>` elements, preload directives, fetch priority, or
   cache headers;
 - infer which islands occur on a route;
-- emit critical CSS or prune individual declarations, tokens, or theme variables;
+- emit critical CSS, decide theme-variable reachability independently of compiler selection, or
+  prune individual declarations;
 - publish files to a server or mutate a framework build ledger; or
 - authenticate application topology or authorize access to an asset.
 

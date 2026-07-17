@@ -12,6 +12,7 @@ mod ir_binary;
 pub use emitter::{
     CssFragmentCache, DeclarationLineage, EmitError, RuleLineage, StyleLineage, class_name,
     emit_css, emit_css_with_theme, emit_css_with_theme_traced, emit_seed_theme, emit_theme,
+    emit_used_theme,
 };
 pub use identity::{
     IdentityError, STYLE_ID_FORMAT_VERSION, derive_style_id, derive_style_id_with_theme,
@@ -2831,6 +2832,25 @@ mod tests {
         assert!(css.contains("@media (min-width:52rem){"));
         assert!(css.contains("background-color:var(--color-accent);"));
         assert!(emit_theme(&theme).contains("--color-accent:oklch(70% .2 40);"));
+    }
+
+    #[test]
+    fn used_theme_emits_only_variable_backed_retained_tokens() {
+        let theme = customized_seed("oklch(70% .2 40)", "52rem");
+        let syntax = parse_style_list("bg-accent p-4").expect("must succeed");
+        let style = lower_style_with_theme(&theme, &syntax).expect("must succeed");
+        let css = emit_used_theme(&theme, [&style]);
+
+        assert!(css.contains("--color-accent:oklch(70% .2 40);"));
+        assert!(!css.contains("--color-surface:"));
+        assert!(!css.contains("--font-"));
+        assert!(!css.contains("--spacing-"));
+    }
+
+    #[test]
+    fn used_theme_preserves_an_empty_root_when_no_variable_is_required() {
+        let style = lower("flex p-4").expect("must succeed");
+        assert_eq!(emit_used_theme(seed_theme(), [&style]), ":root{}");
     }
 
     #[test]

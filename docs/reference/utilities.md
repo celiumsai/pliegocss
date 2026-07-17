@@ -291,8 +291,9 @@ cargo run -p pliego-cssc -- compile --style "flex flex-col gap-4 rounded-lg bord
   integrity. Opt-in schemas 4/5 import exact component/route/island ownership; adding
   `--prune-unreachable` removes complete StyleId rule sets that have no reachable exact origin while
   retaining all origins of a shared emitted style. Direct token graph nodes then describe only
-  emitted styles, but `--theme` still emits its complete supported custom-property block. Token CSS
-  pruning remains open.
+  emitted styles. With the same explicit pruning flag, `--theme` emits only variable-backed tokens
+  referenced by retained styles; without pruning it emits the complete supported block. Authored
+  `var(...)` consumers outside PliegoCSS semantic styles are not discovered.
 - Watch mode uses native Windows/Linux filesystem events with authoritative exact-byte fallback snapshots of
   line-oriented inputs, Rust source trees, and theme configuration, then caches unchanged Rust
   syntax reports, theme-scoped semantic IR, raw CSS fragments, and byte-identical final output.

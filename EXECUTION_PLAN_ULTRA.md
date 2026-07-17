@@ -306,7 +306,8 @@ hosted/multi-browser permanece como gate de release.
 - [x] Implementar `--retention` como excepción explícita bundle-qualified: conserva StyleIds dead
   completos sin convertirlos en reachable/observed y versiona la selección de Usage Analysis,
   Asset Plan, Project Index y ownership.
-- [ ] Eliminar variables/tokens inalcanzables; el bloque emitido por `--theme` permanece global.
+- [x] Eliminar del bloque `--theme` las variables sin consumidores entre los StyleIds retenidos
+  cuando `--prune-unreachable` está activo; el modo normal conserva el registro completo.
 - [x] Fusionar media queries adyacentes con AST exactamente igual sin cruzar límites de cascada;
   el benchmark dirigido ahorra 437 B raw / 13 B gzip con tema y deja Gate A/B neutrales.
 - [x] Implementar `why included` semántico como ruta/island → componente → declaración → token.
@@ -380,8 +381,9 @@ Toda optimización tiene benchmark; ninguna complejidad entra solamente por intu
   Usage analysis schema 1 ya conserva el universo pre-pruning, separa reachability/observación/uso,
   deriva `observed|unobserved|dead|unknown`, liga evidencia exacta y registra tombstones/removal para
   StyleIds completos. Schema 2 y el sidecar de retención ya preservan excepciones exactas sin
-  relabeling y comparten selección con Asset Plan, Project Index y ownership. Faltan granularidad
-  CSS/token genérica y evidencia hosted/release para cerrar R0.4.
+  relabeling y comparten selección con Asset Plan, Project Index y ownership. La misma selección
+  poda variables de tema sin consumidor semántico, pero aún faltan reporte/query de tokens,
+  granularidad de declaraciones y evidencia hosted/release para cerrar R0.4.
 - [ ] Cerrar el gate de producto del token graph. El core canónico ya implementa aliases, derived
   values, deprecations, procedencia, rechazo de ciclos, themes/permutations y cobertura transitiva;
   el bridge de formato y Resolver DTCG 2025.10 están implementados, y los grupos controlados publican

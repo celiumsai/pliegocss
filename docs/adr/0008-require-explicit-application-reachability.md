@@ -57,10 +57,11 @@ subset.
   the schema-4 semantic contract unchanged.
 - The graph contains semantic declarations and direct token nodes only for emitted styles, while a
   retained shared style preserves every compiled origin.
-- Theme custom properties remain application-global: `--theme` and bundle `emit-theme = true` are
-  not filtered by reachability.
-- Automatic application collection, token-variable pruning, bundle derivation, and link/preload
-  generation remain separate work.
+- Theme custom properties remain application-global when emitted, but explicit pruning filters the
+  block to variable-backed tokens directly consumed by retained semantic styles. Non-pruned output
+  remains complete. Authored `var(...)` references outside semantic styles are not proven reachable.
+- Automatic application collection, bundle derivation, and link/preload generation remain separate
+  work from this ADR; later milestones may build on its proof boundary.
 
 See [reachability schema 1](../reference/reachability-schema.md),
 [manifest schema 4](../reference/manifest-schema-4.md), and

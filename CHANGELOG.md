@@ -12,6 +12,14 @@ pre-1.0 compatibility policy.
 
 ### Added
 
+- Opt-in theme-variable pruning under `--prune-unreachable`. After whole-StyleId selection and
+  explicit retention, `--theme` emits only variable-backed tokens directly consumed by retained
+  semantic styles; normal builds retain the complete byte-compatible registry block. Empty root
+  sets produce `:root{}` with no synthetic theme producer, and Asset Plan no longer forces that
+  no-op bundle into every route/island. The deterministic pruning gate freezes repeated themed
+  compiler bytes, closed schema-5 provenance, ten-to-three custom-property selection, and
+  7,654-to-457 raw / 1,370-to-264 gzip reductions on its controlled dead-heavy fixture. Authored
+  external `var(...)` consumers remain outside the semantic reachability proof.
 - An initial `pliego-css-lsp` stdio server implementing a bounded LSP 3.18 subset for full Rust
   document synchronization, UTF-16 positions, scanner/parser/format diagnostics, catalog-backed
   completion, explain-backed hover, and collision-safe whole-literal formatting edits. Cursor
@@ -361,7 +369,8 @@ pre-1.0 compatibility policy.
 - Added explicit `--prune-unreachable` support to compile/build/watch/bundle with manifest schema 4
   or 5. Route and island components form one union root set; a StyleId is emitted when any exact
   origin is reachable, retained shared styles keep every origin, and per-bundle filtering never
-  derives or changes the declared partition. Theme custom-property emission remains unpruned.
+  derives or changes the declared partition. Theme custom-property emission is filtered to direct
+  consumers in the retained styles only when pruning is active; normal emission remains complete.
 - Compile, watch, and bundle preserve schema 3 by default; with pruning disabled, schema-4
   reachability-only changes leave CSS and identity bytes unchanged and can republish only the
   manifest.

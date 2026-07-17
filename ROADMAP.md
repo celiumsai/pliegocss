@@ -320,15 +320,17 @@ ETA: 3–5 días
 - [x] Añadir retención explícita de StyleIds estructuralmente muertos mediante policy hash-bound,
   sin relabeling de evidencia y con selección versionada coherente en Usage Analysis, Asset Plan,
   Project Index y ownership.
-- [ ] Podar variables/tokens no usados; `--theme` todavía emite completo su bloque soportado.
+- [x] Podar las variables de tema no referenciadas por los StyleIds retenidos cuando
+  `--prune-unreachable` está activo; sin pruning, `--theme` conserva el bloque completo y
+  byte-compatible.
 - [x] Derivar automáticamente una partición CSS shared/ruta/island/unreachable desde el registro de
   producto PliegoRS; para otros frameworks el asset plan conserva inputs explícitos.
 - [ ] Implementar extracción de CSS crítico.
 - [ ] Evaluar publicación crash-atomic frente a la publicación agrupada rollback-capable ya
   implementada y al output híbrido.
 - [ ] Seleccionar estrategia por coste raw/gzip.
-- [ ] Añadir reporte de tokens no usados y query interactiva sobre inclusión; el reporte seguro de
-  StyleIds completos ya está implementado, sin afirmar pruning de declaraciones o variables.
+- [ ] Añadir reporte de tokens no usados y query interactiva sobre inclusión; la poda de variables
+  emitidas ya existe, pero todavía no hay reporte/query de producto ni poda de declaraciones.
 - [x] Añadir explicación de inclusión de cada regla mediante la cadena completa de graph schema 2.
 - [x] Comparar rendimiento contra Tailwind v4.
 - [x] Documentar el modelo de optimización implementado con benchmarks controlados y límites

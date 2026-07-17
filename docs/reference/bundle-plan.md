@@ -217,8 +217,9 @@ This filtering does not change the plan partition: it does not assign a bundle t
 styles between bundles, extract a shared bundle, or derive source ownership. Semantic declarations
 and direct token nodes in each graph describe only styles emitted by that bundle. If no root reaches
 any style in one bundle, its CSS is exactly one newline when `emit-theme = false`; with
-`emit-theme = true`, the complete supported theme custom-property block remains. Theme variables are
-not pruned.
+`emit-theme = true`, it is `:root{}` plus one newline under pruning. Non-pruned theme emission keeps
+the complete supported block. With retained styles, pruning emits only directly consumed
+variable-backed tokens.
 
 All bundles finish compilation before publication starts. Therefore a plan, source, theme, Resolver
 selection, or CSS error in any bundle publishes none of the newly compiled outputs. A schema-1 plan
@@ -242,7 +243,9 @@ The compiler validates every complete manifest and adjacent CSS pair before join
 topology. `pliego.assets.json` records all explicit bundles with exact CSS/manifest byte counts and
 SHA-256 digests, then maps routes and islands to bundle IDs independently. A route or island selects
 a bundle when its declared component set intersects that bundle's emitted semantic ownership; the
-single optional theme-emitting bundle is application-global and is selected first for every root.
+single optional bundle that actually emits theme declarations is application-global and is selected
+first for every root. Under pruning, a requested theme bundle with no retained variable consumer
+contains only `:root{}` and is not treated as theme-emitting by the Asset Plan.
 
 The plan records `ruleSelection: "all-compiled"` when pruning is absent and
 `"reachable-style-ids"` when `--prune-unreachable` selected the emitted StyleId sets. A fully pruned
@@ -344,7 +347,7 @@ Neither schema provides:
 - automatic topology collection, route-to-island occurrence, or automatic `<link>`/preload
   generation; the optional asset plan only projects explicit validated route/island ownership;
 - glob patterns, imports, dependencies between bundles, or a shared-style extraction policy;
-- cross-bundle deduplication, critical CSS, individual declaration/token pruning, or tree shaking
+- cross-bundle deduplication, critical CSS, individual declaration pruning, or tree shaking
   that derives or changes the explicitly supplied source partition;
 - cleanup of stale files in the output directory;
 - bundle watch mode or hot reload;

@@ -102,6 +102,14 @@ so this is collision resistance with a loud batch guard, not a mathematical uniq
 `emit_theme(&registry)` writes the custom properties required by the current emitter. Color tokens
 other than direct keywords and font-family tokens use those variables; spacing, radii, type scale,
 weights, line heights, letter spacing, and shadows resolve directly into utility declarations. The
+public `emit_used_theme(&registry, styles)` variant writes only variable-backed tokens directly
+referenced by the supplied retained semantic styles and preserves `:root{}` when that set needs no
+custom property. The CLI uses this narrower operation only with explicit reachability pruning;
+normal `--theme` emission remains complete and byte-compatible. External authored `var(...)`
+consumers are outside the semantic graph and must not rely on pruning unless their variables are
+also retained by a reachable PliegoCSS style.
+
+The
 schema-1 TOML and DTCG Resolver build bridges validate or select one canonical registry during the
 Cargo build; no theme parser or styling runtime enters browser WASM.
 
@@ -138,12 +146,13 @@ The current pipeline does not yet:
 - deduplicate declarations shared by different style identities;
 - validate behavior in a real browser matrix;
 - split CSS by route or island;
-- emit critical CSS or prune individual declarations/theme variables;
+- emit critical CSS or prune individual declarations;
 - emit a reset/preflight layer;
 - approve the current machine-enforced StyleId format-2 candidate as part of a public release.
 
 Static source scanning only covers the explicitly supplied Rust files or directory trees. It does not
 resolve Cargo dependencies, generated code, PliegoRS routes, or island reachability. Schemas 4/5 can
 import those application relationships from an exact, framework-owned sidecar.
-`--prune-unreachable` can then remove complete StyleId rule sets with no reachable exact origin, but
-the adapter remains responsible for application completeness and `--theme` remains unpruned.
+`--prune-unreachable` can then remove complete StyleId rule sets with no reachable exact origin and
+filter theme variables to direct consumers in the retained styles. The adapter remains responsible
+for application completeness, and arbitrary CSS custom-property consumers remain outside that proof.

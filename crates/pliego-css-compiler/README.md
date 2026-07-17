@@ -25,6 +25,11 @@ artifact is a canonical, theme-aware persistence envelope
 with resolved assignment records and portable spans; it is separate from the one-way identity stream
 and adds no Serde dependency.
 
+`emit_theme` emits the complete variable-backed registry surface. `emit_used_theme` accepts the
+already selected semantic styles and emits only their directly referenced variable-backed tokens;
+it returns `:root{}` when none are needed. Callers must establish the retention proof first and must
+account separately for authored CSS that consumes custom properties through `var(...)`.
+
 ## Stability
 
 This is a lockstep implementation and tooling crate, not the supported application facade. Its

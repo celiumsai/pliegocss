@@ -41,7 +41,8 @@ use pliego_css_cascade::{CascadeExplanation, CascadeStatus, explain_stylesheet_c
 use pliego_css_compiler::{
     CssFragmentCache, STYLE_ID_FORMAT_VERSION, UtilityDescriptor, UtilityForm,
     analyze_cross_clause_conflicts, compose_style_override_with_theme, emit_css_with_theme_traced,
-    emit_theme, lower_style_with_theme, try_encode_style_identity_with_theme, utility_catalog,
+    emit_theme, emit_used_theme, lower_style_with_theme, try_encode_style_identity_with_theme,
+    utility_catalog,
 };
 use pliego_css_config::{
     BudgetObservation, BudgetPolicy, BudgetSubject, BudgetSubjectKind, CssBudgetInventory,
@@ -815,6 +816,7 @@ struct CompiledArtifact {
     css: String,
     manifest: String,
     format: CssFormat,
+    emits_theme: bool,
     styles: Vec<ManifestStyle>,
     findings: Vec<Provenance>,
     token_references: BTreeSet<FlatTokenReference>,
@@ -2756,6 +2758,7 @@ fn compile_bundle_group(
     let mut token_references = BTreeSet::new();
     let mut usage_styles = Vec::new();
     let mut resolved_by_bundle = BTreeMap::new();
+    let mut emitted_themes = Vec::with_capacity(plan.bundles.len());
 
     for name in plan.bundles.keys() {
         let mut candidates = Vec::new();
@@ -2851,6 +2854,7 @@ fn compile_bundle_group(
             });
         }
         style_references += artifact.styles.len();
+        emitted_themes.push(artifact.emits_theme);
         token_references.extend(artifact.token_references.iter().copied());
         for style in &artifact.styles {
             *style_occurrences.entry(style.style_id.clone()).or_default() += 1;
@@ -2869,13 +2873,9 @@ fn compile_bundle_group(
             .bundles
             .iter()
             .zip(payloads.chunks_exact(2))
-            .map(|((name, bundle), outputs)| {
-                AssetPlanBundle::new(
-                    name,
-                    bundle.emit_theme,
-                    &outputs[0].bytes,
-                    &outputs[1].bytes,
-                )
+            .zip(&emitted_themes)
+            .map(|(((name, _), outputs), emits_theme)| {
+                AssetPlanBundle::new(name, *emits_theme, &outputs[0].bytes, &outputs[1].bytes)
             })
             .collect::<Vec<_>>();
         let asset_plan = build_asset_plan(&inputs, rule_selection)?;
@@ -5681,8 +5681,15 @@ fn compile_resolved_candidates_with_manifest(
     let token_references = collect_token_references(&semantic_styles);
 
     let mut output = String::new();
+    let mut emits_theme = false;
     if include_theme {
-        output.push_str(&emit_theme(theme));
+        let theme_css = if graph.pruning.is_enabled() {
+            emit_used_theme(theme, semantic_styles.values().map(|(style, _)| style))
+        } else {
+            emit_theme(theme)
+        };
+        emits_theme = theme_css != ":root{}";
+        output.push_str(&theme_css);
         output.push('\n');
     }
     let mut emission_lineage = Vec::new();
@@ -5826,6 +5833,7 @@ fn compile_resolved_candidates_with_manifest(
         css,
         manifest,
         format,
+        emits_theme,
         styles,
         findings,
         token_references,

@@ -62,10 +62,11 @@ For one bundle, active components are the component nodes that own at least one 
 declaration through `componentUsesDeclaration`. A route selects that bundle when its declared
 component set intersects the active set. An island applies the same rule independently.
 
-Zero or one bundle may emit theme custom properties. The theme-emitting bundle is application-global:
-it is ordered first and selected for every declared route and island regardless of component
-intersection. Multiple theme-emitting bundles are rejected as ambiguous. A build with no
-theme-emitting bundle is valid.
+Zero or one bundle may request theme custom properties. A bundle that actually emits at least one
+theme declaration is application-global: it is ordered first and selected for every declared route
+and island regardless of component intersection. Multiple bundles with actual theme declarations
+are rejected as ambiguous. Under pruning, a requested theme bundle with no retained variable consumer contains
+`:root{}`, reports no actual theme emission, and is not forced into root selections.
 
 Routes and islands remain separate in the output. The reachability sidecar does not assert which
 island occurs on which route, so the compiler may not invent that relationship. A framework combines
@@ -112,9 +113,10 @@ CSS and manifest hashes before using root membership.
 - Shared and co-owned styles naturally select a bundle for every applicable route or island while
   each root lists the bundle only once.
 - Fully pruned bundles remain in the integrity ledger even when no root selects them.
-- Theme CSS remains global and is never mistaken for component-owned output.
-- A schema-5 plan can verify the theme-emission flag through `producer:theme`; schema 4 must retain
-  the already validated bundle-plan flag because graph schema 1 has no physical producer.
+- Emitted theme CSS remains global and is never mistaken for component-owned output; an empty
+  pruned `:root{}` has no synthetic producer.
+- A schema-5 plan can verify actual theme emission through `producer:theme`; graph schema 1 has no
+  physical producer, so schema-4 generation carries the compiler's already determined result.
 - Every bundle pays manifest parsing and graph validation when asset-plan generation is requested.
 - All bundle manifests must carry the same full application topology. A partial per-bundle topology
   is rejected instead of merged heuristically.
@@ -156,8 +158,9 @@ extraction, route splitting, critical CSS, or output-strategy selection.
 ## Non-goals
 
 This decision does not add automatic framework collection, route-to-island discovery, preload or
-`<link>` generation, URL construction, critical CSS, individual declaration/token pruning, theme
-variable pruning, runtime loading, deployment, or authorization.
+`<link>` generation, URL construction, critical CSS, individual declaration pruning, an independent
+theme-variable reachability policy, runtime loading, deployment, or authorization. The compiler's
+later pruning contract may supply an already filtered theme subset to this projection.
 
 See the complete [asset load plan schema 1](../reference/asset-plan-schema.md),
 [bundle plan contract](../reference/bundle-plan.md),

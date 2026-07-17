@@ -36,16 +36,55 @@ const expected = {
     physicalRules: 2,
     physicalDeclarations: 15,
   },
+  themedBaseline: {
+    cssSha256: "c44f73c55e746cc012b35aaa4519df2933382c4abdf00016eb117718a948033f",
+    rawBytes: 7_654,
+    gzipBytes: 1_370,
+    manifestSha256: "5ca365733d1ba568e758150a0ba4f497e1c0704ba36c820165c1d4e6f957c8bc",
+    styles: 14,
+    declarations: 147,
+    tokens: 30,
+    physicalRules: 61,
+    physicalDeclarations: 217,
+    customProperties: [
+      "--color-accent",
+      "--color-accent-strong",
+      "--color-canvas",
+      "--color-ink",
+      "--color-line",
+      "--color-muted",
+      "--color-surface",
+      "--color-surface-raised",
+      "--font-mono",
+      "--font-sans",
+    ],
+  },
+  themedPruned: {
+    cssSha256: "97f7110faa860b545b0d9a432ed68fb094088b0aebdd79db76435dbbc1c28ce5",
+    rawBytes: 457,
+    gzipBytes: 264,
+    manifestSha256: "4db44f42fba2570580f191da0d2177207e95ce8ded7bf7a1f9cb4c5cdb378ed2",
+    styles: 2,
+    declarations: 13,
+    tokens: 9,
+    physicalRules: 3,
+    physicalDeclarations: 18,
+    customProperties: ["--color-accent", "--color-ink", "--color-surface"],
+  },
 };
 
 const expectedGzipSha256ByZlib = {
   "1.3.0.1-motley-82a5fec": {
     baseline: "f29588fd0dada2e22227f827a752785e2c4bf04f894379b41b10f42e0cc717f2",
     pruned: "cf24e99f35cd7cdb95bcab9be2fc8e7508f380d8f9a20c9a2f7690ed1eda0d60",
+    themedBaseline: "6fdb9eb9fdbbed3e05b6cdb75fc7c7279ee2d6c3757664c4bb5e02c3fb10bfdd",
+    themedPruned: "393437116dab5d6803a5842d899546598f5ca2f64c3990267321e76f069b27f1",
   },
   "1.3.1-e00f703": {
     baseline: "f29588fd0dada2e22227f827a752785e2c4bf04f894379b41b10f42e0cc717f2",
     pruned: "cf24e99f35cd7cdb95bcab9be2fc8e7508f380d8f9a20c9a2f7690ed1eda0d60",
+    themedBaseline: "6fdb9eb9fdbbed3e05b6cdb75fc7c7279ee2d6c3757664c4bb5e02c3fb10bfdd",
+    themedPruned: "393437116dab5d6803a5842d899546598f5ca2f64c3990267321e76f069b27f1",
   },
 };
 
@@ -209,7 +248,7 @@ function buildReachability(source) {
   };
 }
 
-function compile(executable, name, prune) {
+function compile(executable, name, prune, theme = false) {
   const css = `out/${name}.css`;
   const manifest = `out/${name}.manifest.json`;
   const args = [
@@ -229,6 +268,7 @@ function compile(executable, name, prune) {
     "5",
     "--reachability",
     "pliego.reachability.json",
+    ...(theme ? ["--theme"] : []),
     ...(prune ? ["--prune-unreachable"] : []),
   ];
   const result = run(executable, args, { cwd: runtime });
@@ -454,6 +494,12 @@ function measurement(artifact, counts) {
   };
 }
 
+function customProperties(css) {
+  const rootRule = css.toString("utf8").match(/^:root\{([^}]*)\}/);
+  assert(rootRule, "themed CSS does not begin with a :root rule");
+  return [...rootRule[1].matchAll(/(--[a-z0-9-]+):/g)].map((match) => match[1]);
+}
+
 assertNodeVersion();
 assertSafeRuntime();
 process.once("exit", () => rmSync(runtime, { recursive: true, force: true }));
@@ -473,13 +519,23 @@ const baseline = compile(executable, "baseline-a", false);
 const baselineRepeat = compile(executable, "baseline-b", false);
 const pruned = compile(executable, "pruned-a", true);
 const prunedRepeat = compile(executable, "pruned-b", true);
+const themedBaseline = compile(executable, "themed-baseline-a", false, true);
+const themedBaselineRepeat = compile(executable, "themed-baseline-b", false, true);
+const themedPruned = compile(executable, "themed-pruned-a", true, true);
+const themedPrunedRepeat = compile(executable, "themed-pruned-b", true, true);
 assert(baseline.css.equals(baselineRepeat.css), "baseline CSS repeat drifted");
 assert(baseline.manifest.equals(baselineRepeat.manifest), "baseline manifest repeat drifted");
 assert(pruned.css.equals(prunedRepeat.css), "pruned CSS repeat drifted");
 assert(pruned.manifest.equals(prunedRepeat.manifest), "pruned manifest repeat drifted");
+assert(themedBaseline.css.equals(themedBaselineRepeat.css), "themed baseline CSS repeat drifted");
+assert(themedBaseline.manifest.equals(themedBaselineRepeat.manifest), "themed baseline manifest repeat drifted");
+assert(themedPruned.css.equals(themedPrunedRepeat.css), "themed pruned CSS repeat drifted");
+assert(themedPruned.manifest.equals(themedPrunedRepeat.manifest), "themed pruned manifest repeat drifted");
 
 const baselineManifest = JSON.parse(baseline.manifest);
 const prunedManifest = JSON.parse(pruned.manifest);
+const themedBaselineManifest = JSON.parse(themedBaseline.manifest);
+const themedPrunedManifest = JSON.parse(themedPruned.manifest);
 const baselineCounts = assertClosedGraph(
   baselineManifest,
   baseline.css,
@@ -492,13 +548,49 @@ const prunedCounts = assertClosedGraph(
   sourceBytes,
   liveStyles.length,
 );
+const themedBaselineCounts = assertClosedGraph(
+  themedBaselineManifest,
+  themedBaseline.css,
+  sourceBytes,
+  fixtureStyles.length,
+);
+const themedPrunedCounts = assertClosedGraph(
+  themedPrunedManifest,
+  themedPruned.css,
+  sourceBytes,
+  liveStyles.length,
+);
 assertRootAndPruningSemantics(baselineManifest, prunedManifest, reachability);
+assertRootAndPruningSemantics(themedBaselineManifest, themedPrunedManifest, reachability);
+
+const baselineCustomProperties = customProperties(themedBaseline.css);
+const prunedCustomProperties = customProperties(themedPruned.css);
+sortedUnique(baselineCustomProperties, "themed baseline custom properties");
+sortedUnique(prunedCustomProperties, "themed pruned custom properties");
+const baselineCustomPropertySet = new Set(baselineCustomProperties);
+assert(prunedCustomProperties.length > 0, "themed pruning removed every custom property");
+assert(
+  prunedCustomProperties.every((property) => baselineCustomPropertySet.has(property)),
+  "themed pruning introduced a custom property absent from the baseline",
+);
+assert(
+  prunedCustomProperties.length < baselineCustomProperties.length,
+  "themed pruning did not remove unused custom properties",
+);
 
 const frozen = {
   sourceSha256: sha256(sourceBytes),
   reachabilitySha256: sha256(reachabilityBytes),
   baseline: measurement(baseline, baselineCounts),
   pruned: measurement(pruned, prunedCounts),
+  themedBaseline: {
+    ...measurement(themedBaseline, themedBaselineCounts),
+    customProperties: baselineCustomProperties,
+  },
+  themedPruned: {
+    ...measurement(themedPruned, themedPrunedCounts),
+    customProperties: prunedCustomProperties,
+  },
 };
 const rawSaved = frozen.baseline.rawBytes - frozen.pruned.rawBytes;
 const gzipSaved = frozen.baseline.gzipBytes - frozen.pruned.gzipBytes;
@@ -509,6 +601,10 @@ const gates = {
   deadStylesRemoved: frozen.baseline.styles - frozen.pruned.styles === deadStyles.length,
   rawReduction: rawSaved > 0,
   gzipReduction: gzipSaved > 0,
+  unusedThemeVariablesRemoved:
+    frozen.themedPruned.customProperties.length < frozen.themedBaseline.customProperties.length,
+  themedRawReduction: frozen.themedPruned.rawBytes < frozen.themedBaseline.rawBytes,
+  themedGzipReduction: frozen.themedPruned.gzipBytes < frozen.themedBaseline.gzipBytes,
 };
 assert(Object.values(gates).every(Boolean), `pruning gate failed: ${JSON.stringify(gates)}`);
 if (check) {
@@ -518,6 +614,8 @@ if (check) {
     {
       baseline: frozen.baseline.gzipSha256,
       pruned: frozen.pruned.gzipSha256,
+      themedBaseline: frozen.themedBaseline.gzipSha256,
+      themedPruned: frozen.themedPruned.gzipSha256,
     },
     gzipHashes,
     "reviewed deterministic gzip hashes drifted",
@@ -525,6 +623,8 @@ if (check) {
   const comparable = structuredClone(frozen);
   delete comparable.baseline.gzipSha256;
   delete comparable.pruned.gzipSha256;
+  delete comparable.themedBaseline.gzipSha256;
+  delete comparable.themedPruned.gzipSha256;
   assertEqual(comparable, expected, "reviewed reachability-pruning contract drifted");
 }
 
@@ -540,11 +640,16 @@ const report = {
     routeRootStyles: 1,
     islandRootStyles: 1,
     deadStyles: deadStyles.length,
-    themeEmission: false,
+    themeEmission: "measured-in-separate-baseline-and-pruned-profiles",
     compilerSha256: sha256(readFileSync(executable)),
     compilerSource: process.env.PLIEGO_CSSC ? "PLIEGO_CSSC-prebuilt" : "target-debug",
   },
-  profiles: { baseline: frozen.baseline, pruned: frozen.pruned },
+  profiles: {
+    baseline: frozen.baseline,
+    pruned: frozen.pruned,
+    themedBaseline: frozen.themedBaseline,
+    themedPruned: frozen.themedPruned,
+  },
   delta: {
     rawBytesSaved: rawSaved,
     rawPercentSaved: Number(((rawSaved / frozen.baseline.rawBytes) * 100).toFixed(3)),

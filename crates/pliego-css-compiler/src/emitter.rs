@@ -1,5 +1,5 @@
 use core::{cmp::Ordering, fmt};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use pliego_css_ir::{
     Assignment, CASCADE_LAYER_ORDER_CSS, CascadeLayer, ColorValue, Condition, ConditionId,
@@ -310,10 +310,43 @@ pub fn emit_seed_theme() -> String {
 /// Emits deterministic CSS custom properties required by registry-backed values.
 #[must_use]
 pub fn emit_theme(theme: &ThemeRegistry) -> String {
+    emit_theme_subset(theme, None)
+}
+
+/// Emits only custom properties referenced by the supplied retained semantic styles.
+#[must_use]
+pub fn emit_used_theme<'a>(
+    theme: &ThemeRegistry,
+    styles: impl IntoIterator<Item = &'a SemanticStyle>,
+) -> String {
+    let used = styles
+        .into_iter()
+        .flat_map(|style| style.assignments.iter())
+        .filter_map(|assignment| match assignment.value {
+            SemanticValue::Token(reference) => Some(reference),
+            SemanticValue::Color(ColorValue::Token { id, .. }) => Some(TokenRef {
+                kind: TokenKind::Color,
+                id,
+            }),
+            _ => None,
+        })
+        .collect::<BTreeSet<_>>();
+    emit_theme_subset(theme, Some(&used))
+}
+
+fn emit_theme_subset(theme: &ThemeRegistry, used: Option<&BTreeSet<TokenRef>>) -> String {
     let mut declarations = theme
         .tokens()
         .iter()
         .filter_map(|token| {
+            if used.is_some_and(|used| {
+                !used.contains(&TokenRef {
+                    kind: token.kind,
+                    id: token.id,
+                })
+            }) {
+                return None;
+            }
             let prefix = match token.kind {
                 TokenKind::Color
                     if token.name != "transparent"
