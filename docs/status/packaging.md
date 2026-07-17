@@ -1,6 +1,6 @@
 # Packaging status
 
-Status: **CSS Modules consumer inventory passed the complete exact-clean `7f3b722` replay; no
+Status: **Tailwind auxiliary inventory passed the complete exact-clean `3bd2d41` replay; no
 registry upload performed**
 
 The publishable workspace boundary has six dependency waves. `pliego-css-usage` and
@@ -18,6 +18,25 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## Tailwind auxiliary-inventory clean replay — 2026-07-16
+
+The exact clean `3bd2d41` Debian WSL2 gate packaged and extracted all fifteen archives with Cargo
+1.96, compiled the extracted graph in release mode, and passed the registry-shaped downstream
+consumer with Rust 1.85. The focused Debian replay also passed 33 source tests, all 70 CLI unit
+tests, every CLI integration target, and strict source Clippy. Publication remained disabled, the
+worktree was clean, and the fixed 61,440-byte ceiling was not raised.
+
+| Package | Compressed bytes | Remaining margin | SHA-256 |
+|---|---:|---:|---|
+| `pliego-css-source` | 42,388 | 19,052 | `4a50c5b211ae2be342c93f715404d8b331de361efca374c574231ea36002fbbd` |
+| `pliego-cssc` | 61,380 | 60 | `5f643d565017590fcd8b850dd744d3bfce5153e7f83fa75646b484d1270d0be9` |
+
+Migration projects can now declare exact Tailwind config, plugin, and template auxiliaries. The
+snapshot reads them twice, retains bytes/hash, and resolves matching relative `@config`, `@plugin`,
+and exact-file `@source` seams by kind without executing JavaScript, TypeScript, templates, Node, or
+Tailwind. Glob/directory discovery and semantic config/plugin/template analysis remain open, so
+R0.8 is not closed. The CLI package remains closed to additive feature growth.
 
 ## CSS Modules consumer-inventory clean replay — 2026-07-16
 
