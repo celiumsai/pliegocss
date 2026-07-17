@@ -1,6 +1,6 @@
 # Packaging status
 
-Status: **source-owned PCR001 conversion and the complete exact-clean `435c632` Rust package replay
+Status: **verified editor onboarding and the complete exact-clean `b24c12b` Rust package replay
 passed; no registry or editor Marketplace upload performed**
 
 The publishable workspace boundary has six dependency waves. `pliego-css-usage` and
@@ -18,6 +18,24 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## Verified editor onboarding clean replay — 2026-07-17
+
+The exact clean `b24c12b` Debian WSL2 gate packaged and extracted all sixteen Rust archives with
+native Linux Node 24.14.0 and Cargo 1.96, compiled the complete extracted graph in release mode,
+and executed the Rust 1.85 downstream consumer. `pliego-css-lsp` measured 26,848 compressed bytes
+(34,592 bytes of margin, SHA-256
+`aa9753e80877efeb0b5c911929260618673949876e424659d9a0e8fdcc445136`). Tight archives
+remained below the fixed ceiling: `pliego-cssc` measured 61,395 bytes (45 bytes of margin,
+SHA-256 `fa515b42821e95260352a5ee1a43fade32c2e91e78a78ce1710ff692a4cf06d6`),
+`pliego-css-control` 61,074 (366 bytes), `pliego-css-build` 59,911 (1,529 bytes), and
+`pliego-css-source` 57,028 (4,412 bytes). Publication remained disabled and the 61,440-byte
+ceiling was not raised.
+
+The onboarding milestone adds an exclusive `pliego-css-lsp --version`, local VS Code/Neovim setup,
+LSP troubleshooting, and `pnpm check:docs`. The structural documentation gate passed 127 Markdown
+files and 442 repository-local links. It verifies navigation and required editor documents, not
+prose quality or every unmarked snippet; compiled examples remain separate gates.
 
 ## Source-owned PCR001 conversion clean replay — 2026-07-17
 
