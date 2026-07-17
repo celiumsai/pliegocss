@@ -1,6 +1,6 @@
 # Packaging status
 
-Status: **versioned cross-toolchain migration fixture passed the complete exact-clean `29268cf`
+Status: **Tailwind config/plugin/source migration seams passed the complete exact-clean `39167ac`
 replay; no registry upload performed**
 
 The publishable workspace boundary has six dependency waves. `pliego-css-usage` and
@@ -18,6 +18,23 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## Tailwind auxiliary-seam clean replay — 2026-07-16
+
+The exact clean `39167ac` Debian WSL2 gate packaged and extracted all fifteen archives with Cargo
+1.96, compiled the extracted graph in release mode, and passed the registry-shaped downstream
+consumer with Rust 1.85. Focused source tests, strict Clippy/rustdoc, and the versioned migration CLI
+fixture also passed. Publication remained disabled and the fixed 61,440-byte ceiling was not raised.
+
+| Package | Compressed bytes | Remaining margin | SHA-256 |
+|---|---:|---:|---|
+| `pliego-css-source` | 37,187 | 24,253 | `92e92be4a631511cd34583bc8a06e8a8dbc828df4dca83733b937bbef776d85f` |
+| `pliego-cssc` | 61,387 | 53 | `ce1e429bc397bfa3fe6423372945ca15cf073e7cb57d71448c8a4c22b9416c89` |
+
+Project snapshots now retain Tailwind `@config`, `@plugin`, and `@source` ownership/discovery seams
+as external, unresolved, or dynamic observations without executing their toolchain. This does not
+yet inspect the referenced auxiliary files, discover templates/consumers, or close R0.8. The CLI
+package remains closed to additive feature growth.
 
 ## Cross-toolchain migration fixture clean replay — 2026-07-16
 
