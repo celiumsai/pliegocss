@@ -144,6 +144,41 @@ pub struct PcxSelection {
     pub style: StyleLiteral,
 }
 
+/// Formats one reachable `pcx!` selection as a stable provenance reason.
+#[must_use]
+pub fn pcx_composition_reason(selections: &[PcxSelection]) -> String {
+    let path = selections
+        .iter()
+        .map(|selection| format!("c{}:b{}", selection.clause, selection.branch))
+        .collect::<Vec<_>>()
+        .join(",");
+    format!("reachable-composition[{path}]")
+}
+
+/// Returns whether a source directory is conventionally hidden or generated.
+#[must_use]
+pub fn is_ignored_source_directory(path: &Path) -> bool {
+    path.file_name()
+        .map(|name| name.to_string_lossy())
+        .is_some_and(|name| name == "target" || name == ".git" || name.starts_with('.'))
+}
+
+/// Formats source paths for a deterministic human-readable watch label.
+#[must_use]
+pub fn format_source_paths<'a>(paths: impl IntoIterator<Item = &'a Path>) -> String {
+    paths
+        .into_iter()
+        .map(|path| path.display().to_string())
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
+/// Adds stable candidate context to one parser or lowering failure.
+#[must_use]
+pub fn format_style_failure(index: usize, source: &str, error: &str) -> String {
+    format!("finding {index} (`{source}`): {error}")
+}
+
 /// One statically reachable result of independently selecting every clause.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PcxComposition {

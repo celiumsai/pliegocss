@@ -43,6 +43,12 @@ impl ThemeId {
     }
 }
 
+impl fmt::Display for ThemeId {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(formatter, "{:032x}", self.0)
+    }
+}
+
 /// One named value in a typed design-token namespace.
 #[non_exhaustive]
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
@@ -1129,6 +1135,10 @@ mod tests {
         assert_eq!(THEME_BINARY_MAGIC, *b"PLGCTHM\0");
         assert_eq!(
             format!("{:032x}", registry.id().get()),
+            "bdcf7d279f16eef34e3be1db98ab3894"
+        );
+        assert_eq!(
+            registry.id().to_string(),
             "bdcf7d279f16eef34e3be1db98ab3894"
         );
         assert_eq!(

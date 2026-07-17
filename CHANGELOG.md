@@ -443,6 +443,13 @@ pre-1.0 compatibility policy.
   generated CSS identity. This closes the first executable tutorial only; the full snippet corpus
   and human onboarding remain release blockers.
 
+### Incremental emission
+
+- Watch now retains emitted raw CSS fragments by canonical semantic stream, reuses unchanged
+  fragments across source-only revisions, invalidates through theme-scoped identity, and prunes
+  styles absent from the complete snapshot. Final Lightning CSS optimization still processes the
+  complete artifact and remains an explicit F6 optimization target.
+
 ### Known release blockers
 
 - Obtain hosted Windows/Linux/macOS and Cloudflare evidence, complete multi-browser verification,

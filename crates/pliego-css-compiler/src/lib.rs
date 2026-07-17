@@ -10,8 +10,8 @@ mod identity;
 mod ir_binary;
 
 pub use emitter::{
-    DeclarationLineage, EmitError, RuleLineage, StyleLineage, class_name, emit_css,
-    emit_css_with_theme, emit_css_with_theme_traced, emit_seed_theme, emit_theme,
+    CssFragmentCache, DeclarationLineage, EmitError, RuleLineage, StyleLineage, class_name,
+    emit_css, emit_css_with_theme, emit_css_with_theme_traced, emit_seed_theme, emit_theme,
 };
 pub use identity::{
     IdentityError, STYLE_ID_FORMAT_VERSION, derive_style_id, derive_style_id_with_theme,

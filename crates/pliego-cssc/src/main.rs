@@ -40,9 +40,9 @@ use pliego_css_build::artifacts::{
 };
 use pliego_css_cascade::{CascadeExplanation, CascadeStatus, explain_stylesheet_cascade};
 use pliego_css_compiler::{
-    STYLE_ID_FORMAT_VERSION, UtilityDescriptor, UtilityForm, analyze_cross_clause_conflicts,
-    compose_style_override_with_theme, emit_css_with_theme, emit_css_with_theme_traced, emit_theme,
-    lower_style_with_theme, try_encode_style_identity_with_theme, utility_catalog,
+    CssFragmentCache, STYLE_ID_FORMAT_VERSION, UtilityDescriptor, UtilityForm,
+    analyze_cross_clause_conflicts, compose_style_override_with_theme, emit_css_with_theme_traced,
+    emit_theme, lower_style_with_theme, try_encode_style_identity_with_theme, utility_catalog,
 };
 use pliego_css_config::{
     BudgetObservation, BudgetPolicy, BudgetSubject, BudgetSubjectKind, CssBudgetInventory,
@@ -58,9 +58,10 @@ use pliego_css_ownership::{
 };
 use pliego_css_parser::{format_style_list, parse_named_candidate, parse_style_list};
 use pliego_css_source::{
-    InvocationKind, MigrationProject, MigrationSourceKind, PcxSelection, ScanDiagnostic,
-    ScanFileError, ScanReport, SourceRange, StyleLiteral, UtilityFormatError, UtilityFormatFinding,
-    inspect_utility_format, inventory_migration_file, scan_file, scan_source_named,
+    InvocationKind, MigrationProject, MigrationSourceKind, ScanDiagnostic, ScanFileError,
+    ScanReport, SourceRange, StyleLiteral, UtilityFormatError, UtilityFormatFinding,
+    format_source_paths, format_style_failure, inspect_utility_format, inventory_migration_file,
+    is_ignored_source_directory, pcx_composition_reason, scan_file, scan_source_named,
 };
 use pliego_css_theme::{THEME_ID_FORMAT_VERSION, ThemeRegistry};
 use pliego_css_usage::{
@@ -977,6 +978,7 @@ struct CachedRustSemantics {
 #[derive(Default)]
 struct RustScanCache {
     entries: BTreeMap<String, CachedRustScan>,
+    fragments: CssFragmentCache,
 }
 
 fn main() -> ExitCode {
@@ -1244,7 +1246,7 @@ fn run(
                 "ok: {} finding(s), {} semantic style(s), theme {}, format {}",
                 artifact.findings.len(),
                 artifact.styles.len(),
-                format_theme_id(theme.registry()),
+                theme.registry().id(),
                 arguments.format.as_str()
             );
             Ok(())
@@ -2843,6 +2845,7 @@ fn compile_bundle_group(
             plan.targets,
             plan.format,
             bundle_graph,
+            &mut CssFragmentCache::default(),
         )
         .map_err(CliFailure::compilation)?;
         if arguments.control {
@@ -4884,7 +4887,7 @@ fn build_compilation_control_group(
     })
     .map_err(|error| CliFailure::tool(format!("cannot encode CLI source identity: {error}")))?;
     let registry = theme.registry();
-    let theme_id = format_theme_id(registry);
+    let theme_id = registry.id().to_string();
     let theme_selection = match settings.theme_request {
         ControlThemeRequest::ExplicitConfig => "explicit-config",
         ControlThemeRequest::ExplicitTokens => "explicit-tokens",
@@ -5338,7 +5341,7 @@ fn collect_rust_paths(
             Ok(())
         };
     }
-    if ignored_directory(path) {
+    if is_ignored_source_directory(path) {
         return Ok(());
     }
 
@@ -5362,12 +5365,6 @@ fn collect_rust_paths(
         collect_rust_paths(&entry.path(), false, reject_reparse_points, files)?;
     }
     Ok(())
-}
-
-fn ignored_directory(path: &Path) -> bool {
-    path.file_name()
-        .map(|name| name.to_string_lossy())
-        .is_some_and(|name| name == "target" || name == ".git" || name.starts_with('.'))
 }
 
 fn cli_provenance(source: &str, reason: &str) -> Provenance {
@@ -5534,7 +5531,7 @@ fn candidates_from_scan_report(
                     });
                 }
                 for composition in &pcx.compositions {
-                    let reason = composition_reason(&composition.selections);
+                    let reason = pcx_composition_reason(&composition.selections);
                     let branches = composition
                         .selections
                         .iter()
@@ -5597,15 +5594,6 @@ fn scanner_provenance(
     }
 }
 
-fn composition_reason(selections: &[PcxSelection]) -> String {
-    let path = selections
-        .iter()
-        .map(|selection| format!("c{}:b{}", selection.clause, selection.branch))
-        .collect::<Vec<_>>()
-        .join(",");
-    format!("reachable-composition[{path}]")
-}
-
 #[derive(Clone, Copy, Default)]
 struct ArtifactGraphOptions<'a> {
     reachability: Option<&'a ReachabilityDocument>,
@@ -5648,6 +5636,7 @@ fn compile_candidates_with_manifest(
         targets,
         format,
         graph,
+        &mut CssFragmentCache::default(),
     )
     .map_err(CliFailure::compilation)
 }
@@ -5707,6 +5696,7 @@ fn compile_resolved_candidates(
         targets,
         format,
         ArtifactGraphOptions::default(),
+        &mut CssFragmentCache::default(),
     )
 }
 
@@ -5718,6 +5708,7 @@ fn compile_resolved_candidates_with_manifest(
     targets: TargetContract,
     format: CssFormat,
     graph: ArtifactGraphOptions<'_>,
+    fragment_cache: &mut CssFragmentCache,
 ) -> Result<CompiledArtifact, String> {
     if graph.physical_trace && graph.reachability.is_none() {
         return Err("physical CSS trace requires reachability".into());
@@ -5814,8 +5805,8 @@ fn compile_resolved_candidates_with_manifest(
         output.push('\n');
     }
     let mut emission_lineage = Vec::new();
-    for (semantic, _) in semantic_styles.values() {
-        let emitted = if graph.physical_trace {
+    for (stream, (semantic, _)) in &semantic_styles {
+        if graph.physical_trace {
             let (css, lineage) =
                 emit_css_with_theme_traced(theme, semantic).map_err(|error| error.to_string())?;
             emission_lineage.push(TraceStyle::new(
@@ -5839,13 +5830,16 @@ fn compile_resolved_candidates_with_manifest(
                     })
                     .collect(),
             ));
-            css
+            output.push_str(&css);
         } else {
-            emit_css_with_theme(theme, semantic).map_err(|error| error.to_string())?
-        };
-        output.push_str(&emitted);
+            let (css, _) = fragment_cache
+                .emit(stream, theme, semantic)
+                .map_err(|error| error.to_string())?;
+            output.push_str(css);
+        }
         output.push('\n');
     }
+    fragment_cache.retain(semantic_styles.keys());
     let (mut css, trace_input) = if graph.physical_trace {
         let (css, trace_input) =
             optimize_css_with_trace(&output, targets.lightning(), format.is_minified())?;
@@ -5928,7 +5922,7 @@ fn compile_resolved_candidates_with_manifest(
         style_id_format_version: STYLE_ID_FORMAT_VERSION,
         class_name_format_version: CLASS_NAME_FORMAT_VERSION,
         theme_id_format_version: THEME_ID_FORMAT_VERSION,
-        theme_id: format_theme_id(theme),
+        theme_id: theme.id().to_string(),
         targets,
         format,
         css_sha256: sha256_hex(css.as_bytes()),
@@ -6086,26 +6080,18 @@ fn lower_source(
     provenance: &Provenance,
 ) -> Result<SemanticStyle, CliFailure> {
     let syntax = parse_style_list(source).map_err(|error| {
-        let human = format_style_error(index, source, &error.to_string());
+        let human = format_style_failure(index, source, &error.to_string());
         style_failure(error, human, provenance)
     })?;
     lower_style_with_theme(theme, &syntax).map_err(|error| {
-        let human = format_style_error(index, source, &error.to_string());
+        let human = format_style_failure(index, source, &error.to_string());
         style_failure(error, human, provenance)
     })
 }
 
-fn format_style_error(index: usize, source: &str, error: &str) -> String {
-    format!("finding {index} (`{source}`): {error}")
-}
-
-fn format_theme_id(theme: &ThemeRegistry) -> String {
-    format!("{:032x}", theme.id().get())
-}
-
 fn inspect_theme(theme: &ThemeRegistry) -> ThemeInspection {
     ThemeInspection {
-        id: format_theme_id(theme),
+        id: theme.id().to_string(),
         tokens: theme
             .tokens()
             .iter()
@@ -6391,7 +6377,7 @@ fn build_explanation(arguments: &ExplainArgs) -> Result<ExplainDocument, CliFail
         theme_id_format_version: THEME_ID_FORMAT_VERSION,
         source: arguments.style.clone(),
         canonical,
-        theme_id: format_theme_id(&theme),
+        theme_id: theme.id().to_string(),
         targets: arguments.targets,
         style_id: style.style_id.clone(),
         class_name: style.class_name.clone(),
@@ -6747,7 +6733,13 @@ fn watch(arguments: &WatchArgs) -> Result<(), String> {
         )
         .map_err(|error| error.to_string())?;
     }
-    let inputs = watch_input_label(arguments);
+    let inputs = format_source_paths(
+        arguments
+            .input
+            .iter()
+            .map(PathBuf::as_path)
+            .chain(arguments.sources.iter().map(PathBuf::as_path)),
+    );
     eprintln!(
         "watching `{}` -> `{}` (polling every {} ms)",
         inputs,
@@ -6811,16 +6803,6 @@ fn watch(arguments: &WatchArgs) -> Result<(), String> {
         }
         thread::sleep(POLL_INTERVAL);
     }
-}
-
-fn watch_input_label(arguments: &WatchArgs) -> String {
-    arguments
-        .input
-        .iter()
-        .chain(arguments.sources.iter())
-        .map(|path| path.display().to_string())
-        .collect::<Vec<_>>()
-        .join(", ")
 }
 
 #[cfg(all(test, not(feature = "package-verify")))]
@@ -6938,6 +6920,7 @@ fn compile_watch_snapshot(
             pruning: arguments.pruning,
             ..ArtifactGraphOptions::default()
         },
+        &mut cache.fragments,
     )
 }
 

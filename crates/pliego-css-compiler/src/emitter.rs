@@ -92,6 +92,66 @@ pub struct DeclarationLineage {
     pub generated: bool,
 }
 
+/// Reuses deterministic CSS fragments for unchanged canonical semantic streams.
+///
+/// This cache is an implementation surface for incremental tooling. Callers remain responsible for
+/// deriving collision-checked canonical streams and pruning entries after each complete snapshot.
+#[doc(hidden)]
+#[derive(Default)]
+pub struct CssFragmentCache {
+    fragments: BTreeMap<Vec<u8>, String>,
+}
+
+impl CssFragmentCache {
+    /// Returns the number of retained canonical fragments.
+    #[must_use]
+    pub fn len(&self) -> usize {
+        self.fragments.len()
+    }
+
+    /// Returns whether no canonical fragments are retained.
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.fragments.is_empty()
+    }
+
+    /// Returns one cached or newly emitted fragment and whether it was a cache hit.
+    ///
+    /// # Errors
+    ///
+    /// Returns the ordinary emitter error when a missing fragment cannot be emitted.
+    pub fn emit<'a>(
+        &'a mut self,
+        stream: &[u8],
+        theme: &ThemeRegistry,
+        style: &SemanticStyle,
+    ) -> Result<(&'a str, bool), EmitError> {
+        use std::collections::btree_map::Entry;
+
+        match self.fragments.entry(stream.to_vec()) {
+            Entry::Occupied(entry) => Ok((entry.into_mut().as_str(), true)),
+            Entry::Vacant(entry) => {
+                let css = emit_css_with_theme(theme, style)?;
+                Ok((entry.insert(css).as_str(), false))
+            }
+        }
+    }
+
+    /// Removes fragments that are not part of the latest complete semantic snapshot.
+    pub fn retain<'a, I>(&mut self, streams: I) -> usize
+    where
+        I: IntoIterator<Item = &'a Vec<u8>>,
+    {
+        let active = streams
+            .into_iter()
+            .cloned()
+            .collect::<std::collections::BTreeSet<_>>();
+        let before = self.fragments.len();
+        self.fragments.retain(|stream, _| active.contains(stream));
+        before - self.fragments.len()
+    }
+}
+
 /// Emits deterministic minified CSS for one validated semantic style.
 ///
 /// # Errors
