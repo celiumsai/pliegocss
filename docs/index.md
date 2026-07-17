@@ -27,6 +27,7 @@ owned route bundles. `pliego-cssc watch` only regenerates artifacts; composed wi
 - [First compile](./getting-started/first-compile.md)
 - [PliegoRS + PliegoCSS from an empty project](./getting-started/pliegors.md)
 - [Project structure](./getting-started/project-structure.md)
+- [Editor setup for VS Code and Neovim](./getting-started/editor-setup.md)
 - [Mental model](./learn/mental-model.md)
 - [Themes and tokens](./learn/themes-and-tokens.md)
 - [Configure custom breakpoints](./how-to/custom-breakpoints.md)
@@ -43,6 +44,7 @@ owned route bundles. `pliego-cssc watch` only regenerates artifacts; composed wi
 - [Ownership sidecar troubleshooting](./troubleshooting/ownership-sidecar.md)
 - [Accessibility audit troubleshooting](./troubleshooting/accessibility-audit.md)
 - [Usage-evidence troubleshooting](./troubleshooting/usage-evidence.md)
+- [LSP troubleshooting](./troubleshooting/lsp.md)
 - [PliegoRS integration boundary](./integrations/pliegors.md)
 
 ## Reference
@@ -55,7 +57,7 @@ owned route bundles. `pliego-cssc watch` only regenerates artifacts; composed wi
 - [Canonical token graph schema 1](./reference/token-graph-schema-1.md)
 - [Command-line compiler](./reference/cli.md)
 - [Language Server Protocol transport](./reference/lsp.md)
-- [LSP diagnostic corpus schema 1](./reference/lsp-diagnostic-corpus.md)
+- [LSP diagnostic corpus schema 2](./reference/lsp-diagnostic-corpus.md)
 - [Public API candidate](./reference/public-api.md)
 - [Declarative bundle-plan schema](./reference/bundle-plan.md)
 - [Asset load-plan schemas 1 and 2](./reference/asset-plan-schema.md)

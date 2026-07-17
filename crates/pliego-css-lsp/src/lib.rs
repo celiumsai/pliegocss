@@ -61,10 +61,19 @@ impl Default for ServerConfig {
 ///
 /// Returns an error for invalid arguments, malformed protocol frames, JSON failures, or output I/O.
 pub fn run_from_env() -> Result<(), String> {
-    let config = parse_args(std::env::args_os().skip(1))?;
+    let arguments = std::env::args_os().skip(1).collect::<Vec<_>>();
+    if version_requested(&arguments) {
+        println!("pliego-css-lsp {VERSION}");
+        return Ok(());
+    }
+    let config = parse_args(arguments)?;
     let stdin = io::stdin();
     let stdout = io::stdout();
     serve(BufReader::new(stdin), stdout.lock(), config)
+}
+
+fn version_requested(arguments: &[OsString]) -> bool {
+    arguments == [OsString::from("--version")]
 }
 
 fn parse_args(arguments: impl IntoIterator<Item = OsString>) -> Result<ServerConfig, String> {
@@ -1705,6 +1714,17 @@ mod tests {
             "/tmp/Pliego CSS"
         );
         assert!(percent_decode("%ZZ").is_err());
+    }
+
+    #[test]
+    fn version_option_is_exclusive() {
+        assert!(version_requested(&[OsString::from("--version")]));
+        assert!(!version_requested(&[
+            OsString::from("--version"),
+            OsString::from("--seed")
+        ]));
+        assert!(parse_args([OsString::from("--version")]).is_err());
+        assert!(parse_args([OsString::from("--version"), OsString::from("--seed")]).is_err());
     }
 
     #[test]

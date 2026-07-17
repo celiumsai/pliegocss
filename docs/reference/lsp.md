@@ -117,6 +117,10 @@ Run the reproducible local process gate with:
 pnpm integration:lsp
 ```
 
+`pliego-css-lsp --version` prints the exact package version and exits. It is an exclusive process
+option; combining it with server, compiler, theme, or Project Index arguments fails instead of
+starting an ambiguously configured transport.
+
 The gate builds both binaries with Rust 1.85, performs one framed stdio session, and asserts UTF-16
 initialization, `FMT001` publication, whole-literal formatting, exact completion replacement,
 compiler-backed hover CSS, clean shutdown, and zero stderr.

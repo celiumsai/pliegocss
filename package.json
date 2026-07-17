@@ -29,6 +29,7 @@
     "check:portability": "cargo build --locked -p pliego-cssc && node ./scripts/check-portability.mjs",
     "check:compatibility": "node ./scripts/check-compatibility-policy.mjs",
     "check:attribution": "node ./scripts/check-standards-provenance.mjs",
+    "check:docs": "node ./scripts/check-docs.mjs",
     "check:cascade": "cargo test --locked -p pliego-css-cascade --lib && cargo test --locked -p pliego-cssc --test cascade_explain",
     "check:agent": "cargo test --locked -p pliego-css-agent --all-targets && cargo test --locked -p pliego-cssc --test repair_plan",
     "check:repair-corpus": "node ./scripts/check-repair-corpus.mjs",

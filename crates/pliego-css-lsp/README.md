@@ -8,6 +8,12 @@ Index, Go to Definition follows verified source sites and manifests to final CSS
 Syntactically valid literals also reuse the compiler's diagnostic schema for bounded theme-aware
 semantic checks instead of maintaining an editor-only utility validator.
 
+Print the installed package version without entering stdio mode:
+
+```console
+pliego-css-lsp --version
+```
+
 Run it over stdio from the project root:
 
 ```console

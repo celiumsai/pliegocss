@@ -24,9 +24,10 @@ pre-1.0 compatibility policy.
   direct compiler child when its snapshot becomes stale, while concurrent stdout/stderr readers
   prevent bounded process pipes from blocking cancellation. Multi-clause `pcx!` buffers are
   projected to one bounded literal-only synthetic Rust source so same-version `check --source` owns
-  `PCX003` semantics; findings map back
-  to the exact original branch token. Complete CLI/LSP parity across all diagnostic codes,
-  severities, suggestions, and fixes remains open.
+  `PCX003` semantics; findings map back to the exact original branch token. Current CLI/LSP
+  diagnostic families have exact parity through corpus schema 2 and operational fault injection.
+  The exclusive `pliego-css-lsp --version` process option lets editor setup verify the installed
+  native server without entering stdio mode.
 - An unreleased VS Code client candidate that connects file-backed Rust documents to explicit
   external `pliego-css-lsp` and `pliego-cssc` binaries. It supports discover/seed/config theme
   modes, optional Project Index navigation, fail-closed machine-overridable paths, configuration

@@ -171,6 +171,11 @@ Todo snippet marcado como ejecutable debe:
 
 Los ejemplos grandes vivirán como proyectos reales bajo `examples/`, y las páginas incluirán su fuente para evitar duplicación.
 
+`pnpm check:docs` verifies that every repository-local Markdown link resolves and that the editor
+setup, LSP troubleshooting, diagnostic corpus, and both editor-client documents remain present.
+This structural gate supplements compiled examples; it does not claim that prose quality or every
+unmarked snippet can be validated mechanically.
+
 ## Documentación por fase
 
 ### F0
