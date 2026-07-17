@@ -1,6 +1,6 @@
 # Packaging status
 
-Status: **typed migration discovery passed the complete exact-clean `7b72ee9` replay; no
+Status: **CLI migration discovery passed the complete exact-clean `7be9780` replay; no
 registry upload performed**
 
 The publishable workspace boundary has six dependency waves. `pliego-css-usage` and
@@ -18,6 +18,26 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## CLI migration-discovery clean replay — 2026-07-16
+
+The exact clean `7be9780` Debian WSL2 gate passed 42 source tests, 70 CLI parser/unit tests, five
+black-box migration CLI tests including `migration-project-inventory .`, strict source/CLI Clippy,
+the complete public API smoke with Rust 1.85, and the three-case migration corpus. It then packaged
+and extracted all fifteen archives with Cargo 1.96 and compiled the extracted graph in release
+mode. Publication remained disabled, the worktree was clean, and the fixed 61,440-byte ceiling was
+not raised.
+
+| Package | Compressed bytes | Remaining margin | SHA-256 |
+|---|---:|---:|---|
+| `pliego-css-source` | 51,629 | 9,811 | `2d0ac3068f4c34c5e88f1c5ffb73a728c29834288cc7907e4986b3aac8930392` |
+| `pliego-cssc` | 61,388 | 52 | `e17ddf0230eeccd1b5e3d54d68df6ef9a24ff6f7be0821eb3dae6ab662cbf21a` |
+
+The existing project-inventory command now accepts either a declaration file or relative directory;
+directory mode performs the exact bounded discovery contract and then the normal two-pass
+collection without writing project files. Toolchain-specific resolution, arbitrary glob expansion,
+and real-project precision/recall evidence remain open, so R0.8 is not closed. The CLI package
+remains closed to further additive feature growth.
 
 ## Typed migration-discovery clean replay — 2026-07-16
 
