@@ -142,6 +142,9 @@ fn exercise_migration_inventory_surface() {
     let _project_discovery: fn(
         &std::path::Path,
     ) -> Result<MigrationProject, MigrationInventoryError> = discover_migration_project;
+    let _project_input: fn(
+        &std::path::Path,
+    ) -> Result<MigrationProject, MigrationInventoryError> = MigrationProject::from_input;
     assert_eq!(MIGRATION_INVENTORY_SCHEMA_VERSION, 1);
     let _file_reader = inventory_migration_file;
     let project = MigrationProject::new().source(MigrationProjectSource::new(

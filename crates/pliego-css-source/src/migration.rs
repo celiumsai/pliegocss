@@ -805,6 +805,20 @@ impl MigrationProject {
         Self::from_json(&bytes)
     }
 
+    /// Loads a declaration file or discovers an uncollected project from a relative directory.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`MigrationInventoryError`] under the complete [`Self::from_file`] or
+    /// [`crate::discover_migration_project`] contract selected by the input path.
+    pub fn from_input(input: &Path) -> Result<Self, MigrationInventoryError> {
+        if input.is_dir() {
+            crate::discover_migration_project(input)
+        } else {
+            Self::from_file(input)
+        }
+    }
+
     /// Adds one explicit source. Collection sorts declarations canonically.
     #[must_use]
     pub fn source(mut self, source: MigrationProjectSource) -> Self {

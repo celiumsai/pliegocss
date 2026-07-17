@@ -58,7 +58,8 @@ pub fn discover_migration_project(
                 logical,
             ));
         } else if is_css(file) {
-            let inventory = inventory_migration_file(MigrationSourceKind::Tailwind, file)?;
+            let inventory =
+                inventory_migration_file(MigrationSourceKind::Tailwind, Path::new(&logical))?;
             if is_tailwind_entry(&inventory) {
                 has_tailwind = true;
                 linked_auxiliaries.extend(linked_tailwind_auxiliaries(&inventory)?);
@@ -69,7 +70,6 @@ pub fn discover_migration_project(
             }
         } else if is_script(file) {
             discover_script_roles(
-                file,
                 logical,
                 &mut consumers,
                 &mut templates,
@@ -105,13 +105,14 @@ pub fn discover_migration_project(
 }
 
 fn discover_script_roles(
-    file: &Path,
     logical: String,
     consumers: &mut Vec<MigrationProjectConsumer>,
     templates: &mut Vec<String>,
     configs: &mut Vec<String>,
 ) -> Result<(), MigrationInventoryError> {
-    let consumer = inventory_migration_consumer_file(MigrationConsumerKind::CssModules, file)?;
+    let logical_path = Path::new(&logical);
+    let consumer =
+        inventory_migration_consumer_file(MigrationConsumerKind::CssModules, logical_path)?;
     if consumer
         .observations()
         .iter()
@@ -122,7 +123,7 @@ fn discover_script_roles(
             logical.clone(),
         ));
     }
-    if is_standard_tailwind_config(file) {
+    if is_standard_tailwind_config(logical_path) {
         configs.push(logical.clone());
     }
     templates.push(logical);

@@ -1,7 +1,7 @@
 # Migration project inventory schema 1
 
-Status: **explicit snapshots plus bounded typed library discovery implemented; toolchain-specific
-resolution, CLI discovery, real-project evidence, and broader consumer syntax remain open**
+Status: **explicit snapshots plus bounded typed library/CLI discovery implemented;
+toolchain-specific resolution, real-project evidence, and broader consumer syntax remain open**
 
 `MigrationProject` declares a closed set of Sass, Tailwind CSS v4 entry, and CSS Modules files. It
 does not crawl the repository or infer source kind from filenames. Collection sorts the declaration
@@ -71,9 +71,10 @@ must be regular; link-like components, Unix symlinks, and Windows reparse points
 The returned `MigrationProject` must still pass normal canonicalization, two-pass reads, the
 4,096-role-entry limit, and exact dependency validation through `collect()`.
 
-This is a library boundary, not a new CLI command. It does not implement Sass load paths, Node or
-bundler aliases, Tailwind package/plugin execution, arbitrary glob expansion, framework-specific
-template semantics, or real-project precision/recall proof.
+`pliego-cssc migration-project-inventory DIRECTORY` selects this same discovery path before normal
+collection and writes only the canonical inventory to stdout. It does not implement Sass load
+paths, Node or bundler aliases, Tailwind package/plugin execution, arbitrary glob expansion,
+framework-specific template semantics, or real-project precision/recall proof.
 
 ```rust,no_run
 use pliego_css_source::{

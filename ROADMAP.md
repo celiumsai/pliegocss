@@ -348,7 +348,8 @@ también requiere E0–E4 y todos los Must de R0 en el contrato estratégico.
   clasificaciones de edge; `@config`/`@plugin`/`@source` ya quedan visibles sin ejecución. Configs,
   plugins y templates declarados ya tienen identidad bytes/hash y linking relativo tipado. Un
   crawler de librería bounded/no-follow ya deriva roles con evidencia y devuelve el proyecto sin
-  recolectar; faltan CLI discovery, resolución específica del toolchain e inspección semántica profunda de auxiliares;
+  recolectar y el CLI existente acepta ese directory mode; faltan resolución específica del
+  toolchain e inspección semántica profunda de auxiliares;
   templates ya exponen candidatos `class`/`className` literales y expresiones dynamic,
   mientras keys de config y APIs de plugin comunes quedan visibles como unsupported. Destructuring
   simple shorthand/renamed ya queda tipado y patrones computed/rest/default/nested fallan como una

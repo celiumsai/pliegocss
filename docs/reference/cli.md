@@ -26,7 +26,7 @@ pliego-cssc [--diagnostic-format human|json] audit --input FILE.css --targets ba
 pliego-cssc [--diagnostic-format human|json] audit --asset-plan FILE.json [--ownership FILE.json] --targets baseline-widely|modern|none [--budget-policy FILE.json] [--accessibility-policy FILE.json [--token-graph FILE.json]] [--control-dir DIR [--check]] [--format human|json|sarif]
 pliego-cssc [--diagnostic-format human|json] compatibility --targets baseline-widely|modern|none
 pliego-cssc [--diagnostic-format human|json] migration-inventory sass|tailwind|css-modules FILE
-pliego-cssc [--diagnostic-format human|json] migration-project-inventory DECLARATION.json
+pliego-cssc [--diagnostic-format human|json] migration-project-inventory DECLARATION.json|DIRECTORY
 pliego-cssc [--diagnostic-format human|json] explain --style "utilities" [--config theme.toml|--seed] [--targets baseline-widely|modern|none] [--format text|json]
 pliego-cssc [--diagnostic-format human|json] explain-cascade --input FILE.css --element 'button#save.action' --property LONGHAND [--format text|json]
 pliego-cssc [--diagnostic-format human|json] plan --findings FILE.json --proposal FILE.json --source-root DIR [--format text|json]
@@ -507,16 +507,20 @@ classification, defensive limits, and current project-graph exclusions.
 
 ### `migration-project-inventory`
 
-`migration-project-inventory DECLARATION.json` reads one bounded, regular, project-relative
-schema-1 declaration, rejects link-like path components, collects its explicitly typed sources, and
-writes the canonical project inventory only to stdout:
+`migration-project-inventory DECLARATION.json|DIRECTORY` either reads one bounded, regular,
+project-relative schema-1 declaration or performs bounded typed discovery below one relative
+directory. It collects the resulting typed project and writes the canonical inventory only to
+stdout:
 
 ```console
 pliego-cssc migration-project-inventory migration.project.json > migration.inventory.json
+pliego-cssc migration-project-inventory . > migration.inventory.json
 ```
 
 The command does not crawl the repository, infer source kinds, execute source toolchains, or mutate
-the project. Source, consumer, and auxiliary paths in the declaration are relative to the command working
+the project when given a declaration. Directory mode applies the documented bounded/no-follow
+discovery contract and still does not execute source toolchains or mutate the project. Source,
+consumer, and auxiliary paths in a declaration are relative to the command working
 directory. Missing or mistyped exact local dependencies fail the complete command; external, local,
 unresolved, and dynamic seams stay explicit. Declared CSS Modules JS/TS consumers add exact ESM,
 TypeScript import-equals, and simple CommonJS imports, static class accesses, and conservative

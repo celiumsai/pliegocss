@@ -67,9 +67,9 @@ The workspace is unreleased at `0.0.0`; syntax and crate boundaries may still ch
   binds exact bytes/hash/spans, resolves only declared conservative edges, records template and
   CSS Modules usage seams (including one-level aliases and simple destructuring), and never executes
   Sass, JavaScript, plugins, configs, or imports. A bounded no-follow library crawler can derive an
-  uncollected declaration from evidence-backed file roles, but CLI discovery, toolchain-specific
-  semantics, and real-project precision/recall evidence remain open; no perfect-migration claim is
-  made.
+  uncollected declaration from evidence-backed file roles, and the existing project-inventory CLI
+  accepts that directory mode. Toolchain-specific semantics and real-project precision/recall
+  evidence remain open; no perfect-migration claim is made.
 - `pliego-cssc plan`, `fix --dry-run`, and explicitly authorized `fix --apply` now implement the
   bounded agent-repair boundary. Closed
   schema-1.0.0 proposals accept only exact edits tied to verified, unexcepted, low-risk finding

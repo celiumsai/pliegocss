@@ -146,6 +146,44 @@ fn inventories_a_closed_declared_project_without_mutation() {
 }
 
 #[test]
+fn discovers_and_inventories_a_project_directory_without_mutation() {
+    let directory = temp_dir("discovery");
+    fs::create_dir(directory.join("styles")).expect("styles directory");
+    fs::create_dir(directory.join("src")).expect("source directory");
+    fs::write(
+        directory.join("styles/app.css"),
+        "@import \"tailwindcss\";\n",
+    )
+    .expect("Tailwind entry");
+    fs::write(
+        directory.join("styles/card.module.css"),
+        ".card { display: block; }\n",
+    )
+    .expect("CSS module");
+    fs::write(
+        directory.join("src/Card.tsx"),
+        "import styles from \"../styles/card.module.css\";\nexport const Card = () => <div className=\"p-4\" data-class={styles.card} />;\n",
+    )
+    .expect("component");
+    let output = run(&directory, &["migration-project-inventory", "."]);
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert_eq!(output.stderr, b"");
+    let document: serde_json::Value =
+        serde_json::from_slice(&output.stdout).expect("discovered project inventory JSON");
+    assert_eq!(document["summary"]["sources"], 2);
+    assert_eq!(document["summary"]["consumers"], 1);
+    assert_eq!(document["summary"]["tailwindTemplates"], 1);
+    assert_eq!(document["summary"]["staticTemplateCandidates"], 1);
+    assert!(!directory.join("migration.project.json").exists());
+    assert!(!directory.join("migration.inventory.json").exists());
+    fs::remove_dir_all(directory).expect("remove fixture");
+}
+
+#[test]
 fn inventories_the_versioned_cross_toolchain_project_fixture() {
     let fixture =
         Path::new(env!("CARGO_MANIFEST_DIR")).join("../../integration-tests/migration-project");

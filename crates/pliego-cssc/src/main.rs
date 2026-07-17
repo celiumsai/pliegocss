@@ -1407,7 +1407,7 @@ fn parse_arguments(arguments: impl IntoIterator<Item = OsString>) -> Result<Comm
 }
 
 fn run_migration_project(input: &Path) -> Result<(), CliFailure> {
-    MigrationProject::from_file(input)
+    MigrationProject::from_input(input)
         .and_then(MigrationProject::collect)
         .map(|inventory| print!("{inventory}"))
         .map_err(|error| CliFailure::tool(error.to_string()))
@@ -1416,7 +1416,7 @@ fn run_migration_project(input: &Path) -> Result<(), CliFailure> {
 fn parse_migration_arguments(command: &str, arguments: &[String]) -> Result<Command, String> {
     if command == "migration-project-inventory" {
         let [_, input] = arguments else {
-            return Err("FILE required".into());
+            return Err("PATH required".into());
         };
         return Ok(Command::InventoryProject(PathBuf::from(input)));
     }
