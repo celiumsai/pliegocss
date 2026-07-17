@@ -1,7 +1,7 @@
 # Packaging status
 
-Status: **forceful stale LSP compiler cancellation and the complete exact-clean `6f620d9` Rust
-package replay passed; no registry or editor Marketplace upload performed**
+Status: **complete CLI/LSP diagnostic parity and the complete exact-clean `4755d58` Rust package
+replay passed; no registry or editor Marketplace upload performed**
 
 The publishable workspace boundary has six dependency waves. `pliego-css-usage` and
 `pliego-css-control` follow `pliego-css-build` because direct and optional Cargo dependencies both
@@ -18,6 +18,26 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## Complete CLI/LSP diagnostic parity clean replay — 2026-07-17
+
+The exact clean `4755d58` Debian WSL2 gate packaged and extracted all sixteen Rust archives with
+native Linux Node 24.14.0 and Cargo 1.96, compiled the complete extracted graph in release mode,
+and executed the Rust 1.85 downstream consumer. `pliego-css-lsp` measured 26,644 compressed bytes
+(34,796 bytes of margin, SHA-256
+`ddaf11b51592c36ebc0da737c628769e7691ea79139c5ae9fabe46f9bbf8dba1`). Tight archives
+remained below the fixed ceiling: `pliego-cssc` measured 61,426 bytes (14 bytes of margin,
+SHA-256 `71726c001af71c82fbdf8a7973987361f63cbe7a5fbd7dd3a4dc49d1d3a760c8`),
+`pliego-css-control` 61,068 (372 bytes), `pliego-css-build` 59,910 (1,530 bytes), and
+`pliego-css-source` 56,890 (4,550 bytes). Publication remained disabled and the 61,440-byte
+ceiling was not raised. The 14-byte CLI margin is a release risk: any future CLI source change must
+replay this gate and reduce payload or move behavior behind a smaller dependency boundary.
+
+Diagnostic corpus schema 2 covers twenty PCS/PSC/PCR/FMT cases and separately compares PCX003,
+requiring exact code, message, range, severity, category, suggestion, and typed replacement equality.
+Fault injection covers PCL001 and PCL002. Windows and Debian passed the process gate; Debian also
+passed 48 source tests, 72 CLI tests, strict Clippy, and warning-denied rustdoc. VS Code 1.105.1 and
+Neovim 0.12.4 passed on Windows, and Neovim 0.12.4 passed on Debian.
 
 ## Stale LSP compiler cancellation clean replay — 2026-07-17
 
