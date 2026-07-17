@@ -236,7 +236,9 @@ assert_eq!(inventory.source_sha256().len(), 64);
 The exact-version bridge consists of `MIGRATION_INVENTORY_SCHEMA_VERSION`,
 `inventory_migration_source`, `inventory_migration_file`, `MigrationSourceKind`, `MigrationDisposition`,
 `MigrationPreflightReliance`, the immutable `MigrationInventory`/`MigrationConstruct` getters, and
-`MigrationInventoryError`. It emits canonical schema-1 JSON and records dynamic/unsupported syntax;
+`MigrationInventoryError`. The exact-version project layer additionally exposes `MigrationProject`,
+`MigrationProjectSource`, and `MigrationProjectInventory` for a confirmed, canonically ordered
+declared-file snapshot. It emits canonical schema-1 JSON and records dynamic/unsupported syntax;
 `inventory_migration_file` additionally enforces a bounded regular project-relative file and rejects
 symlink/reparse-point components before reading. The bridge does not execute
 Sass/Tailwind/plugins/configs, traverse a project graph, or promise a codemod.

@@ -73,6 +73,7 @@ owned route bundles. `pliego-cssc watch` only regenerates artifacts; composed wi
 - [Repair proposal, plan, dry-run, and Change Receipt schemas 1.0.0](./reference/repair-plan-schema.md)
 - [Repair check policy and Verification Receipt schemas 1.4.0](./reference/repair-verification-schema.md)
 - [Migration inventory schema 1](./reference/migration-inventory-schema-1.md)
+- [Migration project inventory schema 1](./reference/migration-project-inventory-schema-1.md)
 - [CSS budget policy schema 1](./reference/budget-policy.md)
 - [Accessibility policy schema 1](./reference/accessibility-policy.md)
 - [Standards and third-party provenance schema 1](./reference/standards-provenance.md)

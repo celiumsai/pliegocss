@@ -18,6 +18,7 @@ use crate::application::is_portable_source_path;
 pub const MIGRATION_INVENTORY_SCHEMA_VERSION: u8 = 1;
 const MAX_SOURCE_BYTES: usize = 16 * 1024 * 1024;
 const MAX_CONSTRUCTS: usize = 65_535;
+const MAX_PROJECT_SOURCES: usize = 4_096;
 const MAX_SYNTAX_BYTES: usize = 4_096;
 #[cfg(windows)]
 const FILE_ATTRIBUTE_REPARSE_POINT: u32 = 0x400;
@@ -149,6 +150,26 @@ struct MigrationInventoryDocument<'a> {
     constructs: &'a [MigrationConstruct],
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct MigrationProjectSummary {
+    sources: usize,
+    sass_sources: usize,
+    tailwind_sources: usize,
+    css_modules_sources: usize,
+    constructs: usize,
+    dynamic: usize,
+    unsupported: usize,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct MigrationProjectDocument<'a> {
+    schema_version: u8,
+    summary: MigrationProjectSummary,
+    sources: Vec<MigrationInventoryDocument<'a>>,
+}
+
 /// Canonical read-only inventory for one migration source.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct MigrationInventory {
@@ -223,6 +244,167 @@ impl fmt::Display for MigrationInventory {
         formatter.write_str(
             std::str::from_utf8(&self.bytes).expect("migration inventory JSON is valid UTF-8"),
         )
+    }
+}
+
+/// Explicit source declaration for a migration project snapshot.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MigrationProjectSource {
+    source_kind: MigrationSourceKind,
+    file: String,
+}
+
+impl MigrationProjectSource {
+    /// Declares one source kind and portable project-relative path.
+    #[must_use]
+    pub fn new(source_kind: MigrationSourceKind, file: impl Into<String>) -> Self {
+        Self {
+            source_kind,
+            file: file.into(),
+        }
+    }
+}
+
+/// Closed, explicit input set for one confirmed migration project snapshot.
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
+pub struct MigrationProject {
+    sources: Vec<MigrationProjectSource>,
+}
+
+impl MigrationProject {
+    /// Creates an empty project declaration.
+    #[must_use]
+    pub const fn new() -> Self {
+        Self {
+            sources: Vec::new(),
+        }
+    }
+
+    /// Adds one explicit source. Collection sorts declarations canonically.
+    #[must_use]
+    pub fn source(mut self, source: MigrationProjectSource) -> Self {
+        self.sources.push(source);
+        self
+    }
+
+    /// Reads every source twice and emits a canonical project snapshot only when both reads agree.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`MigrationInventoryError`] for empty, duplicate, unsafe, unstable, malformed, or
+    /// over-limit project declarations and for any source inventory failure.
+    pub fn collect(mut self) -> Result<MigrationProjectInventory, MigrationInventoryError> {
+        if self.sources.is_empty() {
+            return Err(MigrationInventoryError::new(
+                "migration project requires at least one source",
+            ));
+        }
+        if self.sources.len() > MAX_PROJECT_SOURCES {
+            return Err(MigrationInventoryError::new(
+                "migration project exceeds 4,096 sources",
+            ));
+        }
+        self.sources.sort_by(|left, right| {
+            (left.file.as_str(), left.source_kind.as_str())
+                .cmp(&(right.file.as_str(), right.source_kind.as_str()))
+        });
+        for pair in self.sources.windows(2) {
+            if pair[0].file == pair[1].file {
+                return Err(MigrationInventoryError::new(format!(
+                    "migration project source `{}` is declared more than once",
+                    pair[0].file
+                )));
+            }
+        }
+        let first = self
+            .sources
+            .iter()
+            .map(|source| {
+                inventory_migration_file(source.source_kind, Path::new(source.file.as_str()))
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        let second = self
+            .sources
+            .iter()
+            .map(|source| {
+                inventory_migration_file(source.source_kind, Path::new(source.file.as_str()))
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        if first != second {
+            return Err(MigrationInventoryError::new(
+                "migration project changed while its snapshot was being collected",
+            ));
+        }
+        MigrationProjectInventory::from_sources(first)
+    }
+}
+
+/// Canonical, immutable snapshot of every explicitly declared migration source.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MigrationProjectInventory {
+    summary: MigrationProjectSummary,
+    sources: Vec<MigrationInventory>,
+    bytes: Vec<u8>,
+}
+
+impl MigrationProjectInventory {
+    fn from_sources(sources: Vec<MigrationInventory>) -> Result<Self, MigrationInventoryError> {
+        let summary = MigrationProjectSummary {
+            sources: sources.len(),
+            sass_sources: sources
+                .iter()
+                .filter(|source| source.source_kind == MigrationSourceKind::Sass)
+                .count(),
+            tailwind_sources: sources
+                .iter()
+                .filter(|source| source.source_kind == MigrationSourceKind::Tailwind)
+                .count(),
+            css_modules_sources: sources
+                .iter()
+                .filter(|source| source.source_kind == MigrationSourceKind::CssModules)
+                .count(),
+            constructs: sources.iter().map(|source| source.summary.constructs).sum(),
+            dynamic: sources.iter().map(|source| source.summary.dynamic).sum(),
+            unsupported: sources
+                .iter()
+                .map(|source| source.summary.unsupported)
+                .sum(),
+        };
+        let mut inventory = Self {
+            summary,
+            sources,
+            bytes: Vec::new(),
+        };
+        let document = MigrationProjectDocument {
+            schema_version: MIGRATION_INVENTORY_SCHEMA_VERSION,
+            summary,
+            sources: inventory.sources.iter().map(inventory_document).collect(),
+        };
+        inventory.bytes = serde_json::to_vec_pretty(&document).map_err(|error| {
+            MigrationInventoryError::new(format!(
+                "cannot serialize migration project inventory: {error}"
+            ))
+        })?;
+        inventory.bytes.push(b'\n');
+        Ok(inventory)
+    }
+
+    /// Returns the canonically ordered per-source inventories.
+    #[must_use]
+    pub fn sources(&self) -> &[MigrationInventory] {
+        &self.sources
+    }
+
+    /// Returns the total number of recorded constructs.
+    #[must_use]
+    pub const fn construct_count(&self) -> usize {
+        self.summary.constructs
+    }
+
+    /// Returns canonical two-space JSON with one trailing line feed.
+    #[must_use]
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.bytes
     }
 }
 
@@ -401,7 +583,16 @@ fn is_link_like(metadata: &fs::Metadata) -> bool {
 }
 
 fn render_inventory(inventory: &MigrationInventory) -> Result<Vec<u8>, MigrationInventoryError> {
-    let document = MigrationInventoryDocument {
+    let document = inventory_document(inventory);
+    let mut bytes = serde_json::to_vec_pretty(&document).map_err(|error| {
+        MigrationInventoryError::new(format!("cannot serialize migration inventory: {error}"))
+    })?;
+    bytes.push(b'\n');
+    Ok(bytes)
+}
+
+fn inventory_document(inventory: &MigrationInventory) -> MigrationInventoryDocument<'_> {
+    MigrationInventoryDocument {
         schema_version: MIGRATION_INVENTORY_SCHEMA_VERSION,
         source_kind: inventory.source_kind,
         file: &inventory.file,
@@ -410,12 +601,7 @@ fn render_inventory(inventory: &MigrationInventory) -> Result<Vec<u8>, Migration
         preflight_reliance: inventory.preflight_reliance,
         summary: inventory.summary,
         constructs: &inventory.constructs,
-    };
-    let mut bytes = serde_json::to_vec_pretty(&document).map_err(|error| {
-        MigrationInventoryError::new(format!("cannot serialize migration inventory: {error}"))
-    })?;
-    bytes.push(b'\n');
-    Ok(bytes)
+    }
 }
 
 fn validate_input(
@@ -994,6 +1180,57 @@ $color: red;
             std::os::unix::fs::symlink("app.css", &link).unwrap();
             assert!(inventory_migration_file(MigrationSourceKind::Tailwind, &link).is_err());
         }
+        fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
+    fn project_inventory_is_canonical_complete_and_duplicate_closed() {
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let directory = PathBuf::from(format!(
+            ".migration-project-test-{}-{nonce}",
+            std::process::id()
+        ));
+        fs::create_dir(&directory).unwrap();
+        let sass = directory.join("legacy.scss");
+        let tailwind = directory.join("app.css");
+        let module = directory.join("card.module.css");
+        fs::write(&sass, "$space: 1rem;\n").unwrap();
+        fs::write(&tailwind, "@import \"tailwindcss\";\n").unwrap();
+        fs::write(&module, ".card { composes: base; }\n").unwrap();
+
+        let source = |kind, path: &Path| {
+            MigrationProjectSource::new(kind, path.to_string_lossy().into_owned())
+        };
+        let first = MigrationProject::new()
+            .source(source(MigrationSourceKind::Sass, &sass))
+            .source(source(MigrationSourceKind::Tailwind, &tailwind))
+            .source(source(MigrationSourceKind::CssModules, &module))
+            .collect()
+            .unwrap();
+        let second = MigrationProject::new()
+            .source(source(MigrationSourceKind::CssModules, &module))
+            .source(source(MigrationSourceKind::Sass, &sass))
+            .source(source(MigrationSourceKind::Tailwind, &tailwind))
+            .collect()
+            .unwrap();
+        assert_eq!(first.as_bytes(), second.as_bytes());
+        assert_eq!(first.sources().len(), 3);
+        assert_eq!(first.construct_count(), 3);
+        let document: serde_json::Value = serde_json::from_slice(first.as_bytes()).unwrap();
+        assert_eq!(document["schemaVersion"], 1);
+        assert_eq!(document["summary"]["sources"], 3);
+        assert_eq!(document["summary"]["sassSources"], 1);
+        assert_eq!(document["summary"]["tailwindSources"], 1);
+        assert_eq!(document["summary"]["cssModulesSources"], 1);
+
+        let duplicate = MigrationProject::new()
+            .source(source(MigrationSourceKind::Sass, &sass))
+            .source(source(MigrationSourceKind::Sass, &sass))
+            .collect();
+        assert!(duplicate.is_err());
         fs::remove_dir_all(directory).unwrap();
     }
 }

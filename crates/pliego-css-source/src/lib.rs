@@ -36,7 +36,8 @@ pub use application::{
 };
 pub use migration::{
     MIGRATION_INVENTORY_SCHEMA_VERSION, MigrationConstruct, MigrationDisposition,
-    MigrationInventory, MigrationInventoryError, MigrationPreflightReliance, MigrationSourceKind,
+    MigrationInventory, MigrationInventoryError, MigrationPreflightReliance, MigrationProject,
+    MigrationProjectInventory, MigrationProjectSource, MigrationSourceKind,
     inventory_migration_file, inventory_migration_source,
 };
 

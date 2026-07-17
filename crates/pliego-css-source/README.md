@@ -73,6 +73,11 @@ and Tailwind Preflight reliance. `static` means only that a lexical prelude was 
 not authorize transformation. `pliego-cssc migration-inventory` exposes the producer through a
 read-only stdout contract. Project/import/config/template graphs remain open.
 
+For multi-file tooling, `MigrationProject` accepts only explicit typed source declarations, sorts
+them canonically, rejects duplicate paths, and inventories the complete set twice before emitting a
+schema-1 project snapshot. This confirms a stable declared-file view; it does not yet resolve import,
+template, config, plugin, or composition-consumer edges.
+
 ## Stability
 
 This is an exact-version tooling and adapter crate used by `pliego-cssc`. The application-topology

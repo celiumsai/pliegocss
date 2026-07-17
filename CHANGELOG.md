@@ -16,6 +16,10 @@ pre-1.0 compatibility policy.
   Modules source. The command emits canonical schema-1 JSON only to stdout and rejects unsafe paths,
   kind/extension mismatch, symlink-like inputs, malformed lexical state, and bounded-limit
   violations; it never executes the original source toolchain or claims transformation support.
+- Explicit `MigrationProject` snapshots for up to 4,096 declared typed sources. Collection rejects
+  duplicates and unsafe files, uses canonical path/kind order, inventories the complete set twice,
+  and emits one nested schema-1 document only when both passes agree. Dependency-edge resolution
+  and project CLI integration remain intentionally open.
 - Closed post-change verification through the dedicated `pliego-css-agent verify` executable,
   repair-check policy and Verification Receipt schemas 1.2.0 with canonical 1.0.0/1.1.0 read
   support. Built-in `standard-css-audit`, `token-graph-integrity`, and `css-budget-audit` kinds
