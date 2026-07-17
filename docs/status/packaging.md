@@ -1,6 +1,6 @@
 # Packaging status
 
-Status: **exact final-output caching and the complete exact-clean `e3cb04c` Rust package replay
+Status: **native filesystem-event watch and the complete exact-clean `8e63039` Rust package replay
 passed; no registry or editor Marketplace upload performed**
 
 The publishable workspace boundary has seventeen crates in six dependency waves. `pliego-css-usage` and
@@ -18,6 +18,22 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## Native filesystem-event watch clean replay — 2026-07-17
+
+The exact clean `8e63039` Debian WSL2 gate packaged and extracted all seventeen archives, compiled
+the complete registry-shaped graph in release mode, and executed the Rust 1.85 downstream
+consumer. `pliego-css-watch` isolates Windows change-notification handles and Linux recursive
+`inotify`; events only schedule exact snapshot capture, a 2 s timeout covers missed events, and
+unsupported backends retain 100 ms polling.
+
+`pliego-cssc` measured 61,048 compressed bytes (392 bytes of margin, SHA-256
+`5b7a125ac0a343a02d732a199a64c9226bdfc0f5cf2cc647dd7627dd28e91136`) and the new watch crate
+9,541 bytes (51,899 bytes of margin, SHA-256
+`b785ef40999c4d295cd7aae26921ca29d1b18e1f6d1a16319143a6c2ca9e22d9`). Other tight archives
+remained below the fixed 61,440-byte ceiling: `pliego-css-control` measured 61,081 bytes,
+`pliego-css-build` 60,330, `pliego-css-compiler` 59,889, and `pliego-css-source` 58,276.
+Publication remained disabled and the ceiling was not raised.
 
 ## Exact final-output cache clean replay — 2026-07-17
 
