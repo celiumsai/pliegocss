@@ -424,7 +424,9 @@ Toda optimización tiene benchmark; ninguna complejidad entra solamente por intu
   inspección semántica profunda de configs/plugins y dialectos de template; keys/APIs comunes ya
   quedan como seams lexicales unsupported. Consumidores
   CSS Modules JS/TS declarados ya enlazan imports exactos y clasifican usos static/dynamic; faltan
-  sintaxis/aliases avanzados y un corpus de proyectos reales para cerrar.
+  sintaxis/aliases avanzados y un corpus de proyectos reales para cerrar. Un harness versionado ya
+  congela tres casos authored-contract y verifica seams/resúmenes/inmutabilidad vía CLI; no cuenta
+  como evidencia real de precision/recall.
 - [ ] Entrevistar 10–15 developers/equipos y reunir 20 incidentes reales anonimizados.
 - [ ] Medir precision/recall, falsos positivos, excepciones y tiempo de resolución por categoría.
 - [ ] Ejecutar la matriz hosted Windows/Linux/macOS, evidencia nativa ARM64 y el pipeline Cloudflare.

@@ -1,0 +1,2 @@
+@use "./tokens.scss" as tokens;
+.card { padding: tokens.$space; }

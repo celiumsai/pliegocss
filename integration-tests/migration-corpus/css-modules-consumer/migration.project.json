@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "sources": [
+    { "sourceKind": "css-modules", "file": "styles/card.module.css" },
+    { "sourceKind": "css-modules", "file": "styles/base.module.css" }
+  ],
+  "consumers": [
+    { "consumerKind": "css-modules", "file": "Card.tsx" }
+  ]
+}

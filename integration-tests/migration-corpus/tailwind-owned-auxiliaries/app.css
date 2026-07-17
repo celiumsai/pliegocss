@@ -1,0 +1,4 @@
+@import "tailwindcss";
+@config "./tailwind.config.js";
+@plugin "./plugin.ts";
+@source "./Card.tsx";

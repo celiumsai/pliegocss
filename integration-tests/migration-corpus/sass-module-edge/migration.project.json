@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "sources": [
+    { "sourceKind": "sass", "file": "styles/app.scss" },
+    { "sourceKind": "sass", "file": "styles/tokens.scss" }
+  ]
+}

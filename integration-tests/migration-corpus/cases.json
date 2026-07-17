@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "classification": "authored-contract",
+  "cases": [
+    {
+      "id": "sass-module-edge",
+      "directory": "sass-module-edge",
+      "declaration": "migration.project.json",
+      "summary": {
+        "sources": 2,
+        "sassSources": 2,
+        "dependencies": 1,
+        "resolvedDependencies": 1
+      },
+      "requiredDependencies": [
+        { "kind": "sass-use", "resolution": "resolved", "target": "styles/tokens.scss" }
+      ]
+    },
+    {
+      "id": "tailwind-owned-auxiliaries",
+      "directory": "tailwind-owned-auxiliaries",
+      "declaration": "migration.project.json",
+      "summary": {
+        "sources": 1,
+        "auxiliaries": 3,
+        "resolvedDependencies": 3,
+        "staticTemplateCandidates": 3,
+        "dynamicTemplateCandidates": 1,
+        "tailwindConfigKeys": 2,
+        "tailwindPluginApis": 1
+      },
+      "requiredDependencies": [
+        { "kind": "tailwind-config", "resolution": "resolved", "target": "tailwind.config.js" },
+        { "kind": "tailwind-plugin", "resolution": "resolved", "target": "plugin.ts" },
+        { "kind": "tailwind-source", "resolution": "resolved", "target": "Card.tsx" }
+      ]
+    },
+    {
+      "id": "css-modules-consumer",
+      "directory": "css-modules-consumer",
+      "declaration": "migration.project.json",
+      "summary": {
+        "sources": 2,
+        "consumers": 1,
+        "resolvedDependencies": 1,
+        "consumerImports": 1,
+        "staticConsumerUsages": 2,
+        "dynamicConsumerUsages": 1
+      },
+      "requiredDependencies": [
+        { "kind": "css-modules-composes", "resolution": "resolved", "target": "styles/base.module.css" }
+      ]
+    }
+  ]
+}

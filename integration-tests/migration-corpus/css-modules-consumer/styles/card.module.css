@@ -1,0 +1,2 @@
+.card { composes: base from "./base.module.css"; }
+.title { font-weight: 700; }

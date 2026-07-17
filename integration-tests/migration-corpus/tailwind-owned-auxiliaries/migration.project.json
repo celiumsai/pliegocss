@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "sources": [
+    { "sourceKind": "tailwind", "file": "app.css" }
+  ],
+  "auxiliaries": [
+    { "auxiliaryKind": "tailwind-config", "file": "tailwind.config.js" },
+    { "auxiliaryKind": "tailwind-plugin", "file": "plugin.ts" },
+    { "auxiliaryKind": "tailwind-template", "file": "Card.tsx" }
+  ]
+}

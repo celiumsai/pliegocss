@@ -351,7 +351,8 @@ también requiere E0–E4 y todos los Must de R0 en el contrato estratégico.
   templates ya exponen candidatos `class`/`className` literales y expresiones dynamic,
   mientras keys de config y APIs de plugin comunes quedan visibles como unsupported,
   consumers/aliases avanzados y fixtures
-  de migración reales antes de escribir la guía completa.
+  de migración reales antes de escribir la guía completa. El corpus contractual de tres casos y su
+  runner CLI ya están versionados, pero no sustituyen proyectos reales revisados.
 - [ ] Crear tutorial completo, how-to guides y referencia de API.
 - [ ] Crear guía de accesibilidad, theming y responsive design.
 - [ ] Crear documentación para contribuidores, plugins y estabilidad semántica.

@@ -108,6 +108,7 @@ owned route bundles. `pliego-cssc watch` only regenerates artifacts; composed wi
 - [F7 measured optimization and reachability](./status/f7.md)
 - [Reachability-pruning benchmark](./benchmarks/reachability-pruning.md)
 - [Repair authority conformance corpus](./benchmarks/repair-corpus.md)
+- [Migration bridge contract corpus](./benchmarks/migration-corpus.md)
 - [Portability contract](./status/portability.md)
 - [Packaging contract](./status/packaging.md)
 - [Gate A status](./status/gate-a.md)

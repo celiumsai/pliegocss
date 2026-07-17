@@ -12,6 +12,11 @@ pre-1.0 compatibility policy.
 
 ### Added
 
+- A versioned three-case authored migration bridge corpus and read-only CLI runner covering resolved
+  Sass modules, Tailwind-owned auxiliaries/template candidates/config-plugin seams, and CSS Modules
+  consumer usage. The runner verifies selected summary values, required edges, clean process output,
+  and fixture immutability. It is a contract corpus, not real-project precision/recall evidence.
+
 - Read-only `pliego-cssc migration-inventory` for one explicit Sass, Tailwind CSS v4 entry, or CSS
   Modules source. The command emits canonical schema-1 JSON only to stdout and rejects unsafe paths,
   kind/extension mismatch, symlink-like inputs, malformed lexical state, and bounded-limit

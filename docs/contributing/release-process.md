@@ -86,6 +86,7 @@ pnpm check:pruning
 pnpm check:fuzz
 pnpm check:evidence
 pnpm check:repair-corpus
+pnpm check:migration-corpus
 pnpm check:attribution
 pnpm check:portability
 pnpm integration:pliegors
