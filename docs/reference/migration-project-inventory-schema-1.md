@@ -57,8 +57,11 @@ toolchain:
 - `.sass`/`.scss` and `.module.css` are unambiguous source families;
 - ordinary `.css` is retained as Tailwind only when the existing lexical inventory finds an exact
   Tailwind import, directive, reference, theme, utility, variant, or apply seam;
-- JS/TS is retained as a CSS Modules consumer only when it contains an import observation;
-- class-bearing supported template files are retained only after a Tailwind entry is confirmed;
+- JS/TS is parsed as a CSS Modules candidate only when its bounded bytes contain `.module.css`, and
+  is retained only when that parse yields an import observation;
+- supported templates are parsed only after a Tailwind entry is confirmed and their bounded bytes
+  contain `class=` or `className=`; non-tag `<` comparisons and line/block comments between
+  attributes do not become tags or quotes;
 - standard `tailwind.config.*` files and existing exact relative `@config`, `@plugin`, and `@source`
   targets receive their specific auxiliary kind;
 - generic CSS, unresolved globs/directories, package-owned targets, and files without migration
@@ -70,6 +73,7 @@ of candidate-file metadata, and the existing 16 MiB limit on every file that is 
 must be regular; link-like components, Unix symlinks, and Windows reparse points fail the discovery.
 The returned `MigrationProject` must still pass normal canonicalization, two-pass reads, the
 4,096-role-entry limit, and exact dependency validation through `collect()`.
+Any candidate or later role failure includes its portable project-relative file in the error.
 
 `pliego-cssc migration-project-inventory DIRECTORY` selects this same discovery path before normal
 collection and writes only the canonical inventory to stdout. It does not implement Sass load

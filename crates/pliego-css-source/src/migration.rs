@@ -16,7 +16,7 @@ use crate::application::is_portable_source_path;
 
 /// Schema version emitted by the migration inventory producer.
 pub const MIGRATION_INVENTORY_SCHEMA_VERSION: u8 = 1;
-const MAX_SOURCE_BYTES: usize = 16 * 1024 * 1024;
+pub(crate) const MAX_SOURCE_BYTES: usize = 16 * 1024 * 1024;
 const MAX_CONSTRUCTS: usize = 65_535;
 const MAX_PROJECT_SOURCES: usize = 4_096;
 const MAX_PROJECT_DOCUMENT_BYTES: usize = 1024 * 1024;
@@ -915,6 +915,12 @@ impl MigrationProject {
             .iter()
             .map(|source| {
                 inventory_migration_file(source.source_kind, Path::new(source.file.as_str()))
+                    .map_err(|error| {
+                        MigrationInventoryError::new(format!(
+                            "cannot inventory migration source `{}`: {error}",
+                            source.file
+                        ))
+                    })
             })
             .collect::<Result<Vec<_>, _>>()?;
         let consumers = self
@@ -925,6 +931,12 @@ impl MigrationProject {
                     consumer.consumer_kind,
                     Path::new(consumer.file.as_str()),
                 )
+                .map_err(|error| {
+                    MigrationInventoryError::new(format!(
+                        "cannot inventory migration consumer `{}`: {error}",
+                        consumer.file
+                    ))
+                })
             })
             .collect::<Result<Vec<_>, _>>()?;
         let auxiliaries = self
@@ -935,6 +947,12 @@ impl MigrationProject {
                     auxiliary.auxiliary_kind,
                     Path::new(auxiliary.file.as_str()),
                 )
+                .map_err(|error| {
+                    MigrationInventoryError::new(format!(
+                        "cannot inventory migration auxiliary `{}`: {error}",
+                        auxiliary.file
+                    ))
+                })
             })
             .collect::<Result<Vec<_>, _>>()?;
         Ok(MigrationProjectPass {
@@ -1809,6 +1827,10 @@ fn scan_tailwind_template(
             cursor = start + 4 + end + 3;
             continue;
         }
+        if !is_template_tag_start(bytes, start) {
+            cursor = start + 1;
+            continue;
+        }
         let end = template_tag_end(bytes, start + 1)?;
         scan_template_tag(source, start + 1, end, &mut observations)?;
         cursor = end + 1;
@@ -1816,7 +1838,16 @@ fn scan_tailwind_template(
     Ok(observations)
 }
 
+fn is_template_tag_start(bytes: &[u8], start: usize) -> bool {
+    match bytes.get(start + 1) {
+        Some(byte) if byte.is_ascii_alphabetic() => true,
+        Some(b'/') => bytes.get(start + 2).is_some_and(u8::is_ascii_alphabetic),
+        _ => false,
+    }
+}
+
 fn template_tag_end(bytes: &[u8], mut cursor: usize) -> Result<usize, MigrationInventoryError> {
+    let tag_start = cursor.saturating_sub(1);
     let mut quote = None;
     let mut escaped = false;
     let mut braces = 0_usize;
@@ -1831,6 +1862,21 @@ fn template_tag_end(bytes: &[u8], mut cursor: usize) -> Result<usize, MigrationI
                 quote = None;
             }
         } else {
+            if bytes[cursor..].starts_with(b"//") {
+                cursor += 2;
+                while cursor < bytes.len() && !matches!(bytes[cursor], b'\n' | b'\r') {
+                    cursor += 1;
+                }
+                continue;
+            }
+            if bytes[cursor..].starts_with(b"/*") {
+                cursor += 2;
+                while cursor + 1 < bytes.len() && !bytes[cursor..].starts_with(b"*/") {
+                    cursor += 1;
+                }
+                cursor = (cursor + 2).min(bytes.len());
+                continue;
+            }
             match byte {
                 b'\'' | b'"' | b'`' => quote = Some(byte),
                 b'{' => braces = braces.saturating_add(1),
@@ -1841,9 +1887,9 @@ fn template_tag_end(bytes: &[u8], mut cursor: usize) -> Result<usize, MigrationI
         }
         cursor += 1;
     }
-    Err(MigrationInventoryError::new(
-        "migration template contains an unterminated tag",
-    ))
+    Err(MigrationInventoryError::new(format!(
+        "migration template contains an unterminated tag at byte {tag_start}"
+    )))
 }
 
 fn scan_template_tag(
@@ -1891,6 +1937,21 @@ fn template_class_attribute(bytes: &[u8], mut cursor: usize, end: usize) -> Opti
                 quote = None;
             }
         } else {
+            if bytes[cursor..end].starts_with(b"//") {
+                cursor += 2;
+                while cursor < end && !matches!(bytes[cursor], b'\n' | b'\r') {
+                    cursor += 1;
+                }
+                continue;
+            }
+            if bytes[cursor..end].starts_with(b"/*") {
+                cursor += 2;
+                while cursor + 1 < end && !bytes[cursor..end].starts_with(b"*/") {
+                    cursor += 1;
+                }
+                cursor = (cursor + 2).min(end);
+                continue;
+            }
             match byte {
                 b'\'' | b'"' | b'`' => quote = Some(byte),
                 b'{' => braces = braces.saturating_add(1),
@@ -2647,7 +2708,7 @@ fn scan_consumer_bracket_usage(
     (cursor, MigrationDisposition::Dynamic, None)
 }
 
-fn read_regular_project_file(
+pub(crate) fn read_regular_project_file(
     file: &Path,
     max_bytes: usize,
     role: &str,
@@ -3660,7 +3721,7 @@ $color: red;
         fs::write(&plugin, "export default function plugin() {}\n").unwrap();
         fs::write(
             &template,
-            "<main title=\"class='ignored'\" class=\"grid gap-4\" className={active ? 'x' : 'y'}></main>\n<!-- <div class=\"ignored\"> -->\n",
+            "const shader = `if (x < y) {}`;\n<main\n// comment doesn't open a quote\ntitle=\"class='ignored'\" class=\"grid gap-4\" className={active ? 'x' : 'y'}></main>\n<!-- <div class=\"ignored\"> -->\n",
         )
         .unwrap();
         let inventory = MigrationProject::new()

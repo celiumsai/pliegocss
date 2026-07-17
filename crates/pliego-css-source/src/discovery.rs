@@ -3,7 +3,7 @@
 use std::fs;
 use std::path::{Component, Path, PathBuf};
 
-use crate::migration::normalize_relative_target;
+use crate::migration::{MAX_SOURCE_BYTES, normalize_relative_target, read_regular_project_file};
 use crate::{
     MigrationAuxiliaryKind, MigrationConsumerKind, MigrationInventory, MigrationInventoryError,
     MigrationPreflightReliance, MigrationProject, MigrationProjectAuxiliary,
@@ -59,7 +59,8 @@ pub fn discover_migration_project(
             ));
         } else if is_css(file) {
             let inventory =
-                inventory_migration_file(MigrationSourceKind::Tailwind, Path::new(&logical))?;
+                inventory_migration_file(MigrationSourceKind::Tailwind, Path::new(&logical))
+                    .map_err(|error| discovery_file_error("classify", &logical, &error))?;
             if is_tailwind_entry(&inventory) {
                 has_tailwind = true;
                 linked_auxiliaries.extend(linked_tailwind_auxiliaries(&inventory)?);
@@ -111,17 +112,20 @@ fn discover_script_roles(
     configs: &mut Vec<String>,
 ) -> Result<(), MigrationInventoryError> {
     let logical_path = Path::new(&logical);
-    let consumer =
-        inventory_migration_consumer_file(MigrationConsumerKind::CssModules, logical_path)?;
-    if consumer
-        .observations()
-        .iter()
-        .any(|item| item.specifier().is_some())
-    {
-        consumers.push(MigrationProjectConsumer::new(
-            MigrationConsumerKind::CssModules,
-            logical.clone(),
-        ));
+    if candidate_contains(&logical, b".module.css")? {
+        let consumer =
+            inventory_migration_consumer_file(MigrationConsumerKind::CssModules, logical_path)
+                .map_err(|error| discovery_file_error("classify", &logical, &error))?;
+        if consumer
+            .observations()
+            .iter()
+            .any(|item| item.specifier().is_some())
+        {
+            consumers.push(MigrationProjectConsumer::new(
+                MigrationConsumerKind::CssModules,
+                logical.clone(),
+            ));
+        }
     }
     if is_standard_tailwind_config(logical_path) {
         configs.push(logical.clone());
@@ -151,10 +155,14 @@ fn add_tailwind_auxiliaries(
             .filter(|(_, file)| available.contains(file)),
     );
     for file in templates {
+        if !has_template_marker(&file)? {
+            continue;
+        }
         let inventory = inventory_migration_auxiliary_file(
             MigrationAuxiliaryKind::TailwindTemplate,
             Path::new(&file),
-        )?;
+        )
+        .map_err(|error| discovery_file_error("classify", &file, &error))?;
         if !inventory.observations().is_empty()
             && !auxiliaries.iter().any(|(_, existing)| existing == &file)
         {
@@ -427,6 +435,37 @@ fn is_discovery_candidate(file: &Path) -> bool {
     is_sass(file) || is_css(file) || is_script(file) || is_template(file)
 }
 
+fn discovery_file_error(
+    action: &str,
+    file: &str,
+    error: &MigrationInventoryError,
+) -> MigrationInventoryError {
+    MigrationInventoryError::new(format!(
+        "cannot {action} migration discovery candidate `{file}`: {error}"
+    ))
+}
+
+fn candidate_contains(file: &str, needle: &[u8]) -> Result<bool, MigrationInventoryError> {
+    let bytes = read_discovery_candidate(file)?;
+    Ok(bytes.windows(needle.len()).any(|window| window == needle))
+}
+
+fn read_discovery_candidate(file: &str) -> Result<Vec<u8>, MigrationInventoryError> {
+    let (_, bytes) = read_regular_project_file(
+        Path::new(file),
+        MAX_SOURCE_BYTES,
+        "migration discovery candidate",
+    )?;
+    Ok(bytes)
+}
+
+fn has_template_marker(file: &str) -> Result<bool, MigrationInventoryError> {
+    let bytes = read_discovery_candidate(file)?;
+    Ok([b"class=".as_slice(), b"className=".as_slice()]
+        .iter()
+        .any(|needle| bytes.windows(needle.len()).any(|window| window == *needle)))
+}
+
 #[cfg(test)]
 mod tests {
     use std::time::{SystemTime, UNIX_EPOCH};
@@ -494,6 +533,28 @@ mod tests {
     fn rejects_unsafe_or_missing_discovery_roots() {
         assert!(discover_migration_project(Path::new("../outside")).is_err());
         assert!(discover_migration_project(Path::new("missing-migration-root")).is_err());
+    }
+
+    #[test]
+    fn qualifies_candidate_failures_with_the_portable_file() {
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let root = PathBuf::from(format!(
+            ".migration-discovery-error-test-{}-{nonce}",
+            std::process::id()
+        ));
+        fs::create_dir_all(root.join("src")).unwrap();
+        fs::write(root.join("app.scss"), "$brand: red;\n").unwrap();
+        fs::write(
+            root.join("src/broken.ts"),
+            "import styles from './card.module.css;\n",
+        )
+        .unwrap();
+        let error = discover_migration_project(&root).unwrap_err();
+        assert!(error.to_string().contains("src/broken.ts"));
+        fs::remove_dir_all(root).unwrap();
     }
 
     #[cfg(unix)]

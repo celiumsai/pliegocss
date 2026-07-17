@@ -533,6 +533,7 @@ plugins, and templates add exact content identities and resolve matching relativ
 class candidates while expressions remain dynamic, without executing JavaScript or template code.
 The same physical component may be declared in distinct roles, such as CSS Modules consumer and
 Tailwind template; duplicate entries remain rejected within each role.
+Discovery classification and collection errors name the exact portable candidate path.
 The inventory also records a closed set of config keys and plugin registration API calls as
 unsupported lexical seams; this does not claim that their bodies can be migrated. See the
 [migration project inventory schema 1](./migration-project-inventory-schema-1.md).

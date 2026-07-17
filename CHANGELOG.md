@@ -20,6 +20,9 @@ pre-1.0 compatibility policy.
   roles. `migration-project-inventory DIRECTORY` exposes the same path through the existing CLI and
   performs normal two-pass collection; toolchain-specific resolution and real-project
   precision/recall remain open.
+- File-qualified migration discovery and collection failures, so malformed source, consumer, or
+  auxiliary syntax identifies the exact project-relative candidate instead of returning only the
+  underlying lexical error.
 
 - A versioned three-case authored migration bridge corpus and read-only CLI runner covering resolved
   Sass modules, Tailwind-owned auxiliaries/template candidates/config-plugin seams, and CSS Modules
