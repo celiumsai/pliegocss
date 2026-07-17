@@ -215,14 +215,14 @@ pnpm check:packages
 
 The gate fails on a dirty worktree and verifies all of the following without publishing:
 
-- the public boundary is exactly fifteen packages in the dependency-first order above;
+- the public boundary is exactly sixteen packages in the dependency-first order above;
 - all packages share one version and Rust 1.85 MSRV;
 - every internal dependency has the exact matching registry requirement;
 - descriptions, repository metadata, categories, keywords, README, and the complete Apache-2.0
   license are present;
 - tracked and packaged paths are relative, Unicode-normalized, collision-free, and safe on
   case-insensitive Windows/macOS filesystems; each package includes source files;
-- Cargo 1.96 packages all fifteen archives without native registry verification, validates their
+- Cargo 1.96 packages all sixteen archives without native registry verification, validates their
   normalized dependency contracts, exact resolved graph, and 60 KiB (61,440-byte) maximum
   compressed size per archive, then compiles only their extracted contents in the isolated patched
   workspace using the release profile;

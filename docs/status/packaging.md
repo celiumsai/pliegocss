@@ -1,7 +1,7 @@
 # Packaging status
 
-Status: **the pinned VS Code extension host, closed VSIX, and complete exact-clean `b83217e` Rust
-package replay passed; no registry or Marketplace upload performed**
+Status: **the debounced LSP, pinned VS Code extension host, closed VSIX, and complete exact-clean
+`69831d4` Rust package replay passed; no registry or Marketplace upload performed**
 
 The publishable workspace boundary has six dependency waves. `pliego-css-usage` and
 `pliego-css-control` follow `pliego-css-build` because direct and optional Cargo dependencies both
@@ -18,6 +18,30 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## Debounced LSP semantic diagnostics clean replay — 2026-07-17
+
+The exact clean `69831d4` Debian WSL2 gate packaged and extracted all sixteen Rust archives with
+native Linux Node 24.14.0 and Cargo 1.96, compiled the complete extracted graph in release mode,
+and executed the Rust 1.85 downstream consumer. `pliego-css-lsp` measured 23,535 compressed bytes
+(37,905 bytes of margin, SHA-256
+`bc9ec320b0c2dcc6a451c2dc8e405ade24ac8b12ba5d7a821ceacb9d130b08bf`). Tight archives
+remained below the fixed ceiling: `pliego-cssc` measured 61,335 bytes (105 bytes of margin,
+SHA-256 `7ba80424438b2e1721dd3e20eb8fedc301573f1e8ceba3ee2dd1b480fa38766c`),
+`pliego-css-control` 61,073 (367 bytes), `pliego-css-build` 59,910 (1,530 bytes), and
+`pliego-css-source` 56,780 (4,660 bytes). Publication remained disabled and the 61,440-byte
+ceiling was not raised.
+
+The `integration:lsp` session passed on Windows and Debian. It sends full-document versions 2
+through 10 without waiting, proves that a formatting request completes before semantic publication,
+and accepts exactly one compiler-backed `PCS001` result for version 10. The pinned VS Code 1.105.1
+extension-host gate also passed with external binaries. A separate clean-target Debian replay passed
+the complete Rust 1.85 all-feature workspace tests, strict Clippy, and warning-denied rustdoc.
+
+Windows passed the targeted LSP tests, strict Clippy, rustdoc, and the explicitly rebuilt 10-test
+`pliego-css-build` CSS-audit target. The monolithic Windows workspace test command could not launch
+one cached `css_audit` executable because host Application Control returned OS error 4551; this is
+recorded as an environment limitation, not replaced by a false Windows full-workspace pass.
 
 ## Real VS Code extension-host clean replay — 2026-07-17
 
