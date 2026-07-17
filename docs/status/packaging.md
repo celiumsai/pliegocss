@@ -1,8 +1,7 @@
 # Packaging status
 
-Status: **Project Index navigation passed Windows/Linux process gates, the closed-payload VSIX
-gate, and the complete exact-clean `089f555` Rust package replay; no registry or Marketplace
-upload performed**
+Status: **compiler-backed LSP semantic diagnostics passed Windows/Linux process gates and the
+complete exact-clean `cff1e09` Rust package replay; no registry or Marketplace upload performed**
 
 The publishable workspace boundary has six dependency waves. `pliego-css-usage` and
 `pliego-css-control` follow `pliego-css-build` because direct and optional Cargo dependencies both
@@ -19,6 +18,26 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## Compiler-backed LSP diagnostics clean replay — 2026-07-17
+
+The exact clean `cff1e09` Debian WSL2 gate packaged and extracted all sixteen Rust archives with
+native Linux Node 24.14.0 and Cargo 1.96, compiled the complete extracted graph in release mode,
+and executed the Rust 1.85 downstream consumer. `pliego-css-lsp` measured 22,127 compressed bytes
+(39,313 bytes of margin, SHA-256
+`845259477e05b3f7d632ae11a9a1a67cccb4ecfe0ba30747adb1a9dc30406edc`). Tight archives
+remained below the fixed ceiling: `pliego-cssc` measured 61,344 bytes (96 bytes of margin,
+SHA-256 `a1afd3ed5635ebee88de8eeefc981c3b406dcd04a966eb1a7f88e2f4e9efd6b0`),
+`pliego-css-control` 61,081 (359 bytes), `pliego-css-build` 59,919 (1,521 bytes), and
+`pliego-css-source` 56,777 (4,663 bytes). Publication remained disabled and the 61,440-byte
+ceiling was not raised; the CLI remains closed to additive package growth.
+
+The updated `integration:lsp` gate passed on Windows and Debian WSL2 with a native Linux Rust 1.85
+target. After its formatting, completion, hover, and Project Index checks, the session sends a full
+buffer change containing an unknown utility and requires the compiler's exact `PCS001` message plus
+the exact projected UTF-16 range. The complete workspace all-feature test, strict-Clippy, and
+warning-denied rustdoc matrices passed locally. This proves bounded per-literal semantic reuse, not
+debouncing, cancellation, cross-literal `pcx!` equality, or a real editor extension host.
 
 ## Project Index navigation clean replay — 2026-07-17
 
