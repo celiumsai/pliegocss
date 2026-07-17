@@ -7,6 +7,9 @@ use std::ffi::OsString;
 use std::io::{self, BufRead, BufReader, Write};
 use std::path::PathBuf;
 use std::process::Command;
+use std::sync::mpsc::{self, Receiver, RecvTimeoutError, Sender};
+use std::thread;
+use std::time::{Duration, Instant};
 
 use pliego_css_parser::{format_style_list, parse_style_list};
 use pliego_css_source::{InvocationKind, ScanReport, SourceRange, StyleLiteral, scan_source_named};
@@ -17,6 +20,7 @@ mod project_index;
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const MAX_SEMANTIC_CACHE_ITEMS: usize = 4_096;
 const MAX_SEMANTIC_CHECKS_PER_DOCUMENT: usize = 256;
+const SEMANTIC_DEBOUNCE: Duration = Duration::from_millis(150);
 
 /// Exact process and theme selection used by delegated tooling requests.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -52,7 +56,7 @@ pub fn run_from_env() -> Result<(), String> {
     let config = parse_args(std::env::args_os().skip(1))?;
     let stdin = io::stdin();
     let stdout = io::stdout();
-    serve(BufReader::new(stdin.lock()), stdout.lock(), config)
+    serve(BufReader::new(stdin), stdout.lock(), config)
 }
 
 fn parse_args(arguments: impl IntoIterator<Item = OsString>) -> Result<ServerConfig, String> {
@@ -94,7 +98,6 @@ struct Server {
     root: PathBuf,
     documents: BTreeMap<String, Document>,
     catalog: Option<Vec<Value>>,
-    semantic_cache: BTreeMap<String, Result<Vec<Value>, String>>,
     shutdown: bool,
 }
 
@@ -105,7 +108,6 @@ impl Server {
             root: PathBuf::from("."),
             documents: BTreeMap::new(),
             catalog: None,
-            semantic_cache: BTreeMap::new(),
             shutdown: false,
         }
     }
@@ -145,23 +147,37 @@ impl Server {
         }
         Ok(self.catalog.as_deref().unwrap_or_default())
     }
+}
 
-    fn semantic_findings(&mut self, style: &str) -> Result<&[Value], String> {
-        if !self.semantic_cache.contains_key(style) {
-            if self.semantic_cache.len() >= MAX_SEMANTIC_CACHE_ITEMS {
-                self.semantic_cache.clear();
-            }
-            let result = self.run_semantic_check(style);
-            self.semantic_cache.insert(style.to_owned(), result);
+struct SemanticEngine {
+    config: ServerConfig,
+    cache: BTreeMap<String, Result<Vec<Value>, String>>,
+}
+
+impl SemanticEngine {
+    fn new(config: ServerConfig) -> Self {
+        Self {
+            config,
+            cache: BTreeMap::new(),
         }
-        self.semantic_cache
+    }
+
+    fn findings(&mut self, root: &PathBuf, style: &str) -> Result<&[Value], String> {
+        if !self.cache.contains_key(style) {
+            if self.cache.len() >= MAX_SEMANTIC_CACHE_ITEMS {
+                self.cache.clear();
+            }
+            let result = self.run_check(root, style);
+            self.cache.insert(style.to_owned(), result);
+        }
+        self.cache
             .get(style)
             .expect("semantic result inserted")
             .as_deref()
             .map_err(Clone::clone)
     }
 
-    fn run_semantic_check(&self, style: &str) -> Result<Vec<Value>, String> {
+    fn run_check(&self, root: &PathBuf, style: &str) -> Result<Vec<Value>, String> {
         let mut process = Command::new(&self.config.compiler);
         process
             .arg("--diagnostic-format")
@@ -169,7 +185,7 @@ impl Server {
             .arg("check")
             .arg("--style")
             .arg(style)
-            .current_dir(&self.root);
+            .current_dir(root);
         if self.config.seed {
             process.arg("--seed");
         } else if let Some(config) = &self.config.config {
@@ -202,36 +218,201 @@ impl Server {
     }
 }
 
+struct SemanticJob {
+    uri: String,
+    version: i64,
+    text: String,
+    root: PathBuf,
+}
+
+struct SemanticResult {
+    uri: String,
+    version: i64,
+    diagnostics: Vec<Value>,
+}
+
+struct PendingSemantic {
+    due: Instant,
+    job: SemanticJob,
+}
+
+enum ProtocolEvent {
+    Input(Result<Option<Value>, String>),
+    Semantic(SemanticResult),
+}
+
 /// Serves framed JSON-RPC messages until `exit` or end-of-stream.
 ///
 /// # Errors
 ///
 /// Returns an error when an input frame or output write is invalid.
 pub fn serve(
-    mut input: impl BufRead,
+    mut input: impl BufRead + Send,
     mut output: impl Write,
     config: ServerConfig,
 ) -> Result<(), String> {
-    let mut server = Server::new(config);
-    while let Some(message) = read_message(&mut input)? {
-        let method = message.get("method").and_then(Value::as_str).unwrap_or("");
-        let id = message.get("id").cloned();
-        let params = message.get("params").cloned().unwrap_or(Value::Null);
-        if method == "exit" {
-            break;
+    let mut server = Server::new(config.clone());
+    let mut pending = BTreeMap::<String, PendingSemantic>::new();
+    let (event_sender, events) = mpsc::channel::<ProtocolEvent>();
+    let (job_sender, jobs) = mpsc::channel::<SemanticJob>();
+    spawn_semantic_worker(config, jobs, event_sender.clone());
+
+    thread::scope(|scope| -> Result<(), String> {
+        let input_sender = event_sender.clone();
+        scope.spawn(move || {
+            loop {
+                let result = read_message(&mut input);
+                let stop = match &result {
+                    Ok(Some(message)) => {
+                        message.get("method").and_then(Value::as_str) == Some("exit")
+                    }
+                    Ok(None) | Err(_) => true,
+                };
+                if input_sender.send(ProtocolEvent::Input(result)).is_err() || stop {
+                    break;
+                }
+            }
+        });
+        drop(event_sender);
+
+        loop {
+            match receive_event(&events, &pending)? {
+                Some(ProtocolEvent::Input(result)) => {
+                    let Some(message) = result? else { break };
+                    let method = message.get("method").and_then(Value::as_str).unwrap_or("");
+                    let id = message.get("id").cloned();
+                    let params = message.get("params").cloned().unwrap_or(Value::Null);
+                    if method == "exit" {
+                        break;
+                    }
+                    if let Some(id) = id {
+                        let response = match handle_request(&mut server, method, &params) {
+                            Ok(result) => json!({"jsonrpc":"2.0","id":id,"result":result}),
+                            Err(error) => json!({
+                                "jsonrpc":"2.0","id":id,
+                                "error":{"code":-32602,"message":error}
+                            }),
+                        };
+                        write_message(&mut output, &response)?;
+                    } else {
+                        if let Some(notification) =
+                            handle_notification(&mut server, method, &params)?
+                        {
+                            write_message(&mut output, &notification)?;
+                        }
+                        update_semantic_schedule(&server, method, &params, &mut pending)?;
+                    }
+                }
+                Some(ProtocolEvent::Semantic(result)) => {
+                    if let Some(document) = server.documents.get(&result.uri) {
+                        if document.version == result.version {
+                            let mut diagnostics = local_diagnostics(&result.uri, &document.text);
+                            diagnostics.extend(result.diagnostics);
+                            write_message(
+                                &mut output,
+                                &diagnostic_message(&result.uri, document.version, &diagnostics),
+                            )?;
+                        }
+                    }
+                }
+                None => dispatch_due_jobs(&job_sender, &mut pending)?,
+            }
         }
-        if let Some(id) = id {
-            let response = match handle_request(&mut server, method, &params) {
-                Ok(result) => json!({"jsonrpc":"2.0","id":id,"result":result}),
-                Err(error) => json!({
-                    "jsonrpc":"2.0","id":id,
-                    "error":{"code":-32602,"message":error}
-                }),
-            };
-            write_message(&mut output, &response)?;
-        } else if let Some(notification) = handle_notification(&mut server, method, &params)? {
-            write_message(&mut output, &notification)?;
+        drop(job_sender);
+        Ok(())
+    })
+}
+
+fn spawn_semantic_worker(
+    config: ServerConfig,
+    jobs: Receiver<SemanticJob>,
+    events: Sender<ProtocolEvent>,
+) {
+    thread::spawn(move || {
+        let mut engine = SemanticEngine::new(config);
+        while let Ok(job) = jobs.recv() {
+            let diagnostics = semantic_document_diagnostics(&mut engine, &job);
+            if events
+                .send(ProtocolEvent::Semantic(SemanticResult {
+                    uri: job.uri,
+                    version: job.version,
+                    diagnostics,
+                }))
+                .is_err()
+            {
+                break;
+            }
         }
+    });
+}
+
+fn receive_event(
+    events: &Receiver<ProtocolEvent>,
+    pending: &BTreeMap<String, PendingSemantic>,
+) -> Result<Option<ProtocolEvent>, String> {
+    let Some(due) = pending.values().map(|item| item.due).min() else {
+        return events
+            .recv()
+            .map(Some)
+            .map_err(|_| "protocol event loop closed".into());
+    };
+    match events.recv_timeout(due.saturating_duration_since(Instant::now())) {
+        Ok(event) => Ok(Some(event)),
+        Err(RecvTimeoutError::Timeout) => Ok(None),
+        Err(RecvTimeoutError::Disconnected) => Err("protocol event loop closed".into()),
+    }
+}
+
+fn dispatch_due_jobs(
+    jobs: &Sender<SemanticJob>,
+    pending: &mut BTreeMap<String, PendingSemantic>,
+) -> Result<(), String> {
+    let now = Instant::now();
+    let due = pending
+        .iter()
+        .filter(|(_, item)| item.due <= now)
+        .map(|(uri, _)| uri.clone())
+        .collect::<Vec<_>>();
+    for uri in due {
+        let item = pending
+            .remove(&uri)
+            .ok_or("pending semantic job disappeared")?;
+        jobs.send(item.job)
+            .map_err(|_| "semantic worker closed".to_owned())?;
+    }
+    Ok(())
+}
+
+fn update_semantic_schedule(
+    server: &Server,
+    method: &str,
+    params: &Value,
+    pending: &mut BTreeMap<String, PendingSemantic>,
+) -> Result<(), String> {
+    if matches!(method, "textDocument/didOpen" | "textDocument/didChange") {
+        let uri = string_field(
+            params.get("textDocument").ok_or("missing textDocument")?,
+            "uri",
+        )?;
+        let document = server.documents.get(uri).ok_or("document is not open")?;
+        pending.insert(
+            uri.to_owned(),
+            PendingSemantic {
+                due: Instant::now() + SEMANTIC_DEBOUNCE,
+                job: SemanticJob {
+                    uri: uri.to_owned(),
+                    version: document.version,
+                    text: document.text.clone(),
+                    root: server.root.clone(),
+                },
+            },
+        );
+    } else if method == "textDocument/didClose" {
+        let uri = string_field(
+            params.get("textDocument").ok_or("missing textDocument")?,
+            "uri",
+        )?;
+        pending.remove(uri);
     }
     Ok(())
 }
@@ -327,18 +508,23 @@ fn handle_notification(
     }
 }
 
-fn diagnostic_notification(server: &mut Server, uri: &str) -> Result<Value, String> {
+fn diagnostic_notification(server: &Server, uri: &str) -> Result<Value, String> {
     let document = server.documents.get(uri).ok_or("document is not open")?;
-    let text = document.text.clone();
-    let version = document.version;
-    let diagnostics = diagnostics(server, uri, &text);
-    Ok(json!({
-        "jsonrpc":"2.0","method":"textDocument/publishDiagnostics",
-        "params":{"uri":uri,"version":version,"diagnostics":diagnostics}
-    }))
+    Ok(diagnostic_message(
+        uri,
+        document.version,
+        &local_diagnostics(uri, &document.text),
+    ))
 }
 
-fn diagnostics(server: &mut Server, uri: &str, source: &str) -> Vec<Value> {
+fn diagnostic_message(uri: &str, version: i64, diagnostics: &[Value]) -> Value {
+    json!({
+        "jsonrpc":"2.0","method":"textDocument/publishDiagnostics",
+        "params":{"uri":uri,"version":version,"diagnostics":diagnostics}
+    })
+}
+
+fn local_diagnostics(uri: &str, source: &str) -> Vec<Value> {
     let report = match scan_source_named(uri, source) {
         Ok(report) => report,
         Err(error) => {
@@ -350,25 +536,10 @@ fn diagnostics(server: &mut Server, uri: &str, source: &str) -> Vec<Value> {
         .iter()
         .map(|item| diagnostic(source, item.range, item.code, &item.message, 1))
         .collect::<Vec<_>>();
-    let mut semantic_checks = 0;
-    let mut semantic_limit_reported = false;
     visit_literals(&report, |role, literal| {
         match parse_style_list(&literal.value) {
             Ok(parsed) => {
                 let expected = format_style_list(&parsed);
-                if semantic_checks < MAX_SEMANTIC_CHECKS_PER_DOCUMENT {
-                    values.extend(semantic_diagnostics(server, source, literal));
-                    semantic_checks += 1;
-                } else if !semantic_limit_reported {
-                    values.push(diagnostic(
-                        source,
-                        literal.range,
-                        "PCL002",
-                        "semantic diagnostic literal limit exceeded",
-                        1,
-                    ));
-                    semantic_limit_reported = true;
-                }
                 if expected != literal.value {
                     let mut value = diagnostic(
                         source,
@@ -393,8 +564,41 @@ fn diagnostics(server: &mut Server, uri: &str, source: &str) -> Vec<Value> {
     values
 }
 
-fn semantic_diagnostics(server: &mut Server, source: &str, literal: &StyleLiteral) -> Vec<Value> {
-    let findings = match server.semantic_findings(&literal.value) {
+fn semantic_document_diagnostics(engine: &mut SemanticEngine, job: &SemanticJob) -> Vec<Value> {
+    let Ok(report) = scan_source_named(&job.uri, &job.text) else {
+        return Vec::new();
+    };
+    let mut values = Vec::new();
+    let mut semantic_checks = 0;
+    let mut semantic_limit_reported = false;
+    visit_literals(&report, |_, literal| {
+        if parse_style_list(&literal.value).is_err() {
+            return;
+        }
+        if semantic_checks < MAX_SEMANTIC_CHECKS_PER_DOCUMENT {
+            values.extend(semantic_diagnostics(engine, &job.root, &job.text, literal));
+            semantic_checks += 1;
+        } else if !semantic_limit_reported {
+            values.push(diagnostic(
+                &job.text,
+                literal.range,
+                "PCL002",
+                "semantic diagnostic literal limit exceeded",
+                1,
+            ));
+            semantic_limit_reported = true;
+        }
+    });
+    values
+}
+
+fn semantic_diagnostics(
+    engine: &mut SemanticEngine,
+    root: &PathBuf,
+    source: &str,
+    literal: &StyleLiteral,
+) -> Vec<Value> {
+    let findings = match engine.findings(root, &literal.value) {
         Ok(findings) => findings,
         Err(error) => {
             return vec![diagnostic(

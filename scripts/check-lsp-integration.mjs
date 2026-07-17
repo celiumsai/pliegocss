@@ -189,16 +189,34 @@ send({
   method: "textDocument/definition",
   params: { textDocument: { uri }, position: { line: 0, character: cursor } },
 });
+for (let version = 2; version < 10; version += 1) {
+  send({
+    jsonrpc: "2.0",
+    method: "textDocument/didChange",
+    params: {
+      textDocument: { uri, version },
+      contentChanges: [{ text: `fn view(){let _=pc!("flex stale-${version}");}` }],
+    },
+  });
+}
+const finalVersion = 10;
 const invalidText = 'fn view(){let _=pc!("flex unknown-thing");}';
 send({
   jsonrpc: "2.0",
   method: "textDocument/didChange",
   params: {
-    textDocument: { uri, version: 2 },
+    textDocument: { uri, version: finalVersion },
     contentChanges: [{ text: invalidText }],
   },
 });
-send({ jsonrpc: "2.0", id: 6, method: "shutdown", params: null });
+send({
+  jsonrpc: "2.0",
+  id: 6,
+  method: "textDocument/formatting",
+  params: { textDocument: { uri }, options: { tabSize: 4, insertSpaces: true } },
+});
+await new Promise((resolveDelay) => setTimeout(resolveDelay, 500));
+send({ jsonrpc: "2.0", id: 7, method: "shutdown", params: null });
 send({ jsonrpc: "2.0", method: "exit", params: null });
 child.stdin.end();
 
@@ -242,7 +260,13 @@ if (byId.get(1)?.result?.capabilities?.definitionProvider !== true) {
 if (published[0]?.params?.diagnostics?.[0]?.code !== "FMT001") {
   fail("didOpen did not publish FMT001");
 }
-const semantic = published[1]?.params?.diagnostics?.find(
+const semanticMessages = published.filter((message) =>
+  message.params?.diagnostics?.some((diagnostic) => diagnostic.code === "PCS001"),
+);
+if (semanticMessages.length !== 1 || semanticMessages[0].params.version !== finalVersion) {
+  fail("debounce published a stale or duplicate semantic diagnostic result");
+}
+const semantic = semanticMessages[0].params.diagnostics.find(
   (diagnostic) => diagnostic.code === "PCS001",
 );
 if (semantic?.message !== "unknown utility `unknown-thing`") {
@@ -277,7 +301,12 @@ if (
 ) {
   fail("definition did not select the physical declaration range");
 }
-if (byId.get(6)?.result !== null) fail("shutdown did not return null");
+const responsiveIndex = messages.findIndex((message) => message.id === 6);
+const semanticIndex = messages.indexOf(semanticMessages[0]);
+if (responsiveIndex < 0 || semanticIndex < 0 || responsiveIndex >= semanticIndex) {
+  fail("semantic diagnostics blocked the protocol request loop");
+}
+if (byId.get(7)?.result !== null) fail("shutdown did not return null");
 
 if (process.env.PLIEGOCSS_KEEP_LSP_FIXTURE !== "1") {
   rmSync(workspace, { recursive: true, force: true });
@@ -290,6 +319,9 @@ process.stdout.write(
     formatDiagnostics: published[0].params.diagnostics.length,
     semanticDiagnostic: semantic.code,
     semanticRange: semantic.range,
+    semanticVersion: semanticMessages[0].params.version,
+    staleSemanticResults: 0,
+    protocolResponsiveDuringDebounce: true,
     formattingEdits: byId.get(2).result.length,
     completion: item.label,
     completionRange: item.textEdit.range,

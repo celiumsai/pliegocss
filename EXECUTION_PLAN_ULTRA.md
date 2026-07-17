@@ -245,8 +245,10 @@ fixture acotado.
 - [x] Reusar `check` schema 1 para diagnósticos semánticos theme-aware por literal y conservar
   código, mensaje y rango exacto al proyectar UTF-8 → UTF-16.
 - [x] Añadir gate real de VS Code 1.105.1 extension host sobre diagnostics y definition.
-- [ ] Añadir otro cliente, debounce/cancelación y paridad semántica completa de composición `pcx!`
-  CLI/LSP.
+- [x] Añadir debounce semántico de 150 ms, worker fuera del loop de protocolo y descarte por versión
+  de resultados obsoletos, con ráfaga reproducible Windows/Debian.
+- [ ] Añadir otro cliente, cancelación forzosa del child ya iniciado cuando sea justificable y
+  paridad semántica completa de composición `pcx!` CLI/LSP.
 - [x] Añadir formatter determinista y `--check` para utilidades explícitas y archivos line-oriented.
 - [x] Añadir diagnósticos y reemplazos read-only sobre literales Rust.
 - [x] Añadir envelope JSON estable para diagnósticos de comandos one-shot.

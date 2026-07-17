@@ -75,6 +75,9 @@ replaces the complete literal token with a newly escaped ordinary Rust string.
 - Semantic results are cached by exact decoded literal, capped at 4,096 entries, and each document
   is capped at 256 semantic literal checks. Exceeding that boundary emits `PCL002` rather than
   starting an unbounded number of compiler processes.
+- Full-buffer changes replace the pending semantic job for that URI and restart a 150 ms debounce.
+  Due jobs run on a dedicated worker instead of the JSON-RPC thread. A result is published only
+  when its document version still matches the open buffer, so an in-flight stale result is discarded.
 - Formatting returns edits only; it never writes a source file. The editor remains responsible for
   applying the version-bound edit set.
 - Definition consumes Project Index schema 1 or 2 instead of scanning repository structure. It
@@ -83,16 +86,18 @@ replaces the complete literal token with a newly escaped ordinary Rust string.
   request closed.
 
 The current diagnostic pass covers Rust parsing, macro extraction, PliegoCSS syntax, canonical
-formatting, and theme-aware compiler validation of every bounded individual literal. A new uncached
-literal currently invokes the compiler synchronously. Cross-literal `pcx!` composition equality,
-debouncing/cancellation, and a frozen negative corpus remain necessary before claiming complete
+formatting, and theme-aware compiler validation of every bounded individual literal. Local findings
+publish immediately; uncached compiler checks are debounced and run serially in the background.
+Version cancellation is cooperative at the publication boundary: PliegoCSS discards stale results
+but does not forcibly terminate a compiler process that already started. Cross-literal `pcx!`
+composition equality and a frozen negative corpus remain necessary before claiming complete
 CLI/editor diagnostic equality.
 
 ## Current non-goals
 
 This candidate does not yet provide incremental document changes, workspace folders, code actions,
-semantic tokens, cancellation, background/debounced compiler checks, another editor client, or a
-hosted multi-editor matrix. Those remain release gates; the existence
+semantic tokens, forceful child-process cancellation, another editor client, or a hosted
+multi-editor matrix. Those remain release gates; the existence
 of the stdio server and initial VS Code package does not close the full F6 editor-tooling task.
 
 Run the reproducible local process gate with:
@@ -106,8 +111,10 @@ initialization, `FMT001` publication, whole-literal formatting, exact completion
 compiler-backed hover CSS, clean shutdown, and zero stderr.
 The same session configures a synthetic integrity-bound Project Index and requires Go to Definition
 to select the exact physical declaration in its verified stylesheet.
-It then changes the buffer to an unknown utility and requires the compiler's exact `PCS001` message
-and style range to survive UTF-16 LSP projection.
+It then sends a burst of full-buffer versions ending in an unknown utility, requires the protocol
+to answer a formatting request before semantic publication, and accepts exactly one version-10
+`PCS001` result with the compiler's message and exact UTF-16 range. No stale semantic result may
+survive the version check.
 
 ## VS Code client candidate
 

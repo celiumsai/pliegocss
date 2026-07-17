@@ -273,8 +273,10 @@ ETA: 3–5 días
   exacto de byte ranges a posiciones UTF-16.
 - [x] Ejecutar la extensión real en VS Code 1.105.1 y probar diagnóstico compiler-backed más
   navegación Project Index desde la API del extension host.
-- [ ] Añadir otro cliente de editor, debounce/cancelación y paridad diagnóstica completa para
-  composición `pcx!` CLI/LSP.
+- [x] Ejecutar diagnósticos semánticos tras debounce de 150 ms fuera del protocolo y descartar
+  resultados de versiones obsoletas; el gate de ráfaga pasa en Windows y Debian.
+- [ ] Añadir otro cliente de editor, cancelación forzosa del compilador en curso cuando aporte valor
+  y paridad diagnóstica completa para composición `pcx!` CLI/LSP.
 - [x] Mejorar diagnósticos usando los cinco fixtures reales.
 - [x] Crear documentación de CLI, configuración y troubleshooting; editor setup sigue abierto.
 - [x] Ejecutar doctests y ejemplos del workspace desde el workflow de CI.

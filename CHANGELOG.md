@@ -19,7 +19,9 @@ pre-1.0 compatibility policy.
   navigation verifies the source snapshot, Asset Plan, manifest/CSS integrity, and schema-5 physical
   declaration ranges before returning source-to-final-CSS definition links. Bounded per-literal
   semantic diagnostics now reuse `pliego-cssc check` schema 1 and project exact compiler ranges into
-  UTF-16; debounce, cancellation, cross-literal `pcx!` equality, and full CLI/LSP parity remain open.
+  UTF-16. A 150 ms per-document debounce moves compiler work off the protocol loop and rejects stale
+  results by document version; forceful child-process cancellation, cross-literal `pcx!` equality,
+  and full CLI/LSP parity remain open.
 - An unreleased VS Code client candidate that connects file-backed Rust documents to explicit
   external `pliego-css-lsp` and `pliego-cssc` binaries. It supports discover/seed/config theme
   modes, optional Project Index navigation, fail-closed machine-overridable paths, configuration

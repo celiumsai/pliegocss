@@ -115,7 +115,8 @@ The workspace is unreleased at `0.0.0`; syntax and crate boundaries may still ch
   duplication with explicit ownership, deltas, and reviewed exceptions. Declarative schema-1/schema-2
   bundle plans compile explicit source partitions from one snapshot. An initial standard stdio LSP
   transport now provides completion, hover, syntax/format diagnostics, bounded compiler-backed
-  semantic checks, whole-literal formatting, and opt-in integrity-verified Project Index navigation
+  semantic checks with a 150 ms debounce, stale-version rejection, whole-literal formatting, and
+  opt-in integrity-verified Project Index navigation
   to final CSS declarations; an unreleased
   VS Code client packages that transport without embedded binaries. A pinned VS Code 1.105.1
   extension-host gate now exercises compiler diagnostics and Project Index definition end to end;
