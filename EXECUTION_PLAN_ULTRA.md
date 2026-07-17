@@ -315,7 +315,8 @@ hosted/multi-browser permanece como gate de release.
   el benchmark dirigido ahorra 437 B raw / 13 B gzip con tema y deja Gate A/B neutrales.
 - [x] Implementar `why included` semántico como ruta/island → componente → declaración → token.
 - [x] Extender `why included` hasta declaración/regla CSS postprocesada mediante manifest schema 5.
-- [ ] Comparar estrategias de output por coste gzip.
+- [ ] Comparar estrategias de output por coste gzip. La evidencia de estilos críticos ya tiene
+  contrato canónico hash-bound; la proyección y medición siguen abiertas.
 - [ ] Adoptar híbrido únicamente si gana de forma medible.
 - [x] Ejecutar property tests transversales y fuzzing reproducible con corpus/diccionario
   versionados; el soak semanal queda configurado y su evidencia hosted permanece pendiente de

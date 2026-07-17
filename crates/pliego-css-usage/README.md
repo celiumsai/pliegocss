@@ -25,6 +25,11 @@ active Token Graph over retained StyleIds with `direct`, `dependency`, and `unus
 existing report without compilation using `pliego-css-tokens explain --report FILE --token
 KIND.NAME [--format text|json]`.
 
+The crate also owns the canonical critical-style capture sidecar. `build_critical_evidence` records
+positive initial-render StyleIds by route/browser/viewport/stage;
+`verify_critical_evidence` binds them to the exact usage universe, reachability bytes, retained
+selection, and Asset Plan route bundles before any critical-CSS projection.
+
 Every sidecar is closed, bounded, canonical, and bound to the complete pre-pruning universe plus
 the exact reachability bytes. Selection always operates on a whole `(bundleId, StyleId)` and never
 edits authored Rust, individual declarations, or theme variables.

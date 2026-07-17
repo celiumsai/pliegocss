@@ -12,7 +12,14 @@ use pliego_css_build::artifacts::{
 use pliego_css_ir::StyleId;
 use serde::{Deserialize, Serialize};
 
+mod critical;
 mod token_usage;
+
+pub use critical::{
+    CRITICAL_EVIDENCE_SCHEMA_VERSION, CriticalCaptureInput, CriticalCaptureStage,
+    CriticalEvidenceInput, CriticalRouteInput, CriticalSelection, CriticalStyleInput,
+    build_critical_evidence, parse_critical_evidence, verify_critical_evidence,
+};
 
 pub use token_usage::{
     TOKEN_USAGE_FILE, TOKEN_USAGE_SCHEMA_VERSION, TokenUsageConsumerInput, TokenUsageReport,

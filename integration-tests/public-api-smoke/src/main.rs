@@ -39,12 +39,15 @@ use pliego_css_source::{
     inventory_migration_consumer_source, inventory_migration_file, inventory_migration_source,
 };
 use pliego_css_usage::{
-    AssetRuleSelection as UsageRuleSelection, UsageCandidateInput, UsageObservationCoverage,
-    UsageObservationInput, UsageObservationScopeInput, UsageObservedStyleInput,
-    UsageRetentionEntryInput, UsageRetentionInput, TOKEN_USAGE_FILE, TOKEN_USAGE_SCHEMA_VERSION,
-    TokenUsageReport, build_usage_analysis, build_usage_observation, build_usage_retention,
-    collect_usage_style_inputs, explain_token_usage, parse_token_usage_report,
-    parse_usage_observation, parse_usage_retention, verify_usage_analysis,
+    AssetRuleSelection as UsageRuleSelection, CRITICAL_EVIDENCE_SCHEMA_VERSION,
+    CriticalEvidenceInput, CriticalRouteInput, CriticalSelection, UsageCandidateInput,
+    UsageObservationCoverage, UsageObservationInput, UsageObservationScopeInput,
+    UsageObservedStyleInput, UsageRetentionEntryInput, UsageRetentionInput, UsageSelection,
+    TOKEN_USAGE_FILE, TOKEN_USAGE_SCHEMA_VERSION, TokenUsageReport, build_critical_evidence,
+    build_usage_analysis, build_usage_observation, build_usage_retention,
+    collect_usage_style_inputs, explain_token_usage, parse_critical_evidence,
+    parse_token_usage_report, parse_usage_observation, parse_usage_retention,
+    verify_critical_evidence, verify_usage_analysis,
 };
 
 const OWNERSHIP_ASSET_PLAN: &[u8] = br#"{
@@ -329,6 +332,16 @@ fn exercise_ownership_adapter_surface() {
 }
 
 fn exercise_usage_adapter_surface() {
+    assert_eq!(CRITICAL_EVIDENCE_SCHEMA_VERSION, 1);
+    let _: fn(CriticalEvidenceInput) -> Result<Vec<u8>, String> = build_critical_evidence;
+    let _: fn(&[u8]) -> Result<(), String> = parse_critical_evidence;
+    let _: fn(
+        &[u8],
+        &str,
+        &str,
+        &UsageSelection,
+        &[CriticalRouteInput],
+    ) -> Result<CriticalSelection, String> = verify_critical_evidence;
     assert_eq!(TOKEN_USAGE_FILE, "pliego.token-usage.json");
     assert_eq!(TOKEN_USAGE_SCHEMA_VERSION, 1);
     let _: fn(&[u8]) -> Result<TokenUsageReport, String> = parse_token_usage_report;

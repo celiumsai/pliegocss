@@ -325,7 +325,8 @@ ETA: 3–5 días
   byte-compatible.
 - [x] Derivar automáticamente una partición CSS shared/ruta/island/unreachable desde el registro de
   producto PliegoRS; para otros frameworks el asset plan conserva inputs explícitos.
-- [ ] Implementar extracción de CSS crítico.
+- [ ] Implementar extracción de CSS crítico. El contrato cerrado de evidencia inicial por
+  ruta/browser/viewport/paint ya está implementado; faltan proyección CSS y productor browser.
 - [ ] Evaluar publicación crash-atomic frente a la publicación agrupada rollback-capable ya
   implementada y al output híbrido.
 - [ ] Seleccionar estrategia por coste raw/gzip.

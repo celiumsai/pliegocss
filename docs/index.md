@@ -56,6 +56,7 @@ owned route bundles. `pliego-cssc watch` only regenerates artifacts; composed wi
 - [DTCG 2025.10 exchange bridge](./reference/dtcg-bridge.md)
 - [Canonical token graph schema 1](./reference/token-graph-schema-1.md)
 - [Token-usage report schema 1](./reference/token-usage-schema-1.md)
+- [Critical-style evidence schema 1](./reference/critical-style-evidence-schema-1.md)
 - [Command-line compiler](./reference/cli.md)
 - [Language Server Protocol transport](./reference/lsp.md)
 - [LSP diagnostic corpus schema 2](./reference/lsp-diagnostic-corpus.md)
