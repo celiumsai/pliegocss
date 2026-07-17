@@ -173,9 +173,9 @@ The workspace is unreleased at `0.0.0`; syntax and crate boundaries may still ch
 - The publishable boundary candidate is now sixteen exact-version crates in six dependency waves.
   The independent cascade core sits in wave 1 and the bounded repair core in wave 5 so neither
   pushes the already-tight build or CLI archives over the fixed 61,440-byte ceiling. The latest
-  exact clean `438be2e` replay packaged and compiled all sixteen extracted archives and passed its
-  registry-shaped Rust 1.85 consumer. `pliego-css-lsp` was 25,511 bytes,
-  `pliego-css-build` 59,913 bytes, `pliego-cssc` 61,338 bytes, and `pliego-css-control` 61,078
+  exact clean `6f620d9` replay packaged and compiled all sixteen extracted archives and passed its
+  registry-shaped Rust 1.85 consumer. `pliego-css-lsp` was 26,405 bytes,
+  `pliego-css-build` 59,913 bytes, `pliego-cssc` 61,330 bytes, and `pliego-css-control` 61,075
   bytes. Nothing has been uploaded, and repository/registry ownership gates remain open.
 - Clean-commit local snapshots freeze Gate A, Gate B, and paired Rust-check evidence for `c47239c`;
   hosted multi-OS performance evidence remains open.

@@ -1,7 +1,7 @@
 # Packaging status
 
-Status: **the frozen LSP diagnostic corpus and the complete exact-clean `438be2e` Rust package
-replay passed; no registry or editor Marketplace upload performed**
+Status: **forceful stale LSP compiler cancellation and the complete exact-clean `6f620d9` Rust
+package replay passed; no registry or editor Marketplace upload performed**
 
 The publishable workspace boundary has six dependency waves. `pliego-css-usage` and
 `pliego-css-control` follow `pliego-css-build` because direct and optional Cargo dependencies both
@@ -18,6 +18,26 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## Stale LSP compiler cancellation clean replay — 2026-07-17
+
+The exact clean `6f620d9` Debian WSL2 gate packaged and extracted all sixteen Rust archives with
+native Linux Node 24.14.0 and Cargo 1.96, compiled the complete extracted graph in release mode,
+and executed the Rust 1.85 downstream consumer. `pliego-css-lsp` measured 26,405 compressed bytes
+(35,035 bytes of margin, SHA-256
+`15c81dd2828b7b63806ac7815661c0dda451a20c623cee76f8d7fe31b28d4272`). Tight archives
+remained below the fixed ceiling: `pliego-cssc` measured 61,330 bytes (110 bytes of margin,
+SHA-256 `7d9c1e7b75f196d268e91c539972813a15336a7763133eefa0e1730c4cf19c6d`),
+`pliego-css-control` 61,075 (365 bytes), `pliego-css-build` 59,913 (1,527 bytes), and
+`pliego-css-source` 56,784 (4,656 bytes). Publication remained disabled and the 61,440-byte
+ceiling was not raised.
+
+The Windows and Debian process gates started a real compiler proxy that would block for 30 seconds,
+changed the owning URI version after the proxy reported its PID, and proved that the stale direct
+child exited before a replacement `PCS001` arrived. Observed replacement latency was 181 ms on the
+Windows replay and 228 ms on Debian; these single observations are gate evidence, not performance
+benchmarks. Strict Clippy, warning-denied rustdoc, VS Code 1.105.1 on Windows, and Neovim 0.12.4 on
+Windows and Debian also passed.
 
 ## LSP diagnostic corpus clean replay — 2026-07-17
 
