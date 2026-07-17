@@ -476,6 +476,15 @@ name = "pliego-css-ir"
 version = "0.0.0"
 
 [[package]]
+name = "pliego-css-lsp"
+version = "0.0.0"
+dependencies = [
+ "pliego-css-parser",
+ "pliego-css-source",
+ "serde_json",
+]
+
+[[package]]
 name = "pliego-css-macros"
 version = "0.0.0"
 dependencies = [

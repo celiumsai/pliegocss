@@ -14,7 +14,7 @@ affect registry publication order.
 | 3 | `pliego-css-config`, `pliego-css-compiler` |
 | 4 | `pliego-css-build`, `pliego-css-macros` |
 | 5 | `pliego-css-agent`, `pliego-css-usage`, `pliego-css-control`, `pliego-css` |
-| 6 | `pliego-cssc` |
+| 6 | `pliego-css-lsp`, `pliego-cssc` |
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).

@@ -3,7 +3,7 @@
 Status: **local package and public-API candidate verification implemented; PliegoCSS is not
 release-candidate ready**
 
-This process covers the fifteen publishable crates in one version-locked compatibility unit. It does not
+This process covers the sixteen publishable crates in one version-locked compatibility unit. It does not
 authorize an upload. Publishing to crates.io, creating a public repository, pushing a tag, or changing
 production infrastructure requires explicit owner approval at the moment of the action.
 
@@ -20,7 +20,7 @@ The publication order has six dependency waves and is dependency-first:
 3. `pliego-css-config`, `pliego-css-compiler`
 4. `pliego-css-build`, `pliego-css-macros`
 5. `pliego-css-agent`, `pliego-css-usage`, `pliego-css-control`, `pliego-css`
-6. `pliego-cssc`
+6. `pliego-css-lsp`, `pliego-cssc`
 
 Packages in one row are independent. Do not start the next row until the previous row is visible in
 the target registry index. Mixing PliegoCSS package versions in one build is unsupported.
@@ -92,6 +92,7 @@ pnpm check:attribution
 pnpm check:portability
 pnpm integration:pliegors
 pnpm integration:pliegors-dev
+pnpm integration:lsp
 ```
 
 Run rustdoc with warnings denied. In a POSIX shell:

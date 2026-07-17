@@ -37,6 +37,7 @@
     "check:pliegors-guide": "node ./scripts/check-pliegors-guide.mjs",
     "check:packages": "node ./scripts/check-packages.mjs",
     "integration:plain-html": "node ./scripts/check-plain-html-integration.mjs",
+    "integration:lsp": "node ./scripts/check-lsp-integration.mjs",
     "integration:pliegors": "node ./scripts/check-pliegors-integration.mjs",
     "integration:pliegors-browser": "node ./scripts/check-pliegors-browser.mjs",
     "integration:pliegors-dev": "node ./scripts/check-pliegors-dev-loop.mjs"

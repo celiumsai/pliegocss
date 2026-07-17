@@ -30,6 +30,7 @@ const EXPECTED_ORDER = [
   "pliego-css-usage",
   "pliego-css-control",
   "pliego-css",
+  "pliego-css-lsp",
   "pliego-cssc",
 ];
 const EXCLUDED_EXAMPLES = [

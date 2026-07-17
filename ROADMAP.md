@@ -264,7 +264,10 @@ ETA: 3–5 días
   reparse/rescan completo y publicación multiarchivo rollback-capable.
 - [x] Exponer manifest para integración con editor.
 - [x] Diseñar contratos mínimos de autocompletado/hover con `catalog` JSON y `explain` JSON.
-- [ ] Implementar transporte LSP y clientes de editor sobre esos contratos.
+- [x] Implementar el transporte LSP stdio inicial sobre esos contratos, con sincronización completa,
+  posiciones UTF-16, completion, hover, diagnósticos sintácticos y formatting seguro.
+- [ ] Implementar clientes de editor, navegación por Project Index y paridad diagnóstica semántica
+  CLI/LSP.
 - [x] Mejorar diagnósticos usando los cinco fixtures reales.
 - [x] Crear documentación de CLI, configuración y troubleshooting; editor setup sigue abierto.
 - [x] Ejecutar doctests y ejemplos del workspace desde el workflow de CI.

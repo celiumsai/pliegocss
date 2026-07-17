@@ -235,9 +235,11 @@ fixture acotado.
   graph 2/traza física fail-closed, reachability 1, catálogo 3 y explain 2).
 - [x] Exponer Project Index schema 1 como modelo portable compartido para CLI, adapters y futuro
   LSP. El contrato plain-HTML no-Pliego ya consume manifest schema 3 con bindings exactos y browser
-  real; el transporte LSP y un adapter tipado Vite/Astro que produzca topología/Project Index siguen
-  pendientes.
-- [ ] Implementar transporte LSP y clientes de editor.
+  real; el transporte LSP inicial ya existe, mientras su navegación Project Index y un adapter
+  tipado Vite/Astro que produzca topología/Project Index siguen pendientes.
+- [x] Implementar transporte LSP stdio inicial para completion, hover, diagnósticos de buffer y
+  formatting, negociando posiciones UTF-16 sin duplicar catálogo/explain.
+- [ ] Implementar clientes de editor, navegación Project Index y paridad semántica CLI/LSP.
 - [x] Añadir formatter determinista y `--check` para utilidades explícitas y archivos line-oriented.
 - [x] Añadir diagnósticos y reemplazos read-only sobre literales Rust.
 - [x] Añadir envelope JSON estable para diagnósticos de comandos one-shot.

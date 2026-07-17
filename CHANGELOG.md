@@ -12,6 +12,11 @@ pre-1.0 compatibility policy.
 
 ### Added
 
+- An initial `pliego-css-lsp` stdio server implementing a bounded LSP 3.18 subset for full Rust
+  document synchronization, UTF-16 positions, scanner/parser/format diagnostics, catalog-backed
+  completion, explain-backed hover, and collision-safe whole-literal formatting edits. Cursor
+  features fail closed for cooked Rust strings with escapes; editor packaging, Project Index
+  navigation, and theme-aware CLI/LSP diagnostic parity remain open.
 - Bounded typed migration discovery through `discover_migration_project`. The library walks one
   project-relative root in canonical order, ignores only `.git`/`node_modules`/`target`, rejects
   link-like or non-regular paths, caps traversal at 32 levels, 65,536 entries, and 256 MiB of
