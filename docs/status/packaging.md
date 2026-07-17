@@ -1,6 +1,6 @@
 # Packaging status
 
-Status: **declared migration dependency resolution passed the complete exact-clean `270eaa2`
+Status: **closed migration project declarations passed the complete exact-clean `003e276`
 replay; no registry upload performed**
 
 The publishable workspace boundary has six dependency waves. `pliego-css-usage` and
@@ -18,6 +18,24 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## Migration project declaration clean replay — 2026-07-16
+
+The exact clean `003e276` Debian WSL2 gate packaged and extracted all fifteen archives with Cargo
+1.96, compiled the extracted graph in release mode, and passed the registry-shaped downstream
+consumer with Rust 1.85. The consumer parses the bounded schema-1 declaration through the extracted
+`pliego-css-source` API. Publication remained disabled and the fixed 61,440-byte ceiling was not
+raised.
+
+| Package | Compressed bytes | Remaining margin | SHA-256 |
+|---|---:|---:|---|
+| `pliego-css-source` | 36,511 | 24,929 | `46ca7f93919a88953efc6d27a68b488f7a364f5049131e431b928a8264568728` |
+| `pliego-cssc` | 61,253 | 187 | `7228cfe6084d82c8ef80b9f81774bce435c37b403fbcabb17228a98b40ea4d18` |
+
+This closes packaging for a reviewable persisted declaration of the exact typed source set. It does
+not close safe declaration-file loading, project CLI/crawling, source-toolchain-specific resolution,
+configs/plugins/templates, downstream composition consumers, real migration fixtures, registry
+publication, or R0.8 completion.
 
 ## Declared migration dependency clean replay — 2026-07-16
 
