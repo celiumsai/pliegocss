@@ -177,6 +177,8 @@ jobs:
         run: |
           cargo +1.96.0 run --locked -p pliego-cssc -- fmt --input benchmarks/pliego-gate-a/styles.txt --check
           cargo +1.96.0 run --locked -p pliego-cssc -- fmt --source examples/basic/src --check
+      - name: Verify getting-started example
+        run: pnpm check:getting-started
       - name: Verify revision-pinned CLI installation
         run: |
           cargo +1.96.0 install --path crates/pliego-cssc --locked --root target/cli-install --force

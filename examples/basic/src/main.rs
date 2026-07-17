@@ -10,6 +10,7 @@ fn card() -> Style {
 }
 
 fn main() {
-    let style = card();
-    println!("{}", style.class_name());
+    let class = card().class_name();
+    assert!(class.starts_with("pc_"));
+    println!("{class}");
 }

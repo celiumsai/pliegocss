@@ -11,6 +11,7 @@ pliego-css = { path = "<path-to-PliegoCSS>/crates/pliego-css" }
 
 Then validate a utility list during Rust compilation:
 
+<!-- docs-smoke:basic-rust:start -->
 ```rust
 use pliego_css::{Style, pc};
 
@@ -27,6 +28,7 @@ fn main() {
     println!("{class}");
 }
 ```
+<!-- docs-smoke:basic-rust:end -->
 
 `pc!` validates grammar, catalog names, token domains, variants, negative forms, and semantic
 conflicts while Rust compiles. It returns the same class identity for equivalent normalized styles.
@@ -141,4 +143,7 @@ and regenerate CSS and manifests together. The class encoder is still format 1, 
 changed, so old `pc_*` values cannot be mixed with new CSS. See the
 [StyleId format-2 migration](../reference/style-id-format-v2.md#migration-from-the-format-1-candidate).
 
-The complete checked Rust source lives in `examples/basic` and builds with the workspace tests.
+The complete checked Rust source lives in `examples/basic`. Run `pnpm check:getting-started` from
+the PliegoCSS checkout to compile it with Rust 1.85, execute the documented CLI extraction both
+from the literal style and from the Rust source, and prove that the macro class, manifest class,
+and generated CSS converge exactly.

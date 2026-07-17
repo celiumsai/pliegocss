@@ -436,6 +436,13 @@ pre-1.0 compatibility policy.
 - The lowercase base-36 class encoder remains format 1, but its input StyleId changed, so existing
   `pc_*` strings must not be retained or mixed with regenerated assets.
 
+### Documentation verification
+
+- Added a Rust 1.85 getting-started gate that keeps the marked first-compile snippet identical to
+  the checked `examples/basic` package and proves macro, manifest, literal CLI, source scanner, and
+  generated CSS identity. This closes the first executable tutorial only; the full snippet corpus
+  and human onboarding remain release blockers.
+
 ### Known release blockers
 
 - Obtain hosted Windows/Linux/macOS and Cloudflare evidence, complete multi-browser verification,

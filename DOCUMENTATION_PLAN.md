@@ -176,6 +176,12 @@ setup, LSP troubleshooting, diagnostic corpus, and both editor-client documents 
 This structural gate supplements compiled examples; it does not claim that prose quality or every
 unmarked snippet can be validated mechanically.
 
+`pnpm check:getting-started` verifies the first marked executable tutorial. It requires the Rust
+snippet to remain byte-equivalent to `examples/basic/src/main.rs`, compiles and executes that
+package with Rust 1.85, then proves that literal CLI extraction and Rust-source extraction emit
+identical CSS with the same class identity as `pc!`. Additional marked snippets remain to be added
+to this contract before the all-snippets release gate can close.
+
 ## Documentación por fase
 
 ### F0
