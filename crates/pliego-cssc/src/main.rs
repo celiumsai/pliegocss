@@ -58,8 +58,8 @@ use pliego_css_ownership::{
 };
 use pliego_css_parser::{format_style_list, parse_named_candidate, parse_style_list};
 use pliego_css_source::{
-    InvocationKind, MigrationSourceKind, PcxSelection, ScanDiagnostic, ScanReport, SourceRange,
-    StyleLiteral, inventory_migration_file, scan_file, scan_source_named,
+    InvocationKind, MigrationProject, MigrationSourceKind, PcxSelection, ScanDiagnostic,
+    ScanReport, SourceRange, StyleLiteral, inventory_migration_file, scan_file, scan_source_named,
 };
 use pliego_css_theme::{THEME_ID_FORMAT_VERSION, ThemeRegistry};
 use pliego_css_usage::{
@@ -476,6 +476,7 @@ enum Command {
     Catalog(CatalogArgs),
     Compatibility(CompatibilityArgs),
     Inventory(MigrationSourceKind, PathBuf),
+    InventoryProject(PathBuf),
     Explain(ExplainArgs),
     ExplainCascade(CascadeExplainArgs),
     Plan(RepairPlanCliArgs),
@@ -1293,6 +1294,7 @@ fn run(
         Command::Inventory(kind, input) => inventory_migration_file(kind, &input)
             .map(|inventory| print!("{inventory}"))
             .map_err(|error| CliFailure::tool(error.to_string())),
+        Command::InventoryProject(input) => run_migration_project(&input),
         Command::Explain(arguments) => run_explain(&arguments),
         Command::ExplainCascade(arguments) => run_cascade_explain(&arguments),
         Command::Plan(arguments) => run_repair_plan(&arguments),
@@ -1343,14 +1345,11 @@ fn parse_arguments(arguments: impl IntoIterator<Item = OsString>) -> Result<Comm
     if command == "compatibility" {
         return parse_compatibility_arguments(&arguments[1..]);
     }
-    if command == "migration-inventory" {
-        let [_, kind, input] = arguments.as_slice() else {
-            return Err("KIND FILE required".into());
-        };
-        return Ok(Command::Inventory(
-            kind.parse().map_err(str::to_owned)?,
-            PathBuf::from(input),
-        ));
+    if matches!(
+        command.as_str(),
+        "migration-inventory" | "migration-project-inventory"
+    ) {
+        return parse_migration_arguments(command, &arguments);
     }
     if command == "explain" {
         return parse_explain_arguments(&arguments[1..]);
@@ -1405,6 +1404,29 @@ fn parse_arguments(arguments: impl IntoIterator<Item = OsString>) -> Result<Comm
         1 => Command::Check(parsed),
         _ => Command::Inspect(parsed),
     })
+}
+
+fn run_migration_project(input: &Path) -> Result<(), CliFailure> {
+    MigrationProject::from_file(input)
+        .and_then(MigrationProject::collect)
+        .map(|inventory| print!("{inventory}"))
+        .map_err(|error| CliFailure::tool(error.to_string()))
+}
+
+fn parse_migration_arguments(command: &str, arguments: &[String]) -> Result<Command, String> {
+    if command == "migration-project-inventory" {
+        let [_, input] = arguments else {
+            return Err("FILE required".into());
+        };
+        return Ok(Command::InventoryProject(PathBuf::from(input)));
+    }
+    let [_, kind, input] = arguments else {
+        return Err("KIND FILE required".into());
+    };
+    Ok(Command::Inventory(
+        kind.parse().map_err(str::to_owned)?,
+        PathBuf::from(input),
+    ))
 }
 
 #[allow(clippy::too_many_lines)]

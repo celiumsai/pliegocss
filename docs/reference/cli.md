@@ -26,6 +26,7 @@ pliego-cssc [--diagnostic-format human|json] audit --input FILE.css --targets ba
 pliego-cssc [--diagnostic-format human|json] audit --asset-plan FILE.json [--ownership FILE.json] --targets baseline-widely|modern|none [--budget-policy FILE.json] [--accessibility-policy FILE.json [--token-graph FILE.json]] [--control-dir DIR [--check]] [--format human|json|sarif]
 pliego-cssc [--diagnostic-format human|json] compatibility --targets baseline-widely|modern|none
 pliego-cssc [--diagnostic-format human|json] migration-inventory sass|tailwind|css-modules FILE
+pliego-cssc [--diagnostic-format human|json] migration-project-inventory DECLARATION.json
 pliego-cssc [--diagnostic-format human|json] explain --style "utilities" [--config theme.toml|--seed] [--targets baseline-widely|modern|none] [--format text|json]
 pliego-cssc [--diagnostic-format human|json] explain-cascade --input FILE.css --element 'button#save.action' --property LONGHAND [--format text|json]
 pliego-cssc [--diagnostic-format human|json] plan --findings FILE.json --proposal FILE.json --source-root DIR [--format text|json]
@@ -503,6 +504,22 @@ templates. A `static` disposition means only that PliegoCSS bounded and recorded
 construct. Dynamic and unsupported seams stay explicit. See
 [migration inventory schema 1](./migration-inventory-schema-1.md) for constructs, Preflight
 classification, defensive limits, and current project-graph exclusions.
+
+### `migration-project-inventory`
+
+`migration-project-inventory DECLARATION.json` reads one bounded, regular, project-relative
+schema-1 declaration, rejects link-like path components, collects its explicitly typed sources, and
+writes the canonical project inventory only to stdout:
+
+```console
+pliego-cssc migration-project-inventory migration.project.json > migration.inventory.json
+```
+
+The command does not crawl the repository, infer source kinds, execute source toolchains, or mutate
+the project. Source paths in the declaration are relative to the command working directory. Missing
+or mistyped exact local dependencies fail the complete command; external, local, unresolved, and
+dynamic seams stay explicit. See the
+[migration project inventory schema 1](./migration-project-inventory-schema-1.md).
 
 ### `compile` and `build`
 

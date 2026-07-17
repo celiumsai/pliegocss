@@ -1775,6 +1775,27 @@ fn migration_inventory_requires_one_kind_and_input() {
 }
 
 #[test]
+fn migration_project_inventory_requires_one_declaration_file() {
+    let Command::InventoryProject(input) = parse_arguments(os(&[
+        "migration-project-inventory",
+        "migration.project.json",
+    ]))
+    .expect("migration project inventory arguments") else {
+        panic!("migration project inventory command")
+    };
+    assert_eq!(input, PathBuf::from("migration.project.json"));
+    assert!(parse_arguments(os(&["migration-project-inventory"])).is_err());
+    assert!(
+        parse_arguments(os(&[
+            "migration-project-inventory",
+            "migration.project.json",
+            "output.json"
+        ]))
+        .is_err()
+    );
+}
+
+#[test]
 fn format_defaults_to_minified_and_is_accepted_by_every_command() {
     let Command::Compile(defaults) =
         parse_arguments(os(&["compile", "--style", "flex"])).expect("compile defaults")
@@ -1796,6 +1817,7 @@ fn format_defaults_to_minified_and_is_accepted_by_every_command() {
             | Command::Catalog(_)
             | Command::Compatibility(_)
             | Command::Inventory(_, _)
+            | Command::InventoryProject(_)
             | Command::Explain(_)
             | Command::ExplainCascade(_)
             | Command::Plan(_)

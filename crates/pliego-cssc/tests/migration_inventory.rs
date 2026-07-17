@@ -105,3 +105,42 @@ fn rejects_kind_mismatch_and_unsafe_paths() {
 
     fs::remove_dir_all(directory).expect("remove fixture");
 }
+
+#[test]
+fn inventories_a_closed_declared_project_without_mutation() {
+    let directory = temp_dir("project");
+    fs::create_dir(directory.join("src")).expect("source directory");
+    fs::write(directory.join("src/app.scss"), "@use \"./tokens.scss\";\n").expect("Sass entry");
+    fs::write(directory.join("src/tokens.scss"), "$brand: red;\n").expect("Sass target");
+    fs::write(
+        directory.join("migration.project.json"),
+        r#"{
+  "schemaVersion": 1,
+  "sources": [
+    {"sourceKind":"sass","file":"src/tokens.scss"},
+    {"sourceKind":"sass","file":"src/app.scss"}
+  ]
+}
+"#,
+    )
+    .expect("project declaration");
+    let output = run(
+        &directory,
+        &["migration-project-inventory", "migration.project.json"],
+    );
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(output.stdout.ends_with(b"\n"));
+    let document: serde_json::Value =
+        serde_json::from_slice(&output.stdout).expect("project inventory JSON");
+    assert_eq!(document["schemaVersion"], 1);
+    assert_eq!(document["summary"]["sources"], 2);
+    assert_eq!(document["summary"]["dependencies"], 1);
+    assert_eq!(document["summary"]["resolvedDependencies"], 1);
+    assert_eq!(document["dependencies"][0]["target"], "src/tokens.scss");
+    assert!(!directory.join("migration.inventory.json").exists());
+    fs::remove_dir_all(directory).expect("remove fixture");
+}

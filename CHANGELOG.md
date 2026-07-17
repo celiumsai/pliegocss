@@ -21,13 +21,15 @@ pre-1.0 compatibility policy.
   and emits one nested schema-1 document only when both passes agree. Canonical dependency
   observations cover Sass module/import seams, CSS import/reference, and CSS Modules/ICSS
   composition; exact supported local targets fail closed unless declared with the expected kind,
-  while external, unresolved, local, and dynamic edges remain explicit. Project CLI integration,
-  graph crawling, source-toolchain-specific resolution, configs/plugins/templates, consumers, and
-  real-project fixtures remain open.
+  while external, unresolved, local, and dynamic edges remain explicit. The read-only
+  `pliego-cssc migration-project-inventory` command loads a closed declaration and emits the
+  canonical project snapshot only to stdout. Graph crawling, source-toolchain-specific resolution,
+  configs/plugins/templates, consumers, and real-project fixtures remain open.
 - Bounded closed schema-1 JSON declarations through `MigrationProject::from_json`, allowing the
   typed source set to be reviewed and checked into a project before canonical collection. Unknown
   fields, unsupported versions, unsafe/kind-incompatible paths, oversized documents, and source
-  count overflow fail before any source read.
+  count overflow fail before any source read. `MigrationProject::from_file` adds bounded regular-file
+  loading with symlink/reparse-point rejection.
 - Closed post-change verification through the dedicated `pliego-css-agent verify` executable,
   repair-check policy and Verification Receipt schemas 1.2.0 with canonical 1.0.0/1.1.0 read
   support. Built-in `standard-css-audit`, `token-graph-integrity`, and `css-budget-audit` kinds

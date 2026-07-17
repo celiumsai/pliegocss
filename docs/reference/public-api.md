@@ -244,7 +244,8 @@ derives conservative dependency observations for Sass module/import seams, CSS i
 and CSS Modules/ICSS composition. Exact supported local targets fail closed unless declared with the
 expected kind; extensionless or dynamic resolution remains explicit without toolchain emulation;
 `MigrationProject::from_json` parses a bounded, closed, reviewable schema-1 declaration without
-reading source files;
+reading source files; `MigrationProject::from_file` adds safe regular-file loading without following
+link-like path components;
 `inventory_migration_file` additionally enforces a bounded regular project-relative file and rejects
 symlink/reparse-point components before reading. The bridge does not execute
 Sass/Tailwind/plugins/configs, crawl undeclared sources, discover consumers, or promise a codemod.
@@ -253,7 +254,7 @@ This tooling bridge is not part of the minimal application/build-script SemVer s
 ## CLI and document surface
 
 The candidate process API includes the one-shot `compile`/`build`, `check`, `inspect`, `bundle`,
-`catalog`, `migration-inventory`, `explain`, `explain-cascade`, `plan`, `fix --dry-run`, explicitly authorized `fix
+`catalog`, `migration-inventory`, `migration-project-inventory`, `explain`, `explain-cascade`, `plan`, `fix --dry-run`, explicitly authorized `fix
 --apply`, and `fmt` commands, their
 exit behavior, and the numbered documents they emit.
 Default manifest 3, opt-in manifest 4 with graph 1/reachability 1, opt-in manifest 5 with graph 2 and

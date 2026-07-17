@@ -81,7 +81,9 @@ declared set with the expected kind; package and built-in references stay extern
 toolchain-specific resolution remains visible without guessing. It does not crawl imports or yet
 inventory template, config, plugin, or downstream composition-consumer edges.
 `MigrationProject::from_json` accepts the same closed declaration as bounded schema-1 JSON so it can
-be reviewed and checked into a project without introducing repository crawling or source execution.
+be reviewed and checked into a project without introducing repository crawling or source execution;
+`MigrationProject::from_file` adds the bounded regular-file and no-link path boundary used by
+`pliego-cssc migration-project-inventory`.
 
 ## Stability
 

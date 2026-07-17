@@ -414,7 +414,8 @@ Toda optimización tiene benchmark; ninguna complejidad entra solamente por intu
   deriva edges conservadores Sass/CSS/CSS Modules: targets locales exactos fallan si no están
   declarados con el tipo esperado; external/unresolved/local/dynamic quedan explícitos sin emular el
   toolchain. El mismo source set puede persistirse como declaración JSON schema 1 cerrada y acotada.
-  Faltan CLI/crawling de proyecto, resolución específica Sass/bundlers,
+  El CLI read-only ya carga esa declaración con límites/no-follow y emite el snapshot canónico solo
+  por stdout. Faltan crawling de proyecto, resolución específica Sass/bundlers,
   templates/config/plugins, composition consumers y fixtures de proyectos reales para cerrar.
 - [ ] Entrevistar 10–15 developers/equipos y reunir 20 incidentes reales anonimizados.
 - [ ] Medir precision/recall, falsos positivos, excepciones y tiempo de resolución por categoría.

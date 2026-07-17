@@ -436,6 +436,22 @@ impl MigrationProject {
         Ok(project)
     }
 
+    /// Reads a bounded regular project declaration without following link-like path components.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`MigrationInventoryError`] when the declaration path is unsafe, a component is a
+    /// symbolic link or reparse point, the file is not regular or exceeds 1 MiB, I/O fails, or the
+    /// closed schema-1 declaration is invalid.
+    pub fn from_file(file: &Path) -> Result<Self, MigrationInventoryError> {
+        let (_, bytes) = read_regular_project_file(
+            file,
+            MAX_PROJECT_DOCUMENT_BYTES,
+            "migration project declaration",
+        )?;
+        Self::from_json(&bytes)
+    }
+
     /// Adds one explicit source. Collection sorts declarations canonically.
     #[must_use]
     pub fn source(mut self, source: MigrationProjectSource) -> Self {
@@ -600,6 +616,15 @@ impl MigrationProjectInventory {
     #[must_use]
     pub fn as_bytes(&self) -> &[u8] {
         &self.bytes
+    }
+}
+
+impl fmt::Display for MigrationProjectInventory {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(
+            std::str::from_utf8(&self.bytes)
+                .expect("migration project inventory JSON is valid UTF-8"),
+        )
     }
 }
 
@@ -961,13 +986,26 @@ pub fn inventory_migration_file(
     source_kind: MigrationSourceKind,
     file: &Path,
 ) -> Result<MigrationInventory, MigrationInventoryError> {
+    let (logical, bytes) = read_regular_project_file(file, MAX_SOURCE_BYTES, "migration source")?;
+    validate_input(source_kind, &logical, "")?;
+    let source = std::str::from_utf8(&bytes).map_err(|error| {
+        MigrationInventoryError::new(format!("migration source is not valid UTF-8: {error}"))
+    })?;
+    inventory_migration_source(source_kind, &logical, source)
+}
+
+fn read_regular_project_file(
+    file: &Path,
+    max_bytes: usize,
+    role: &str,
+) -> Result<(String, Vec<u8>), MigrationInventoryError> {
     let mut current = PathBuf::new();
     let mut logical = Vec::new();
     for component in file.components() {
         let Component::Normal(value) = component else {
-            return Err(MigrationInventoryError::new(
-                "migration inventory requires a portable project-relative file",
-            ));
+            return Err(MigrationInventoryError::new(format!(
+                "{role} requires a portable project-relative file"
+            )));
         };
         current.push(value);
         logical.push(value.to_str().ok_or_else(|| {
@@ -975,19 +1013,23 @@ pub fn inventory_migration_file(
         })?);
         let metadata = fs::symlink_metadata(&current).map_err(|error| {
             MigrationInventoryError::new(format!(
-                "cannot inspect migration source `{}`: {error}",
+                "cannot inspect {role} `{}`: {error}",
                 current.display()
             ))
         })?;
         if is_link_like(&metadata) {
             return Err(MigrationInventoryError::new(format!(
-                "migration source `{}` is a symbolic link or reparse point",
+                "{role} `{}` is a symbolic link or reparse point",
                 current.display()
             )));
         }
     }
     let logical = logical.join("/");
-    validate_input(source_kind, &logical, "")?;
+    if !is_portable_source_path(&logical) {
+        return Err(MigrationInventoryError::new(format!(
+            "{role} requires a portable project-relative file"
+        )));
+    }
     let mut options = OpenOptions::new();
     options.read(true);
     #[cfg(unix)]
@@ -995,38 +1037,30 @@ pub fn inventory_migration_file(
     #[cfg(windows)]
     options.custom_flags(0x0020_0000);
     let opened = options.open(file).map_err(|error| {
-        MigrationInventoryError::new(format!(
-            "cannot open migration source `{}`: {error}",
-            file.display()
-        ))
+        MigrationInventoryError::new(format!("cannot open {role} `{}`: {error}", file.display()))
     })?;
     let metadata = opened.metadata().map_err(|error| {
         MigrationInventoryError::new(format!(
-            "cannot inspect opened migration source `{}`: {error}",
+            "cannot inspect opened {role} `{}`: {error}",
             file.display()
         ))
     })?;
-    if is_link_like(&metadata) || !metadata.is_file() || metadata.len() > MAX_SOURCE_BYTES as u64 {
-        return Err(MigrationInventoryError::new(
-            "migration source must be a regular file of at most 16 MiB",
-        ));
+    if is_link_like(&metadata) || !metadata.is_file() || metadata.len() > max_bytes as u64 {
+        return Err(MigrationInventoryError::new(format!(
+            "{role} must be a regular file within its byte limit"
+        )));
     }
     let mut bytes = Vec::new();
     opened
-        .take((MAX_SOURCE_BYTES + 1) as u64)
+        .take((max_bytes + 1) as u64)
         .read_to_end(&mut bytes)
-        .map_err(|error| {
-            MigrationInventoryError::new(format!("cannot read migration source: {error}"))
-        })?;
-    if bytes.len() > MAX_SOURCE_BYTES {
-        return Err(MigrationInventoryError::new(
-            "migration source exceeds 16 MiB",
-        ));
+        .map_err(|error| MigrationInventoryError::new(format!("cannot read {role}: {error}")))?;
+    if bytes.len() > max_bytes {
+        return Err(MigrationInventoryError::new(format!(
+            "{role} exceeds its byte limit"
+        )));
     }
-    let source = std::str::from_utf8(&bytes).map_err(|error| {
-        MigrationInventoryError::new(format!("migration source is not valid UTF-8: {error}"))
-    })?;
-    inventory_migration_source(source_kind, &logical, source)
+    Ok((logical, bytes))
 }
 
 fn is_link_like(metadata: &fs::Metadata) -> bool {

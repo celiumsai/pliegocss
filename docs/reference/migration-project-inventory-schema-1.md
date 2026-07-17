@@ -28,6 +28,13 @@ unsupported schema versions, and more than 4,096 entries. Parsing does not read 
 performs the same canonical duplicate, file-safety, two-pass, and dependency checks as the builder
 API. Declaration order therefore does not affect snapshot bytes.
 
+`MigrationProject::from_file` applies the same portable regular-file/no-link boundary to the
+declaration itself. The CLI exposes that complete path and writes no file implicitly:
+
+```console
+pliego-cssc migration-project-inventory migration.project.json > migration.inventory.json
+```
+
 ```rust,no_run
 use pliego_css_source::{
     MigrationProject, MigrationProjectSource, MigrationSourceKind,
