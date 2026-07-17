@@ -87,6 +87,8 @@ usage without executing a bundler.
 Declared templates additionally inventory exact literal `class`/`className` candidates and retain
 expression/interpolation attributes as dynamic observations; this is tag-aware lexical inspection,
 not arbitrary template-language execution.
+Config/plugin modules also retain a closed set of recognized config-key and registration-API seams
+as unsupported observations. They are evidence for migration planning, not executable semantics.
 `MigrationProject::from_json` accepts the same closed declaration as bounded schema-1 JSON so it can
 be reviewed and checked into a project without introducing repository crawling or source execution;
 `MigrationProject::from_file` adds the bounded regular-file and no-link path boundary used by

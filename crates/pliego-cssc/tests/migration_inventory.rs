@@ -171,6 +171,8 @@ fn inventories_the_versioned_cross_toolchain_project_fixture() {
     assert_eq!(document["summary"]["tailwindTemplates"], 1);
     assert_eq!(document["summary"]["staticTemplateCandidates"], 4);
     assert_eq!(document["summary"]["dynamicTemplateCandidates"], 0);
+    assert_eq!(document["summary"]["tailwindConfigKeys"], 1);
+    assert_eq!(document["summary"]["tailwindPluginApis"], 1);
     assert_eq!(document["summary"]["dependencies"], 11);
     assert_eq!(document["summary"]["resolvedDependencies"], 7);
     assert_eq!(document["summary"]["externalDependencies"], 3);

@@ -210,6 +210,8 @@ fn exercise_migration_inventory_surface() {
         let _: Option<&str> = observation.value();
     };
     assert_eq!(template.observations().len(), 2);
+    let _: MigrationAuxiliaryObservationKind = MigrationAuxiliaryObservationKind::ConfigKey;
+    let _: MigrationAuxiliaryObservationKind = MigrationAuxiliaryObservationKind::PluginApi;
     let _dependency_surface: fn(&MigrationDependency) = |dependency| {
         let _: &str = dependency.from();
         let _: MigrationDependencyKind = dependency.kind();

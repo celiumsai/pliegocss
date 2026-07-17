@@ -51,6 +51,9 @@ pre-1.0 compatibility policy.
   markup tags. Exact whitespace-separated candidates retain byte spans; expressions and
   interpolation remain one dynamic observation. HTML comments, unrelated attribute strings, and
   text outside tags do not create candidates.
+- Closed lexical seams for common Tailwind config keys and plugin registration APIs. Exact
+  identifier spans are retained as unsupported observations only when followed by the required
+  object-key `:` or call `(` delimiter in code; comments and strings are excluded.
 - Closed post-change verification through the dedicated `pliego-css-agent verify` executable,
   repair-check policy and Verification Receipt schemas 1.2.0 with canonical 1.0.0/1.1.0 read
   support. Built-in `standard-css-audit`, `token-graph-integrity`, and `css-budget-audit` kinds

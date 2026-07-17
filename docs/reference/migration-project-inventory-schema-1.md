@@ -103,7 +103,9 @@ The canonical document uses two-space JSON and one trailing LF:
     "tailwindPlugins": 1,
     "tailwindTemplates": 1,
     "staticTemplateCandidates": 4,
-    "dynamicTemplateCandidates": 1
+    "dynamicTemplateCandidates": 1,
+    "tailwindConfigKeys": 2,
+    "tailwindPluginApis": 1
   },
   "sources": [
     {
@@ -205,6 +207,12 @@ resolution, destructuring semantics, or proof that an exported CSS class exists.
 
 `tailwind-config` and `tailwind-plugin` accept JavaScript/TypeScript module extensions. They pass
 bounded lexical-state validation, then retain exact UTF-8 byte count and SHA-256.
+The scanner retains the closed config-key set `content`, `theme`, `plugins`, `presets`, `safelist`,
+and `corePlugins` only when an identifier is followed by `:` in code. Plugin modules retain
+`addUtilities`, `matchUtilities`, `addComponents`, `addVariant`, and `matchVariant` only when the
+identifier is followed by `(` in code. These observations carry exact spans and an `unsupported`
+disposition: they expose migration ownership without claiming semantic normalization. Comments and
+strings cannot create these observations.
 `tailwind-template` accepts common HTML/component/template extensions and retains the same exact
 identity. Its tag-aware lexical scanner extracts whitespace-separated literal candidates from exact
 `class` and `className` attributes with byte spans. Expression, interpolation, or template-literal

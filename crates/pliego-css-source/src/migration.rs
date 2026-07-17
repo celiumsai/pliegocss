@@ -176,6 +176,8 @@ struct MigrationProjectSummary {
     tailwind_templates: usize,
     static_template_candidates: usize,
     dynamic_template_candidates: usize,
+    tailwind_config_keys: usize,
+    tailwind_plugin_apis: usize,
 }
 
 #[derive(Serialize)]
@@ -334,6 +336,10 @@ pub struct MigrationAuxiliaryInventory {
 pub enum MigrationAuxiliaryObservationKind {
     /// One class candidate or dynamic class-bearing attribute from a template tag.
     ClassCandidate,
+    /// Recognized top-level-like Tailwind configuration key seam.
+    ConfigKey,
+    /// Recognized Tailwind plugin registration API call seam.
+    PluginApi,
 }
 
 /// One exact observation derived from a declared Tailwind auxiliary.
@@ -1100,6 +1106,16 @@ fn migration_project_summary(
             .flat_map(|item| &item.observations)
             .filter(|item| item.disposition == MigrationDisposition::Dynamic)
             .count(),
+        tailwind_config_keys: auxiliaries
+            .iter()
+            .flat_map(|item| &item.observations)
+            .filter(|item| item.kind == MigrationAuxiliaryObservationKind::ConfigKey)
+            .count(),
+        tailwind_plugin_apis: auxiliaries
+            .iter()
+            .flat_map(|item| &item.observations)
+            .filter(|item| item.kind == MigrationAuxiliaryObservationKind::PluginApi)
+            .count(),
     }
 }
 
@@ -1637,11 +1653,12 @@ pub fn inventory_migration_auxiliary_source(
             "migration auxiliary must be NUL-free and at most 16 MiB",
         ));
     }
-    let mut observations = if auxiliary_kind == MigrationAuxiliaryKind::TailwindTemplate {
-        scan_tailwind_template(source)?
-    } else {
-        lexical_masks(source)?;
-        Vec::new()
+    let mut observations = match auxiliary_kind {
+        MigrationAuxiliaryKind::TailwindTemplate => scan_tailwind_template(source)?,
+        MigrationAuxiliaryKind::TailwindConfig | MigrationAuxiliaryKind::TailwindPlugin => {
+            let masks = lexical_masks(source)?;
+            scan_tailwind_script(auxiliary_kind, source, &masks.code)
+        }
     };
     observations.sort_by_key(|item| (item.byte_start, item.byte_end));
     observations.dedup();
@@ -1674,6 +1691,72 @@ pub fn inventory_migration_auxiliary_file(
         MigrationInventoryError::new(format!("migration auxiliary is not valid UTF-8: {error}"))
     })?;
     inventory_migration_auxiliary_source(auxiliary_kind, &logical, source)
+}
+
+fn scan_tailwind_script(
+    auxiliary_kind: MigrationAuxiliaryKind,
+    source: &str,
+    code: &[bool],
+) -> Vec<MigrationAuxiliaryObservation> {
+    let (kind, delimiter, markers): (MigrationAuxiliaryObservationKind, u8, &[&str]) =
+        match auxiliary_kind {
+            MigrationAuxiliaryKind::TailwindConfig => (
+                MigrationAuxiliaryObservationKind::ConfigKey,
+                b':',
+                &[
+                    "content",
+                    "theme",
+                    "plugins",
+                    "presets",
+                    "safelist",
+                    "corePlugins",
+                ],
+            ),
+            MigrationAuxiliaryKind::TailwindPlugin => (
+                MigrationAuxiliaryObservationKind::PluginApi,
+                b'(',
+                &[
+                    "addUtilities",
+                    "matchUtilities",
+                    "addComponents",
+                    "addVariant",
+                    "matchVariant",
+                ],
+            ),
+            MigrationAuxiliaryKind::TailwindTemplate => return Vec::new(),
+        };
+    let bytes = source.as_bytes();
+    let mut observations = Vec::new();
+    for marker in markers {
+        for (start, _) in source.match_indices(marker) {
+            let end = start + marker.len();
+            if !code[start]
+                || is_identifier(
+                    start
+                        .checked_sub(1)
+                        .and_then(|index| bytes.get(index))
+                        .copied(),
+                )
+                || is_identifier(bytes.get(end).copied())
+            {
+                continue;
+            }
+            let mut next = end;
+            while bytes.get(next).is_some_and(u8::is_ascii_whitespace) {
+                next += 1;
+            }
+            if bytes.get(next) == Some(&delimiter) {
+                observations.push(MigrationAuxiliaryObservation {
+                    kind,
+                    byte_start: start,
+                    byte_end: end,
+                    disposition: MigrationDisposition::Unsupported,
+                    value: Some((*marker).into()),
+                });
+            }
+        }
+    }
+    observations
 }
 
 fn scan_tailwind_template(
@@ -3218,6 +3301,31 @@ $color: red;
         assert_eq!(document["summary"]["staticTemplateCandidates"], 2);
         assert_eq!(document["summary"]["dynamicTemplateCandidates"], 1);
         fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
+    fn inventories_closed_tailwind_config_and_plugin_seams() {
+        let config = inventory_migration_auxiliary_source(
+            MigrationAuxiliaryKind::TailwindConfig,
+            "tailwind.config.js",
+            "export default { theme: {}, content: [] }; const ignored = 'safelist:';",
+        )
+        .unwrap();
+        assert_eq!(config.observations().len(), 2);
+        assert_eq!(config.observations()[0].value(), Some("theme"));
+        assert_eq!(config.observations()[1].value(), Some("content"));
+        let plugin = inventory_migration_auxiliary_source(
+            MigrationAuxiliaryKind::TailwindPlugin,
+            "plugin.ts",
+            "function plugin({ addUtilities }) { addUtilities({}); } // matchVariant()\nconst ignored = 'addVariant(';",
+        )
+        .unwrap();
+        assert_eq!(plugin.observations().len(), 1);
+        assert_eq!(plugin.observations()[0].value(), Some("addUtilities"));
+        assert_eq!(
+            plugin.observations()[0].disposition(),
+            MigrationDisposition::Unsupported
+        );
     }
 
     #[test]
