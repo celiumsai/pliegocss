@@ -1,7 +1,7 @@
 # Packaging status
 
-Status: **Tailwind config/plugin/source migration seams passed the complete exact-clean `39167ac`
-replay; no registry upload performed**
+Status: **CSS Modules consumer inventory passed the complete exact-clean `7f3b722` replay; no
+registry upload performed**
 
 The publishable workspace boundary has six dependency waves. `pliego-css-usage` and
 `pliego-css-control` follow `pliego-css-build` because direct and optional Cargo dependencies both
@@ -18,6 +18,24 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## CSS Modules consumer-inventory clean replay — 2026-07-16
+
+The exact clean `7f3b722` Debian WSL2 gate packaged and extracted all fifteen archives with Cargo
+1.96, compiled the extracted graph in release mode, and passed the registry-shaped downstream
+consumer with Rust 1.85. Publication remained disabled, the worktree was clean, and the fixed
+61,440-byte ceiling was not raised.
+
+| Package | Compressed bytes | Remaining margin | SHA-256 |
+|---|---:|---:|---|
+| `pliego-css-source` | 40,697 | 20,743 | `3b86e310148033b7d354ac428579e9b569cd00288be2eb26e32551abcdefc0da` |
+| `pliego-cssc` | 61,390 | 50 | `53568a729136d0b1df548a4be9d6a1ca9779834776bddad766e871cc57767e37` |
+
+Project inventory now links declared CSS Modules consumers to declared module sources and reports
+exact property usages separately from dynamic or escaping bindings. The scanner remains lexical
+and execution-free: it does not run JavaScript, TypeScript, a bundler, or application code. This
+gate does not yet inspect Tailwind configuration/plugin/template contents, provide a representative
+migration corpus, or close R0.8. The CLI package remains closed to additive feature growth.
 
 ## Tailwind auxiliary-seam clean replay — 2026-07-16
 
