@@ -1,7 +1,7 @@
 # Packaging status
 
-Status: **compiler-backed LSP semantic diagnostics passed Windows/Linux process gates and the
-complete exact-clean `cff1e09` Rust package replay; no registry or Marketplace upload performed**
+Status: **the pinned VS Code extension host, closed VSIX, and complete exact-clean `b83217e` Rust
+package replay passed; no registry or Marketplace upload performed**
 
 The publishable workspace boundary has six dependency waves. `pliego-css-usage` and
 `pliego-css-control` follow `pliego-css-build` because direct and optional Cargo dependencies both
@@ -18,6 +18,32 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## Real VS Code extension-host clean replay — 2026-07-17
+
+The exact clean `b83217e` gate loaded the development extension in the official VS Code 1.105.1
+Windows extension host with all other extensions disabled. It opened a file-backed Rust document,
+started explicit external Rust 1.85 `pliego-css-lsp`/`pliego-cssc` binaries, followed Project Index
+definition to the final CSS `display:flex` range, changed the open buffer, and observed the exact
+compiler-backed `PCS001` message and UTF-16 range. The test runtime is version-pinned and ignored;
+the extension still embeds and downloads no server or compiler.
+
+The companion closed-payload gate produced a 103,831-byte VSIX and 446,117-byte bundle containing
+only `LICENSE`, `README.md`, `dist/extension.js`, and `package.json`. Its observed SHA-256 was
+`4c8217955ba2462e4b252b78be4bb456bda1769f729d0863758d20cc0cad1056`; VSCE timestamp
+behavior prevents a reproducibility claim. Frozen installation and full/production npm audits
+passed with no known vulnerabilities.
+
+The same commit passed the complete clean Debian WSL2 package replay with native Linux Node
+24.14.0, Cargo 1.96, and the Rust 1.85 downstream consumer. `pliego-css-lsp` measured 22,128 bytes
+(39,312 bytes of margin, SHA-256
+`f58f893887d95451df5c5a27e244e8bb3166df41487f2177b58fefacd02e4dc6`), while
+`pliego-cssc` measured 61,333 bytes (107 bytes, SHA-256
+`206ef27c6b64fe88c50d56e8297beab87aa8fcf6262864a2dfee2f4a0a75a257`),
+`pliego-css-control` 61,081 (359 bytes), `pliego-css-build` 59,920 (1,520 bytes), and
+`pliego-css-source` 56,782 (4,658 bytes). Publication remained disabled and the fixed ceiling was
+not raised. Hosted editor matrices, another client, Marketplace publication, and complete semantic
+parity remain separate blockers.
 
 ## Compiler-backed LSP diagnostics clean replay — 2026-07-17
 
