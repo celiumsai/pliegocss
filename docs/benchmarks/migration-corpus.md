@@ -29,7 +29,8 @@ Current frozen expectations include:
 - typed `@config`, `@plugin`, and exact-file `@source` resolution;
 - literal and dynamic template candidate counts;
 - closed Tailwind config-key and plugin-API seam counts;
-- CSS Modules composition, import, static class usage, and dynamic class usage.
+- CSS Modules composition, ESM/CommonJS/TypeScript import forms, static class usage, and dynamic
+  class usage.
 
 Adding a case requires a unique ID, a project declaration, explicit summary expectations, at least
 one required dependency seam when dependencies are in scope, and the same authored-contract claim

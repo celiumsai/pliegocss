@@ -423,8 +423,9 @@ Toda optimización tiene benchmark; ninguna complejidad entra solamente por intu
   con expresión como dynamic. Faltan crawling de proyecto, resolución específica Sass/bundlers e
   inspección semántica profunda de configs/plugins y dialectos de template; keys/APIs comunes ya
   quedan como seams lexicales unsupported. Consumidores
-  CSS Modules JS/TS declarados ya enlazan imports exactos y clasifican usos static/dynamic; faltan
-  sintaxis/aliases avanzados y un corpus de proyectos reales para cerrar. Un harness versionado ya
+  CSS Modules JS/TS declarados ya enlazan ESM, TypeScript import-equals y CommonJS simple, y
+  clasifican usos static/dynamic; faltan destructuring/aliases avanzados y un corpus de proyectos
+  reales para cerrar. Un harness versionado ya
   congela tres casos authored-contract y verifica seams/resúmenes/inmutabilidad vía CLI; no cuenta
   como evidencia real de precision/recall.
 - [ ] Entrevistar 10–15 developers/equipos y reunir 20 incidentes reales anonimizados.

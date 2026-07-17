@@ -83,7 +83,8 @@ and template auxiliaries are retained by exact bytes/hash; relative `@config`, `
 exact-file `@source` seams link only to the declared auxiliary kind. Configuration and plugin
 modules are lexically validated but never executed. Declared JS/TS CSS Modules consumers can be linked
 to exact sources and inventory static property/bracket class usage plus conservative dynamic binding
-usage without executing a bundler.
+usage without executing a bundler. Default/namespace ESM, TypeScript import-equals, and simple
+`const|let|var` CommonJS require bindings share the same exact target/linking contract.
 Declared templates additionally inventory exact literal `class`/`className` candidates and retain
 expression/interpolation attributes as dynamic observations; this is tag-aware lexical inspection,
 not arbitrary template-language execution.

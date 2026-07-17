@@ -357,7 +357,7 @@ pub struct MigrationAuxiliaryObservation {
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum MigrationConsumerObservationKind {
-    /// Static default/namespace import of a CSS Modules source.
+    /// Static ESM, TypeScript import-equals, or `CommonJS` require seam.
     Import,
     /// Property or bracket access through the imported binding.
     ClassUsage,
@@ -2049,6 +2049,12 @@ fn scan_css_modules_consumer(
         }
         let end = consumer_import_end(source, &masks.code, start);
         let syntax = &source[start..end];
+        if syntax
+            .match_indices("require")
+            .any(|(offset, _)| masks.code[start + offset])
+        {
+            continue;
+        }
         let Some(specifier) =
             quoted_dependency_specifier(MigrationDependencyKind::CssModulesImport, syntax)
         else {
@@ -2086,6 +2092,7 @@ fn scan_css_modules_consumer(
             bindings.push((binding, target, start, end));
         }
     }
+    scan_css_modules_requires(file, source, &masks.code, &mut observations, &mut bindings)?;
     for (binding, target, import_start, import_end) in bindings {
         scan_consumer_binding_usages(
             source,
@@ -2098,6 +2105,128 @@ fn scan_css_modules_consumer(
         );
     }
     Ok(observations)
+}
+
+fn scan_css_modules_requires(
+    file: &str,
+    source: &str,
+    code: &[bool],
+    observations: &mut Vec<MigrationConsumerObservation>,
+    bindings: &mut Vec<(String, Option<String>, usize, usize)>,
+) -> Result<(), MigrationInventoryError> {
+    let bytes = source.as_bytes();
+    for start in 0..bytes.len() {
+        if !code[start]
+            || !bytes[start..].starts_with(b"require")
+            || is_identifier(start.checked_sub(1).and_then(|i| bytes.get(i)).copied())
+            || previous_non_whitespace(bytes, start) == Some(b'.')
+            || is_identifier(bytes.get(start + 7).copied())
+        {
+            continue;
+        }
+        let Some((call_end, specifier)) = static_require_call(source, start) else {
+            continue;
+        };
+        if !specifier.to_ascii_lowercase().ends_with(".module.css") {
+            continue;
+        }
+        let statement_start = consumer_statement_start(bytes, start);
+        let binding = require_binding(&source[statement_start..start]);
+        let target = if specifier.starts_with("./") || specifier.starts_with("../") {
+            Some(normalize_relative_target(file, specifier.as_str())?)
+        } else {
+            None
+        };
+        observations.push(MigrationConsumerObservation {
+            kind: MigrationConsumerObservationKind::Import,
+            byte_start: statement_start,
+            byte_end: call_end,
+            disposition: if binding.is_some() {
+                MigrationDisposition::Static
+            } else {
+                MigrationDisposition::Dynamic
+            },
+            binding: binding.clone(),
+            specifier: Some(specifier),
+            target: target.clone(),
+            class_name: None,
+        });
+        if let Some(binding) = binding {
+            bindings.push((binding, target, statement_start, call_end));
+        }
+    }
+    Ok(())
+}
+
+fn previous_non_whitespace(bytes: &[u8], start: usize) -> Option<u8> {
+    bytes[..start]
+        .iter()
+        .rev()
+        .copied()
+        .find(|byte| !byte.is_ascii_whitespace())
+}
+
+fn static_require_call(source: &str, start: usize) -> Option<(usize, String)> {
+    let bytes = source.as_bytes();
+    let mut cursor = start + "require".len();
+    while bytes.get(cursor).is_some_and(u8::is_ascii_whitespace) {
+        cursor += 1;
+    }
+    if bytes.get(cursor) != Some(&b'(') {
+        return None;
+    }
+    cursor += 1;
+    while bytes.get(cursor).is_some_and(u8::is_ascii_whitespace) {
+        cursor += 1;
+    }
+    let quote = *bytes.get(cursor)?;
+    if !matches!(quote, b'\'' | b'"') {
+        return None;
+    }
+    let value_start = cursor + 1;
+    cursor = value_start;
+    while let Some(byte) = bytes.get(cursor) {
+        if *byte == b'\\' {
+            return None;
+        }
+        if *byte == quote {
+            let specifier = source.get(value_start..cursor)?.to_owned();
+            cursor += 1;
+            while bytes.get(cursor).is_some_and(u8::is_ascii_whitespace) {
+                cursor += 1;
+            }
+            return (bytes.get(cursor) == Some(&b')')).then_some((cursor + 1, specifier));
+        }
+        cursor += 1;
+    }
+    None
+}
+
+fn consumer_statement_start(bytes: &[u8], start: usize) -> usize {
+    let mut cursor = start;
+    while cursor > 0 && !matches!(bytes[cursor - 1], b';' | b'\n' | b'\r') {
+        cursor -= 1;
+    }
+    while bytes.get(cursor).is_some_and(u8::is_ascii_whitespace) {
+        cursor += 1;
+    }
+    cursor
+}
+
+fn require_binding(prefix: &str) -> Option<String> {
+    let declaration = prefix.trim().strip_suffix('=')?.trim();
+    let split = declaration.rfind(char::is_whitespace)?;
+    let keyword = declaration[..split].trim();
+    let candidate = declaration[split..].trim();
+    if !matches!(keyword, "const" | "let" | "var" | "import")
+        || candidate.is_empty()
+        || !candidate
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'$'))
+    {
+        return None;
+    }
+    Some(candidate.into())
 }
 
 fn import_binding(prelude: &str) -> Option<String> {
@@ -3409,6 +3538,45 @@ const text = "styles.ignored";
                 && source
                     .get(observation.byte_start()..observation.byte_end())
                     .is_some()
+        }));
+    }
+
+    #[test]
+    fn inventories_commonjs_and_typescript_css_modules_bindings() {
+        let source = r#"const styles = require("./card.module.css");
+const card = styles.card;
+const title = styles["title"];
+import legacy = require("./legacy.module.css");
+const old = legacy.old;
+import other from "./require.module.css";
+const required = other.required;
+loader . require("./ignored.module.css");
+require("./side-effect.module.css");
+"#;
+        let inventory = inventory_migration_consumer_source(
+            MigrationConsumerKind::CssModules,
+            "src/Card.tsx",
+            source,
+        )
+        .unwrap();
+        let imports = inventory
+            .observations()
+            .iter()
+            .filter(|item| item.kind() == MigrationConsumerObservationKind::Import)
+            .collect::<Vec<_>>();
+        assert_eq!(imports.len(), 4);
+        assert_eq!(imports[0].binding(), Some("styles"));
+        assert_eq!(imports[1].binding(), Some("legacy"));
+        assert_eq!(imports[2].binding(), Some("other"));
+        assert_eq!(imports[3].disposition(), MigrationDisposition::Dynamic);
+        let usages = inventory
+            .observations()
+            .iter()
+            .filter(|item| item.kind() == MigrationConsumerObservationKind::ClassUsage)
+            .collect::<Vec<_>>();
+        assert_eq!(usages.len(), 4);
+        assert!(usages.iter().all(|item| {
+            item.disposition() == MigrationDisposition::Static && item.class_name().is_some()
         }));
     }
 

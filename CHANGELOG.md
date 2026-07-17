@@ -44,7 +44,8 @@ pre-1.0 compatibility policy.
   dynamic; PliegoCSS records these seams without executing or pretending to understand their
   JavaScript/toolchain semantics.
 - Declared CSS Modules consumers for JavaScript and TypeScript module extensions. Project snapshots
-  bind default/namespace `.module.css` imports to declared CSS Modules sources, retain exact dot and
+  bind default/namespace ESM, TypeScript import-equals, and `const|let|var` CommonJS
+  `.module.css` imports to declared CSS Modules sources, retain exact dot and
   quoted-bracket class usage, classify computed/binding-escape/template usage as dynamic, and reject
   missing or mistyped local targets without executing JavaScript, TypeScript, or bundlers.
 - Explicit Tailwind config, plugin, and template auxiliaries in migration project declarations.

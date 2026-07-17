@@ -43,8 +43,8 @@
         "sources": 2,
         "consumers": 1,
         "resolvedDependencies": 1,
-        "consumerImports": 1,
-        "staticConsumerUsages": 2,
+        "consumerImports": 2,
+        "staticConsumerUsages": 3,
         "dynamicConsumerUsages": 1
       },
       "requiredDependencies": [

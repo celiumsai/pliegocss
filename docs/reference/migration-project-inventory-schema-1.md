@@ -193,10 +193,13 @@ does not silently reinterpret that edge as external and does not guess Sass part
 ## CSS Modules consumer boundary
 
 Declared `js`, `jsx`, `ts`, `tsx`, `mjs`, and `cjs` consumers are read through the same bounded
-regular-file/no-link boundary and inventoried twice. The scanner retains default and namespace
-imports ending in `.module.css`, exact `binding.className` and `binding["class-name"]` accesses, and
+regular-file/no-link boundary and inventoried twice. The scanner retains default/namespace ESM,
+TypeScript import-equals, and simple `const|let|var binding = require(...)` imports ending in
+`.module.css`, exact `binding.className` and `binding["class-name"]` accesses, and
 marks computed brackets, binding escape, named/dynamic imports, or binding text inside template
-literals as dynamic. Comments and ordinary quoted strings cannot create usage observations.
+literals as dynamic. An unbound static CommonJS require remains a dynamic import observation.
+Escaped/calculated require arguments and typed/destructured declarations are not guessed. Comments
+and ordinary quoted strings cannot create usage observations.
 
 Every relative import target must normalize to a declared `css-modules` source; missing or mistyped
 targets fail the complete snapshot. Package imports remain visible without a local target. This is a
