@@ -1,7 +1,8 @@
 # Packaging status
 
-Status: **the debounced LSP, pinned VS Code extension host, closed VSIX, and complete exact-clean
-`69831d4` Rust package replay passed; no registry or Marketplace upload performed**
+Status: **cross-clause `pcx!` diagnostics, the pinned VS Code extension host, closed VSIX, and the
+complete exact-clean `2e3539c` Rust package replay passed; no registry or Marketplace upload
+performed**
 
 The publishable workspace boundary has six dependency waves. `pliego-css-usage` and
 `pliego-css-control` follow `pliego-css-build` because direct and optional Cargo dependencies both
@@ -18,6 +19,31 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## Cross-clause pcx LSP clean replay — 2026-07-17
+
+The exact clean `2e3539c` Debian WSL2 gate packaged and extracted all sixteen Rust archives with
+native Linux Node 24.14.0 and Cargo 1.96, compiled the complete extracted graph in release mode,
+and executed the Rust 1.85 downstream consumer. `pliego-css-lsp` measured 25,464 compressed bytes
+(35,976 bytes of margin, SHA-256
+`2c321079f08c666c79de3470b2846e64a3974df8eccfc435a7c9939a64ba1633`). Tight archives
+remained below the fixed ceiling: `pliego-cssc` measured 61,337 bytes (103 bytes of margin,
+SHA-256 `7392897db71487f45230c5467fefb09af799b2a404db360beb23a1aaddba4bcb`),
+`pliego-css-control` 61,071 (369 bytes), `pliego-css-build` 59,916 (1,524 bytes), and
+`pliego-css-source` 56,782 (4,658 bytes). Publication remained disabled and the 61,440-byte
+ceiling was not raised.
+
+The Windows and Debian process gates require compiler `PCX003` for an exact semantic duplicate
+across two independent `pcx!` clauses and map the finding to the complete second-clause Rust literal
+token. Both platforms passed the twelve LSP tests, strict Clippy, warning-denied rustdoc, and the
+framed integration session under Rust 1.85. The Debian gate additionally verified zero leftover
+`pliegocss-lsp-*.rs` files after execution; Unix creation is configured for mode `0600`.
+
+The official VS Code 1.105.1 Extension Host passed Project Index definition, `PCS001`, and the same
+cross-clause `PCX003` edit using external binaries. The companion closed-payload gate produced a
+103,856-byte VSIX and 446,117-byte bundle with no embedded server; its observed SHA-256 was
+`58dacefac988a77849d2f2cca89019a9f92de826e38bf3155c74a5fa0a76ba63`, without a reproducibility
+claim because VSCE may encode timestamps.
 
 ## Debounced LSP semantic diagnostics clean replay — 2026-07-17
 
