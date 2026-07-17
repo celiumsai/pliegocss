@@ -1,6 +1,6 @@
 # Packaging status
 
-Status: **fixed Chromium browser evidence passed the complete exact-clean `9b93314` replay; no registry
+Status: **migration inventory CLI passed the complete exact-clean `ba04e87` replay; no registry
 upload performed**
 
 The publishable workspace boundary has six dependency waves. `pliego-css-usage` and
@@ -18,6 +18,28 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## Migration inventory CLI clean replay — 2026-07-16
+
+The exact clean `ba04e87` Debian WSL2 gate ran under Node.js 20.19.2, packaged and extracted all
+fifteen archives with Cargo 1.96, compiled the archive graph in release mode, and passed the
+registry-shaped downstream consumer with Rust 1.85. The consumer now compile-checks both exact-byte
+and safe-file migration inventory entry points in addition to the established facade, collector,
+ownership, usage, DTCG, TOML, control, and repair surfaces. Publication remained disabled and the
+fixed 61,440-byte ceiling was not raised.
+
+| Package | Compressed bytes | Remaining margin | SHA-256 |
+|---|---:|---:|---|
+| `pliego-css-source` | 30,941 | 30,499 | `8028369aaac007c57a7e1a852ad4ef253dbc55ee2c1a82717b36f051fe996cde` |
+| `pliego-css-build` | 59,913 | 1,527 | `e8b29b52caa5b6da80e28df2c9342b4e01064ad0a724db9928f4884ec5ab09e4` |
+| `pliego-css-control` | 61,075 | 365 | `6f498434978554135fe229402f9c80f5526f3331f92d6f7a3178750f53f5c78f` |
+| `pliego-cssc` | 61,262 | 178 | `14e9bd410f1c26dca92348421348b9beeb6c7f8cbfabe7e175c1d74933f0cd7a` |
+
+This closes the exact-commit package gate for the bounded single-file CLI slice. It proves
+canonical inventory output for Sass, Tailwind CSS v4 entry CSS, and CSS Modules plus regular-file,
+path, link, UTF-8, and size enforcement. It does not prove complete project snapshots, import or
+composition resolution, template/config/plugin discovery, migration correctness, registry
+publication, or R0.8 completion.
 
 ## Fixed Chromium browser evidence clean replay — 2026-07-16
 
