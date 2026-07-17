@@ -18,6 +18,7 @@
 #![forbid(unsafe_code)]
 
 mod application;
+mod discovery;
 mod migration;
 
 use std::fmt;
@@ -34,6 +35,7 @@ pub use application::{
     ApplicationComponent, ApplicationIsland, ApplicationRoute, ApplicationTopology, CollectError,
     CollectedReachability,
 };
+pub use discovery::discover_migration_project;
 pub use migration::{
     MIGRATION_INVENTORY_SCHEMA_VERSION, MigrationAuxiliaryInventory, MigrationAuxiliaryKind,
     MigrationAuxiliaryObservation, MigrationAuxiliaryObservationKind, MigrationConstruct,

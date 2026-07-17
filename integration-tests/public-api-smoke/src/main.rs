@@ -32,7 +32,8 @@ use pliego_css_source::{
     MigrationDependencyKind, MigrationDependencyResolution, MigrationDisposition,
     MigrationInventory, MigrationInventoryError, MigrationPreflightReliance, MigrationProject,
     MigrationProjectAuxiliary, MigrationProjectConsumer, MigrationProjectInventory,
-    MigrationProjectSource, MigrationSourceKind, inventory_migration_auxiliary_file,
+    MigrationProjectSource, MigrationSourceKind, discover_migration_project,
+    inventory_migration_auxiliary_file,
     inventory_migration_auxiliary_source, inventory_migration_consumer_file,
     inventory_migration_consumer_source, inventory_migration_file, inventory_migration_source,
 };
@@ -138,6 +139,9 @@ fn exercise_repair_tooling_surface() {
 }
 
 fn exercise_migration_inventory_surface() {
+    let _project_discovery: fn(
+        &std::path::Path,
+    ) -> Result<MigrationProject, MigrationInventoryError> = discover_migration_project;
     assert_eq!(MIGRATION_INVENTORY_SCHEMA_VERSION, 1);
     let _file_reader = inventory_migration_file;
     let project = MigrationProject::new().source(MigrationProjectSource::new(

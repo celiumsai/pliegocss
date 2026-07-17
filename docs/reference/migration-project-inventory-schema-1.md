@@ -1,8 +1,7 @@
 # Migration project inventory schema 1
 
-Status: **explicit source/consumer/auxiliary snapshot, conservative dependencies, and CSS Modules
-consumer linking implemented; transitive discovery, auxiliary semantic evaluation, and broader
-consumer syntax remain open**
+Status: **explicit snapshots plus bounded typed library discovery implemented; toolchain-specific
+resolution, CLI discovery, real-project evidence, and broader consumer syntax remain open**
 
 `MigrationProject` declares a closed set of Sass, Tailwind CSS v4 entry, and CSS Modules files. It
 does not crawl the repository or infer source kind from filenames. Collection sorts the declaration
@@ -48,6 +47,33 @@ declaration itself. The CLI exposes that complete path and writes no file implic
 ```console
 pliego-cssc migration-project-inventory migration.project.json > migration.inventory.json
 ```
+
+## Bounded typed discovery
+
+`discover_migration_project(Path::new("."))` can build the same uncollected declaration from one
+project-relative directory. It does not classify every file by extension or execute a source
+toolchain:
+
+- `.sass`/`.scss` and `.module.css` are unambiguous source families;
+- ordinary `.css` is retained as Tailwind only when the existing lexical inventory finds an exact
+  Tailwind import, directive, reference, theme, utility, variant, or apply seam;
+- JS/TS is retained as a CSS Modules consumer only when it contains an import observation;
+- class-bearing supported template files are retained only after a Tailwind entry is confirmed;
+- standard `tailwind.config.*` files and existing exact relative `@config`, `@plugin`, and `@source`
+  targets receive their specific auxiliary kind;
+- generic CSS, unresolved globs/directories, package-owned targets, and files without migration
+  evidence are not guessed into a role.
+
+Traversal is deterministic and bounded to 32 directory levels, 65,536 unignored entries, 256 MiB
+of candidate-file metadata, and the existing 16 MiB limit on every file that is actually read.
+`.git`, `node_modules`, and `target` are the closed default ignore set. Every other traversed path
+must be regular; link-like components, Unix symlinks, and Windows reparse points fail the discovery.
+The returned `MigrationProject` must still pass normal canonicalization, two-pass reads, the
+4,096-role-entry limit, and exact dependency validation through `collect()`.
+
+This is a library boundary, not a new CLI command. It does not implement Sass load paths, Node or
+bundler aliases, Tailwind package/plugin execution, arbitrary glob expansion, framework-specific
+template semantics, or real-project precision/recall proof.
 
 ```rust,no_run
 use pliego_css_source::{

@@ -1463,7 +1463,7 @@ fn classify_dependency(
     Ok((MigrationDependencyResolution::Resolved, Some(target)))
 }
 
-fn normalize_relative_target(
+pub(crate) fn normalize_relative_target(
     from: &str,
     specifier: &str,
 ) -> Result<String, MigrationInventoryError> {
@@ -1498,7 +1498,7 @@ pub struct MigrationInventoryError {
 }
 
 impl MigrationInventoryError {
-    fn new(message: impl Into<String>) -> Self {
+    pub(crate) fn new(message: impl Into<String>) -> Self {
         Self {
             message: message.into(),
         }

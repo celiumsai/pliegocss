@@ -12,6 +12,14 @@ pre-1.0 compatibility policy.
 
 ### Added
 
+- Bounded typed migration discovery through `discover_migration_project`. The library walks one
+  project-relative root in canonical order, ignores only `.git`/`node_modules`/`target`, rejects
+  link-like or non-regular paths, caps traversal at 32 levels, 65,536 entries, and 256 MiB of
+  candidate files, and selects only
+  evidence-backed Sass, CSS Modules, Tailwind, consumer, template, config, plugin, and exact-source
+  roles. The result still requires normal two-pass collection; CLI discovery, toolchain-specific
+  resolution, and real-project precision/recall remain open.
+
 - A versioned three-case authored migration bridge corpus and read-only CLI runner covering resolved
   Sass modules, Tailwind-owned auxiliaries/template candidates/config-plugin seams, and CSS Modules
   consumer usage. The runner verifies selected summary values, required edges, clean process output,

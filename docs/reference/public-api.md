@@ -250,7 +250,9 @@ the consumer layer additionally exposes `MigrationProjectConsumer`, `MigrationCo
 `MigrationConsumerInventory`, `MigrationConsumerObservation`,
 `MigrationConsumerObservationKind`, `inventory_migration_consumer_source`, and
 `inventory_migration_consumer_file` for declared CSS Modules JS/TS consumers, including explicit
-`BindingAlias` and `DestructuredClass` observations and the `alias()` getter; the auxiliary layer
+`BindingAlias` and `DestructuredClass` observations and the `alias()` getter;
+`discover_migration_project` adds deterministic, bounded, no-follow typed discovery that returns an
+uncollected `MigrationProject`; the auxiliary layer
 exposes `MigrationProjectAuxiliary`, `MigrationAuxiliaryKind`, `MigrationAuxiliaryInventory`,
 `MigrationAuxiliaryObservation`, `MigrationAuxiliaryObservationKind`,
 `inventory_migration_auxiliary_source`, and `inventory_migration_auxiliary_file` for exact Tailwind
