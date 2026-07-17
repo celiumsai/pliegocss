@@ -5,6 +5,8 @@ open documents in memory, negotiates UTF-16 positions, publishes scanner and `FM
 returns collision-safe whole-literal formatting edits, and delegates completion/hover metadata to
 the versioned `pliego-cssc` catalog/explain JSON contracts. With an explicit generated Project
 Index, Go to Definition follows verified source sites and manifests to final CSS declarations.
+Syntactically valid literals also reuse the compiler's diagnostic schema for bounded theme-aware
+semantic checks instead of maintaining an editor-only utility validator.
 
 Run it over stdio from the project root:
 

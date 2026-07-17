@@ -189,6 +189,15 @@ send({
   method: "textDocument/definition",
   params: { textDocument: { uri }, position: { line: 0, character: cursor } },
 });
+const invalidText = 'fn view(){let _=pc!("flex unknown-thing");}';
+send({
+  jsonrpc: "2.0",
+  method: "textDocument/didChange",
+  params: {
+    textDocument: { uri, version: 2 },
+    contentChanges: [{ text: invalidText }],
+  },
+});
 send({ jsonrpc: "2.0", id: 6, method: "shutdown", params: null });
 send({ jsonrpc: "2.0", method: "exit", params: null });
 child.stdin.end();
@@ -221,15 +230,29 @@ function decodeFrames(bytes) {
 
 const messages = decodeFrames(Buffer.concat(output));
 const byId = new Map(messages.filter((message) => "id" in message).map((message) => [message.id, message]));
-const published = messages.find((message) => message.method === "textDocument/publishDiagnostics");
+const published = messages.filter(
+  (message) => message.method === "textDocument/publishDiagnostics",
+);
 if (byId.get(1)?.result?.capabilities?.positionEncoding !== "utf-16") {
   fail("initialize did not negotiate UTF-16");
 }
 if (byId.get(1)?.result?.capabilities?.definitionProvider !== true) {
   fail("initialize did not advertise configured Project Index navigation");
 }
-if (published?.params?.diagnostics?.[0]?.code !== "FMT001") {
+if (published[0]?.params?.diagnostics?.[0]?.code !== "FMT001") {
   fail("didOpen did not publish FMT001");
+}
+const semantic = published[1]?.params?.diagnostics?.find(
+  (diagnostic) => diagnostic.code === "PCS001",
+);
+if (semantic?.message !== "unknown utility `unknown-thing`") {
+  fail("didChange did not preserve the compiler semantic diagnostic");
+}
+if (
+  semantic.range?.start?.character !== invalidText.indexOf("unknown-thing") ||
+  semantic.range?.end?.character !== invalidText.indexOf("unknown-thing") + "unknown-thing".length
+) {
+  fail("compiler semantic diagnostic did not map to the exact Rust source range");
 }
 if (byId.get(2)?.result?.[0]?.newText !== '"flex gap-4"') {
   fail("formatting did not return the canonical whole literal");
@@ -262,7 +285,9 @@ process.stdout.write(
   `${JSON.stringify({
     schemaVersion: 1,
     positionEncoding: "utf-16",
-    diagnostics: published.params.diagnostics.length,
+    formatDiagnostics: published[0].params.diagnostics.length,
+    semanticDiagnostic: semantic.code,
+    semanticRange: semantic.range,
     formattingEdits: byId.get(2).result.length,
     completion: item.label,
     completionRange: item.textEdit.range,

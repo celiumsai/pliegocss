@@ -45,7 +45,7 @@ Index is configured. The current closed method set is:
 |---|---|---|
 | client to server | `initialize`, `initialized`, `shutdown`, `exit` | Process lifecycle and one file-root workspace. |
 | client to server | `textDocument/didOpen`, `didChange`, `didClose` | In-memory, monotonically versioned, full-document buffers. |
-| server to client | `textDocument/publishDiagnostics` | Rust parse/scanner diagnostics, PCS syntax diagnostics, and `FMT001` drift. |
+| server to client | `textDocument/publishDiagnostics` | Rust parse/scanner diagnostics, PCS syntax diagnostics, compiler-backed per-literal semantic diagnostics, and `FMT001` drift. |
 | request | `textDocument/completion` | Catalog schema 3 examples and summaries, with a whole-utility `textEdit`. |
 | request | `textDocument/hover` | Explain schema 2 pattern, summary, and emitted CSS. |
 | request | `textDocument/definition` | Exact Project Index source site to integrity-bound manifest and final CSS declaration links. Advertised only with `--project-index`. |
@@ -68,6 +68,13 @@ replaces the complete literal token with a newly escaped ordinary Rust string.
 - Hover invokes `pliego-cssc explain --style ... --format json` and requires explain schema 2.
 - Open-buffer syntax and formatting use the same `pliego-css-source` scanner and
   `pliego-css-parser` canonical formatter as the CLI.
+- Each syntactically valid visible literal is checked through same-version
+  `pliego-cssc --diagnostic-format json check --style ...`. Schema-1 code, severity, message,
+  suggestion, replacement, and decoded style range are validated before projection into LSP
+  UTF-16 coordinates. Cooked strings with escapes use the safe whole-literal range.
+- Semantic results are cached by exact decoded literal, capped at 4,096 entries, and each document
+  is capped at 256 semantic literal checks. Exceeding that boundary emits `PCL002` rather than
+  starting an unbounded number of compiler processes.
 - Formatting returns edits only; it never writes a source file. The editor remains responsible for
   applying the version-bound edit set.
 - Definition consumes Project Index schema 1 or 2 instead of scanning repository structure. It
@@ -75,9 +82,11 @@ replaces the complete literal token with a newly escaped ordinary Rust string.
   contract, and exact declaration ranges on every request. Any stale or mixed artifact fails the
   request closed.
 
-The current diagnostic pass covers Rust parsing, macro extraction, PliegoCSS syntax, and canonical
-formatting. Theme-aware semantic/compiler diagnostics are not yet evaluated on every keystroke, so
-this candidate does not yet prove complete CLI/editor diagnostic equality.
+The current diagnostic pass covers Rust parsing, macro extraction, PliegoCSS syntax, canonical
+formatting, and theme-aware compiler validation of every bounded individual literal. A new uncached
+literal currently invokes the compiler synchronously. Cross-literal `pcx!` composition equality,
+debouncing/cancellation, and a frozen negative corpus remain necessary before claiming complete
+CLI/editor diagnostic equality.
 
 ## Current non-goals
 
@@ -97,6 +106,8 @@ initialization, `FMT001` publication, whole-literal formatting, exact completion
 compiler-backed hover CSS, clean shutdown, and zero stderr.
 The same session configures a synthetic integrity-bound Project Index and requires Go to Definition
 to select the exact physical declaration in its verified stylesheet.
+It then changes the buffer to an unknown utility and requires the compiler's exact `PCS001` message
+and style range to survive UTF-16 LSP projection.
 
 ## VS Code client candidate
 

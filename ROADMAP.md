@@ -269,8 +269,10 @@ ETA: 3–5 días
 - [x] Empaquetar un cliente VS Code inicial con binarios externos explícitos y gate VSIX acotado.
 - [x] Consumir Project Index schema 1/2 para navegación verificada desde el literal Rust hasta las
   declaraciones físicas finales en CSS, rechazando snapshots o artifacts mezclados/stale.
-- [ ] Añadir prueba real en extension host, otro cliente de editor y paridad diagnóstica semántica
-  CLI/LSP.
+- [x] Reusar diagnósticos semánticos schema 1 del compilador por literal, con cache/límites y mapeo
+  exacto de byte ranges a posiciones UTF-16.
+- [ ] Añadir prueba real en extension host, otro cliente de editor, debounce/cancelación y paridad
+  diagnóstica completa para composición `pcx!` CLI/LSP.
 - [x] Mejorar diagnósticos usando los cinco fixtures reales.
 - [x] Crear documentación de CLI, configuración y troubleshooting; editor setup sigue abierto.
 - [x] Ejecutar doctests y ejemplos del workspace desde el workflow de CI.

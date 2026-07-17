@@ -242,7 +242,10 @@ fixture acotado.
 - [x] Empaquetar el cliente VS Code inicial sin descargar ni ocultar binarios nativos.
 - [x] Añadir navegación Project Index source-site → manifest schema 5 → declaración CSS física con
   verificación fail-closed de Asset Plan, snapshots, hashes y rangos.
-- [ ] Añadir gate real de extension host, otro cliente y paridad semántica CLI/LSP.
+- [x] Reusar `check` schema 1 para diagnósticos semánticos theme-aware por literal y conservar
+  código, mensaje y rango exacto al proyectar UTF-8 → UTF-16.
+- [ ] Añadir gate real de extension host, otro cliente, debounce/cancelación y paridad semántica
+  completa de composición `pcx!` CLI/LSP.
 - [x] Añadir formatter determinista y `--check` para utilidades explícitas y archivos line-oriented.
 - [x] Añadir diagnósticos y reemplazos read-only sobre literales Rust.
 - [x] Añadir envelope JSON estable para diagnósticos de comandos one-shot.

@@ -17,8 +17,9 @@ pre-1.0 compatibility policy.
   completion, explain-backed hover, and collision-safe whole-literal formatting edits. Cursor
   features fail closed for cooked Rust strings with escapes. Optional Project Index schema 1/2
   navigation verifies the source snapshot, Asset Plan, manifest/CSS integrity, and schema-5 physical
-  declaration ranges before returning source-to-final-CSS definition links. Theme-aware CLI/LSP
-  diagnostic parity remains open.
+  declaration ranges before returning source-to-final-CSS definition links. Bounded per-literal
+  semantic diagnostics now reuse `pliego-cssc check` schema 1 and project exact compiler ranges into
+  UTF-16; debounce, cancellation, cross-literal `pcx!` equality, and full CLI/LSP parity remain open.
 - An unreleased VS Code client candidate that connects file-backed Rust documents to explicit
   external `pliego-css-lsp` and `pliego-cssc` binaries. It supports discover/seed/config theme
   modes, optional Project Index navigation, fail-closed machine-overridable paths, configuration

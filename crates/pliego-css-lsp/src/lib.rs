@@ -15,6 +15,8 @@ use serde_json::{Value, json};
 mod project_index;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
+const MAX_SEMANTIC_CACHE_ITEMS: usize = 4_096;
+const MAX_SEMANTIC_CHECKS_PER_DOCUMENT: usize = 256;
 
 /// Exact process and theme selection used by delegated tooling requests.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -92,6 +94,7 @@ struct Server {
     root: PathBuf,
     documents: BTreeMap<String, Document>,
     catalog: Option<Vec<Value>>,
+    semantic_cache: BTreeMap<String, Result<Vec<Value>, String>>,
     shutdown: bool,
 }
 
@@ -102,6 +105,7 @@ impl Server {
             root: PathBuf::from("."),
             documents: BTreeMap::new(),
             catalog: None,
+            semantic_cache: BTreeMap::new(),
             shutdown: false,
         }
     }
@@ -140,6 +144,61 @@ impl Server {
             );
         }
         Ok(self.catalog.as_deref().unwrap_or_default())
+    }
+
+    fn semantic_findings(&mut self, style: &str) -> Result<&[Value], String> {
+        if !self.semantic_cache.contains_key(style) {
+            if self.semantic_cache.len() >= MAX_SEMANTIC_CACHE_ITEMS {
+                self.semantic_cache.clear();
+            }
+            let result = self.run_semantic_check(style);
+            self.semantic_cache.insert(style.to_owned(), result);
+        }
+        self.semantic_cache
+            .get(style)
+            .expect("semantic result inserted")
+            .as_deref()
+            .map_err(Clone::clone)
+    }
+
+    fn run_semantic_check(&self, style: &str) -> Result<Vec<Value>, String> {
+        let mut process = Command::new(&self.config.compiler);
+        process
+            .arg("--diagnostic-format")
+            .arg("json")
+            .arg("check")
+            .arg("--style")
+            .arg(style)
+            .current_dir(&self.root);
+        if self.config.seed {
+            process.arg("--seed");
+        } else if let Some(config) = &self.config.config {
+            process.arg("--config").arg(config);
+        }
+        let output = process
+            .output()
+            .map_err(|error| format!("cannot run pliego-cssc check: {error}"))?;
+        if output.status.success() {
+            if !output.stderr.is_empty() {
+                return Err("successful pliego-cssc check wrote stderr".into());
+            }
+            return Ok(Vec::new());
+        }
+        let document: Value = serde_json::from_slice(&output.stderr)
+            .map_err(|error| format!("invalid pliego-cssc diagnostic JSON: {error}"))?;
+        if document.get("schemaVersion") != Some(&json!(1))
+            || document.get("command") != Some(&json!("check"))
+        {
+            return Err("unsupported pliego-cssc diagnostic schema".into());
+        }
+        let diagnostics = document
+            .get("diagnostics")
+            .and_then(Value::as_array)
+            .ok_or("pliego-cssc diagnostic document has no diagnostics")?;
+        if diagnostics.is_empty() {
+            return Err("failed pliego-cssc check returned no diagnostics".into());
+        }
+        Ok(diagnostics.clone())
     }
 }
 
@@ -268,16 +327,18 @@ fn handle_notification(
     }
 }
 
-fn diagnostic_notification(server: &Server, uri: &str) -> Result<Value, String> {
+fn diagnostic_notification(server: &mut Server, uri: &str) -> Result<Value, String> {
     let document = server.documents.get(uri).ok_or("document is not open")?;
-    let diagnostics = diagnostics(uri, &document.text);
+    let text = document.text.clone();
+    let version = document.version;
+    let diagnostics = diagnostics(server, uri, &text);
     Ok(json!({
         "jsonrpc":"2.0","method":"textDocument/publishDiagnostics",
-        "params":{"uri":uri,"version":document.version,"diagnostics":diagnostics}
+        "params":{"uri":uri,"version":version,"diagnostics":diagnostics}
     }))
 }
 
-fn diagnostics(uri: &str, source: &str) -> Vec<Value> {
+fn diagnostics(server: &mut Server, uri: &str, source: &str) -> Vec<Value> {
     let report = match scan_source_named(uri, source) {
         Ok(report) => report,
         Err(error) => {
@@ -289,22 +350,36 @@ fn diagnostics(uri: &str, source: &str) -> Vec<Value> {
         .iter()
         .map(|item| diagnostic(source, item.range, item.code, &item.message, 1))
         .collect::<Vec<_>>();
+    let mut semantic_checks = 0;
+    let mut semantic_limit_reported = false;
     visit_literals(&report, |role, literal| {
         match parse_style_list(&literal.value) {
             Ok(parsed) => {
                 let expected = format_style_list(&parsed);
-                if expected == literal.value {
-                    return;
+                if semantic_checks < MAX_SEMANTIC_CHECKS_PER_DOCUMENT {
+                    values.extend(semantic_diagnostics(server, source, literal));
+                    semantic_checks += 1;
+                } else if !semantic_limit_reported {
+                    values.push(diagnostic(
+                        source,
+                        literal.range,
+                        "PCL002",
+                        "semantic diagnostic literal limit exceeded",
+                        1,
+                    ));
+                    semantic_limit_reported = true;
                 }
-                let mut value = diagnostic(
-                    source,
-                    literal.range,
-                    "FMT001",
-                    &format!("{role} utility literal should be {expected:?}"),
-                    2,
-                );
-                value["data"] = json!({"replacement":expected});
-                values.push(value);
+                if expected != literal.value {
+                    let mut value = diagnostic(
+                        source,
+                        literal.range,
+                        "FMT001",
+                        &format!("{role} utility literal should be {expected:?}"),
+                        2,
+                    );
+                    value["data"] = json!({"replacement":expected});
+                    values.push(value);
+                }
             }
             Err(error) => values.push(diagnostic(
                 source,
@@ -316,6 +391,116 @@ fn diagnostics(uri: &str, source: &str) -> Vec<Value> {
         }
     });
     values
+}
+
+fn semantic_diagnostics(server: &mut Server, source: &str, literal: &StyleLiteral) -> Vec<Value> {
+    let findings = match server.semantic_findings(&literal.value) {
+        Ok(findings) => findings,
+        Err(error) => {
+            return vec![diagnostic(
+                source,
+                literal.range,
+                "PCL001",
+                &format!("compiler-backed diagnostics unavailable: {error}"),
+                1,
+            )];
+        }
+    };
+    let mut diagnostics = Vec::with_capacity(findings.len());
+    for finding in findings {
+        match semantic_diagnostic(source, literal, finding) {
+            Ok(diagnostic) => diagnostics.push(diagnostic),
+            Err(error) => {
+                return vec![diagnostic(
+                    source,
+                    literal.range,
+                    "PCL001",
+                    &format!("invalid compiler diagnostic: {error}"),
+                    1,
+                )];
+            }
+        }
+    }
+    diagnostics
+}
+
+fn semantic_diagnostic(
+    source: &str,
+    literal: &StyleLiteral,
+    finding: &Value,
+) -> Result<Value, String> {
+    let code = string_field(finding, "code")?;
+    let message = string_field(finding, "message")?;
+    let severity = match string_field(finding, "severity")? {
+        "error" => 1,
+        "warning" => 2,
+        "information" => 3,
+        "hint" => 4,
+        _ => return Err("unsupported severity".into()),
+    };
+    let origin = finding.get("origin").ok_or("missing origin")?;
+    if string_field(origin, "kind")? != "cli"
+        || string_field(origin, "label")? != "explicit-style-1"
+    {
+        return Err("semantic diagnostic has an unexpected origin".into());
+    }
+    let range =
+        if let Some(style_range) = finding.get("styleRange").filter(|value| !value.is_null()) {
+            let start = usize::try_from(
+                style_range
+                    .get("byteStart")
+                    .and_then(Value::as_u64)
+                    .ok_or("missing style range start")?,
+            )
+            .map_err(|_| "style range start is too large")?;
+            let end = usize::try_from(
+                style_range
+                    .get("byteEnd")
+                    .and_then(Value::as_u64)
+                    .ok_or("missing style range end")?,
+            )
+            .map_err(|_| "style range end is too large")?;
+            semantic_source_range(source, literal, start, end)?
+        } else {
+            source_range_to_lsp(source, literal.range)
+        };
+    let mut diagnostic = lsp_diagnostic(&range, code, message, severity);
+    diagnostic["data"] = json!({
+        "category":finding.get("category").cloned().unwrap_or(Value::Null),
+        "suggestion":finding.get("suggestion").cloned().unwrap_or(Value::Null),
+        "replacement":finding.get("replacement").cloned().unwrap_or(Value::Null)
+    });
+    Ok(diagnostic)
+}
+
+fn semantic_source_range(
+    source: &str,
+    literal: &StyleLiteral,
+    start: usize,
+    end: usize,
+) -> Result<Value, String> {
+    if start >= end
+        || end > literal.value.len()
+        || !literal.value.is_char_boundary(start)
+        || !literal.value.is_char_boundary(end)
+    {
+        return Err("semantic diagnostic style range is invalid".into());
+    }
+    let token = source
+        .get(literal.range.byte_range())
+        .ok_or("literal range is outside the source")?;
+    let (content_start, content_end) = literal_content(token).ok_or("unsupported literal token")?;
+    let absolute_start = literal.range.start.byte + content_start;
+    let raw = source
+        .get(absolute_start..literal.range.start.byte + content_end)
+        .ok_or("literal content is outside the source")?;
+    if raw.contains('\\') || raw != literal.value {
+        return Ok(source_range_to_lsp(source, literal.range));
+    }
+    Ok(byte_range_to_lsp(
+        source,
+        absolute_start + start..absolute_start + end,
+    ))
 }
 
 fn completion(server: &mut Server, params: &Value) -> Result<Value, String> {
@@ -562,8 +747,12 @@ fn literal_content(token: &str) -> Option<(usize, usize)> {
 }
 
 fn diagnostic(source: &str, range: SourceRange, code: &str, message: &str, severity: u8) -> Value {
+    lsp_diagnostic(&source_range_to_lsp(source, range), code, message, severity)
+}
+
+fn lsp_diagnostic(range: &Value, code: &str, message: &str, severity: u8) -> Value {
     json!({
-        "range":source_range_to_lsp(source, range),
+        "range":range,
         "severity":severity,"code":code,"source":"pliegocss","message":message
     })
 }
@@ -768,6 +957,39 @@ mod tests {
             InvocationKind::Pcx(_) => unreachable!(),
         };
         assert!(literal_context(escaped, literal, escaped.find("gap").unwrap()).is_none());
+    }
+
+    #[test]
+    fn semantic_ranges_are_exact_and_escaped_literals_fail_to_the_whole_token() {
+        let finding = json!({
+            "code":"PCS001","category":"style","severity":"error",
+            "message":"unknown utility `unknown`","suggestion":null,
+            "origin":{"kind":"cli","label":"explicit-style-1"},
+            "range":null,"styleRange":{"byteStart":5,"byteEnd":12},"replacement":null
+        });
+        let source = "fn x(){let _=pc!(\"flex unknown\");}";
+        let report = scan_source_named("x.rs", source).unwrap();
+        let literal = match &report.invocations[0].kind {
+            InvocationKind::Pc(pc) => &pc.style,
+            InvocationKind::Pcx(_) => unreachable!(),
+        };
+        let exact = semantic_diagnostic(source, literal, &finding).unwrap();
+        assert_eq!(
+            exact["range"],
+            byte_range_to_lsp(
+                source,
+                source.find("unknown").unwrap()..source.find("unknown").unwrap() + 7
+            )
+        );
+
+        let escaped = "fn x(){let _=pc!(\"flex\\tunknown\");}";
+        let report = scan_source_named("x.rs", escaped).unwrap();
+        let literal = match &report.invocations[0].kind {
+            InvocationKind::Pc(pc) => &pc.style,
+            InvocationKind::Pcx(_) => unreachable!(),
+        };
+        let whole = semantic_diagnostic(escaped, literal, &finding).unwrap();
+        assert_eq!(whole["range"], source_range_to_lsp(escaped, literal.range));
     }
 
     #[test]
