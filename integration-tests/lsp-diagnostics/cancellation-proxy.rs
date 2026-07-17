@@ -24,6 +24,13 @@ fn main() {
         thread::sleep(Duration::from_secs(30));
         exit(86);
     }
+    let should_emit_invalid_json = arguments
+        .windows(2)
+        .any(|pair| pair[0] == "--style" && pair[1] == "proxy-invalid-json");
+    if should_emit_invalid_json {
+        eprintln!("not diagnostic JSON");
+        exit(87);
+    }
 
     let compiler = env::var_os("PLIEGOCSS_REAL_COMPILER")
         .expect("PLIEGOCSS_REAL_COMPILER is required");

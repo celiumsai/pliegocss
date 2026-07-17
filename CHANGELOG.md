@@ -39,10 +39,13 @@ pre-1.0 compatibility policy.
   Neovim 0.12.4 Windows and Linux hosts verify Project Index definition plus exact `PCS001` and
   cross-clause `PCX003` diagnostics; downloaded editor archives are hash-verified gate fixtures,
   not client behavior.
-- LSP diagnostic corpus schema 1 with seven frozen parser, semantic, scanner, and formatting cases.
-  Windows and Debian require exact code/message/range equality with CLI diagnostic schema 1 or the
-  shared formatter. Parser failures now project their precise `Diagnostic.span` into UTF-16 when
-  source mapping is exact instead of selecting the complete Rust literal token.
+- LSP diagnostic corpus schema 2 with twenty frozen parser, semantic, scanner, Rust-parse, and
+  formatting cases covering PCS001–PCS012, PSC001–PSC006, PCR001, and FMT001. The same process gate
+  covers cross-clause PCX003 and fault-injected PCL001/PCL002. Windows and Debian require exact
+  code/message/range/severity/suggestion/replacement equality with CLI diagnostic schema 1. Parser
+  failures now project precise, including zero-width, spans into UTF-16 when source mapping is exact.
+  Rust parse failures are typed as PCR001 in both CLI and LSP, and scanner codes survive context
+  prepended by `syn`.
 - Bounded typed migration discovery through `discover_migration_project`. The library walks one
   project-relative root in canonical order, ignores only `.git`/`node_modules`/`target`, rejects
   link-like or non-regular paths, caps traversal at 32 levels, 65,536 entries, and 256 MiB of

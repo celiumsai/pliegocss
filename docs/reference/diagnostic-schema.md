@@ -60,7 +60,7 @@ or meaning of a required field requires a schema-version bump.
 
 | Field | Contract |
 |---|---|
-| `code` | Stable PCS001-PCS012, PSC001-PSC006, PCX003, FMT001, PCL001, or PCL002 identifier. |
+| `code` | Stable PCS001-PCS012, PSC001-PSC006, PCR001, PCX003, FMT001, PCL001, or PCL002 identifier. |
 | `category` | `style`, `source`, `composition`, `format`, `invocation`, or `tool`. |
 | `severity` | `error` in schema 1. |
 | `message` | Human-readable explanation without a duplicated code or usage block. |
@@ -109,6 +109,9 @@ The value is canonical decoded literal content, not a ready-to-splice Rust token
 engine must preserve the literal's raw/escaped representation or re-encode it collision-safely.
 
 ## Fallback codes
+
+- `PCR001` means that a Rust source unit could not be parsed. It retains the parser message and the
+  most specific source range available from `syn`; it is not an untyped tool failure.
 
 - `PCL001` means invalid CLI invocation, including an unknown option or unsupported JSON watch mode.
 - `PCL002` means an I/O, configuration, emission, publication, or other tool failure that does not

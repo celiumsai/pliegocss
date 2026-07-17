@@ -3151,6 +3151,30 @@ fn scanner_diagnostic_is_fatal_with_file_and_range() {
 }
 
 #[test]
+fn rust_parse_failure_is_typed_with_file_and_range() {
+    let directory = temp_dir("rust-parse-error");
+    let source = directory.join("bad.rs");
+    fs::write(&source, "fn {").expect("write invalid Rust source");
+    let error = candidates_from_rust(&ThemeRegistry::seed(), &source).expect_err("must reject");
+    assert_eq!(error.diagnostics.len(), 1);
+    let diagnostic = &error.diagnostics[0];
+    assert_eq!(diagnostic.code, "PCR001");
+    assert_eq!(diagnostic.category, "source");
+    assert_eq!(diagnostic.severity, "error");
+    assert_eq!(
+        diagnostic
+            .origin
+            .as_ref()
+            .map(|origin| origin.label.as_str()),
+        Some("source-scan")
+    );
+    let range = diagnostic.range.as_ref().expect("source range");
+    assert_eq!(range.file, source.display().to_string());
+    assert_eq!(range.start_line, Some(1));
+    fs::remove_dir_all(directory).expect("remove temporary directory");
+}
+
+#[test]
 fn scanner_json_preserves_multiple_diagnostics_in_source_order() {
     let report = scan_source_named(
         "bad.rs",
@@ -4179,8 +4203,11 @@ fn portable_publication_key_preserves_the_physical_lock_parent() {
     let destinations =
         publication_destinations([destination.as_path()]).expect("publication destinations");
     let (key, physical) = destinations.iter().next().expect("one destination");
-    assert!(key.ends_with("casesensitiveparent/app.css"));
-    assert!(physical.ends_with("CaseSensitiveParent/App.CSS"));
+    assert!(
+        key.replace('\\', "/")
+            .ends_with("casesensitiveparent/app.css")
+    );
+    assert!(physical.ends_with(Path::new("CaseSensitiveParent").join("App.CSS")));
 
     let locks = acquire_publication_locks(&destinations).expect("physical publication lock");
     assert!(parent.join(".App.CSS.pliego.lock").is_file());

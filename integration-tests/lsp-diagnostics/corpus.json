@@ -1,6 +1,6 @@
 {
   "kind": "pliegocss-lsp-diagnostic-corpus",
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "cases": [
     {
       "id": "unknown-utility",
@@ -17,6 +17,15 @@
       "style": "flex:",
       "code": "PCS002",
       "message": "variant chain must end with a utility",
+      "styleStart": 4,
+      "styleEnd": 5
+    },
+    {
+      "id": "unknown-token",
+      "kind": "style",
+      "style": "gap-7",
+      "code": "PCS003",
+      "message": "unknown Spacing token `7`",
       "styleStart": 4,
       "styleEnd": 5
     },
@@ -39,6 +48,60 @@
       "styleEnd": 7
     },
     {
+      "id": "noncanonical-negative",
+      "kind": "style",
+      "style": "mt-[-1rem]",
+      "code": "PCS006",
+      "message": "put the negative marker before the utility, not inside its arbitrary value",
+      "styleStart": 3,
+      "styleEnd": 10
+    },
+    {
+      "id": "unbalanced-delimiter",
+      "kind": "style",
+      "style": "w-[calc(100%",
+      "code": "PCS007",
+      "message": "unclosed `(`",
+      "styleStart": 7,
+      "styleEnd": 8
+    },
+    {
+      "id": "empty-arbitrary-value",
+      "kind": "style",
+      "style": "bg-[]",
+      "code": "PCS008",
+      "message": "arbitrary value cannot be empty",
+      "styleStart": 4,
+      "styleEnd": 4
+    },
+    {
+      "id": "duplicate-important",
+      "kind": "style",
+      "style": "flex!!",
+      "code": "PCS009",
+      "message": "`!` is only valid as one trailing important marker",
+      "styleStart": 4,
+      "styleEnd": 5
+    },
+    {
+      "id": "ambiguous-namespace",
+      "kind": "style",
+      "style": "text-(--value)",
+      "code": "PCS010",
+      "message": "`text-(--value)` is ambiguous between font size and color",
+      "styleStart": 5,
+      "styleEnd": 14
+    },
+    {
+      "id": "invalid-arbitrary-property",
+      "kind": "style",
+      "style": "[color:red;background:blue]",
+      "code": "PCS011",
+      "message": "arbitrary properties contain exactly one declaration and no block",
+      "styleStart": 0,
+      "styleEnd": 27
+    },
+    {
       "id": "duplicate-variant",
       "kind": "style",
       "style": "hover:hover:block",
@@ -46,6 +109,24 @@
       "message": "variant is duplicated",
       "styleStart": 6,
       "styleEnd": 11
+    },
+    {
+      "id": "invalid-rust-source",
+      "kind": "source",
+      "source": "fn {",
+      "code": "PCR001",
+      "message": "cannot parse string into token stream",
+      "sourceStart": 3,
+      "sourceEnd": 3
+    },
+    {
+      "id": "dynamic-pc-literal",
+      "kind": "source",
+      "source": "fn view(dynamic: &str){let _=pc!(dynamic);}",
+      "code": "PSC001",
+      "message": "`pc!` requires one Rust string literal",
+      "sourceStart": 33,
+      "sourceEnd": 40
     },
     {
       "id": "malformed-pcx-base",
@@ -57,11 +138,47 @@
       "sourceEnd": 28
     },
     {
+      "id": "missing-pcx-clause",
+      "kind": "source",
+      "source": "fn view(){let _=pcx!(\"flex\",);}",
+      "code": "PSC003",
+      "message": "`pcx!` requires at least one conditional clause",
+      "sourceStart": 0,
+      "sourceEnd": 0
+    },
+    {
+      "id": "missing-pcx-else",
+      "kind": "source",
+      "source": "fn view(a: bool){let _=pcx!(\"flex\",if a{\"block\"});}",
+      "code": "PSC004",
+      "message": "`pcx!` requires an `else` block with one visible string literal",
+      "sourceStart": 39,
+      "sourceEnd": 48
+    },
+    {
+      "id": "empty-pcx-match",
+      "kind": "source",
+      "source": "fn view(x: bool){let _=pcx!(\"flex\",match x{});}",
+      "code": "PSC005",
+      "message": "`pcx!` match requires at least one arm",
+      "sourceStart": 41,
+      "sourceEnd": 42
+    },
+    {
+      "id": "pcx-combination-limit",
+      "kind": "source",
+      "source": "fn view(a: bool){let _=pcx!(\"flex\",if a{\"block\"}else{\"hidden\"},if a{\"block\"}else{\"hidden\"},if a{\"block\"}else{\"hidden\"},if a{\"block\"}else{\"hidden\"},if a{\"block\"}else{\"hidden\"},if a{\"block\"}else{\"hidden\"},if a{\"block\"}else{\"hidden\"});}",
+      "code": "PSC006",
+      "message": "`pcx!` expands to more than 64 style combinations",
+      "sourceStart": 28,
+      "sourceEnd": 34
+    },
+    {
       "id": "format-drift",
       "kind": "format",
       "source": "fn view(){let _=pc!(\" flex   gap-4 \");}",
       "code": "FMT001",
-      "message": "pc utility literal should be \"flex gap-4\"",
+      "message": "pc utility literal is not canonically formatted",
       "sourceStart": 20,
       "sourceEnd": 36
     }

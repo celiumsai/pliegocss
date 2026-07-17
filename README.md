@@ -123,8 +123,9 @@ The workspace is unreleased at `0.0.0`; syntax and crate boundaries may still ch
   VS Code client packages that transport without embedded binaries. A pinned VS Code 1.105.1
   extension-host gate now exercises `PCS001`, cross-clause `PCX003`, and Project Index definition
   end to end. A 3,466-byte Neovim built-in-LSP client passes the same surface in official Neovim
-  0.12.4 Windows and Debian hosts. Diagnostic corpus schema 1 freezes seven representative
-  code/message/range equality cases; complete semantic diagnostic parity remains open.
+  0.12.4 Windows and Debian hosts. Diagnostic corpus schema 2 covers all twelve PCS codes, all six
+  PSC codes, `PCR001`, `FMT001`, and separate `PCX003`, requiring exact code, message, range,
+  severity, suggestion, and typed replacement equality. Fault injection covers `PCL001`/`PCL002`.
 - `pliego-css-config` implements the versioned DTCG 2025.10 format bridge, a bounded same-document
   Resolver profile, and the canonical token graph with aliases, derived values, deprecations,
   provenance, cycle rejection, and validated theme permutations. Direct CLI `--tokens` selection

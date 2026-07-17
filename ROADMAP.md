@@ -278,12 +278,14 @@ ETA: 3–5 días
 - [x] Delegar conflictos cross-clause `pcx!` a `check --source`, remapear `PCX003` al branch literal
   original y ejercerlo en el proceso LSP y VS Code 1.105.1 reales.
 - [x] Añadir cliente Neovim built-in LSP sin binarios embebidos y gate real 0.12.4 en Windows/Debian.
-- [x] Congelar corpus diagnóstico schema 1 de siete casos y comparar código/mensaje/rango exactos
-  entre CLI, formatter y LSP en Windows/Debian.
+- [x] Congelar corpus diagnóstico schema 2 de veinte casos y comparar código, mensaje, rango,
+  severidad, sugerencia y replacement exactos entre CLI y LSP para PCS001–PCS012, PSC001–PSC006,
+  PCR001 y FMT001; PCX003 y fallbacks PCL001/PCL002 tienen gates en la misma sesión.
 - [x] Cancelar y recolectar el child directo del compilador cuando una nueva versión por URI vuelve
   obsoleto su snapshot; un proxy real de 30 segundos prueba terminación y recuperación en Windows y
   Debian.
-- [ ] Completar paridad diagnóstica CLI/LSP para todos los códigos, severidades, sugerencias y fixes.
+- [x] Completar paridad diagnóstica CLI/LSP para todas las familias tipadas de authoring actuales,
+  incluyendo fallbacks operacionales mediante fault injection.
 - [x] Mejorar diagnósticos usando los cinco fixtures reales.
 - [x] Crear documentación de CLI, configuración, troubleshooting y setup inicial VS Code/Neovim.
 - [x] Ejecutar doctests y ejemplos del workspace desde el workflow de CI.

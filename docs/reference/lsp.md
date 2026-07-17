@@ -99,10 +99,10 @@ Cancellation is scoped to the direct `pliego-cssc` child for one URI/version; Pl
 claim arbitrary descendant process-tree termination for a replacement compiler executable.
 Compiler-backed `PCX003`
 parity now covers semantic overlaps and exact duplicates across independently selectable clauses.
-The versioned seven-case negative corpus freezes code, message, and exact range equality for
-representative parser, compiler, scanner, formatting, and composition failures. Broader code,
-severity, suggestion, replacement, and configuration coverage remains necessary before claiming
-complete CLI/editor diagnostic equality.
+The versioned twenty-case negative corpus freezes exact code, message, range, severity, suggestion,
+and typed replacement equality for PCS001–PCS012, PSC001–PSC006, PCR001, and FMT001. The same
+session compares PCX003 and fault-injects PCL001/PCL002, closing the current CLI/editor diagnostic
+families. New diagnostic codes must add coverage before that claim can remain true.
 
 ## Current non-goals
 
@@ -129,9 +129,10 @@ survive the version check. The gate then starts a 30-second blocking compiler pr
 document version, proves the stale PID exits, and requires a fresh compiler result within five
 seconds. A subsequent version 13 contains an exact semantic duplicate across two
 independent `pcx!` clauses; the gate requires one compiler `PCX003` mapped to the complete literal
-token in the second clause. Finally, diagnostic corpus schema 1 applies seven additional buffer
-versions and compares each frozen code, message, and byte/UTF-16 range against the CLI or shared
-formatter contract. See [the corpus contract](./lsp-diagnostic-corpus.md).
+token in the second clause. Finally, diagnostic corpus schema 2 applies twenty additional buffer
+versions and compares every typed field against the CLI contract, then injects invalid compiler JSON
+and the 256-literal bound to verify PCL001/PCL002. See
+[the corpus contract](./lsp-diagnostic-corpus.md).
 
 ## VS Code client candidate
 

@@ -43,10 +43,22 @@ if (proxyBuild.status !== 0) fail(`${proxyBuild.stdout}${proxyBuild.stderr}`.tri
 if (!existsSync(cancellationProxy)) fail("LSP cancellation proxy is missing");
 if (
   diagnosticCorpus.kind !== "pliegocss-lsp-diagnostic-corpus" ||
-  diagnosticCorpus.schemaVersion !== 1 ||
+  diagnosticCorpus.schemaVersion !== 2 ||
   !Array.isArray(diagnosticCorpus.cases)
 ) {
   fail("unsupported LSP diagnostic corpus schema");
+}
+const expectedCorpusCodes = [
+  ...Array.from({ length: 12 }, (_, index) => `PCS${String(index + 1).padStart(3, "0")}`),
+  ...Array.from({ length: 6 }, (_, index) => `PSC${String(index + 1).padStart(3, "0")}`),
+  "PCR001",
+  "FMT001",
+];
+const corpusIds = diagnosticCorpus.cases.map((item) => item.id);
+const corpusCodes = [...new Set(diagnosticCorpus.cases.map((item) => item.code))].sort();
+if (new Set(corpusIds).size !== corpusIds.length) fail("diagnostic corpus ids must be unique");
+if (JSON.stringify(corpusCodes) !== JSON.stringify([...expectedCorpusCodes].sort())) {
+  fail(`diagnostic corpus code coverage drifted: ${corpusCodes.join(", ")}`);
 }
 
 const workspace = resolve(target, "lsp-integration-workspace");
@@ -159,20 +171,27 @@ writeFileSync(resolve(workspace, "out", "app.manifest.json"), manifest);
 writeFileSync(resolve(workspace, "out", "pliego.index.json"), JSON.stringify(index));
 writeFileSync(resolve(workspace, "out", "pliego.assets.json"), "x");
 
+const cliCorpusFindings = new Map();
 for (const item of diagnosticCorpus.cases) {
   if (!/^[a-z0-9-]+$/.test(item.id) || !["style", "source", "format"].includes(item.kind)) {
     fail("diagnostic corpus contains an invalid id or kind");
   }
-  if (item.kind === "format") continue;
-  const argumentsList = ["--diagnostic-format", "json", "check"];
+  const argumentsList = ["--diagnostic-format", "json"];
   if (item.kind === "style") {
+    argumentsList.push("check");
     argumentsList.push("--style", item.style);
-  } else {
+  } else if (item.kind === "source") {
+    argumentsList.push("check");
     const sourcePath = resolve(workspace, `${item.id}.rs`);
     writeFileSync(sourcePath, item.source);
     argumentsList.push("--source", sourcePath);
+  } else {
+    argumentsList.push("fmt");
+    const sourcePath = resolve(workspace, `${item.id}.rs`);
+    writeFileSync(sourcePath, item.source);
+    argumentsList.push("--source", sourcePath, "--check");
   }
-  argumentsList.push("--seed");
+  if (item.kind !== "format") argumentsList.push("--seed");
   const checked = spawnSync(compiler, argumentsList, {
     cwd: workspace,
     encoding: "utf8",
@@ -186,6 +205,7 @@ for (const item of diagnosticCorpus.cases) {
     fail(`CLI diagnostic corpus case ${item.id} returned an unsupported envelope`);
   }
   const finding = document.diagnostics[0];
+  cliCorpusFindings.set(item.id, finding);
   if (finding.code !== item.code || finding.message !== item.message) {
     fail(`CLI diagnostic corpus case ${item.id} drifted`);
   }
@@ -349,6 +369,18 @@ if (processIsAlive(cancelledPid)) fail("stale semantic compiler child remained a
 const pcxVersion = 13;
 const pcxText =
   'fn view(){let _=pcx!("flex",if a{"opacity-50"}else{"block"},if b{"opacity-50"}else{"grid"});}';
+const pcxSourcePath = resolve(workspace, "pcx-parity.rs");
+writeFileSync(pcxSourcePath, pcxText);
+const pcxChecked = spawnSync(
+  compiler,
+  ["--diagnostic-format", "json", "check", "--source", pcxSourcePath, "--seed"],
+  { cwd: workspace, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
+);
+if (pcxChecked.error || pcxChecked.status === 0) {
+  fail("CLI PCX003 parity fixture did not fail as required");
+}
+const pcxCliFinding = JSON.parse(pcxChecked.stderr).diagnostics?.[0];
+if (pcxCliFinding?.code !== "PCX003") fail("CLI PCX003 parity fixture drifted");
 send({
   jsonrpc: "2.0",
   method: "textDocument/didChange",
@@ -376,6 +408,30 @@ for (const item of diagnosticCorpus.cases) {
   corpusRuns.push({ item, sourceText, version: corpusVersion });
   corpusVersion += 1;
 }
+const toolFailureVersion = corpusVersion;
+const toolFailureOffset = Buffer.concat(output).length;
+send({
+  jsonrpc: "2.0",
+  method: "textDocument/didChange",
+  params: {
+    textDocument: { uri, version: toolFailureVersion },
+    contentChanges: [{ text: 'fn view(){let _=pc!("proxy-invalid-json");}' }],
+  },
+});
+await waitForOutput('"code":"PCL001"', toolFailureOffset);
+
+const literalLimitVersion = toolFailureVersion + 1;
+const literalLimitText = `fn view(){${'let _=pc!("flex");'.repeat(257)}}`;
+const literalLimitOffset = Buffer.concat(output).length;
+send({
+  jsonrpc: "2.0",
+  method: "textDocument/didChange",
+  params: {
+    textDocument: { uri, version: literalLimitVersion },
+    contentChanges: [{ text: literalLimitText }],
+  },
+});
+await waitForOutput('"code":"PCL002"', literalLimitOffset);
 send({ jsonrpc: "2.0", id: 7, method: "shutdown", params: null });
 send({ jsonrpc: "2.0", method: "exit", params: null });
 child.stdin.end();
@@ -461,6 +517,17 @@ const pcxDiagnostic = pcxMessages[0].params.diagnostics.find(
 if (!pcxDiagnostic?.message?.includes("independent clauses 1 and 2")) {
   fail("pcx diagnostic did not preserve the compiler message");
 }
+if (pcxDiagnostic.message !== pcxCliFinding.message || pcxDiagnostic.severity !== 1) {
+  fail("pcx diagnostic message or severity diverged from CLI schema 1");
+}
+for (const field of ["category", "suggestion", "replacement"]) {
+  if (
+    JSON.stringify(pcxDiagnostic.data?.[field] ?? null) !==
+    JSON.stringify(pcxCliFinding[field] ?? null)
+  ) {
+    fail(`pcx diagnostic ${field} diverged from CLI schema 1`);
+  }
+}
 if (
   pcxDiagnostic.range?.start?.character !== pcxText.lastIndexOf('"opacity-50"') ||
   pcxDiagnostic.range?.end?.character !==
@@ -497,8 +564,18 @@ for (const run of corpusRuns) {
     fail(`LSP diagnostic corpus case ${run.item.id} emitted ${codes.join(", ")}`);
   }
   const finding = diagnostics.find((diagnostic) => diagnostic.code === run.item.code);
+  const cliFinding = cliCorpusFindings.get(run.item.id);
   if (finding?.message !== run.item.message) {
     fail(`LSP diagnostic corpus message ${run.item.id} drifted`);
+  }
+  const severity = { error: 1, warning: 2, information: 3, hint: 4 }[cliFinding.severity];
+  if (finding.severity !== severity) {
+    fail(`LSP diagnostic corpus severity ${run.item.id} drifted`);
+  }
+  for (const field of ["category", "suggestion", "replacement"]) {
+    if (JSON.stringify(finding.data?.[field] ?? null) !== JSON.stringify(cliFinding[field] ?? null)) {
+      fail(`LSP diagnostic corpus ${field} ${run.item.id} drifted`);
+    }
   }
   const relativeStart =
     run.item.kind === "style" ? run.item.styleStart : run.item.sourceStart;
@@ -513,6 +590,28 @@ for (const run of corpusRuns) {
   ) {
     fail(`LSP diagnostic corpus range ${run.item.id} drifted`);
   }
+}
+const toolFailureDiagnostics = published
+  .filter((message) => message.params?.version === toolFailureVersion)
+  .flatMap((message) => message.params?.diagnostics ?? []);
+const toolFailure = toolFailureDiagnostics.find((diagnostic) => diagnostic.code === "PCL001");
+if (
+  toolFailure?.severity !== 1 ||
+  toolFailure?.data?.category !== "tool" ||
+  !toolFailure.message.includes("invalid pliego-cssc diagnostic JSON")
+) {
+  fail("PCL001 fault-injection contract drifted");
+}
+const literalLimitDiagnostics = published
+  .filter((message) => message.params?.version === literalLimitVersion)
+  .flatMap((message) => message.params?.diagnostics ?? []);
+const literalLimit = literalLimitDiagnostics.find((diagnostic) => diagnostic.code === "PCL002");
+if (
+  literalLimit?.severity !== 1 ||
+  literalLimit?.data?.category !== "tool" ||
+  literalLimit.message !== "semantic diagnostic literal limit exceeded"
+) {
+  fail("PCL002 bounded-limit contract drifted");
 }
 if (byId.get(2)?.result?.[0]?.newText !== '"flex gap-4"') {
   fail("formatting did not return the canonical whole literal");
@@ -566,7 +665,9 @@ process.stdout.write(
     pcxRange: pcxDiagnostic.range,
     diagnosticCorpusSchema: diagnosticCorpus.schemaVersion,
     diagnosticCorpusCases: corpusRuns.length,
-    diagnosticCorpusEquality: "code-message-range",
+    diagnosticCorpusEquality: "code-message-range-severity-suggestion-replacement",
+    typedDiagnosticCodes: [...expectedCorpusCodes, "PCX003"],
+    operationalFallbacks: [toolFailure.code, literalLimit.code],
     formattingEdits: byId.get(2).result.length,
     completion: item.label,
     completionRange: item.textEdit.range,

@@ -759,13 +759,19 @@ fn local_diagnostics(uri: &str, source: &str) -> Vec<Value> {
     let report = match scan_source_named(uri, source) {
         Ok(report) => report,
         Err(error) => {
-            return vec![diagnostic(source, error.range, "PCR001", &error.message, 1)];
+            let mut value = diagnostic(source, error.range, "PCR001", &error.message, 1);
+            value["data"] = diagnostic_data("source", &Value::Null, &Value::Null);
+            return vec![value];
         }
     };
     let mut values = report
         .diagnostics
         .iter()
-        .map(|item| diagnostic(source, item.range, item.code, &item.message, 1))
+        .map(|item| {
+            let mut value = diagnostic(source, item.range, item.code, &item.message, 1);
+            value["data"] = diagnostic_data("source", &Value::Null, &Value::Null);
+            value
+        })
         .collect::<Vec<_>>();
     visit_literals(&report, |role, literal| {
         match parse_style_list(&literal.value) {
@@ -776,10 +782,14 @@ fn local_diagnostics(uri: &str, source: &str) -> Vec<Value> {
                         source,
                         literal.range,
                         "FMT001",
-                        &format!("{role} utility literal should be {expected:?}"),
-                        2,
+                        &format!("{role} utility literal is not canonically formatted"),
+                        1,
                     );
-                    value["data"] = json!({"replacement":expected});
+                    value["data"] = diagnostic_data(
+                        "format",
+                        &json!(format!("expected {expected:?}, found {:?}", literal.value)),
+                        &json!({"kind":"decoded-style-value","value":expected}),
+                    );
                     values.push(value);
                 }
             }
@@ -788,7 +798,7 @@ fn local_diagnostics(uri: &str, source: &str) -> Vec<Value> {
                     semantic_source_range(source, literal, error.span.start, error.span.end)
                         .unwrap_or_else(|_| source_range_to_lsp(source, literal.range));
                 let mut value = lsp_diagnostic(&range, error.code.as_str(), &error.message, 1);
-                value["data"] = json!({"suggestion":error.suggestion});
+                value["data"] = diagnostic_data("style", &json!(error.suggestion), &Value::Null);
                 values.push(value);
             }
         }
@@ -822,13 +832,15 @@ fn semantic_document_diagnostics(
             values.extend(diagnostics);
             semantic_checks += 1;
         } else if !semantic_limit_reported {
-            values.push(diagnostic(
+            let mut value = diagnostic(
                 &job.text,
                 literal.range,
                 "PCL002",
                 "semantic diagnostic literal limit exceeded",
                 1,
-            ));
+            );
+            value["data"] = diagnostic_data("tool", &Value::Null, &Value::Null);
+            values.push(value);
             semantic_limit_reported = true;
         }
     });
@@ -917,26 +929,30 @@ fn pcx_document_diagnostics(
         Ok(Some(synthetic)) => synthetic,
         Ok(None) => return Some(Vec::new()),
         Err(error) => {
-            return Some(vec![diagnostic(
+            let mut value = diagnostic(
                 &job.text,
                 report.invocations[0].range,
                 "PCL001",
                 &format!("compiler-backed pcx diagnostics unavailable: {error}"),
                 1,
-            )]);
+            );
+            value["data"] = diagnostic_data("tool", &Value::Null, &Value::Null);
+            return Some(vec![value]);
         }
     };
     let findings = match engine.pcx_findings(&job.root, &synthetic.source, cancellation, job) {
         Ok(Some(findings)) => findings,
         Ok(None) => return None,
         Err(error) => {
-            return Some(vec![diagnostic(
+            let mut value = diagnostic(
                 &job.text,
                 synthetic.fallback,
                 "PCL001",
                 &format!("compiler-backed pcx diagnostics unavailable: {error}"),
                 1,
-            )]);
+            );
+            value["data"] = diagnostic_data("tool", &Value::Null, &Value::Null);
+            return Some(vec![value]);
         }
     };
     let mut diagnostics = Vec::new();
@@ -947,13 +963,15 @@ fn pcx_document_diagnostics(
         match pcx_diagnostic(&job.text, &synthetic, finding) {
             Ok(value) => diagnostics.push(value),
             Err(error) => {
-                return Some(vec![diagnostic(
+                let mut value = diagnostic(
                     &job.text,
                     synthetic.fallback,
                     "PCL001",
                     &format!("invalid compiler pcx diagnostic: {error}"),
                     1,
-                )]);
+                );
+                value["data"] = diagnostic_data("tool", &Value::Null, &Value::Null);
+                return Some(vec![value]);
             }
         }
     }
@@ -1023,13 +1041,15 @@ fn semantic_diagnostics(
         Ok(Some(findings)) => findings,
         Ok(None) => return None,
         Err(error) => {
-            return Some(vec![diagnostic(
+            let mut value = diagnostic(
                 source,
                 literal.range,
                 "PCL001",
                 &format!("compiler-backed diagnostics unavailable: {error}"),
                 1,
-            )]);
+            );
+            value["data"] = diagnostic_data("tool", &Value::Null, &Value::Null);
+            return Some(vec![value]);
         }
     };
     let mut diagnostics = Vec::with_capacity(findings.len());
@@ -1037,13 +1057,15 @@ fn semantic_diagnostics(
         match semantic_diagnostic(source, literal, finding) {
             Ok(diagnostic) => diagnostics.push(diagnostic),
             Err(error) => {
-                return Some(vec![diagnostic(
+                let mut value = diagnostic(
                     source,
                     literal.range,
                     "PCL001",
                     &format!("invalid compiler diagnostic: {error}"),
                     1,
-                )]);
+                );
+                value["data"] = diagnostic_data("tool", &Value::Null, &Value::Null);
+                return Some(vec![value]);
             }
         }
     }
@@ -1105,7 +1127,7 @@ fn semantic_source_range(
     start: usize,
     end: usize,
 ) -> Result<Value, String> {
-    if start >= end
+    if start > end
         || end > literal.value.len()
         || !literal.value.is_char_boundary(start)
         || !literal.value.is_char_boundary(end)
@@ -1383,6 +1405,14 @@ fn lsp_diagnostic(range: &Value, code: &str, message: &str, severity: u8) -> Val
     })
 }
 
+fn diagnostic_data(category: &str, suggestion: &Value, replacement: &Value) -> Value {
+    json!({
+        "category":category,
+        "suggestion":suggestion,
+        "replacement":replacement
+    })
+}
+
 fn source_range_to_lsp(source: &str, range: SourceRange) -> Value {
     byte_range_to_lsp(source, range.byte_range())
 }
@@ -1616,6 +1646,16 @@ mod tests {
         };
         let whole = semantic_diagnostic(escaped, literal, &finding).unwrap();
         assert_eq!(whole["range"], source_range_to_lsp(escaped, literal.range));
+
+        let empty = "fn x(){let _=pc!(\"bg-[]\");}";
+        let report = scan_source_named("x.rs", empty).unwrap();
+        let literal = match &report.invocations[0].kind {
+            InvocationKind::Pc(pc) => &pc.style,
+            InvocationKind::Pcx(_) => unreachable!(),
+        };
+        let zero_width = semantic_source_range(empty, literal, 4, 4).unwrap();
+        let insertion = empty.find(']').unwrap();
+        assert_eq!(zero_width, byte_range_to_lsp(empty, insertion..insertion));
     }
 
     #[test]

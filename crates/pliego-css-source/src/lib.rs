@@ -725,7 +725,7 @@ fn qualified_path_start(tokens: &[TokenTree], mut index: usize) -> usize {
 fn diagnostic_code(name: &str, message: &str) -> &'static str {
     ["PSC001", "PSC002", "PSC003", "PSC004", "PSC005", "PSC006"]
         .into_iter()
-        .find(|code| message.starts_with(code))
+        .find(|code| message.contains(&format!("{code}: ")))
         .unwrap_or(match name {
             "pc" => "PSC001",
             "pcx" => "PSC002",
@@ -738,7 +738,11 @@ fn diagnostic_message(message: String) -> String {
         "PSC001: ", "PSC002: ", "PSC003: ", "PSC004: ", "PSC005: ", "PSC006: ",
     ]
     .into_iter()
-    .find_map(|prefix| message.strip_prefix(prefix).map(str::to_owned))
+    .find_map(|prefix| {
+        message
+            .find(prefix)
+            .map(|start| message[start + prefix.len()..].to_owned())
+    })
     .unwrap_or(message)
 }
 
@@ -983,6 +987,18 @@ mod tests {
             report.diagnostics[1]
                 .message
                 .contains("visible Rust string literals")
+        );
+    }
+
+    #[test]
+    fn embedded_scanner_code_survives_syn_context() {
+        let report = scan_source_named("src/lib.rs", "fn view(){let _=pcx!(\"flex\",);}")
+            .expect("valid Rust source");
+        assert_eq!(report.diagnostics.len(), 1);
+        assert_eq!(report.diagnostics[0].code, "PSC003");
+        assert_eq!(
+            report.diagnostics[0].message,
+            "`pcx!` requires at least one conditional clause"
         );
     }
 
