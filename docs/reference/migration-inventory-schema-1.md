@@ -1,7 +1,7 @@
 # Migration inventory schema 1
 
-Status: **Rust producer implemented for bounded single-file Sass, Tailwind CSS v4 entry CSS, and
-CSS Modules inventory; project graphs and CLI integration remain open**
+Status: **Rust producer and fail-closed CLI implemented for bounded single-file Sass, Tailwind CSS
+v4 entry CSS, and CSS Modules inventory; project graphs remain open**
 
 `pliego-css-source` exposes a read-only migration bridge that accepts an explicit source kind,
 portable logical path, and exact UTF-8 source bytes. It never runs Sass, Tailwind, PostCSS,
@@ -51,6 +51,18 @@ The output is canonical two-space JSON with one trailing LF:
 
 The byte count in this illustrative document is not a compatibility vector; real output always
 derives it and the SHA-256 from the exact caller-provided bytes.
+
+## CLI
+
+```console
+pliego-cssc migration-inventory sass src/legacy.scss
+pliego-cssc migration-inventory tailwind src/app.css > app.inventory.json
+pliego-cssc migration-inventory css-modules src/card.module.css
+```
+
+The CLI accepts one explicit source, never performs discovery, and writes the canonical document to
+stdout. It has no output-file mutation surface. Inputs must be portable project-relative paths, and
+symlink/reparse-point inputs are rejected.
 
 ## Dispositions
 
@@ -107,7 +119,7 @@ class mappings.
 - the exact source byte count and SHA-256 are always recorded.
 
 This is lexical inventory, not a full language parser, import graph, migration plan, codemod, or
-compatibility proof. R0.8 remains partial until a documented CLI/project-input surface inventories
+compatibility proof. R0.8 remains partial until the project-input surface inventories
 utilities and arbitrary values from templates, config/plugin graphs, Sass modules/imports, CSS
 Modules composition/JS consumers, and classified unsupported/dynamic constructs across the complete
 declared project snapshot.

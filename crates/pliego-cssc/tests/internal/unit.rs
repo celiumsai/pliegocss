@@ -1754,6 +1754,27 @@ fn parses_check_inspect_and_target_contracts() {
 }
 
 #[test]
+fn migration_inventory_requires_one_kind_and_input() {
+    let Command::Inventory(kind, input) =
+        parse_arguments(os(&["migration-inventory", "tailwind", "src/app.css"]))
+            .expect("migration inventory arguments")
+    else {
+        panic!("migration inventory command")
+    };
+    assert_eq!(kind, MigrationSourceKind::Tailwind);
+    assert_eq!(input, PathBuf::from("src/app.css"));
+
+    for invalid in [
+        vec!["migration-inventory", "src/app.css"],
+        vec!["migration-inventory", "tailwind"],
+        vec!["migration-inventory", "less", "src/app.css"],
+        vec!["migration-inventory", "tailwind", "src/app.css", "app.json"],
+    ] {
+        assert!(parse_arguments(os(&invalid)).is_err(), "{invalid:?}");
+    }
+}
+
+#[test]
 fn format_defaults_to_minified_and_is_accepted_by_every_command() {
     let Command::Compile(defaults) =
         parse_arguments(os(&["compile", "--style", "flex"])).expect("compile defaults")
@@ -1774,6 +1795,7 @@ fn format_defaults_to_minified_and_is_accepted_by_every_command() {
             | Command::Bundle(_)
             | Command::Catalog(_)
             | Command::Compatibility(_)
+            | Command::Inventory(_, _)
             | Command::Explain(_)
             | Command::ExplainCascade(_)
             | Command::Plan(_)

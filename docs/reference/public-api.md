@@ -234,16 +234,18 @@ assert_eq!(inventory.source_sha256().len(), 64);
 ```
 
 The exact-version bridge consists of `MIGRATION_INVENTORY_SCHEMA_VERSION`,
-`inventory_migration_source`, `MigrationSourceKind`, `MigrationDisposition`,
+`inventory_migration_source`, `inventory_migration_file`, `MigrationSourceKind`, `MigrationDisposition`,
 `MigrationPreflightReliance`, the immutable `MigrationInventory`/`MigrationConstruct` getters, and
 `MigrationInventoryError`. It emits canonical schema-1 JSON and records dynamic/unsupported syntax;
-it does not execute Sass/Tailwind/plugins/configs, traverse a project graph, or promise a codemod.
+`inventory_migration_file` additionally enforces a bounded regular project-relative file and rejects
+symlink/reparse-point components before reading. The bridge does not execute
+Sass/Tailwind/plugins/configs, traverse a project graph, or promise a codemod.
 This tooling bridge is not part of the minimal application/build-script SemVer surface.
 
 ## CLI and document surface
 
 The candidate process API includes the one-shot `compile`/`build`, `check`, `inspect`, `bundle`,
-`catalog`, `explain`, `explain-cascade`, `plan`, `fix --dry-run`, explicitly authorized `fix
+`catalog`, `migration-inventory`, `explain`, `explain-cascade`, `plan`, `fix --dry-run`, explicitly authorized `fix
 --apply`, and `fmt` commands, their
 exit behavior, and the numbered documents they emit.
 Default manifest 3, opt-in manifest 4 with graph 1/reachability 1, opt-in manifest 5 with graph 2 and

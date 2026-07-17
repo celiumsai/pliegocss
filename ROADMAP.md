@@ -338,10 +338,11 @@ también requiere E0–E4 y todos los Must de R0 en el contrato estratégico.
 - [ ] Probar mensajes de error con usuarios/fixtures nuevos.
 - [ ] Completar portal documental y catálogo navegable generado desde código.
 - [ ] Crear guía de migración desde Tailwind.
-  El productor Rust schema 1 ya inventaría un archivo Sass/Tailwind-entry/CSS-Modules con
-  bytes/hash/spans, constructs dynamic/unsupported y dependencia Preflight; faltan CLI, project
-  graphs, templates/config/plugins/composition y fixtures de migración reales antes de escribir la
-  guía completa.
+  El productor Rust schema 1 y `pliego-cssc migration-inventory` ya inventarían un archivo
+  Sass/Tailwind-entry/CSS-Modules con bytes/hash/spans, constructs dynamic/unsupported, dependencia
+  Preflight y output stdout no-mutante; faltan project graphs,
+  templates/config/plugins/composition y fixtures de migración reales antes de escribir la guía
+  completa.
 - [ ] Crear tutorial completo, how-to guides y referencia de API.
 - [ ] Crear guía de accesibilidad, theming y responsive design.
 - [ ] Crear documentación para contribuidores, plugins y estabilidad semántica.

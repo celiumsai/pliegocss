@@ -1,4 +1,4 @@
-//! Command-line extraction and CSS compilation for `PliegoCSS`.
+//! `PliegoCSS` CLI.
 
 #![forbid(unsafe_code)]
 
@@ -58,8 +58,8 @@ use pliego_css_ownership::{
 };
 use pliego_css_parser::{format_style_list, parse_named_candidate, parse_style_list};
 use pliego_css_source::{
-    InvocationKind, PcxSelection, ScanDiagnostic, ScanReport, SourceRange, StyleLiteral, scan_file,
-    scan_source_named,
+    InvocationKind, MigrationSourceKind, PcxSelection, ScanDiagnostic, ScanReport, SourceRange,
+    StyleLiteral, inventory_migration_file, scan_file, scan_source_named,
 };
 use pliego_css_theme::{THEME_ID_FORMAT_VERSION, ThemeRegistry};
 use pliego_css_usage::{
@@ -475,6 +475,7 @@ enum Command {
     Bundle(BundleArgs),
     Catalog(CatalogArgs),
     Compatibility(CompatibilityArgs),
+    Inventory(MigrationSourceKind, PathBuf),
     Explain(ExplainArgs),
     ExplainCascade(CascadeExplainArgs),
     Plan(RepairPlanCliArgs),
@@ -1289,6 +1290,9 @@ fn run(
             print!("{policy}");
             Ok(())
         }
+        Command::Inventory(kind, input) => inventory_migration_file(kind, &input)
+            .map(|inventory| print!("{inventory}"))
+            .map_err(|error| CliFailure::tool(error.to_string())),
         Command::Explain(arguments) => run_explain(&arguments),
         Command::ExplainCascade(arguments) => run_cascade_explain(&arguments),
         Command::Plan(arguments) => run_repair_plan(&arguments),
@@ -1338,6 +1342,15 @@ fn parse_arguments(arguments: impl IntoIterator<Item = OsString>) -> Result<Comm
     }
     if command == "compatibility" {
         return parse_compatibility_arguments(&arguments[1..]);
+    }
+    if command == "migration-inventory" {
+        let [_, kind, input] = arguments.as_slice() else {
+            return Err("KIND FILE required".into());
+        };
+        return Ok(Command::Inventory(
+            kind.parse().map_err(str::to_owned)?,
+            PathBuf::from(input),
+        ));
     }
     if command == "explain" {
         return parse_explain_arguments(&arguments[1..]);
@@ -2755,8 +2768,6 @@ fn compile_bundle_group(
     let mut usage_styles = Vec::new();
     let mut resolved_by_bundle = BTreeMap::new();
 
-    // Resolve the complete all-compiled universe before emitting any bundle. Usage policy is
-    // derived once from this immutable universe so selection and reporting cannot drift.
     for name in plan.bundles.keys() {
         let mut candidates = Vec::new();
         for key in files_by_bundle
@@ -7396,8 +7407,6 @@ fn publication_destinations<'a>(
 ) -> Result<BTreeMap<String, PathBuf>, String> {
     let mut destinations_by_key = BTreeMap::new();
     for destination in destinations {
-        // The final component is mutable while a cooperating publisher stages the previous output
-        // as a backup. Canonicalize only its parent so every writer keeps one stable lock identity.
         let (key, resolved) = publication_path_identity(destination)?;
         let name = resolved
             .file_name()

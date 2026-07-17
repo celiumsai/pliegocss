@@ -474,6 +474,7 @@ dependencies = [
 name = "pliego-css-source"
 version = "0.0.0"
 dependencies = [
+ "libc",
  "proc-macro2",
  "serde",
  "serde_json",

@@ -26,7 +26,8 @@ use pliego_css_ownership::{
 use pliego_css_source::{
     MIGRATION_INVENTORY_SCHEMA_VERSION, ApplicationComponent, ApplicationRoute,
     ApplicationTopology, MigrationDisposition, MigrationInventory, MigrationInventoryError,
-    MigrationPreflightReliance, MigrationSourceKind, inventory_migration_source,
+    MigrationPreflightReliance, MigrationSourceKind, inventory_migration_file,
+    inventory_migration_source,
 };
 use pliego_css_usage::{
     AssetRuleSelection as UsageRuleSelection, UsageCandidateInput, UsageObservationCoverage,
@@ -131,6 +132,7 @@ fn exercise_repair_tooling_surface() {
 
 fn exercise_migration_inventory_surface() {
     assert_eq!(MIGRATION_INVENTORY_SCHEMA_VERSION, 1);
+    let _file_reader = inventory_migration_file;
     let inventory: MigrationInventory = inventory_migration_source(
         MigrationSourceKind::Tailwind,
         "src/app.css",

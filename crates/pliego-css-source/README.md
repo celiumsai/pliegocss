@@ -70,7 +70,8 @@ assert_eq!(inventory.constructs().len(), 2);
 
 Schema 1 binds the exact path, byte count, SHA-256, construct ranges, dynamic/unsupported counts,
 and Tailwind Preflight reliance. `static` means only that a lexical prelude was inventoried; it does
-not authorize transformation. Project/import/config/template graphs and CLI integration remain open.
+not authorize transformation. `pliego-cssc migration-inventory` exposes the producer through a
+read-only stdout contract. Project/import/config/template graphs remain open.
 
 ## Stability
 

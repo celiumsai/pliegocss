@@ -25,6 +25,7 @@ pliego-cssc [--diagnostic-format human|json] catalog [--config theme.toml|--seed
 pliego-cssc [--diagnostic-format human|json] audit --input FILE.css --targets baseline-widely|modern|none [--budget-policy FILE.json [--budget-subject package=NAME|route=/PATH ...]] [--accessibility-policy FILE.json [--token-graph FILE.json]] [--control-dir DIR [--check]] [--format human|json|sarif]
 pliego-cssc [--diagnostic-format human|json] audit --asset-plan FILE.json [--ownership FILE.json] --targets baseline-widely|modern|none [--budget-policy FILE.json] [--accessibility-policy FILE.json [--token-graph FILE.json]] [--control-dir DIR [--check]] [--format human|json|sarif]
 pliego-cssc [--diagnostic-format human|json] compatibility --targets baseline-widely|modern|none
+pliego-cssc [--diagnostic-format human|json] migration-inventory sass|tailwind|css-modules FILE
 pliego-cssc [--diagnostic-format human|json] explain --style "utilities" [--config theme.toml|--seed] [--targets baseline-widely|modern|none] [--format text|json]
 pliego-cssc [--diagnostic-format human|json] explain-cascade --input FILE.css --element 'button#save.action' --property LONGHAND [--format text|json]
 pliego-cssc [--diagnostic-format human|json] plan --findings FILE.json --proposal FILE.json --source-root DIR [--format text|json]
@@ -480,6 +481,28 @@ pliego-cssc compatibility --targets baseline-widely
 The document enumerates target versions and per-feature `allow`, `transform`, `warn`, or `error`
 decisions. It is the machine contract used by CI, adapters, and future editor tooling; it is not a
 live browser-data query.
+
+### `migration-inventory`
+
+`migration-inventory` creates a conservative, read-only schema-1 inventory for exactly one Sass,
+Tailwind CSS v4 entry, or CSS Modules source:
+
+```console
+pliego-cssc migration-inventory sass src/legacy.scss
+pliego-cssc migration-inventory tailwind src/app.css > tailwind.inventory.json
+pliego-cssc migration-inventory css-modules src/card.module.css
+```
+
+The source kind and input are mandatory positional arguments. The input must be a portable,
+project-relative path and kind and extension must agree. Canonical JSON is written only to stdout; the command has no mutation or
+tool-execution surface. Callers may redirect stdout and compare the resulting bytes in their own
+build system.
+
+The command executes no Sass, Tailwind, PostCSS, JavaScript, plugins, configuration, imports, or
+templates. A `static` disposition means only that PliegoCSS bounded and recorded the lexical
+construct. Dynamic and unsupported seams stay explicit. See
+[migration inventory schema 1](./migration-inventory-schema-1.md) for constructs, Preflight
+classification, defensive limits, and current project-graph exclusions.
 
 ### `compile` and `build`
 

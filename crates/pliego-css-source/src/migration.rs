@@ -1,6 +1,13 @@
 //! Conservative source inventory for migration bridges.
 
 use std::fmt;
+use std::fs::{self, OpenOptions};
+use std::io::Read;
+#[cfg(unix)]
+use std::os::unix::fs::OpenOptionsExt as _;
+#[cfg(windows)]
+use std::os::windows::fs::{MetadataExt as _, OpenOptionsExt as _};
+use std::path::{Component, Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -12,6 +19,8 @@ pub const MIGRATION_INVENTORY_SCHEMA_VERSION: u8 = 1;
 const MAX_SOURCE_BYTES: usize = 16 * 1024 * 1024;
 const MAX_CONSTRUCTS: usize = 65_535;
 const MAX_SYNTAX_BYTES: usize = 4_096;
+#[cfg(windows)]
+const FILE_ATTRIBUTE_REPARSE_POINT: u32 = 0x400;
 
 /// Source family inspected by the migration inventory.
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -31,6 +40,19 @@ impl MigrationSourceKind {
             Self::Sass => "sass",
             Self::Tailwind => "tailwind",
             Self::CssModules => "css-modules",
+        }
+    }
+}
+
+impl std::str::FromStr for MigrationSourceKind {
+    type Err = &'static str;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        match value {
+            "sass" => Ok(Self::Sass),
+            "tailwind" => Ok(Self::Tailwind),
+            "css-modules" => Ok(Self::CssModules),
+            _ => Err("migration source kind must be `sass`, `tailwind`, or `css-modules`"),
         }
     }
 }
@@ -196,6 +218,14 @@ impl MigrationInventory {
     }
 }
 
+impl fmt::Display for MigrationInventory {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(
+            std::str::from_utf8(&self.bytes).expect("migration inventory JSON is valid UTF-8"),
+        )
+    }
+}
+
 /// Failure while conservatively inventorying a migration source.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct MigrationInventoryError {
@@ -278,6 +308,96 @@ pub fn inventory_migration_source(
     };
     inventory.bytes = render_inventory(&inventory)?;
     Ok(inventory)
+}
+
+/// Reads and inventories one project-relative migration source without following its final link.
+///
+/// # Errors
+///
+/// Returns [`MigrationInventoryError`] when the path is not portable, any path component is a
+/// symbolic link or reparse point, the file changes away from a regular bounded file, I/O fails, or
+/// the source cannot be inventoried.
+pub fn inventory_migration_file(
+    source_kind: MigrationSourceKind,
+    file: &Path,
+) -> Result<MigrationInventory, MigrationInventoryError> {
+    let mut current = PathBuf::new();
+    let mut logical = Vec::new();
+    for component in file.components() {
+        let Component::Normal(value) = component else {
+            return Err(MigrationInventoryError::new(
+                "migration inventory requires a portable project-relative file",
+            ));
+        };
+        current.push(value);
+        logical.push(value.to_str().ok_or_else(|| {
+            MigrationInventoryError::new("migration inventory path is not valid UTF-8")
+        })?);
+        let metadata = fs::symlink_metadata(&current).map_err(|error| {
+            MigrationInventoryError::new(format!(
+                "cannot inspect migration source `{}`: {error}",
+                current.display()
+            ))
+        })?;
+        if is_link_like(&metadata) {
+            return Err(MigrationInventoryError::new(format!(
+                "migration source `{}` is a symbolic link or reparse point",
+                current.display()
+            )));
+        }
+    }
+    let logical = logical.join("/");
+    validate_input(source_kind, &logical, "")?;
+    let mut options = OpenOptions::new();
+    options.read(true);
+    #[cfg(unix)]
+    options.custom_flags(libc::O_NOFOLLOW | libc::O_NONBLOCK);
+    #[cfg(windows)]
+    options.custom_flags(0x0020_0000);
+    let opened = options.open(file).map_err(|error| {
+        MigrationInventoryError::new(format!(
+            "cannot open migration source `{}`: {error}",
+            file.display()
+        ))
+    })?;
+    let metadata = opened.metadata().map_err(|error| {
+        MigrationInventoryError::new(format!(
+            "cannot inspect opened migration source `{}`: {error}",
+            file.display()
+        ))
+    })?;
+    if is_link_like(&metadata) || !metadata.is_file() || metadata.len() > MAX_SOURCE_BYTES as u64 {
+        return Err(MigrationInventoryError::new(
+            "migration source must be a regular file of at most 16 MiB",
+        ));
+    }
+    let mut bytes = Vec::new();
+    opened
+        .take((MAX_SOURCE_BYTES + 1) as u64)
+        .read_to_end(&mut bytes)
+        .map_err(|error| {
+            MigrationInventoryError::new(format!("cannot read migration source: {error}"))
+        })?;
+    if bytes.len() > MAX_SOURCE_BYTES {
+        return Err(MigrationInventoryError::new(
+            "migration source exceeds 16 MiB",
+        ));
+    }
+    let source = std::str::from_utf8(&bytes).map_err(|error| {
+        MigrationInventoryError::new(format!("migration source is not valid UTF-8: {error}"))
+    })?;
+    inventory_migration_source(source_kind, &logical, source)
+}
+
+fn is_link_like(metadata: &fs::Metadata) -> bool {
+    if metadata.file_type().is_symlink() {
+        return true;
+    }
+    #[cfg(windows)]
+    if metadata.file_attributes() & FILE_ATTRIBUTE_REPARSE_POINT != 0 {
+        return true;
+    }
+    false
 }
 
 fn render_inventory(inventory: &MigrationInventory) -> Result<Vec<u8>, MigrationInventoryError> {
@@ -745,6 +865,7 @@ fn derive_preflight(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::time::{SystemTime, UNIX_EPOCH};
 
     #[test]
     fn inventories_tailwind_preflight_dynamic_sources_and_unsupported_hooks() {
@@ -847,5 +968,32 @@ $color: red;
             )
             .is_err()
         );
+    }
+
+    #[test]
+    fn file_inventory_reads_regular_sources_and_rejects_links() {
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let directory = PathBuf::from(format!(
+            ".migration-file-test-{}-{nonce}",
+            std::process::id()
+        ));
+        fs::create_dir(&directory).unwrap();
+        let source = directory.join("app.css");
+        fs::write(&source, "@import \"tailwindcss\";\n").unwrap();
+        let inventory = inventory_migration_file(MigrationSourceKind::Tailwind, &source).unwrap();
+        assert_eq!(
+            inventory.file(),
+            source.to_string_lossy().replace('\\', "/")
+        );
+        #[cfg(unix)]
+        {
+            let link = directory.join("linked.css");
+            std::os::unix::fs::symlink("app.css", &link).unwrap();
+            assert!(inventory_migration_file(MigrationSourceKind::Tailwind, &link).is_err());
+        }
+        fs::remove_dir_all(directory).unwrap();
     }
 }

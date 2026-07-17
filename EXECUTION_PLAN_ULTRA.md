@@ -408,9 +408,10 @@ Toda optimización tiene benchmark; ninguna complejidad entra solamente por intu
   policies de accesibilidad y evidencia hosted/macOS/ARM64 siguen pendientes antes de cerrar
   R0.2/R0.5.
 - [ ] Crear inventarios read-only Sass, Tailwind y CSS Modules sin prometer migración perfecta. La
-  primera rebanada Rust schema 1 ya cubre un archivo explícito por familia, hashes/spans,
-  dynamic/unsupported y Preflight; faltan CLI, snapshot de proyecto, imports/templates/config/plugins,
-  composition consumers y fixtures reales para cerrar.
+  primera rebanada Rust schema 1 y `pliego-cssc migration-inventory` ya cubren un archivo explícito
+  por familia, hashes/spans, dynamic/unsupported, Preflight y un contrato stdout no-mutante;
+  faltan snapshot de proyecto, imports/templates/config/plugins, composition consumers y fixtures
+  de proyectos reales para cerrar.
 - [ ] Entrevistar 10–15 developers/equipos y reunir 20 incidentes reales anonimizados.
 - [ ] Medir precision/recall, falsos positivos, excepciones y tiempo de resolución por categoría.
 - [ ] Ejecutar la matriz hosted Windows/Linux/macOS, evidencia nativa ARM64 y el pipeline Cloudflare.

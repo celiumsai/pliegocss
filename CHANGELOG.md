@@ -12,6 +12,10 @@ pre-1.0 compatibility policy.
 
 ### Added
 
+- Read-only `pliego-cssc migration-inventory` for one explicit Sass, Tailwind CSS v4 entry, or CSS
+  Modules source. The command emits canonical schema-1 JSON only to stdout and rejects unsafe paths,
+  kind/extension mismatch, symlink-like inputs, malformed lexical state, and bounded-limit
+  violations; it never executes the original source toolchain or claims transformation support.
 - Closed post-change verification through the dedicated `pliego-css-agent verify` executable,
   repair-check policy and Verification Receipt schemas 1.2.0 with canonical 1.0.0/1.1.0 read
   support. Built-in `standard-css-audit`, `token-graph-integrity`, and `css-budget-audit` kinds
