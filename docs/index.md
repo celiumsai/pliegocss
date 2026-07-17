@@ -25,6 +25,7 @@ owned route bundles. `pliego-cssc watch` only regenerates artifacts; composed wi
 - [Installation](./getting-started/installation.md)
 - [First standard-CSS audit](./getting-started/first-audit.md)
 - [First compile](./getting-started/first-compile.md)
+- [PliegoRS + PliegoCSS from an empty project](./getting-started/pliegors.md)
 - [Project structure](./getting-started/project-structure.md)
 - [Mental model](./learn/mental-model.md)
 - [Themes and tokens](./learn/themes-and-tokens.md)

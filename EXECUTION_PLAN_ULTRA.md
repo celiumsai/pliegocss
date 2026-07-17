@@ -161,14 +161,13 @@ cubre ocho variants, produce 30/30 hashes iguales y queda en 2,049 B CSS gzip / 
 - Integración `pc!` + `view!`.
 - `StyleId` en el árbol DOM.
 - SSR y resumability deterministas.
-- CSS por ruta/island mediante particiones explícitas y asset plan generado; partición automática
-  pendiente.
+- CSS por ruta/island mediante particiones automáticas derivadas del registro y asset plan generado.
 - Interoperabilidad con CSS estándar.
 
 ### Tareas
 
 - [x] Integrar `Style`/`StyleId` con el seam de clase de `pliego-dom` mediante `Display`/`String`.
-- [ ] Conectar el registro de estilos al árbol de vistas.
+- [x] Conectar el registro de estilos al árbol de vistas mediante el registro validado de producto.
 - [x] Emitir links de stylesheet mediante el `Head` de SSG.
 - [x] Añadir preload CSS explícito y validado en `Head`; el fixture selecciona únicamente el bundle
   compartido con tema y Chromium confirma una sola descarga, sin afirmar mejora de latencia.
@@ -193,8 +192,8 @@ cubre ocho variants, produce 30/30 hashes iguales y queda en 2,049 B CSS gzip / 
 - [x] Compilar, publicar y ejecutar un cliente WASM real en el fixture SSG, registrando 31,423 B raw
   / 12,584 B gzip-9 de WASM y 39,962 B raw / 15,186 B gzip-9 para sus cuatro recursos browser.
 - [ ] Medir CSS y WASM de una app real.
-- [ ] Escribir Getting Started completo.
-- [ ] Documentar SSR, resumability y CSS externo desde proyecto vacío.
+- [x] Escribir Getting Started completo.
+- [x] Documentar SSR, resumability y CSS externo desde proyecto vacío.
 
 ### Gate semanal
 

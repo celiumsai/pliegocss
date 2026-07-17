@@ -83,10 +83,11 @@ let head = Head::new("My page").stylesheet("/assets/pliego.css");
 The cross-repository integration gate now executes this API with compiler-produced global and route
 CSS bundles, verifies the emitted `<link>` elements, and cross-checks the deployed asset hashes.
 Those assets are generated together from a versioned
-[declarative bundle plan](../reference/bundle-plan.md). Bundle ownership is still explicit;
-`pliego build` does not yet derive PliegoCSS reachability. A future adapter can emit the already
-supported [reachability sidecar](../reference/reachability-schema.md) for schema-4/schema-5 manifests;
-`pliego-cssc bundle` remains a one-shot command rather than a multi-bundle watch loop.
+[declarative bundle plan](../reference/bundle-plan.md). The current application-owned adapter derives
+the supported [reachability sidecar](../reference/reachability-schema.md) and automatic source
+partitions from one validated PliegoRS product registry. It is exercised by the integration fixture,
+but is not yet packaged as a one-command starter feature. `pliego-cssc bundle` remains a one-shot
+command rather than a multi-bundle watch loop.
 
 ## Security and limits
 

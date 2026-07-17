@@ -34,6 +34,7 @@
     "check:repair-corpus": "node ./scripts/check-repair-corpus.mjs",
     "check:migration-corpus": "node ./scripts/check-migration-corpus.mjs",
     "check:migration-real-corpus": "node ./scripts/check-migration-real-corpus.mjs",
+    "check:pliegors-guide": "node ./scripts/check-pliegors-guide.mjs",
     "check:packages": "node ./scripts/check-packages.mjs",
     "integration:plain-html": "node ./scripts/check-plain-html-integration.mjs",
     "integration:pliegors": "node ./scripts/check-pliegors-integration.mjs",

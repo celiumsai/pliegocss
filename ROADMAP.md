@@ -226,8 +226,8 @@ ETA: 3–5 días
 - [x] Compilar, publicar, medir y ejecutar un cliente WASM real en el fixture SSG acotado: 31,423 B
   raw / 12,584 B gzip-9; la comparación de una aplicación productiva sigue abierta.
 - [x] Verificar SSG determinista, assets CSS, aislamiento derivado por ruta/island y markup resumible.
-- [ ] Crear Getting Started de PliegoRS + PliegoCSS desde proyecto vacío.
-- [ ] Documentar SSR, resumability, rutas, islands y uso de CSS externo desde proyecto vacío.
+- [x] Crear Getting Started de PliegoRS + PliegoCSS desde proyecto vacío.
+- [x] Documentar SSR, resumability, rutas, islands y uso de CSS externo desde proyecto vacío.
 
 ### Gate
 
