@@ -1,7 +1,7 @@
 # Packaging status
 
-Status: **closed migration project declarations passed the complete exact-clean `003e276`
-replay; no registry upload performed**
+Status: **read-only migration project CLI passed the complete exact-clean `dde0d69` replay; no
+registry upload performed**
 
 The publishable workspace boundary has six dependency waves. `pliego-css-usage` and
 `pliego-css-control` follow `pliego-css-build` because direct and optional Cargo dependencies both
@@ -18,6 +18,26 @@ affect registry publication order.
 
 The exact dependency-first order is enforced by `scripts/check-packages.mjs` and documented in the
 [release process](../contributing/release-process.md).
+
+## Migration project CLI clean replay — 2026-07-16
+
+The exact clean `dde0d69` Debian WSL2 gate packaged and extracted all fifteen archives with Cargo
+1.96, compiled the extracted graph in release mode, and passed the registry-shaped downstream
+consumer with Rust 1.85. Focused Debian WSL2 testing also passed 30 `pliego-css-source` tests, 70
+CLI unit tests, and every `pliego-cssc` integration target. Publication remained disabled and the
+fixed 61,440-byte ceiling was not raised.
+
+| Package | Compressed bytes | Remaining margin | SHA-256 |
+|---|---:|---:|---|
+| `pliego-css-source` | 36,796 | 24,644 | `200b0df77dc1c48d037aa47e44dfcd09b969d3fc1940cdc668f280124d554821` |
+| `pliego-cssc` | 61,391 | 49 | `b18b1f31dfbfd7beea92d8e7ee2b5458a254801e5d29090876748b28a89fc442` |
+
+`pliego-cssc migration-project-inventory` now safely loads the bounded declaration, collects the
+declared source set, and emits only canonical stdout. With 49 compressed bytes remaining, further
+CLI growth is blocked on a structural size reduction or executable split; future R0.8 analysis must
+remain in `pliego-css-source` unless that package boundary changes deliberately. This gate does not
+close crawling, source-toolchain-specific resolution, configs/plugins/templates, downstream
+composition consumers, real migration fixtures, registry publication, or R0.8 completion.
 
 ## Migration project declaration clean replay — 2026-07-16
 
