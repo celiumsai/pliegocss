@@ -228,6 +228,8 @@ fixture acotado.
 - [x] Evitar lowering de unidades sin cambios con caché de IR semántico invalidada por tema.
 - [ ] Evitar emisión global cuando cambie un subconjunto mediante fragmentos CSS incrementales.
 - [x] Crear comandos `check`, `build`, `watch` e `inspect`.
+- [x] Delegar `pliego css check` desde PliegoRS al binario `pliego-cssc` instalado por separado,
+  con fuente `src` por defecto y opciones explícitas reenviadas.
 - [x] Exponer manifest, catálogo JSON para completion y `explain` JSON para hover (versiones
   iniciales cerradas; contratos actuales manifest 3 por defecto, 4 con graph 1 semántico y 5 con
   graph 2/traza física fail-closed, reachability 1, catálogo 3 y explain 2).

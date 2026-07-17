@@ -53,9 +53,16 @@ pliego-cssc check --source src
 
 For a custom registry, add `--config pliego.theme.toml`; use `--seed` when the built-in registry is
 intentional. The crates are not published yet, so distribution is pinned by checkout revision and
-`Cargo.lock`, not by the current experimental `0.0.0` package version. Installing `pliego-cssc` does
-not modify the PliegoRS `pliego` command; an eventual `pliego css ...` delegation remains an upstream
-integration point.
+`Cargo.lock`, not by the current experimental `0.0.0` package version.
+
+Current PliegoRS can delegate the same read-only validation without linking the compiler:
+
+```console
+pliego css check --seed
+```
+
+The wrapper invokes the separately installed `pliego-cssc`, defaults to `--source src`, and forwards
+additional check options. Use `--config pliego.theme.toml` instead of `--seed` for a custom registry.
 
 ## Seed theme setup
 

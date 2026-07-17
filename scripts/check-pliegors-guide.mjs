@@ -29,6 +29,7 @@ const requiredClaims = [
   "ProductRegistry",
   "ApplicationTopology",
   "pliego build",
+  "pliego css check",
   "pliego.build.json",
   "preload_stylesheet",
   "pliego_resume",

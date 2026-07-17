@@ -251,7 +251,8 @@ ETA: 3–5 días
 - [x] Cachear unidades Rust parseadas por archivo usando snapshots de bytes exactos.
 - [x] Cachear IR semántico por archivo e invalidarlo por identidad de tema.
 - [x] Crear una superficie instalable `pliego-cssc check` con versión verificable.
-- [ ] Delegar `pliego css check` desde el CLI upstream de PliegoRS.
+- [x] Delegar `pliego css check` desde el CLI upstream de PliegoRS sin enlazar el compilador y
+  verificarlo contra el binario fijado en el gate cross-repository.
 - [x] Crear formatter determinista y lint semántico para listas explícitas/line-oriented.
 - [x] Integrar diagnósticos read-only con rangos y reemplazos sobre literales Rust.
 - [x] Exponer diagnósticos estructurados schema 1 para tooling de editor y CI.

@@ -57,7 +57,11 @@ Keep the generated `pliego-dom` and `pliego-ssg` dependencies. Then refresh and 
 ```console
 cargo +1.85.0 generate-lockfile
 pliego check
+pliego css check --seed
 ```
+
+The last command is optional delegation to the separately installed `pliego-cssc`; PliegoRS does not
+embed the PliegoCSS compiler. It defaults to `--source src` and forwards additional check options.
 
 ## 3. Author a typed utility and bind it to a component
 
@@ -250,4 +254,3 @@ The local gates prove deterministic SSR/SSG, complete ownership for the exact th
 targets, route/island partitioning, dead-style pruning, asset integrity, one Chromium resumability
 event, preload reuse, and one measured WASM client. They do not yet prove hosted deployment,
 multiple browsers, every Cargo feature/target combination, or a production-application budget.
-
