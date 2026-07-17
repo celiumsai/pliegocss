@@ -54,6 +54,9 @@ pre-1.0 compatibility policy.
 - Typed CSS Modules destructuring observations for exact shorthand and renamed members. Computed,
   rest, default, nested, empty, and otherwise ambiguous patterns emit one fail-closed dynamic seam
   for the complete declaration; no partial static classes or duplicate binding usages are invented.
+- Multi-role migration declarations, allowing one physical JS/TS component to be inventoried as
+  both a CSS Modules consumer and Tailwind template. Duplicates remain closed within each role and
+  every role entry counts toward the existing 4,096-entry bound.
 - Explicit Tailwind config, plugin, and template auxiliaries in migration project declarations.
   Every auxiliary is read twice through the bounded no-link file boundary and retained by exact
   bytes/SHA-256. Relative `@config`, `@plugin`, and exact-file `@source` seams resolve only to the

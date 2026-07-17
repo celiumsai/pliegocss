@@ -892,19 +892,6 @@ impl MigrationProject {
                 )));
             }
         }
-        let mut roles = self
-            .sources
-            .iter()
-            .map(|item| item.file.as_str())
-            .collect::<Vec<_>>();
-        roles.extend(self.consumers.iter().map(|item| item.file.as_str()));
-        roles.extend(self.auxiliaries.iter().map(|item| item.file.as_str()));
-        roles.sort_unstable();
-        if roles.windows(2).any(|pair| pair[0] == pair[1]) {
-            return Err(MigrationInventoryError::new(
-                "migration project path cannot have more than one declared role",
-            ));
-        }
         Ok(())
     }
 
@@ -3432,6 +3419,51 @@ $color: red;
             .is_err()
         );
         assert!(MigrationProject::from_json(&vec![b' '; MAX_PROJECT_DOCUMENT_BYTES + 1]).is_err());
+    }
+
+    #[test]
+    fn project_inventory_allows_one_file_in_distinct_roles() {
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let directory = PathBuf::from(format!(
+            ".migration-multi-role-test-{}-{nonce}",
+            std::process::id()
+        ));
+        fs::create_dir(&directory).unwrap();
+        let module = directory.join("card.module.css");
+        let component = directory.join("Card.tsx");
+        fs::write(&module, ".card { display: block; }\n").unwrap();
+        fs::write(
+            &component,
+            "import styles from \"./card.module.css\";\nexport const Card = () => <div className=\"p-4\" data-class={styles.card} />;\n",
+        )
+        .unwrap();
+        let logical = component.to_string_lossy().into_owned();
+        let inventory = MigrationProject::new()
+            .source(MigrationProjectSource::new(
+                MigrationSourceKind::CssModules,
+                module.to_string_lossy().into_owned(),
+            ))
+            .consumer(MigrationProjectConsumer::new(
+                MigrationConsumerKind::CssModules,
+                logical.clone(),
+            ))
+            .auxiliary(MigrationProjectAuxiliary::new(
+                MigrationAuxiliaryKind::TailwindTemplate,
+                logical,
+            ))
+            .collect()
+            .unwrap();
+        assert_eq!(inventory.consumers().len(), 1);
+        assert_eq!(inventory.auxiliaries().len(), 1);
+        assert_eq!(inventory.auxiliaries()[0].observations().len(), 1);
+        assert_eq!(
+            inventory.auxiliaries()[0].observations()[0].value(),
+            Some("p-4")
+        );
+        fs::remove_dir_all(directory).unwrap();
     }
 
     #[test]

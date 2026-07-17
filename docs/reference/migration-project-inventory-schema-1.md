@@ -6,9 +6,14 @@ consumer syntax remain open**
 
 `MigrationProject` declares a closed set of Sass, Tailwind CSS v4 entry, and CSS Modules files. It
 does not crawl the repository or infer source kind from filenames. Collection sorts the declaration
-set canonically, rejects duplicate/cross-role paths and more than 4,096 combined declared files,
+set canonically, rejects duplicate declarations within a role and more than 4,096 combined entries,
 inventories every regular file twice, and publishes bytes only when both complete reads
 agree.
+
+One physical file may hold distinct roles. For example, a TSX component can be both a CSS Modules
+consumer and a Tailwind template; each role gets its own typed observations over the same exact
+content identity. Duplicate declarations remain rejected within `sources`, `consumers`, and
+`auxiliaries`, and every role entry counts toward the 4,096-entry bound.
 
 The same closed input set can be checked into the project as schema-1 JSON and parsed with
 `MigrationProject::from_json`:
@@ -33,7 +38,7 @@ The same closed input set can be checked into the project as schema-1 JSON and p
 ```
 
 The declaration is bounded to 1 MiB, rejects unknown fields, unsafe paths, kind/extension mismatch,
-unsupported schema versions, and more than 4,096 files across all three roles. Parsing does not read declared files; collection
+unsupported schema versions, and more than 4,096 entries across all three roles. Parsing does not read declared files; collection
 performs the same canonical duplicate, file-safety, two-pass, and dependency checks as the builder
 API. Declaration order therefore does not affect snapshot bytes.
 
@@ -248,7 +253,7 @@ plugins stay `external`, inline sources stay `dynamic`, and glob/directory disco
 ## Security and consistency boundary
 
 - every source, consumer, and auxiliary path is explicit, project-relative, UTF-8, kind-compatible,
-  and duplicate-free across all roles;
+  and duplicate-free within its role; one path may intentionally have multiple distinct roles;
 - every component is inspected and symbolic links or Windows reparse points are rejected;
 - the final file is opened with no-follow semantics, must remain regular, and is bounded to 16 MiB;
 - malformed UTF-8, comments, strings, dependency targets, or per-file defensive limits fail the

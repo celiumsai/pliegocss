@@ -6,5 +6,8 @@
   ],
   "consumers": [
     { "consumerKind": "css-modules", "file": "Card.tsx" }
+  ],
+  "auxiliaries": [
+    { "auxiliaryKind": "tailwind-template", "file": "Card.tsx" }
   ]
 }
