@@ -26,6 +26,11 @@ fn button() -> Style {
 
 The workspace is unreleased at `0.0.0`; syntax and crate boundaries may still change.
 
+> **Development pause (2026-07-18):** PliegoCSS is preserved as an experimental research
+> workspace and is not on the active PliegoRS release path. No `0.1.0` release is currently
+> scheduled. The verified pause checkpoint and reactivation gates are recorded in
+> [`docs/status/paused-checkpoint-2026-07-18.md`](./docs/status/paused-checkpoint-2026-07-18.md).
+
 - The [strategic product contract](./docs/product/strategic-product-contract-2026.md) supersedes the
   original "utility-first framework" category and defines the Phase 0 and R0 gates that now block
   `0.1.0`. Standard-CSS audit now has strict ingestion, bounded official compatibility decisions,

@@ -16,9 +16,11 @@ mod critical;
 mod token_usage;
 
 pub use critical::{
+    CRITICAL_CSS_MANIFEST_FILE, CRITICAL_CSS_MANIFEST_SCHEMA_VERSION,
     CRITICAL_EVIDENCE_SCHEMA_VERSION, CriticalCaptureInput, CriticalCaptureStage,
-    CriticalEvidenceInput, CriticalRouteInput, CriticalSelection, CriticalStyleInput,
-    build_critical_evidence, parse_critical_evidence, verify_critical_evidence,
+    CriticalCssRouteInput, CriticalEvidenceInput, CriticalRouteInput, CriticalSelection,
+    CriticalStyleInput, build_critical_css_manifest, build_critical_evidence,
+    parse_critical_css_manifest, parse_critical_evidence, verify_critical_evidence,
 };
 
 pub use token_usage::{

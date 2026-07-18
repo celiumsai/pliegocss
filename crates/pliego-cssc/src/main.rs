@@ -66,9 +66,11 @@ use pliego_css_source::{
 };
 use pliego_css_theme::{THEME_ID_FORMAT_VERSION, ThemeRegistry};
 use pliego_css_usage::{
-    PreparedUsageAnalysis, TOKEN_USAGE_FILE, UsageCandidateInput, UsageSelection, UsageStyleInput,
-    build_token_usage_report, collect_selected_bundle_token_references,
-    collect_selected_token_usage_consumers, collect_usage_style_inputs, prepare_usage_analysis,
+    CRITICAL_CSS_MANIFEST_FILE, CriticalCssRouteInput, CriticalRouteInput, PreparedUsageAnalysis,
+    TOKEN_USAGE_FILE, UsageCandidateInput, UsageSelection, UsageStyleInput,
+    build_critical_css_manifest, build_token_usage_report,
+    collect_selected_bundle_token_references, collect_selected_token_usage_consumers,
+    collect_usage_style_inputs, prepare_usage_analysis, verify_critical_evidence,
 };
 use pliego_css_watch::{
     FileSnapshot as WatchFileSnapshot, WatchScheduler, confirmed as watch_snapshot_confirmed,
@@ -425,6 +427,7 @@ struct BundleArgs {
     control: bool,
     observations: Option<PathBuf>,
     retention: Option<PathBuf>,
+    critical_evidence: Option<PathBuf>,
     reachability: Option<PathBuf>,
     physical_trace: bool,
     pruning: ReachabilityPruning,
@@ -2242,6 +2245,7 @@ fn parse_bundle_arguments(arguments: &[String]) -> Result<Command, String> {
     let mut control = false;
     let mut observations = None;
     let mut retention = None;
+    let mut critical_evidence = None;
     let mut manifest_version = None;
     let mut reachability = None;
     let mut pruning = ReachabilityPruning::Disabled;
@@ -2281,6 +2285,15 @@ fn parse_bundle_arguments(arguments: &[String]) -> Result<Command, String> {
             }
             "--retention" => {
                 set_path_once(&mut retention, arguments, index, "--retention")?;
+                index += 2;
+            }
+            "--critical-evidence" => {
+                set_path_once(
+                    &mut critical_evidence,
+                    arguments,
+                    index,
+                    "--critical-evidence",
+                )?;
                 index += 2;
             }
             "--control" => {
@@ -2333,6 +2346,17 @@ fn parse_bundle_arguments(arguments: &[String]) -> Result<Command, String> {
                 .into(),
         );
     }
+    if critical_evidence.is_some()
+        && (!usage_report
+            || !asset_plan
+            || reachability.is_none()
+            || manifest_version.as_deref() != Some("5"))
+    {
+        return Err(
+            "`--critical-evidence` requires `--usage-report`, `--asset-plan`, manifest version 5, and exact `--reachability` evidence"
+                .into(),
+        );
+    }
     if control && !asset_plan {
         return Err("`--control` requires `--asset-plan`".into());
     }
@@ -2346,6 +2370,7 @@ fn parse_bundle_arguments(arguments: &[String]) -> Result<Command, String> {
         control,
         observations,
         retention,
+        critical_evidence,
         reachability,
         physical_trace,
         pruning,
@@ -2397,10 +2422,13 @@ fn run_bundle(arguments: &BundleArgs) -> Result<(), CliFailure> {
     let outputs = bundle_output_roles(&plan, &output_dir, arguments);
     validate_bundle_io_paths(
         &plan_path,
-        theme_path,
-        arguments.reachability.as_deref(),
-        arguments.observations.as_deref(),
-        arguments.retention.as_deref(),
+        BundleSidecarPaths {
+            theme: theme_path,
+            reachability: arguments.reachability.as_deref(),
+            observation: arguments.observations.as_deref(),
+            retention: arguments.retention.as_deref(),
+            critical: arguments.critical_evidence.as_deref(),
+        },
         &sources.paths,
         &outputs,
     )?;
@@ -2452,6 +2480,19 @@ fn run_bundle(arguments: &BundleArgs) -> Result<(), CliFailure> {
         .as_deref()
         .map(|path| read_bounded_utf8_document(path, "usage retention"))
         .transpose()?;
+    let critical_path = arguments
+        .critical_evidence
+        .as_deref()
+        .map(|path| -> Result<PathBuf, CliFailure> {
+            let path = existing_regular_file(path, "critical style evidence")?;
+            ensure_path_within_plan(&plan_dir, &path, "critical style evidence")?;
+            Ok(path)
+        })
+        .transpose()?;
+    let critical_bytes = critical_path
+        .as_deref()
+        .map(|path| read_bounded_utf8_document(path, "critical style evidence"))
+        .transpose()?;
     let registry_graph = TokenGraph::from_registry(theme.registry());
     let registry_selections = BTreeMap::new();
     let (token_graph, token_selections) = if let LoadedTheme::Dtcg(theme) = &theme {
@@ -2476,6 +2517,7 @@ fn run_bundle(arguments: &BundleArgs) -> Result<(), CliFailure> {
         reachability_bytes.as_deref(),
         observation_bytes.as_deref(),
         retention_bytes.as_deref(),
+        critical_bytes.as_deref(),
         token_graph,
         token_selections,
     )?;
@@ -2493,6 +2535,8 @@ fn run_bundle(arguments: &BundleArgs) -> Result<(), CliFailure> {
             observation_bytes.as_deref(),
             retention_path.as_deref(),
             retention_bytes.as_deref(),
+            critical_path.as_deref(),
+            critical_bytes.as_deref(),
             &snapshots,
             &output_dir,
             &theme,
@@ -2642,6 +2686,12 @@ fn bundle_output_roles(
         outputs.push(("usage report".into(), output_dir.join("pliego.usage.json")));
         outputs.push(("tokens".into(), output_dir.join(TOKEN_USAGE_FILE)));
     }
+    if arguments.critical_evidence.is_some() {
+        outputs.push((
+            "critical CSS manifest".into(),
+            output_dir.join(CRITICAL_CSS_MANIFEST_FILE),
+        ));
+    }
     if arguments.control {
         for file in [
             pliego_css_control::TOKEN_GRAPH_FILE,
@@ -2655,12 +2705,18 @@ fn bundle_output_roles(
     outputs
 }
 
+#[derive(Clone, Copy)]
+struct BundleSidecarPaths<'a> {
+    theme: Option<&'a Path>,
+    reachability: Option<&'a Path>,
+    observation: Option<&'a Path>,
+    retention: Option<&'a Path>,
+    critical: Option<&'a Path>,
+}
+
 fn validate_bundle_io_paths(
     plan_path: &Path,
-    config_path: Option<&Path>,
-    reachability_path: Option<&Path>,
-    observation_path: Option<&Path>,
-    retention_path: Option<&Path>,
+    sidecars: BundleSidecarPaths<'_>,
     source_paths: &BTreeMap<String, (PathBuf, String)>,
     outputs: &[(String, PathBuf)],
 ) -> Result<(), String> {
@@ -2668,26 +2724,32 @@ fn validate_bundle_io_paths(
         validate_bundle_output_destination(output)?;
     }
     let mut inputs = vec![("bundle plan".to_owned(), plan_path.to_path_buf())];
-    if let Some(config_path) = config_path {
+    if let Some(config_path) = sidecars.theme {
         inputs.push((
             "bundle theme configuration".to_owned(),
             config_path.to_path_buf(),
         ));
     }
-    if let Some(reachability_path) = reachability_path {
+    if let Some(reachability_path) = sidecars.reachability {
         inputs.push((
             "reachability document".to_owned(),
             reachability_path.to_path_buf(),
         ));
     }
-    if let Some(observation_path) = observation_path {
+    if let Some(observation_path) = sidecars.observation {
         inputs.push((
             "usage observation".to_owned(),
             observation_path.to_path_buf(),
         ));
     }
-    if let Some(retention_path) = retention_path {
+    if let Some(retention_path) = sidecars.retention {
         inputs.push(("usage retention".to_owned(), retention_path.to_path_buf()));
+    }
+    if let Some(critical_path) = sidecars.critical {
+        inputs.push((
+            "critical style evidence".to_owned(),
+            critical_path.to_path_buf(),
+        ));
     }
     inputs.extend(
         source_paths
@@ -2745,6 +2807,7 @@ fn compile_bundle_group(
     reachability_source: Option<&[u8]>,
     observation_source: Option<&[u8]>,
     retention_source: Option<&[u8]>,
+    critical_source: Option<&[u8]>,
     token_graph: &TokenGraph,
     token_selections: &BTreeMap<String, String>,
 ) -> Result<CompiledBundleGroup, CliFailure> {
@@ -2910,6 +2973,22 @@ fn compile_bundle_group(
                 build_project_index(&inputs, &documents, rule_selection)
             })
             .transpose()?;
+        let critical_outputs = critical_source
+            .map(|source| {
+                build_critical_bundle_outputs(
+                    source,
+                    &asset_plan,
+                    prepared_usage
+                        .as_ref()
+                        .expect("critical evidence requires usage preparation"),
+                    reachability_source.expect("critical evidence requires reachability"),
+                    &resolved_by_bundle,
+                    theme,
+                    plan,
+                    output_dir,
+                )
+            })
+            .transpose()?;
         payloads.push(BundleOutputPayload {
             destination: output_dir.join("pliego.assets.json"),
             bytes: asset_plan,
@@ -2919,6 +2998,9 @@ fn compile_bundle_group(
                 destination: output_dir.join("pliego.index.json"),
                 bytes: project_index,
             });
+        }
+        if let Some(critical_outputs) = critical_outputs {
+            payloads.extend(critical_outputs);
         }
     }
     if arguments.usage_report {
@@ -2952,6 +3034,110 @@ fn compile_bundle_group(
         shared_styles,
         token_references,
     })
+}
+
+#[allow(clippy::too_many_arguments, clippy::too_many_lines)]
+fn build_critical_bundle_outputs(
+    evidence: &[u8],
+    asset_plan: &[u8],
+    usage: &PreparedUsageAnalysis,
+    reachability: &[u8],
+    candidates: &BTreeMap<String, Vec<ResolvedCandidate>>,
+    theme: &ThemeRegistry,
+    plan: &BundlePlanDocument,
+    output_dir: &Path,
+) -> Result<Vec<BundleOutputPayload>, CliFailure> {
+    let assets =
+        parse_asset_plan(asset_plan).map_err(|error| CliFailure::tool(error.to_string()))?;
+    let routes = assets
+        .routes()
+        .iter()
+        .map(|route| {
+            CriticalRouteInput::new(route.id(), route.path(), route.bundle_ids().iter().cloned())
+        })
+        .collect::<Vec<_>>();
+    let reachability_sha256 = sha256_hex(reachability);
+    let selection = verify_critical_evidence(
+        evidence,
+        usage.universe_sha256(),
+        &reachability_sha256,
+        usage.selection(),
+        &routes,
+    )?;
+    let mut payloads = Vec::new();
+    let mut manifest_routes = Vec::new();
+    for route in assets.routes() {
+        let Some(styles) = selection.styles(route.id()) else {
+            continue;
+        };
+        if styles.is_empty() {
+            return Err(CliFailure::tool(format!(
+                "critical route `{}` has no positive StyleId observations",
+                route.id()
+            )));
+        }
+        let mut selected = Vec::new();
+        for (bundle_id, style_id) in styles {
+            selected.extend(
+                candidates[bundle_id]
+                    .iter()
+                    .filter(|candidate| {
+                        format!("{:032x}", candidate.semantic.id.get()) == *style_id
+                    })
+                    .cloned(),
+            );
+        }
+        if selected.is_empty() {
+            return Err(CliFailure::tool(
+                "critical selection resolved no compiler styles",
+            ));
+        }
+        let references = referenced_tokens(selected.iter().map(|item| &item.semantic));
+        let artifact = compile_resolved_candidates_with_manifest(
+            theme,
+            &selected,
+            true,
+            plan.targets,
+            plan.format,
+            ArtifactGraphOptions {
+                theme_references: Some(&references),
+                ..ArtifactGraphOptions::default()
+            },
+            &mut CssCaches::default(),
+        )
+        .map_err(CliFailure::compilation)?;
+        let digest = sha256_hex(route.id().as_bytes());
+        let file = format!("critical-{}.css", &digest[..16]);
+        let css = artifact.css.into_bytes();
+        manifest_routes.push(CriticalCssRouteInput::new(
+            route.id(),
+            route.path(),
+            &file,
+            css.clone(),
+            styles.iter().cloned().collect(),
+        ));
+        payloads.push(BundleOutputPayload {
+            destination: output_dir.join(file),
+            bytes: css,
+        });
+    }
+    let format = match plan.format {
+        CssFormat::Minified => "minified",
+        CssFormat::Pretty => "pretty",
+    };
+    payloads.push(BundleOutputPayload {
+        destination: output_dir.join(CRITICAL_CSS_MANIFEST_FILE),
+        bytes: build_critical_css_manifest(
+            selection.evidence_sha256(),
+            usage.universe_sha256(),
+            &reachability_sha256,
+            &theme.id().to_string(),
+            plan.targets.as_str(),
+            format,
+            manifest_routes,
+        )?,
+    });
+    Ok(payloads)
 }
 
 fn bundle_usage_inputs(
@@ -3159,6 +3345,8 @@ fn append_bundle_control(
     observation_bytes: Option<&[u8]>,
     retention_path: Option<&Path>,
     retention_bytes: Option<&[u8]>,
+    critical_path: Option<&Path>,
+    critical_bytes: Option<&[u8]>,
     snapshots: &BTreeMap<String, BundleSourceSnapshot>,
     output_dir: &Path,
     theme: &LoadedTheme,
@@ -3180,6 +3368,9 @@ fn append_bundle_control(
     let retention_logical = retention_path
         .map(|path| bundle_logical_source_path(plan_dir, path))
         .transpose()?;
+    let critical_logical = critical_path
+        .map(|path| bundle_logical_source_path(plan_dir, path))
+        .transpose()?;
     let source_inputs = snapshots
         .values()
         .map(|snapshot| AuditSourceInput {
@@ -3188,7 +3379,7 @@ fn append_bundle_control(
             bytes: &snapshot.bytes,
         })
         .collect::<Vec<_>>();
-    let mut config_inputs = Vec::with_capacity(5);
+    let mut config_inputs = Vec::with_capacity(6);
     config_inputs.push(AuditSourceInput {
         logical_path: &plan_logical,
         role: "bundle-plan",
@@ -3219,6 +3410,13 @@ fn append_bundle_control(
         config_inputs.push(AuditSourceInput {
             logical_path: logical,
             role: "usage-retention",
+            bytes,
+        });
+    }
+    if let (Some(bytes), Some(logical)) = (critical_bytes, critical_logical.as_deref()) {
+        config_inputs.push(AuditSourceInput {
+            logical_path: logical,
+            role: "critical-style-evidence",
             bytes,
         });
     }
@@ -5694,11 +5892,10 @@ fn compile_resolved_candidates_with_manifest(
     let mut output = String::new();
     let mut emits_theme = false;
     if include_theme {
-        let theme_css = if graph.pruning.is_enabled() {
-            graph.theme_references.map_or_else(
-                || emit_used_theme(theme, semantic_styles.values().map(|(style, _)| style)),
-                |references| emit_theme_references(theme, references),
-            )
+        let theme_css = if let Some(references) = graph.theme_references {
+            emit_theme_references(theme, references)
+        } else if graph.pruning.is_enabled() {
+            emit_used_theme(theme, semantic_styles.values().map(|(style, _)| style))
         } else {
             emit_theme(theme)
         };

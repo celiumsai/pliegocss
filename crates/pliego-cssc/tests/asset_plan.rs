@@ -23,6 +23,10 @@ use pliego_css_ownership::{
     build_ownership_document, parse_asset_plan, parse_ownership,
 };
 use pliego_css_theme::THEME_ID_FORMAT_VERSION;
+use pliego_css_usage::{
+    CriticalCaptureInput, CriticalCaptureStage, CriticalEvidenceInput, CriticalStyleInput,
+    build_critical_evidence, parse_critical_css_manifest, parse_usage_analysis,
+};
 use serde_json::{Value, json};
 
 static NEXT_DIRECTORY: AtomicU64 = AtomicU64::new(0);
@@ -163,11 +167,113 @@ fn asset_plan_public_cli_contract() {
     let fixture = Fixture::new();
     verify_schema_four(&fixture);
     let schema_five = verify_schema_five_pruning(&fixture);
+    verify_critical_css_projection(&fixture);
     verify_schema_two_asset_plan_ownership_audit(&fixture, &schema_five);
     verify_asset_plan_budget_audit(&fixture, &schema_five);
     verify_reorder_check_and_read_only_drift(&fixture, &schema_five);
     verify_boolean_and_invalid_combinations(&fixture);
     verify_asset_generation_failure_publishes_nothing(&fixture, &schema_five);
+}
+
+#[allow(clippy::too_many_lines)]
+fn verify_critical_css_projection(fixture: &Fixture) {
+    let output = fixture.root().join("critical");
+    fs::create_dir(&output).expect("critical output directory must be created");
+    let mut bundle_arguments = project_arguments("critical", "reachability.json", true, false);
+    bundle_arguments.push("--usage-report".into());
+    assert_success(&run(fixture.root(), &bundle_arguments));
+
+    let usage_bytes = fs::read(output.join("pliego.usage.json")).expect("usage report must exist");
+    let usage = parse_usage_analysis(&usage_bytes).expect("usage report must be canonical");
+    let plan_bytes = fs::read(output.join("pliego.assets.json")).expect("asset plan must exist");
+    let plan = parse_asset_plan(&plan_bytes).expect("asset plan must be canonical");
+    let reachability = fs::read(fixture.root().join("reachability.json"))
+        .expect("reachability evidence must exist");
+
+    let captures = plan
+        .routes()
+        .iter()
+        .map(|route| {
+            let (bundle_id, style_id) = route
+                .bundle_ids()
+                .iter()
+                .find_map(|bundle_id| {
+                    let bytes = fs::read(output.join(format!("{bundle_id}.manifest.json"))).ok()?;
+                    let manifest: Value = serde_json::from_slice(&bytes).ok()?;
+                    let style_id = manifest["styles"]
+                        .as_array()?
+                        .first()?
+                        .get("styleId")?
+                        .as_str()?
+                        .to_owned();
+                    Some((bundle_id.clone(), style_id))
+                })
+                .unwrap_or_else(|| panic!("route `{}` must expose a selected style", route.id()));
+            CriticalCaptureInput::new(
+                format!("capture:{}", route.id()),
+                route.id(),
+                route.path(),
+                "chromium-test",
+                1440,
+                900,
+                CriticalCaptureStage::FirstContentfulPaint,
+                vec![CriticalStyleInput::new(bundle_id, style_id)],
+            )
+        })
+        .collect();
+    let evidence = build_critical_evidence(CriticalEvidenceInput::new(
+        usage.universe_sha256(),
+        sha256_hex(&reachability),
+        "asset-plan-test",
+        "1.0.0",
+        Vec::new(),
+        captures,
+    ))
+    .expect("critical evidence must be canonical");
+    fs::write(fixture.root().join("critical-evidence.json"), &evidence)
+        .expect("critical evidence must be written");
+
+    bundle_arguments.extend([
+        "--critical-evidence".into(),
+        "critical-evidence.json".into(),
+    ]);
+    assert_success(&run(fixture.root(), &bundle_arguments));
+    let manifest_bytes =
+        fs::read(output.join("pliego.critical.json")).expect("critical manifest must exist");
+    parse_critical_css_manifest(&manifest_bytes).expect("critical manifest must be canonical");
+    let manifest_json: Value =
+        serde_json::from_slice(&manifest_bytes).expect("critical manifest must be JSON");
+    let routes = manifest_json["routes"]
+        .as_array()
+        .expect("critical routes must be an array");
+    assert_eq!(routes.len(), plan.routes().len());
+    for route in routes {
+        let file = route["cssFile"]
+            .as_str()
+            .expect("critical route must name its CSS file");
+        let css = fs::read(output.join(file)).expect("critical CSS must exist");
+        assert!(!css.is_empty());
+        assert_eq!(route["cssBytes"].as_u64(), Some(usize_u64(css.len())));
+        assert_eq!(route["cssSha256"], sha256_hex(&css));
+    }
+
+    let baseline = output_snapshot(&output);
+    assert_success(&run(fixture.root(), &bundle_arguments));
+    assert_eq!(output_snapshot(&output), baseline);
+    let mut check = bundle_arguments.clone();
+    check.push("--check".into());
+    assert_success(&run(fixture.root(), &check));
+    assert_eq!(output_snapshot(&output), baseline);
+
+    fs::write(fixture.root().join("critical-evidence.json"), b"{}\n")
+        .expect("invalid evidence must be written");
+    let failed = run(fixture.root(), &bundle_arguments);
+    assert_failure(&failed, "invalid critical style evidence");
+    assert_eq!(
+        output_snapshot(&output),
+        baseline,
+        "invalid evidence must not mutate the last valid critical output"
+    );
 }
 
 #[allow(clippy::too_many_lines)]

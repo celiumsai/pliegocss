@@ -2,6 +2,10 @@
 
 Fecha base: 2026-07-12
 
+**Estado desde 2026-07-18:** pausado después de un checkpoint experimental verificable. Este
+documento preserva el backlog histórico; no constituye un calendario de producto activo. Véase
+[`docs/status/paused-checkpoint-2026-07-18.md`](docs/status/paused-checkpoint-2026-07-18.md).
+
 ## Objetivo
 
 Construir el compilador y verificador standards-first de CSS para humanos y agentes: CSS estándar de

@@ -15,7 +15,10 @@ pre-1.0 compatibility policy.
 - A closed critical-style capture schema and public builder/parser/verifier. Evidence records exact
   route, browser, viewport, paint stage, and positive bundle-qualified StyleIds; it is hash-bound to
   Usage Analysis and reachability, then checked against retained styles and Asset Plan route
-  membership. CSS projection and the browser producer remain in progress.
+  membership. `bundle --critical-evidence` now projects verified per-route CSS, publishes an
+  integrity-bound `pliego.critical.json`, participates in atomic grouped publication and read-only
+  `--check`, and rejects stale or invalid evidence without changing the last valid output. The real
+  browser producer and before/after field measurements remain open.
 - `bundle --usage-report` now also emits canonical `pliego.token-usage.json`, projecting the active
   Token Graph over the exact retained StyleId selection as `direct`, `dependency`, or `unused` with
   bundle-qualified consumers and actual custom-property emission state. The new read-only

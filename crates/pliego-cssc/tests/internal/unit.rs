@@ -973,6 +973,7 @@ fn bundle_cli_parsing_is_strict_and_global_diagnostics_respect_option_arity() {
             control: false,
             observations: None,
             retention: None,
+            critical_evidence: None,
             reachability: None,
             physical_trace: false,
             pruning: ReachabilityPruning::Disabled,
@@ -996,6 +997,29 @@ fn bundle_cli_parsing_is_strict_and_global_diagnostics_respect_option_arity() {
             asset_plan: true,
             control: true,
             physical_trace: false,
+            ..
+        }))
+    ));
+    assert!(matches!(
+        parse_arguments(os(&[
+            "bundle",
+            "--plan",
+            "plan.toml",
+            "--output-dir",
+            "dist",
+            "--manifest-version",
+            "5",
+            "--reachability",
+            "reachability.json",
+            "--asset-plan",
+            "--usage-report",
+            "--critical-evidence",
+            "critical.json",
+        ])),
+        Ok(Command::Bundle(BundleArgs {
+            asset_plan: true,
+            usage_report: true,
+            critical_evidence: Some(_),
             ..
         }))
     ));
@@ -1147,6 +1171,37 @@ fn bundle_cli_parsing_is_strict_and_global_diagnostics_respect_option_arity() {
             "--retention",
             "one.json",
             "--retention",
+            "two.json",
+        ]),
+        os(&[
+            "bundle",
+            "--plan",
+            "plan.toml",
+            "--output-dir",
+            "dist",
+            "--manifest-version",
+            "5",
+            "--reachability",
+            "reachability.json",
+            "--asset-plan",
+            "--critical-evidence",
+            "critical.json",
+        ]),
+        os(&[
+            "bundle",
+            "--plan",
+            "plan.toml",
+            "--output-dir",
+            "dist",
+            "--manifest-version",
+            "5",
+            "--reachability",
+            "reachability.json",
+            "--asset-plan",
+            "--usage-report",
+            "--critical-evidence",
+            "one.json",
+            "--critical-evidence",
             "two.json",
         ]),
     ] {

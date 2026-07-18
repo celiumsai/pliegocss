@@ -7,6 +7,10 @@ use super::{MAX_USAGE_DOCUMENT_BYTES, UsageSelection};
 
 /// Wire version of explicit initial-render style evidence.
 pub const CRITICAL_EVIDENCE_SCHEMA_VERSION: u8 = 1;
+/// Wire version of the generated critical-CSS manifest.
+pub const CRITICAL_CSS_MANIFEST_SCHEMA_VERSION: u8 = 1;
+/// Fixed adjacent filename for the generated critical-CSS manifest.
+pub const CRITICAL_CSS_MANIFEST_FILE: &str = "pliego.critical.json";
 
 const EVIDENCE_KIND: &str = "pliegocss-critical-style-capture/1";
 const INVALID: &str = "invalid critical style evidence";
@@ -158,6 +162,42 @@ impl CriticalSelection {
     pub fn routes(&self) -> impl Iterator<Item = (&str, &BTreeSet<(String, String)>)> {
         self.routes.iter().map(|(id, styles)| (id.as_str(), styles))
     }
+
+    /// Returns the union selected for one route.
+    #[must_use]
+    pub fn styles(&self, route_id: &str) -> Option<&BTreeSet<(String, String)>> {
+        self.routes.get(route_id)
+    }
+}
+
+/// One generated critical CSS route artifact supplied to the canonical manifest builder.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct CriticalCssRouteInput {
+    route_id: String,
+    route_path: String,
+    css_file: String,
+    css: Vec<u8>,
+    styles: Vec<(String, String)>,
+}
+
+impl CriticalCssRouteInput {
+    /// Creates one integrity-bound route artifact input.
+    #[must_use]
+    pub fn new(
+        route_id: impl Into<String>,
+        route_path: impl Into<String>,
+        css_file: impl Into<String>,
+        css: Vec<u8>,
+        styles: Vec<(String, String)>,
+    ) -> Self {
+        Self {
+            route_id: route_id.into(),
+            route_path: route_path.into(),
+            css_file: css_file.into(),
+            css,
+            styles,
+        }
+    }
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -197,6 +237,31 @@ struct Capture {
 struct CriticalStyle {
     bundle_id: String,
     style_id: String,
+}
+
+#[derive(Deserialize, Eq, PartialEq, Serialize)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+struct CriticalCssManifest {
+    schema_version: u8,
+    manifest_kind: String,
+    evidence_sha256: String,
+    universe_sha256: String,
+    reachability_sha256: String,
+    theme_id: String,
+    targets: String,
+    format: String,
+    routes: Vec<CriticalCssRoute>,
+}
+
+#[derive(Deserialize, Eq, PartialEq, Serialize)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+struct CriticalCssRoute {
+    route_id: String,
+    route_path: String,
+    css_file: String,
+    css_bytes: usize,
+    css_sha256: String,
+    styles: Vec<CriticalStyle>,
 }
 
 /// Builds canonical critical-style evidence bytes.
@@ -294,6 +359,142 @@ pub fn verify_critical_evidence(
     })
 }
 
+/// Builds the canonical integrity manifest for generated per-route critical CSS.
+///
+/// # Errors
+///
+/// Returns an error for invalid hashes, identities, filenames, duplicate routes/styles, empty
+/// artifacts, or document-limit violations.
+#[allow(clippy::too_many_arguments)]
+pub fn build_critical_css_manifest(
+    evidence_sha256: &str,
+    universe_sha256: &str,
+    reachability_sha256: &str,
+    theme_id: &str,
+    targets: &str,
+    format: &str,
+    routes: impl IntoIterator<Item = CriticalCssRouteInput>,
+) -> Result<Vec<u8>, String> {
+    hash(evidence_sha256)?;
+    hash(universe_sha256)?;
+    hash(reachability_sha256)?;
+    hex(theme_id, 32)?;
+    valid(matches!(targets, "modern" | "none"))?;
+    valid(matches!(format, "minified" | "pretty"))?;
+    let mut routes = routes
+        .into_iter()
+        .map(|input| {
+            text(&input.route_id)?;
+            text(&input.route_path)?;
+            valid(
+                input.css_file.starts_with("critical-")
+                    && input.css_file.strip_suffix(".css").is_some(),
+            )?;
+            valid(!input.css.is_empty())?;
+            let mut styles = input
+                .styles
+                .into_iter()
+                .map(|(bundle_id, style_id)| {
+                    validate_asset_bundle_id(&bundle_id).map_err(|_| INVALID.to_owned())?;
+                    hex(&style_id, 32)?;
+                    Ok(CriticalStyle {
+                        bundle_id,
+                        style_id,
+                    })
+                })
+                .collect::<Result<Vec<_>, String>>()?;
+            styles.sort();
+            valid(styles.windows(2).all(|pair| pair[0] != pair[1]))?;
+            Ok(CriticalCssRoute {
+                route_id: input.route_id,
+                route_path: input.route_path,
+                css_file: input.css_file,
+                css_bytes: input.css.len(),
+                css_sha256: sha256_hex(&input.css),
+                styles,
+            })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+    routes.sort_by(|left, right| left.route_id.cmp(&right.route_id));
+    valid(!routes.is_empty() && routes.len() <= MAX_ITEMS)?;
+    valid(
+        routes
+            .windows(2)
+            .all(|pair| pair[0].route_id != pair[1].route_id),
+    )?;
+    let document = CriticalCssManifest {
+        schema_version: CRITICAL_CSS_MANIFEST_SCHEMA_VERSION,
+        manifest_kind: "pliegocss-critical-css/1".into(),
+        evidence_sha256: evidence_sha256.into(),
+        universe_sha256: universe_sha256.into(),
+        reachability_sha256: reachability_sha256.into(),
+        theme_id: theme_id.into(),
+        targets: targets.into(),
+        format: format.into(),
+        routes,
+    };
+    validate_css_manifest(&document)?;
+    encode_css_manifest(&document)
+}
+
+/// Parses and byte-canonically validates a generated critical-CSS manifest.
+///
+/// # Errors
+///
+/// Returns an error for malformed, noncanonical, inconsistent, or unbounded input.
+pub fn parse_critical_css_manifest(source: &[u8]) -> Result<(), String> {
+    valid(source.len() <= MAX_USAGE_DOCUMENT_BYTES)?;
+    let document: CriticalCssManifest =
+        serde_json::from_slice(source).map_err(|_| INVALID.to_owned())?;
+    validate_css_manifest(&document)?;
+    valid(encode_css_manifest(&document)? == source)
+}
+
+fn validate_css_manifest(document: &CriticalCssManifest) -> Result<(), String> {
+    valid(
+        document.schema_version == CRITICAL_CSS_MANIFEST_SCHEMA_VERSION
+            && document.manifest_kind == "pliegocss-critical-css/1",
+    )?;
+    hash(&document.evidence_sha256)?;
+    hash(&document.universe_sha256)?;
+    hash(&document.reachability_sha256)?;
+    hex(&document.theme_id, 32)?;
+    valid(matches!(document.targets.as_str(), "modern" | "none"))?;
+    valid(matches!(document.format.as_str(), "minified" | "pretty"))?;
+    valid(!document.routes.is_empty() && document.routes.len() <= MAX_ITEMS)?;
+    valid(
+        document
+            .routes
+            .windows(2)
+            .all(|pair| pair[0].route_id < pair[1].route_id),
+    )?;
+    let mut files = BTreeSet::new();
+    for route in &document.routes {
+        text(&route.route_id)?;
+        text(&route.route_path)?;
+        valid(
+            route.css_file.starts_with("critical-")
+                && route.css_file.strip_suffix(".css").is_some(),
+        )?;
+        valid(files.insert(route.css_file.as_str()))?;
+        valid(route.css_bytes > 0)?;
+        hash(&route.css_sha256)?;
+        valid(route.styles.windows(2).all(|pair| pair[0] < pair[1]))?;
+        for style in &route.styles {
+            validate_asset_bundle_id(&style.bundle_id).map_err(|_| INVALID.to_owned())?;
+            hex(&style.style_id, 32)?;
+        }
+    }
+    Ok(())
+}
+
+fn encode_css_manifest(document: &CriticalCssManifest) -> Result<Vec<u8>, String> {
+    let mut output = serde_json::to_vec_pretty(document).map_err(|_| INVALID.to_owned())?;
+    output.push(b'\n');
+    valid(output.len() <= MAX_USAGE_DOCUMENT_BYTES)?;
+    Ok(output)
+}
+
 impl CriticalEvidence {
     fn canonicalize(&mut self) -> Result<(), String> {
         valid(self.schema_version == 1 && self.evidence_kind == EVIDENCE_KIND)?;
@@ -372,8 +573,9 @@ mod tests {
     use std::collections::{BTreeMap, BTreeSet};
 
     use super::{
-        CriticalCaptureInput, CriticalCaptureStage, CriticalEvidenceInput, CriticalRouteInput,
-        CriticalStyleInput, build_critical_evidence, parse_critical_evidence,
+        CriticalCaptureInput, CriticalCaptureStage, CriticalCssRouteInput, CriticalEvidenceInput,
+        CriticalRouteInput, CriticalStyleInput, build_critical_css_manifest,
+        build_critical_evidence, parse_critical_css_manifest, parse_critical_evidence,
         verify_critical_evidence,
     };
     use crate::UsageSelection;
@@ -416,6 +618,23 @@ mod tests {
                 .expect("evidence must verify");
         let (_, styles) = selection.routes().next().expect("route union must exist");
         assert!(styles.contains(&("application".into(), STYLE.into())));
+        let manifest = build_critical_css_manifest(
+            selection.evidence_sha256(),
+            &"a".repeat(64),
+            &"b".repeat(64),
+            "0123456789abcdef0123456789abcdef",
+            "modern",
+            "minified",
+            [CriticalCssRouteInput::new(
+                "route:home",
+                "/",
+                "critical-0123456789abcdef.css",
+                b".pc_test{display:block}\n".to_vec(),
+                vec![("application".into(), STYLE.into())],
+            )],
+        )
+        .expect("critical CSS manifest must build");
+        parse_critical_css_manifest(&manifest).expect("critical manifest must be canonical");
         assert!(
             verify_critical_evidence(&bytes, &"c".repeat(64), &"b".repeat(64), &selected, &routes,)
                 .is_err()
