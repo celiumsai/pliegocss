@@ -1,14 +1,17 @@
 # Changelog
 
-All notable user-facing changes to PliegoCSS are recorded here. The project is still unreleased at
-`0.0.0`; entries under **Unreleased** describe the candidate workspace, not a published stability
-promise.
+All notable user-facing changes to PliegoCSS are recorded here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and releases will use
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) together with PliegoCSS's stricter
 pre-1.0 compatibility policy.
 
 ## [Unreleased]
+
+## [0.1.0-rc.1] - 2026-07-20
+
+The first release candidate establishes the version-locked nineteen-crate publication boundary and
+the selected `0.1.x` formats. It is intended for evaluation and integration testing before `0.1.0`.
 
 ### Added
 
