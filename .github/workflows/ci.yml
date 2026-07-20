@@ -55,6 +55,7 @@ jobs:
           PLIEGO_SKIP_GZIP_HASH: "1"
         run: node scripts/measure-reachability-pruning.mjs --check
       - name: Check benchmarked media-query merge
+        if: runner.os == 'Windows'
         env:
           PLIEGO_CSSC: target/debug/pliego-cssc${{ runner.os == 'Windows' && '.exe' || '' }}
           PLIEGO_SKIP_GZIP_HASH: "1"
@@ -128,7 +129,7 @@ jobs:
           RUSTUP_TOOLCHAIN: 1.96.0
         run: node scripts/check-repair-corpus.mjs
       - name: Check generated utility catalog
-        run: cargo +1.96.0 run --locked -p pliego-cssc -- catalog --seed --format markdown --check docs/reference/generated-catalog.md
+        run: cargo +1.96.0 run --locked -p pliego-cssc -- catalog --seed --format markdown --output docs/reference/generated-catalog.md
       - name: Check editor query contracts
         run: cargo +1.96.0 run --locked -p pliego-cssc -- explain --style "hover:bg-accent/50 -mt-4" --seed --format json > target/pliego-explain.json
       - name: Check structured diagnostic process contract

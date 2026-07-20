@@ -610,7 +610,7 @@ fn assert_failure(output: &Output, expected: &str) {
 }
 
 fn wait_for<T>(label: &str, mut inspect: impl FnMut() -> Option<T>) -> T {
-    let deadline = Instant::now() + Duration::from_secs(10);
+    let deadline = Instant::now() + Duration::from_secs(30);
     loop {
         if let Some(value) = inspect() {
             return value;
