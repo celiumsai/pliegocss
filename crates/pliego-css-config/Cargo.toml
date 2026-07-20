@@ -18,7 +18,7 @@ compatibility-data = ["dep:lightningcss"]
 css-analysis = ["dep:lightningcss"]
 
 [dependencies]
-lightningcss = { version = "1.0.0-alpha.71", default-features = false, optional = true }
+lightningcss = { version = "=1.0.0-alpha.71", default-features = false, optional = true }
 pliego-css-ir.workspace = true
 pliego-css-theme.workspace = true
 serde = { version = "1.0.228", features = ["derive"] }

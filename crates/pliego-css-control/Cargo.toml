@@ -24,7 +24,7 @@ projection = [
 ]
 
 [dependencies]
-lightningcss = { version = "1.0.0-alpha.71", default-features = false, optional = true }
+lightningcss = { version = "=1.0.0-alpha.71", default-features = false, optional = true }
 pliego-css-build = { workspace = true, features = ["artifacts"], optional = true }
 pliego-css-config = { workspace = true, features = ["compatibility-data", "css-analysis"], optional = true }
 pliego-css-ir = { workspace = true, optional = true }

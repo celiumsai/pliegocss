@@ -7,7 +7,10 @@ use pliego_css_io::{
 };
 
 fn fixture(name: &str) -> std::path::PathBuf {
-    std::env::temp_dir().join(format!("pliego-io-{name}-{}", std::process::id()))
+    std::env::current_dir()
+        .expect("current directory")
+        .join("target/pliego-io-tests")
+        .join(format!("{name}-{}", std::process::id()))
 }
 
 #[test]

@@ -34,7 +34,7 @@ catalog = [
 ]
 
 [dependencies]
-lightningcss = { version = "1.0.0-alpha.71", default-features = false, optional = true }
+lightningcss = { version = "=1.0.0-alpha.71", default-features = false, optional = true }
 pliego-css-compiler = { workspace = true, optional = true }
 pliego-css-config.workspace = true
 pliego-css-ir = { workspace = true, optional = true }
