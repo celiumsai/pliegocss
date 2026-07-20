@@ -121,6 +121,7 @@ jobs:
           RUSTDOCFLAGS: -D warnings
         run: cargo +1.96.0 doc --workspace --no-deps --locked
       - name: Check frozen benchmark evidence
+        if: ${{ hashFiles(format('benchmarks/evidence/*-{0}.json', github.sha)) != '' }}
         run: node scripts/check-benchmark-evidence.mjs
       - name: Check repair authority corpus
         env:

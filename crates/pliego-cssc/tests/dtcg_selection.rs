@@ -29,11 +29,11 @@ impl TemporaryDirectory {
             .as_nanos();
         for _ in 0..32 {
             let sequence = NEXT_DIRECTORY.fetch_add(1, Ordering::Relaxed);
-            let path = std::env::temp_dir().join(format!(
-                "pliego-cssc-dtcg-selection-{}-{timestamp}-{sequence}",
-                std::process::id()
-            ));
-            match fs::create_dir(&path) {
+            let path = std::env::current_dir()
+                .expect("current directory")
+                .join("target/pliego-cssc-dtcg-selection")
+                .join(format!("{}-{timestamp}-{sequence}", std::process::id()));
+            match fs::create_dir_all(&path) {
                 Ok(()) => return Self(path),
                 Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {}
                 Err(error) => panic!("cannot create `{}`: {error}", path.display()),
