@@ -109,7 +109,7 @@ owned route bundles. `pliego-cssc watch` only regenerates artifacts; composed wi
 
 ## Status and evidence
 
-- [Active development checkpoint (2026-07-19)](./status/active-development-checkpoint-2026-07-19.md)
+- [0.1.0 release readiness](./product/release-readiness-0.1.0.md)
 - [F0 verification](./status/f0-verification.md)
 - [F1 parser and IR](./status/f1.md)
 - [F2 semantic compiler](./status/f2.md)

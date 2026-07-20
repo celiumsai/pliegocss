@@ -5,7 +5,7 @@ Status: **normative traceability baseline; alpha gates are not all closed**
 This page tracks the original A1-A12 engineering research. The later
 [strategic product contract](./strategic-product-contract-2026.md) converts the complete 14 July 2026
 CSS/Rust/AI report into the controlling product and R0-R3 release contract. Both are normative
-alongside `EXECUTION_PLAN_ULTRA.md`: a release claim must cite current code, a reproducible command,
+alongside the repository execution plan: a release claim must cite current code, a reproducible command,
 and an artifact for every gate below. A roadmap checkbox or an indirect smoke test is not evidence.
 
 ## Product doctrine

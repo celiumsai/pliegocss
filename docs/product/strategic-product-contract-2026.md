@@ -10,7 +10,7 @@ CSS nativo + Rust + agentes de IA* into release gates. The reviewed source is th
 The report explicitly describes proposed capabilities, not existing implementation. Consequently,
 this page distinguishes current evidence from required evidence and no unchecked row may be implied
 by product copy. It is normative alongside the
-[research requirements](./research-requirements.md) and `EXECUTION_PLAN_ULTRA.md`.
+[research requirements](./research-requirements.md) and the repository execution plan.
 
 One source correction is recorded without changing the report's architectural conclusion: DTCG
 2025.10 is a stable Final Community Group Report, not a preview draft. It is still not a W3C

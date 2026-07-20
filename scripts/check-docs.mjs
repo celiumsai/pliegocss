@@ -22,7 +22,6 @@ function markdownFiles(directory) {
 
 const files = [
   resolve(ROOT, "README.md"),
-  resolve(ROOT, "DOCUMENTATION_PLAN.md"),
   ...markdownFiles(resolve(ROOT, "docs")),
   resolve(ROOT, "editors", "vscode", "README.md"),
   resolve(ROOT, "editors", "neovim", "README.md"),
