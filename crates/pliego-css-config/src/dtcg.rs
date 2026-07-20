@@ -875,7 +875,14 @@ impl<'a> Resolver<'a> {
                 })?;
             let dependencies = self.dependencies(&source)?;
             for dependency in dependencies.into_iter().rev() {
-                match self.states[dependency] {
+                let state = self
+                    .states
+                    .get(dependency)
+                    .copied()
+                    .ok_or(DtcgError::Limit(
+                        "resolved dependency index exceeds token graph",
+                    ))?;
+                match state {
                     ResolveState::Unvisited => stack.push((dependency, false)),
                     ResolveState::Visiting => return Err(self.circular_reference(dependency)),
                     ResolveState::Resolved => {}

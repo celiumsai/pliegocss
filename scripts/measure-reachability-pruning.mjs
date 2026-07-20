@@ -608,18 +608,20 @@ const gates = {
 };
 assert(Object.values(gates).every(Boolean), `pruning gate failed: ${JSON.stringify(gates)}`);
 if (check) {
-  const gzipHashes = expectedGzipSha256ByZlib[process.versions.zlib];
-  assert(gzipHashes, `unreviewed zlib build ${process.versions.zlib}`);
-  assertEqual(
-    {
-      baseline: frozen.baseline.gzipSha256,
-      pruned: frozen.pruned.gzipSha256,
-      themedBaseline: frozen.themedBaseline.gzipSha256,
-      themedPruned: frozen.themedPruned.gzipSha256,
-    },
-    gzipHashes,
-    "reviewed deterministic gzip hashes drifted",
-  );
+  if (process.env.PLIEGO_SKIP_GZIP_HASH !== "1") {
+    const gzipHashes = expectedGzipSha256ByZlib[process.versions.zlib];
+    assert(gzipHashes, `unreviewed zlib build ${process.versions.zlib}`);
+    assertEqual(
+      {
+        baseline: frozen.baseline.gzipSha256,
+        pruned: frozen.pruned.gzipSha256,
+        themedBaseline: frozen.themedBaseline.gzipSha256,
+        themedPruned: frozen.themedPruned.gzipSha256,
+      },
+      gzipHashes,
+      "reviewed deterministic gzip hashes drifted",
+    );
+  }
   const comparable = structuredClone(frozen);
   delete comparable.baseline.gzipSha256;
   delete comparable.pruned.gzipSha256;

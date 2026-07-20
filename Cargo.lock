@@ -426,7 +426,9 @@ dependencies = [
 name = "pliego-css-build"
 version = "0.1.0-rc.1"
 dependencies = [
+ "cssparser",
  "lightningcss",
+ "parcel_selectors",
  "pliego-css-compiler",
  "pliego-css-config",
  "pliego-css-ir",
@@ -441,7 +443,9 @@ dependencies = [
 name = "pliego-css-cascade"
 version = "0.1.0-rc.1"
 dependencies = [
+ "cssparser",
  "lightningcss",
+ "parcel_selectors",
  "serde",
 ]
 
@@ -459,8 +463,10 @@ dependencies = [
 name = "pliego-css-config"
 version = "0.1.0-rc.1"
 dependencies = [
+ "cssparser",
  "libc",
  "lightningcss",
+ "parcel_selectors",
  "pliego-css-ir",
  "pliego-css-theme",
  "serde",
@@ -473,7 +479,9 @@ dependencies = [
 name = "pliego-css-control"
 version = "0.1.0-rc.1"
 dependencies = [
+ "cssparser",
  "lightningcss",
+ "parcel_selectors",
  "pliego-css-build",
  "pliego-css-config",
  "pliego-css-ir",

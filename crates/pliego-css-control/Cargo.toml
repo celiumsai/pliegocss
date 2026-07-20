@@ -25,6 +25,8 @@ projection = [
 
 [dependencies]
 lightningcss = { version = "=1.0.0-alpha.71", default-features = false, optional = true }
+cssparser = "=0.33.0"
+parcel_selectors = "=0.28.2"
 pliego-css-build = { workspace = true, features = ["artifacts"], optional = true }
 pliego-css-config = { workspace = true, features = ["compatibility-data", "css-analysis"], optional = true }
 pliego-css-ir = { workspace = true, optional = true }

@@ -614,10 +614,10 @@ mod tests {
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_nanos();
-        let root = std::env::temp_dir().join(format!(
-            "pliego-css-lsp-navigation-{}-{nonce}",
-            std::process::id()
-        ));
+        let root = std::env::current_dir()
+            .expect("current directory")
+            .join("target/pliego-css-lsp-tests")
+            .join(format!("navigation-{}-{nonce}", std::process::id()));
         let source_dir = root.join("src");
         let output_dir = root.join("out");
         fs::create_dir_all(&source_dir).unwrap();

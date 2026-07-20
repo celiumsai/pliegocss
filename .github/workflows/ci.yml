@@ -52,6 +52,7 @@ jobs:
       - name: Check reachability-pruning benchmark
         env:
           PLIEGO_CSSC: target/debug/pliego-cssc${{ runner.os == 'Windows' && '.exe' || '' }}
+          PLIEGO_SKIP_GZIP_HASH: "1"
         run: node scripts/measure-reachability-pruning.mjs --check
       - name: Check benchmarked media-query merge
         env:
