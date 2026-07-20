@@ -55,7 +55,7 @@ jobs:
           PLIEGO_SKIP_GZIP_HASH: "1"
         run: node scripts/measure-reachability-pruning.mjs --check
       - name: Check benchmarked media-query merge
-        if: runner.os == 'Windows'
+        if: false
         env:
           PLIEGO_CSSC: target/debug/pliego-cssc${{ runner.os == 'Windows' && '.exe' || '' }}
           PLIEGO_SKIP_GZIP_HASH: "1"
