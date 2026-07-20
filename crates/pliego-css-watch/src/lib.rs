@@ -325,7 +325,9 @@ mod platform {
 mod tests {
     use super::{snapshot_file, watch_roots};
     use std::fs;
-    use std::time::{Duration, SystemTime, UNIX_EPOCH};
+    #[cfg(any(target_os = "linux", windows))]
+    use std::time::Duration;
+    use std::time::{SystemTime, UNIX_EPOCH};
 
     #[test]
     fn roots_keep_recursive_directories_and_stable_file_parents() {
