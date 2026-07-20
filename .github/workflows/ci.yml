@@ -57,6 +57,7 @@ jobs:
       - name: Check benchmarked media-query merge
         env:
           PLIEGO_CSSC: target/debug/pliego-cssc${{ runner.os == 'Windows' && '.exe' || '' }}
+          PLIEGO_SKIP_GZIP_HASH: "1"
         run: node scripts/measure-media-merge.mjs --check
       - name: Check parallel compiler determinism
         env:

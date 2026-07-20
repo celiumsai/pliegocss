@@ -96,6 +96,13 @@ impl StyleId {
 }
 
 /// A compile-time validated style literal.
+///
+/// Construction is intentionally sealed; callers receive values from [`pc!`] or [`pcx!`].
+///
+/// ```compile_fail
+/// use pliego_css::Style;
+/// let _forged = Style { id: Style::EMPTY.id() };
+/// ```
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 #[repr(transparent)]
 pub struct Style {

@@ -1,5 +1,0 @@
-error[E0451]: field `id` of struct `Style` is private
- --> tests/ui/fail/internal_constructor.rs:5:9
-  |
-5 |         id: Style::EMPTY.id(),
-  |         ^^^^^^^^^^^^^^^^^^^^^ private field

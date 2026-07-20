@@ -73,8 +73,11 @@ fn temp_dir(name: &str) -> PathBuf {
         .duration_since(UNIX_EPOCH)
         .expect("system clock")
         .as_nanos();
-    let path = env::temp_dir().join(format!("pliego-cssc-{name}-{}-{nonce}", std::process::id()));
-    fs::create_dir(&path).expect("create temporary directory");
+    let path = env::current_dir()
+        .expect("current directory")
+        .join("target/pliego-cssc-tests")
+        .join(format!("{name}-{}-{nonce}", std::process::id()));
+    fs::create_dir_all(&path).expect("create temporary directory");
     path
 }
 
