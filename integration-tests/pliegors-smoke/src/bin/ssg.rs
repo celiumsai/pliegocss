@@ -371,7 +371,7 @@ fn validate_plan(plan: &AssetPlan) -> Result<(), Box<dyn std::error::Error>> {
         || plan.application_coverage != "adapter-attested-complete"
         || plan.style_id_format_version != 2
         || plan.class_name_format_version != 1
-        || plan.theme_id_format_version != 1
+        || plan.theme_id_format_version != 2
         || !lower_hex(&plan.theme_id, 32)
         || plan.targets != "modern"
         || plan.format != "minified"

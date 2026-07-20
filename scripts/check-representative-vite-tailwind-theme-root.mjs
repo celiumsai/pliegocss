@@ -1,0 +1,28 @@
+import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
+import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { resolve } from "node:path";
+
+const root = resolve(import.meta.dirname, "..");
+const source = resolve(root, "integration-tests/representative/vite-tailwind-inventory");
+const stage = resolve(root, "target/tests/vite-tailwind-theme-root");
+const binary = resolve(root, process.platform === "win32" ? "target/debug/pliego-cssc.exe" : "target/debug/pliego-cssc");
+const run = (args) => { const result = spawnSync(binary, args, {cwd:stage,encoding:"utf8"}); if(result.status!==0) throw new Error(`${args.join(' ')} failed:\n${result.stderr}`); return result.stdout; };
+const sha = (bytes) => createHash("sha256").update(bytes).digest("hex");
+rmSync(stage,{recursive:true,force:true}); mkdirSync(stage,{recursive:true}); cpSync(source,stage,{recursive:true});
+const plan=JSON.parse(run(["migration-project-plan","."]));
+const proposal=plan.proposals.find((item)=>item.kind==="theme-root-projection");
+if(!proposal||proposal.automatic!==false) throw new Error("theme projection proposal absent or automatic");
+const file=resolve(stage,proposal.file); const before=readFileSync(file);
+const match=before.toString("utf8").match(/@theme\s*\{([^{}]*)\}/);
+if(!match) throw new Error("closed theme block absent");
+const after=Buffer.concat([before,Buffer.from(`/* PliegoCSS projected Tailwind theme */\n:root {${match[1]}}\n`)]);
+if(sha(after)!==proposal.afterSha256) throw new Error("projection hash disagrees with plan");
+writeFileSync(resolve(stage,"before.css"),before); writeFileSync(resolve(stage,"after.css"),after);
+run(["migration-replace-apply","--file",proposal.file,"--before","before.css","--after","after.css","--receipt","receipt.json"]);
+const applied=JSON.parse(run(["migration-project-inventory","."]));
+if(applied.sources.find((item)=>item.file===proposal.file).sourceSha256!==proposal.afterSha256) throw new Error("applied inventory mismatch");
+run(["migration-replace-rollback","--file",proposal.file,"--receipt","receipt.json"]);
+if(sha(readFileSync(file))!==proposal.beforeSha256) throw new Error("rollback bytes mismatch");
+rmSync(stage,{recursive:true,force:true});
+process.stdout.write(`${JSON.stringify({schemaVersion:1,fixture:"vite-tailwind-inventory-copy",proposal,apply:"passed",inventory:"passed",rollback:"passed"},null,2)}\n`);

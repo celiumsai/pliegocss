@@ -1,0 +1,19 @@
+schema = 1
+targets = "modern"
+format = "minified"
+
+[theme]
+kind = "seed"
+
+[bundles.global]
+sources = ["src/global.rs"]
+emit-theme = true
+
+[bundles.home]
+sources = ["src/home.rs"]
+
+[bundles.visit]
+sources = ["src/visit.rs"]
+
+[bundles.counter]
+sources = ["src/counter.rs"]

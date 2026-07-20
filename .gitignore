@@ -1,5 +1,6 @@
 /node_modules/
 /target/
+/.hermes/
 /.pliegocss-repair.lock
 /benchmarks/tailwind-v4/dist/
 /benchmarks/rust-check/runtime/
@@ -16,3 +17,5 @@
 /editors/neovim/.nvim-test/
 *.profraw
 *.pliego.lock
+
+/integration-tests/representative/rust-typed-control/target/

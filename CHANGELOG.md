@@ -419,6 +419,26 @@ pre-1.0 compatibility policy.
 
 ### Compatibility
 
+- Split hardened filesystem boundaries into two dependency-light leaf crates: `pliego-css-io` owns
+  bounded no-follow reads, while `pliego-css-publication` owns advisory locks, identity-bound sibling
+  reservation, rollback-capable grouped publication, and optional durability. This keeps watch free
+  from parser/Serde dependencies and keeps publication machinery out of the build crate's archive.
+- Hardened the LSP transport boundary: framing now caps aggregate headers and rejects duplicate
+  `Content-Length`; malformed notifications do not terminate or mutate the session; workspace-folder
+  fallback and file-URI authority handling are explicit; semantic/catalog cache identity includes
+  compiler, root, and current bounded configuration bytes so theme changes cannot reuse stale data.
+- Unified bounded regular-file reads for source/watch/LSP paths: parent and leaf symlinks or Windows
+  reparse points are rejected, the opened descriptor is revalidated, reads are capped, and special
+  files are refused. TOML theme loading now applies the same 16 MiB/non-link boundary as DTCG input.
+- Removed the public doc-hidden `Style::__from_compiled_id` escape hatch. `pc!` and `pcx!` retain a
+  lockstep hygienic bridge, while ordinary consumers can no longer fabricate an apparently compiled
+  class identity through the supported `Style` surface. Compiler tooling also gains fallible
+  composition entry points that validate mutable/manual semantic IR before indexing intern tables.
+- Migrated `ThemeId` to format 2: a domain-separated, explicitly framed canonical stream is hashed
+  with SHA-256 and truncated to its first 128 bits. Theme binary format 2 stores the new identity;
+  format-1 FNV artifacts are rejected explicitly and must be regenerated. Because ThemeId is part of
+  StyleId, applications must regenerate macro output, CSS, manifests, catalogs, Asset Plans, Project
+  Indexes, token graphs, control artifacts, and class-keyed caches as one coordinated revision.
 - Kept `modern` as the compile default to preserve candidate CSS, made `none` the explicit unmanaged
   handoff, and defined reset `none` plus standard-class scope without hidden global CSS.
 - Added machine-enforced candidate vectors for representative StyleId/class values, theme identity

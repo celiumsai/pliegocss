@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Northstar Tailwind dashboard</title>
+  </head>
+  <body class="min-h-screen bg-slate-950 text-slate-100 antialiased">
+    <main class="mx-auto grid max-w-5xl gap-6 px-6 py-12 md:grid-cols-2">
+      <section class="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-xl">
+        <p class="text-sm font-semibold uppercase tracking-wider text-sky-400">Release candidate</p>
+        <h1 class="mt-3 text-3xl font-bold">Northstar 0.1.0</h1>
+        <button class="mt-6 rounded-lg bg-sky-500 px-4 py-2 font-semibold text-slate-950 hover:bg-sky-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-300">
+          Review release
+        </button>
+      </section>
+      <aside class="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+        <p class="text-sm text-slate-400">Build channel</p>
+        <p class="mt-2 text-xl font-semibold">Stable</p>
+      </aside>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

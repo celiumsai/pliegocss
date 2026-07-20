@@ -3,7 +3,7 @@
 Status: **local package and public-API candidate verification implemented; PliegoCSS is not
 release-candidate ready**
 
-This process covers the sixteen publishable crates in one version-locked compatibility unit. It does not
+This process covers the nineteen publishable crates in one version-locked compatibility unit. It does not
 authorize an upload. Publishing to crates.io, creating a public repository, pushing a tag, or changing
 production infrastructure requires explicit owner approval at the moment of the action.
 
@@ -15,8 +15,8 @@ package manifest, leaving only the exact requirement.
 
 The publication order has six dependency waves and is dependency-first:
 
-1. `pliego-css-ir`, `pliego-css-cascade`, `pliego-css-ownership`, `pliego-css-source`, `pliego-css-watch`
-2. `pliego-css-parser`, `pliego-css-theme`
+1. `pliego-css-ir`, `pliego-css-cascade`, `pliego-css-ownership`, `pliego-css-io`, `pliego-css-publication`
+2. `pliego-css-source`, `pliego-css-watch`, `pliego-css-parser`, `pliego-css-theme`
 3. `pliego-css-config`, `pliego-css-compiler`
 4. `pliego-css-build`, `pliego-css-macros`
 5. `pliego-css-agent`, `pliego-css-usage`, `pliego-css-control`, `pliego-css`
@@ -45,7 +45,7 @@ Before changing a version:
 - confirm that the selected [public API candidate](../reference/public-api.md) is unchanged and
   decide explicitly whether this release activates it as a SemVer promise;
 - confirm `STYLE_ID_FORMAT_VERSION = 2`, `CLASS_NAME_FORMAT_VERSION = 1`,
-  `THEME_ID_FORMAT_VERSION = 1`, and `IR_BINARY_FORMAT_VERSION = 2`, plus default manifest 3,
+  `THEME_ID_FORMAT_VERSION = 2`, and `IR_BINARY_FORMAT_VERSION = 2`, plus default manifest 3,
   opt-in manifests 4/5, graphs 1/2, declaration and physical ID formats 1, reachability 1,
   observation/retention sidecars 1, usage analysis 1/2, Asset Plan and Project Index 1/2,
   ownership 1, migration inventory 1, inspect/catalog/utility-explain/cascade-explain schemas
@@ -67,6 +67,21 @@ The package gate rejects a partial bump.
 ## 2. Run local quality gates
 
 Run from a clean checkout at the intended release commit:
+
+The repository exposes three cumulative verification profiles. `verify:fast` is the mandatory
+development and pull-request floor and does not launch generated executables. `verify:integration`
+adds executable onboarding plus local browser/editor/framework seams
+when their declared environment is configured. `verify:release` adds packaging, evidence, fuzzing,
+network corpus, and every integration gate. Missing external prerequisites are reported as
+`not-configured`; the release profile treats any such result as blocked rather than passed.
+
+```console
+pnpm verify:fast
+pnpm verify:integration
+pnpm verify:release
+```
+
+The expanded commands below remain useful for diagnosing one failed gate:
 
 ```console
 cargo fmt --all -- --check
@@ -215,15 +230,15 @@ pnpm check:packages
 
 The gate fails on a dirty worktree and verifies all of the following without publishing:
 
-- the public boundary is exactly sixteen packages in the dependency-first order above;
+- the public boundary is exactly nineteen packages in the dependency-first order above;
 - all packages share one version and Rust 1.85 MSRV;
 - every internal dependency has the exact matching registry requirement;
 - descriptions, repository metadata, categories, keywords, README, and the complete Apache-2.0
   license are present;
 - tracked and packaged paths are relative, Unicode-normalized, collision-free, and safe on
   case-insensitive Windows/macOS filesystems; each package includes source files;
-- Cargo 1.96 packages all sixteen archives without native registry verification, validates their
-  normalized dependency contracts, exact resolved graph, and 60 KiB (61,440-byte) maximum
+- Cargo 1.96 packages all nineteen archives without native registry verification, validates their
+  normalized dependency contracts, exact resolved graph, and 62 KiB (63,488-byte) maximum
   compressed size per archive, then compiles only their extracted contents in the isolated patched
   workspace using the release profile;
 - Rust 1.85 resolves, compiles, and runs the public facade, custom-theme bridge, ownership contract,
@@ -299,7 +314,7 @@ Create a minimal application using exact `pliego-css` and, when needed, `pliego-
 Compile seed and custom-theme examples, run the CLI against the application source, and compare the
 class/manifest identities with the release evidence. Verify that default manifest schema 3 and
 opt-in schemas 4/5, inspection schema 2, catalog schema 3, and utility-explain schema 2 report
-StyleId/class/ThemeId formats 2/1/1. Separately verify cascade-explain schema 1 statuses, candidates,
+StyleId/class/ThemeId formats 2/1/2. Separately verify cascade-explain schema 1 statuses, candidates,
 blockers, and exact declaration spans. Also verify graph schemas 1/2, declaration and physical ID
 formats 1, exact graph-1 projection, CSS identity across manifest versions, and reachability schema
 1 with the installed binary. Run `bundle --asset-plan` with manifest 4 or 5 and reachability, verify

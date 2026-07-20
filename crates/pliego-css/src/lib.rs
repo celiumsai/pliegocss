@@ -32,6 +32,14 @@ use core::fmt;
 #[doc(hidden)]
 pub mod __private {
     pub use pliego_css_macros::{pc_id, pcx_id};
+
+    /// Constructs a style from output produced by the lockstep procedural macros.
+    #[must_use]
+    pub const fn style_from_compiled_id(id: u128) -> super::Style {
+        super::Style {
+            id: super::StyleId(pliego_css_ir::StyleId::new(id)),
+        }
+    }
 }
 
 /// Validates one utility string at compile time and returns its static [`Style`].
@@ -41,7 +49,7 @@ pub mod __private {
 #[macro_export]
 macro_rules! pc {
     ($($tokens:tt)*) => {
-        $crate::Style::__from_compiled_id($crate::__private::pc_id!($($tokens)*))
+        $crate::__private::style_from_compiled_id($crate::__private::pc_id!($($tokens)*))
     };
 }
 
@@ -51,14 +59,14 @@ macro_rules! pc {
 #[macro_export]
 macro_rules! pcx {
     ($($tokens:tt)*) => {
-        $crate::Style::__from_compiled_id($crate::__private::pcx_id!($($tokens)*))
+        $crate::__private::style_from_compiled_id($crate::__private::pcx_id!($($tokens)*))
     };
 }
 
 /// A compact identity for one normalized, theme-scoped style.
 ///
 /// Application code receives IDs from [`Style::id`]. Integer construction is not part of the
-/// supported application API; the doc-hidden hook on [`Style`] exists only for macro expansion.
+/// supported application API, and `Style` exposes no integer constructor.
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 #[repr(transparent)]
 pub struct StyleId(pliego_css_ir::StyleId);
@@ -99,15 +107,6 @@ impl Style {
     pub const EMPTY: Self = Self {
         id: StyleId(pliego_css_ir::StyleId::UNRESOLVED),
     };
-
-    /// Creates a style identity already validated by the matching PliegoCSS macro crate.
-    #[doc(hidden)]
-    #[must_use]
-    pub const fn __from_compiled_id(id: u128) -> Self {
-        Self {
-            id: StyleId(pliego_css_ir::StyleId::new(id)),
-        }
-    }
 
     /// Returns the stable identity derived from normalized semantics.
     #[must_use]

@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "policyVersion": 1,
+  "checks": {
+    "contrast": {
+      "violation": "fail",
+      "unverified": "warn",
+      "manualRequired": "warn"
+    },
+    "motion": {
+      "violation": "fail",
+      "unverified": "warn",
+      "manualRequired": "warn"
+    },
+    "focusVisibility": {
+      "violation": "fail",
+      "unverified": "warn",
+      "manualRequired": "warn"
+    },
+    "forcedColors": {
+      "violation": "fail",
+      "unverified": "warn",
+      "manualRequired": "warn"
+    },
+    "inputModality": {
+      "violation": "fail",
+      "unverified": "warn",
+      "manualRequired": "warn"
+    }
+  },
+  "contrastPairs": [
+    {
+      "id": "body-on-surface",
+      "foreground": {
+        "literal": {
+          "value": "#1f2937"
+        }
+      },
+      "background": {
+        "literal": {
+          "value": "#ffffff"
+        }
+      },
+      "minimumRatioMilli": 4500
+    },
+    {
+      "id": "action-on-blue",
+      "foreground": {
+        "literal": {
+          "value": "#ffffff"
+        }
+      },
+      "background": {
+        "literal": {
+          "value": "#1d4ed8"
+        }
+      },
+      "minimumRatioMilli": 4500
+    }
+  ],
+  "exceptions": []
+}

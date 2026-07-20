@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "statusDate": "2026-07-19",
+  "applications": [
+    {
+      "id": "plain-html-audit-first",
+      "gate": "integration:representative:plain-html-audit",
+      "status": "passed",
+      "proven": ["ordinary CSS adoption", "budgets", "static accessibility", "audit control receipt"],
+      "gaps": ["generic CSS transform/minify output", "complete CSS classification", "browser visual evidence"]
+    },
+    {
+      "id": "vite-tailwind-inventory-first",
+      "gate": "integration:representative:vite-tailwind",
+      "status": "passed",
+      "proven": ["bounded directory discovery", "Tailwind source/template inventory", "Preflight reliance"],
+      "gaps": ["reversible Tailwind migration", "semantic output parity", "visual evidence"]
+    },
+    {
+      "id": "css-modules-consumer",
+      "gate": "integration:representative:css-modules",
+      "status": "passed",
+      "proven": ["module source inventory", "consumer use inventory", "relative composition resolution"],
+      "gaps": ["export validation", "bundler semantics", "reversible CSS Modules migration"]
+    },
+    {
+      "id": "rust-typed-controlled-artifacts",
+      "gate": "integration:representative:rust-control",
+      "status": "passed",
+      "proven": ["Rust 1.85 typed API", "pc and pcx provenance", "seven-artifact controlled build"],
+      "gaps": ["clean-build cost", "application rendering evidence"]
+    },
+    {
+      "id": "framework-neutral-multiroute",
+      "gate": "integration:representative:framework-routes",
+      "status": "passed",
+      "proven": ["route/island Asset Plan", "Project Index", "schema-5 physical trace", "controlled bundle group"],
+      "gaps": ["configured PliegoRS checkout", "browser replay", "hosted adapter evidence"]
+    }
+  ],
+  "priorities": [
+    {
+      "rank": 1,
+      "id": "standard-css-transform",
+      "releaseImpact": "blocking",
+      "exposedBy": ["plain-html-audit-first"],
+      "reason": "The first-value audit path works, but an ordinary CSS application cannot yet opt into deterministic target transform/minify output and bind it into the same evidence graph."
+    },
+    {
+      "rank": 2,
+      "id": "classification-corpus",
+      "releaseImpact": "blocking",
+      "exposedBy": ["plain-html-audit-first", "vite-tailwind-inventory-first"],
+      "reason": "The compatibility coverage warning remains honest but prevents complete supported-CSS claims."
+    },
+    {
+      "rank": 3,
+      "id": "hosted-browser-os-evidence",
+      "releaseImpact": "blocking",
+      "exposedBy": ["plain-html-audit-first", "framework-neutral-multiroute"],
+      "reason": "Local static and framework-neutral evidence cannot substitute for Chromium, Firefox, WebKit, and supported-OS runs."
+    },
+    {
+      "rank": 4,
+      "id": "reversible-migration-slice",
+      "releaseImpact": "should",
+      "exposedBy": ["vite-tailwind-inventory-first", "css-modules-consumer"],
+      "reason": "Inventory finds exact seams, but adoption still lacks one conservative, reviewable, reversible conversion with visual proof."
+    },
+    {
+      "rank": 5,
+      "id": "published-rc-replay",
+      "releaseImpact": "blocking",
+      "exposedBy": ["rust-typed-controlled-artifacts", "framework-neutral-multiroute"],
+      "reason": "Checkout and registry-shaped evidence do not activate installation or SemVer promises."
+    }
+  ],
+  "selectedNext": "standard-css-transform"
+}

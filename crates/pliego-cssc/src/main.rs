@@ -7,7 +7,7 @@ use std::env;
 use std::ffi::OsString;
 use std::fmt;
 use std::fs::{self, OpenOptions};
-use std::io::{Read, Write};
+use std::io::Read;
 #[cfg(unix)]
 use std::os::unix::fs::OpenOptionsExt as _;
 #[cfg(windows)]
@@ -16,59 +16,48 @@ use std::os::windows::fs::MetadataExt;
 use std::os::windows::fs::OpenOptionsExt as _;
 use std::path::{Component, Path, PathBuf};
 use std::process::ExitCode;
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::AtomicU64;
 use std::time::Duration;
 
-use fs2::FileExt;
 use pliego_css_agent::{
-    RepairCliCommand, RepairCliFormat, RepairFixCliArgs, RepairFixMode, RepairPlanCliArgs,
-    RepairSourceTransition, RepairTool, apply_repair_plan_checked, build_repair_plan,
-    parse_repair_cli_arguments, parse_repair_plan, parse_repair_proposal, verify_repair_plan,
+    RepairCliCommand, RepairFixCliArgs, RepairPlanCliArgs, parse_repair_cli_arguments,
 };
 use pliego_css_build::artifacts::{
-    AssetPlanBundle, AssetRuleSelection, CatalogOutputFormat, CompatibilityProfile, Finding,
-    FindingCause, FindingDocument, FindingSeverity, FindingSource, FindingTool,
-    FindingVerification, FixedCssOutputCache, GraphOrigin, GraphStyle as ManifestGraphStyle,
-    MAX_DOCUMENT_BYTES, ManifestGraph, ProjectIndexDocument, ReachabilityDocument,
-    ReachabilityIndex, TraceDeclaration, TraceRule, TraceStyle, audit_standard_css,
-    audit_standard_css_with_budgets, build_asset_plan, build_compatibility_policy,
+    AssetPlanBundle, AssetRuleSelection, CompatibilityProfile, Finding, FindingCause,
+    FindingDocument, FindingSeverity, FindingSource, FindingTool, FindingVerification,
+    FixedCssOutputCache, GraphOrigin, GraphStyle as ManifestGraphStyle, MAX_DOCUMENT_BYTES,
+    ManifestGraph, ProjectIndexDocument, ReachabilityDocument, StandardCssFormat, TraceDeclaration,
+    TraceRule, TraceStyle, audit_standard_css, audit_standard_css_with_budgets, build_asset_plan,
     build_manifest_graph, build_manifest_graph_with_physical, build_physical_projection,
     build_project_index, css_layer_finding_source, evaluate_budget_observation_findings,
-    optimize_css_with_trace, parse_reachability_document, render_catalog, sha256_hex,
-    utility_domain_name, utility_form_name, validate_asset_bundle_id,
+    optimize_css_with_trace, parse_finding_document, parse_reachability_document, sha256_hex,
+    transform_standard_css, validate_asset_bundle_id,
 };
-use pliego_css_cascade::{CascadeExplanation, CascadeStatus, explain_stylesheet_cascade};
 use pliego_css_compiler::{
-    CssFragmentCache, STYLE_ID_FORMAT_VERSION, UtilityDescriptor, UtilityForm,
-    analyze_cross_clause_conflicts, compose_style_override_with_theme, emit_css_with_theme_traced,
-    emit_theme, emit_theme_references, emit_used_theme, lower_style_with_theme, referenced_tokens,
-    try_encode_style_identity_with_theme, utility_catalog,
+    CssFragmentCache, STYLE_ID_FORMAT_VERSION, compose_style_override_with_theme,
+    emit_css_with_theme_traced, emit_theme, emit_theme_references, emit_used_theme,
+    lower_style_with_theme, referenced_tokens, try_encode_style_identity_with_theme,
 };
 use pliego_css_config::{
     BudgetObservation, BudgetPolicy, BudgetSubject, BudgetSubjectKind, CssBudgetInventory,
     CssBudgetMetrics, DtcgTheme, TokenGraph, parse_budget_policy, parse_dtcg_resolver_str,
     parse_token_graph,
 };
-use pliego_css_ir::{
-    CLASS_NAME_FORMAT_VERSION, CandidateKind, Diagnostic, SemanticStyle, StyleItem, TokenRef,
-    is_classified_selector_transform,
-};
+use pliego_css_ir::{CLASS_NAME_FORMAT_VERSION, Diagnostic, SemanticStyle, TokenRef};
 use pliego_css_ownership::{
     AssetRuleSelection as OwnershipRuleSelection, Ownership, parse_asset_plan, parse_ownership,
 };
-use pliego_css_parser::{format_style_list, parse_named_candidate, parse_style_list};
+use pliego_css_parser::parse_style_list;
 use pliego_css_source::{
-    InvocationKind, MigrationProject, MigrationSourceKind, ScanDiagnostic, ScanFileError,
-    ScanReport, SourceRange, StyleLiteral, UtilityFormatError, UtilityFormatFinding,
+    MigrationSourceKind, ScanDiagnostic, ScanReport, SourceRange, UtilityFormatFinding,
     expand_bundle_source_paths, expand_source_paths, format_source_paths, format_style_failure,
-    inspect_utility_format, inventory_migration_file, pcx_composition_reason, scan_file,
     scan_source_named,
 };
 use pliego_css_theme::{THEME_ID_FORMAT_VERSION, ThemeRegistry};
 use pliego_css_usage::{
     CRITICAL_CSS_MANIFEST_FILE, CriticalCssRouteInput, CriticalRouteInput, PreparedUsageAnalysis,
     TOKEN_USAGE_FILE, UsageCandidateInput, UsageSelection, UsageStyleInput,
-    build_critical_css_manifest, build_token_usage_report,
+    build_critical_css_manifest, build_generic_css_usage_report, build_token_usage_report,
     collect_selected_bundle_token_references, collect_selected_token_usage_consumers,
     collect_usage_style_inputs, prepare_usage_analysis, verify_critical_evidence,
 };
@@ -86,6 +75,38 @@ use pliego_css_control::projection::{
     SourceMapOrigin, SourceMapStyle, TokenObservationInput, build_audit_control_group,
     build_audit_token_graph_measurements, build_css_source_map, build_token_graph_measurements,
     evaluate_accessibility, render_sarif,
+};
+
+mod atomic_write;
+mod catalog;
+mod compatibility;
+mod explain;
+mod formatter;
+mod inspection;
+mod migration;
+mod provenance;
+mod publication;
+mod repair;
+mod source_candidates;
+use atomic_write::{prepare_atomic_write, prepare_atomic_write_if_changed};
+use catalog::run_catalog;
+use compatibility::{enforce_compatibility_policy, run_compatibility};
+use explain::{run_cascade_explain, run_explain};
+use formatter::{reject_isolated_carriage_returns, run_utility_formatter};
+use inspection::serialize_inspection;
+use migration::{
+    run_migration_inventory, run_migration_project, run_reversible_group_apply,
+    run_reversible_group_rollback, run_reversible_migration_project_plan,
+    run_reversible_replace_apply, run_reversible_replace_rollback, run_reversible_sidecar_apply,
+    run_reversible_sidecar_rollback,
+};
+use provenance::{cli_provenance, normalize_provenance, provenance_is_reachable};
+use publication::{
+    acquire_publication_locks, commit_prepared_locked_with, publication_destinations,
+};
+use repair::{run_repair_fix, run_repair_plan};
+use source_candidates::{
+    candidates_from_line_source, candidates_from_scan_report, cli_candidates, collect_candidates,
 };
 
 const POLL_INTERVAL: Duration = Duration::from_millis(100);
@@ -289,6 +310,16 @@ struct AuditArgs {
 }
 
 #[derive(Debug, Eq, PartialEq)]
+struct StandardCssTransformArgs {
+    input: PathBuf,
+    output: PathBuf,
+    targets: TargetContract,
+    format: CssFormat,
+    check: bool,
+    control_dir: Option<PathBuf>,
+}
+
+#[derive(Debug, Eq, PartialEq)]
 enum AuditInput {
     Css(PathBuf),
     AssetPlan(PathBuf),
@@ -470,6 +501,7 @@ struct BundlePlanDocument {
 #[derive(Debug, Eq, PartialEq)]
 enum Command {
     Audit(AuditArgs),
+    TransformCss(StandardCssTransformArgs),
     Compile(BuildArgs),
     Check(BuildArgs),
     Inspect(BuildArgs),
@@ -477,8 +509,41 @@ enum Command {
     Bundle(BundleArgs),
     Catalog(CatalogArgs),
     Compatibility(CompatibilityArgs),
+    GenericCssUsage {
+        findings: PathBuf,
+        observed: PathBuf,
+        scope: String,
+        output: PathBuf,
+        control_dir: Option<PathBuf>,
+    },
     Inventory(MigrationSourceKind, PathBuf),
     InventoryProject(PathBuf),
+    MigrationProjectPlan(PathBuf),
+    MigrationSidecarApply {
+        output: PathBuf,
+        receipt: PathBuf,
+    },
+    MigrationSidecarRollback {
+        output: PathBuf,
+        receipt: PathBuf,
+    },
+    MigrationReplaceApply {
+        file: PathBuf,
+        before: PathBuf,
+        after: PathBuf,
+        receipt: PathBuf,
+    },
+    MigrationReplaceRollback {
+        file: PathBuf,
+        receipt: PathBuf,
+    },
+    MigrationGroupApply {
+        manifest: PathBuf,
+        receipt: PathBuf,
+    },
+    MigrationGroupRollback {
+        receipt: PathBuf,
+    },
     Explain(ExplainArgs),
     ExplainCascade(CascadeExplainArgs),
     Plan(RepairPlanCliArgs),
@@ -680,86 +745,6 @@ struct Manifest {
     styles: Vec<ManifestStyle>,
     #[serde(skip_serializing_if = "Option::is_none")]
     graph: Option<ManifestGraph>,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct ThemeInspection {
-    id: String,
-    tokens: Vec<TokenInspection>,
-    breakpoints: Vec<BreakpointInspection>,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct TokenInspection {
-    kind: String,
-    name: String,
-    value: String,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct BreakpointInspection {
-    name: String,
-    min_width: String,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct Inspection {
-    schema_version: u8,
-    style_id_format_version: u16,
-    class_name_format_version: u16,
-    theme_id_format_version: u16,
-    theme: ThemeInspection,
-    targets: TargetContract,
-    format: CssFormat,
-    css_sha256: String,
-    css_bytes: usize,
-    findings: Vec<Provenance>,
-    styles: Vec<ManifestStyle>,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-#[allow(clippy::struct_excessive_bools)]
-struct CatalogCapabilities {
-    negative: bool,
-    arbitrary_value: bool,
-    custom_property: bool,
-    modifier: bool,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct ExplainedUtility {
-    source: String,
-    byte_start: usize,
-    byte_end: usize,
-    pattern: String,
-    match_name: String,
-    form: String,
-    domain: String,
-    capabilities: CatalogCapabilities,
-    summary: String,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct ExplainDocument {
-    schema_version: u8,
-    style_id_format_version: u16,
-    class_name_format_version: u16,
-    theme_id_format_version: u16,
-    source: String,
-    canonical: String,
-    theme_id: String,
-    targets: TargetContract,
-    style_id: String,
-    class_name: String,
-    css: String,
-    utilities: Vec<ExplainedUtility>,
 }
 
 fn format_finding_diagnostic(finding: &UtilityFormatFinding) -> CliDiagnostic {
@@ -1138,6 +1123,10 @@ fn command_option_arity(command: Option<&str>, option: Option<&str>) -> usize {
             "--input" | "--format" => 1,
             _ => 0,
         },
+        "transform-css" => match option {
+            "--input" | "--output" | "--targets" | "--format" | "--control-dir" => 1,
+            _ => 0,
+        },
         _ => 0,
     }
 }
@@ -1161,6 +1150,7 @@ fn render_failure_json(command: Option<&str>, failure: &CliFailure) -> String {
     .expect("diagnostic documents contain only serializable values")
 }
 
+#[allow(clippy::too_many_lines)]
 fn run(
     arguments: impl IntoIterator<Item = OsString>,
     diagnostic_format: DiagnosticFormat,
@@ -1247,26 +1237,55 @@ fn run(
         Command::Watch(arguments) => watch(&arguments).map_err(Into::into),
         Command::Bundle(arguments) => run_bundle(&arguments),
         Command::Catalog(arguments) => run_catalog(&arguments).map_err(Into::into),
-        Command::Compatibility(arguments) => {
-            let policy = build_compatibility_policy(arguments.targets).map_err(CliFailure::tool)?;
-            print!("{policy}");
-            Ok(())
-        }
-        Command::Inventory(kind, input) => inventory_migration_file(kind, &input)
-            .map(|inventory| print!("{inventory}"))
-            .map_err(|error| CliFailure::tool(error.to_string())),
+        Command::Compatibility(arguments) => run_compatibility(arguments.targets),
+        Command::GenericCssUsage {
+            findings,
+            observed,
+            scope,
+            output,
+            control_dir,
+        } => run_generic_css_usage(
+            &findings,
+            &observed,
+            &scope,
+            &output,
+            control_dir.as_deref(),
+        ),
+        Command::Inventory(kind, input) => run_migration_inventory(kind, &input),
         Command::InventoryProject(input) => run_migration_project(&input),
+        Command::MigrationProjectPlan(input) => run_reversible_migration_project_plan(&input),
+        Command::MigrationSidecarApply { output, receipt } => {
+            run_reversible_sidecar_apply(&output, &receipt)
+        }
+        Command::MigrationSidecarRollback { output, receipt } => {
+            run_reversible_sidecar_rollback(&output, &receipt)
+        }
+        Command::MigrationReplaceApply {
+            file,
+            before,
+            after,
+            receipt,
+        } => run_reversible_replace_apply(&file, &before, &after, &receipt),
+        Command::MigrationReplaceRollback { file, receipt } => {
+            run_reversible_replace_rollback(&file, &receipt)
+        }
+        Command::MigrationGroupApply { manifest, receipt } => {
+            run_reversible_group_apply(&manifest, &receipt)
+        }
+        Command::MigrationGroupRollback { receipt } => run_reversible_group_rollback(&receipt),
         Command::Explain(arguments) => run_explain(&arguments),
         Command::ExplainCascade(arguments) => run_cascade_explain(&arguments),
         Command::Plan(arguments) => run_repair_plan(&arguments),
         Command::Fix(arguments) => run_repair_fix(&arguments),
         Command::Format(arguments) => run_utility_formatter(&arguments),
         Command::Audit(arguments) => return run_audit(&arguments),
+        Command::TransformCss(arguments) => run_standard_css_transform(&arguments),
     };
     result?;
     Ok(ExitCode::SUCCESS)
 }
 
+#[allow(clippy::too_many_lines)]
 fn parse_arguments(arguments: impl IntoIterator<Item = OsString>) -> Result<Command, String> {
     let arguments = arguments
         .into_iter()
@@ -1306,9 +1325,20 @@ fn parse_arguments(arguments: impl IntoIterator<Item = OsString>) -> Result<Comm
     if command == "compatibility" {
         return parse_compatibility_arguments(&arguments[1..]);
     }
+    if command == "generic-css-usage" {
+        return parse_generic_css_usage_arguments(&arguments[1..]);
+    }
     if matches!(
         command.as_str(),
-        "migration-inventory" | "migration-project-inventory"
+        "migration-inventory"
+            | "migration-project-inventory"
+            | "migration-project-plan"
+            | "migration-sidecar-apply"
+            | "migration-sidecar-rollback"
+            | "migration-replace-apply"
+            | "migration-replace-rollback"
+            | "migration-group-apply"
+            | "migration-group-rollback"
     ) {
         return parse_migration_arguments(command, &arguments);
     }
@@ -1329,6 +1359,9 @@ fn parse_arguments(arguments: impl IntoIterator<Item = OsString>) -> Result<Comm
     }
     if command == "audit" {
         return parse_audit_arguments(&arguments[1..]);
+    }
+    if command == "transform-css" {
+        return parse_standard_css_transform_arguments(&arguments[1..]);
     }
     let command_kind = match command.as_str() {
         "compile" | "build" => 0,
@@ -1367,14 +1400,100 @@ fn parse_arguments(arguments: impl IntoIterator<Item = OsString>) -> Result<Comm
     })
 }
 
-fn run_migration_project(input: &Path) -> Result<(), CliFailure> {
-    MigrationProject::from_input(input)
-        .and_then(MigrationProject::collect)
-        .map(|inventory| print!("{inventory}"))
-        .map_err(|error| CliFailure::tool(error.to_string()))
-}
-
+#[allow(clippy::too_many_lines)]
 fn parse_migration_arguments(command: &str, arguments: &[String]) -> Result<Command, String> {
+    if command == "migration-group-apply" {
+        let [_, manifest_flag, manifest, receipt_flag, receipt] = arguments else {
+            return Err("--manifest FILE --receipt FILE required".into());
+        };
+        if manifest_flag != "--manifest" || receipt_flag != "--receipt" {
+            return Err("--manifest FILE --receipt FILE required".into());
+        }
+        return Ok(Command::MigrationGroupApply {
+            manifest: manifest.into(),
+            receipt: receipt.into(),
+        });
+    }
+    if command == "migration-group-rollback" {
+        let [_, receipt_flag, receipt] = arguments else {
+            return Err("--receipt FILE required".into());
+        };
+        if receipt_flag != "--receipt" {
+            return Err("--receipt FILE required".into());
+        }
+        return Ok(Command::MigrationGroupRollback {
+            receipt: receipt.into(),
+        });
+    }
+    if command == "migration-replace-apply" {
+        let [
+            _,
+            file_flag,
+            file,
+            before_flag,
+            before,
+            after_flag,
+            after,
+            receipt_flag,
+            receipt,
+        ] = arguments
+        else {
+            return Err("--file FILE --before FILE --after FILE --receipt FILE required".into());
+        };
+        if file_flag != "--file"
+            || before_flag != "--before"
+            || after_flag != "--after"
+            || receipt_flag != "--receipt"
+        {
+            return Err("--file FILE --before FILE --after FILE --receipt FILE required".into());
+        }
+        return Ok(Command::MigrationReplaceApply {
+            file: file.into(),
+            before: before.into(),
+            after: after.into(),
+            receipt: receipt.into(),
+        });
+    }
+    if command == "migration-replace-rollback" {
+        let [_, file_flag, file, receipt_flag, receipt] = arguments else {
+            return Err("--file FILE --receipt FILE required".into());
+        };
+        if file_flag != "--file" || receipt_flag != "--receipt" {
+            return Err("--file FILE --receipt FILE required".into());
+        }
+        return Ok(Command::MigrationReplaceRollback {
+            file: file.into(),
+            receipt: receipt.into(),
+        });
+    }
+    if matches!(
+        command,
+        "migration-sidecar-apply" | "migration-sidecar-rollback"
+    ) {
+        let [_, output_flag, output, receipt_flag, receipt] = arguments else {
+            return Err("--output FILE --receipt FILE required".into());
+        };
+        if output_flag != "--output" || receipt_flag != "--receipt" {
+            return Err("--output FILE --receipt FILE required".into());
+        }
+        return Ok(if command == "migration-sidecar-apply" {
+            Command::MigrationSidecarApply {
+                output: PathBuf::from(output),
+                receipt: PathBuf::from(receipt),
+            }
+        } else {
+            Command::MigrationSidecarRollback {
+                output: PathBuf::from(output),
+                receipt: PathBuf::from(receipt),
+            }
+        });
+    }
+    if command == "migration-project-plan" {
+        let [_, input] = arguments else {
+            return Err("PATH required".into());
+        };
+        return Ok(Command::MigrationProjectPlan(PathBuf::from(input)));
+    }
     if command == "migration-project-inventory" {
         let [_, input] = arguments else {
             return Err("PATH required".into());
@@ -1388,6 +1507,167 @@ fn parse_migration_arguments(command: &str, arguments: &[String]) -> Result<Comm
         kind.parse().map_err(str::to_owned)?,
         PathBuf::from(input),
     ))
+}
+
+fn parse_standard_css_transform_arguments(arguments: &[String]) -> Result<Command, String> {
+    let mut input = None;
+    let mut output = None;
+    let mut targets = TargetContract::Modern;
+    let mut format = CssFormat::Minified;
+    let mut check = false;
+    let mut control_dir = None;
+    let mut index = 0;
+    while index < arguments.len() {
+        match arguments[index].as_str() {
+            "--input" => {
+                set_path_once(&mut input, arguments, index, "--input")?;
+                index += 2;
+            }
+            "--output" => {
+                set_path_once(&mut output, arguments, index, "--output")?;
+                index += 2;
+            }
+            "--targets" => {
+                targets = parse_targets(
+                    arguments
+                        .get(index + 1)
+                        .ok_or_else(|| "--targets requires a value".to_owned())?,
+                )?;
+                index += 2;
+            }
+            "--format" => {
+                format = match arguments.get(index + 1).map(String::as_str) {
+                    Some("minified") => CssFormat::Minified,
+                    Some("pretty") => CssFormat::Pretty,
+                    Some(value) => return Err(format!("unsupported CSS format `{value}`")),
+                    None => return Err("--format requires a value".into()),
+                };
+                index += 2;
+            }
+            "--check" => {
+                if check {
+                    return Err("--check may only be supplied once".into());
+                }
+                check = true;
+                index += 1;
+            }
+            "--control-dir" => {
+                set_path_once(&mut control_dir, arguments, index, "--control-dir")?;
+                index += 2;
+            }
+            option => return Err(format!("unknown transform-css option `{option}`")),
+        }
+    }
+    Ok(Command::TransformCss(StandardCssTransformArgs {
+        input: input.ok_or_else(|| "transform-css requires --input FILE.css".to_owned())?,
+        output: output.ok_or_else(|| "transform-css requires --output FILE.css".to_owned())?,
+        targets,
+        format,
+        check,
+        control_dir,
+    }))
+}
+
+fn run_standard_css_transform(arguments: &StandardCssTransformArgs) -> Result<(), CliFailure> {
+    let logical_path = audit_logical_path(&arguments.input).map_err(CliFailure::invalid)?;
+    let bytes = read_audit_artifact(&arguments.input, "standard CSS input")?;
+    let css = std::str::from_utf8(&bytes).map_err(|error| {
+        CliFailure::invalid(format!(
+            "standard CSS input `{}` is not valid UTF-8: {error}",
+            arguments.input.display()
+        ))
+    })?;
+    let format = match arguments.format {
+        CssFormat::Minified => StandardCssFormat::Minified,
+        CssFormat::Pretty => StandardCssFormat::Pretty,
+    };
+    let transformed = transform_standard_css(&logical_path, css, arguments.targets, format)
+        .map_err(CliFailure::tool)?;
+    if let Some(control_dir) = &arguments.control_dir {
+        let control_dir = existing_artifact_directory(control_dir, "transform control output")
+            .map_err(CliFailure::invalid)?;
+        let output_file = control_output_logical_path(&control_dir, &arguments.output)?;
+        let outcome =
+            audit_standard_css(&logical_path, css, arguments.targets).map_err(CliFailure::tool)?;
+        let relationships = Vec::new();
+        let generated_outputs = [ControlOutputInput {
+            file: &output_file,
+            role: "standard-css",
+            media_type: "text/css",
+            bytes: transformed.css().as_bytes(),
+            source_map: None,
+            relationships: &relationships,
+        }];
+        let source_inputs = [AuditSourceInput {
+            logical_path: &logical_path,
+            role: "source",
+            bytes: &bytes,
+        }];
+        let group = build_audit_control_group(AuditControlInput {
+            source_inputs: &source_inputs,
+            config_inputs: &[],
+            generated_outputs: &generated_outputs,
+            document: outcome.document(),
+            passed: outcome.passed(),
+            rule_metrics: outcome.inventory().map(CssBudgetInventory::file),
+            rules_unavailable_reason: "standard CSS syntax ingestion failed",
+            token_observation: TokenObservationInput::Unavailable(
+                "standard CSS transform has no typed token graph input",
+            ),
+            token_graph: None,
+            output_relationships: std::slice::from_ref(&output_file),
+            asset_plan_verified: false,
+            targets: arguments.targets,
+            budget_policy: None,
+            budget_policy_path: None,
+            budget_policy_bytes: None,
+            budget_subjects: &[],
+        })
+        .map_err(CliFailure::tool)?;
+        let mut payloads = vec![BundleOutputPayload {
+            destination: arguments.output.clone(),
+            bytes: transformed.css().as_bytes().to_vec(),
+        }];
+        payloads.extend(group.artifacts().map(|artifact| BundleOutputPayload {
+            destination: control_dir.join(artifact.file),
+            bytes: artifact.bytes.to_vec(),
+        }));
+        validate_path_roles(
+            &[("transform input", arguments.input.as_path())],
+            &payloads
+                .iter()
+                .map(|payload| ("transform output", payload.destination.as_path()))
+                .collect::<Vec<_>>(),
+        )
+        .map_err(CliFailure::invalid)?;
+        if arguments.check {
+            return check_output_group(&payloads).map_err(CliFailure::invalid);
+        }
+        publish_output_group(&payloads).map_err(CliFailure::tool)?;
+        return Ok(());
+    }
+    if arguments.check {
+        let existing = fs::read(&arguments.output).map_err(|error| {
+            CliFailure::invalid(format!(
+                "cannot read transform output `{}` for --check: {error}",
+                arguments.output.display()
+            ))
+        })?;
+        if existing != transformed.css().as_bytes() {
+            return Err(CliFailure::invalid(format!(
+                "standard CSS output `{}` is out of date",
+                arguments.output.display()
+            )));
+        }
+        return Ok(());
+    }
+    if let Some(write) =
+        prepare_atomic_write_if_changed(&arguments.output, transformed.css().as_bytes())
+            .map_err(CliFailure::tool)?
+    {
+        write.commit().map_err(CliFailure::tool)?;
+    }
+    Ok(())
 }
 
 #[allow(clippy::too_many_lines)]
@@ -2392,12 +2672,6 @@ struct BundleFileInput {
 struct BundleOutputPayload {
     destination: PathBuf,
     bytes: Vec<u8>,
-}
-
-struct LoadedRepairSources {
-    root: PathBuf,
-    paths: BTreeMap<String, PathBuf>,
-    bytes: BTreeMap<String, Vec<u8>>,
 }
 
 struct ResolvedBundleSources {
@@ -3867,6 +4141,144 @@ fn parse_compatibility_arguments(arguments: &[String]) -> Result<Command, String
     }))
 }
 
+fn run_generic_css_usage(
+    findings_path: &Path,
+    observed_path: &Path,
+    scope: &str,
+    output: &Path,
+    control_dir: Option<&Path>,
+) -> Result<(), CliFailure> {
+    let findings_bytes = read_command_artifact(findings_path, "generic-css-usage", "findings")?;
+    let document = parse_finding_document(&findings_bytes)
+        .map_err(|error| CliFailure::invalid(error.to_string()))?;
+    let inventory_finding = document
+        .findings()
+        .iter()
+        .find(|finding| finding.code() == "PCSS-AUDIT-000")
+        .ok_or_else(|| CliFailure::invalid("generic-css-usage findings lack PCSS-AUDIT-000"))?;
+    let mut inventory = Vec::new();
+    for evidence in inventory_finding.evidence() {
+        if evidence.kind() != "identity" || !evidence.name().starts_with("generic-css-declaration-")
+        {
+            continue;
+        }
+        let (identity, occurrences) = evidence
+            .value()
+            .split_once(";occurrences=")
+            .ok_or_else(|| CliFailure::invalid("malformed generic CSS declaration evidence"))?;
+        inventory.push((
+            identity.to_owned(),
+            occurrences
+                .parse::<usize>()
+                .map_err(|_| CliFailure::invalid("malformed generic CSS occurrence count"))?,
+        ));
+    }
+    if inventory.is_empty() {
+        return Err(CliFailure::invalid(
+            "generic-css-usage findings contain no declaration identities",
+        ));
+    }
+    let observed_bytes = read_command_artifact(observed_path, "generic-css-usage", "observed")?;
+    let observed = serde_json::from_slice::<Vec<String>>(&observed_bytes)
+        .map_err(|error| CliFailure::invalid(format!("invalid observed identity list: {error}")))?;
+    let bytes =
+        build_generic_css_usage_report(inventory, observed, scope).map_err(CliFailure::invalid)?;
+    if let Some(control_dir) = control_dir {
+        let control_dir =
+            existing_artifact_directory(control_dir, "generic CSS usage control output")
+                .map_err(CliFailure::invalid)?;
+        let output_file = control_output_logical_path(&control_dir, output)?;
+        let relationships = Vec::new();
+        let outputs = [ControlOutputInput {
+            file: &output_file,
+            role: "generic-css-usage",
+            media_type: "application/json",
+            bytes: &bytes,
+            source_map: None,
+            relationships: &relationships,
+        }];
+        let source_inputs = [
+            AuditSourceInput {
+                logical_path: "generic-css-findings.json",
+                role: "findings",
+                bytes: &findings_bytes,
+            },
+            AuditSourceInput {
+                logical_path: "generic-css-observed.json",
+                role: "positive-observations",
+                bytes: &observed_bytes,
+            },
+        ];
+        let group = build_audit_control_group(AuditControlInput {
+            source_inputs: &source_inputs,
+            config_inputs: &[],
+            generated_outputs: &outputs,
+            document: &document,
+            passed: false,
+            rule_metrics: None,
+            rules_unavailable_reason:
+                "generic CSS usage consumes declaration identities from audit findings",
+            token_observation: TokenObservationInput::Unavailable(
+                "generic CSS usage has no typed token graph input",
+            ),
+            token_graph: None,
+            output_relationships: std::slice::from_ref(&output_file),
+            asset_plan_verified: false,
+            targets: CompatibilityProfile::None,
+            budget_policy: None,
+            budget_policy_path: None,
+            budget_policy_bytes: None,
+            budget_subjects: &[],
+        })
+        .map_err(CliFailure::tool)?;
+        let mut payloads = vec![BundleOutputPayload {
+            destination: output.to_owned(),
+            bytes: bytes.clone(),
+        }];
+        payloads.extend(group.artifacts().map(|artifact| BundleOutputPayload {
+            destination: control_dir.join(artifact.file),
+            bytes: artifact.bytes.to_vec(),
+        }));
+        publish_output_group(&payloads).map_err(CliFailure::tool)?;
+        return Ok(());
+    }
+    if let Some(prepared) =
+        prepare_atomic_write_if_changed(output, &bytes).map_err(CliFailure::from)?
+    {
+        prepared.commit().map_err(CliFailure::from)?;
+    }
+    Ok(())
+}
+
+fn parse_generic_css_usage_arguments(arguments: &[String]) -> Result<Command, String> {
+    let mut findings = None;
+    let mut observed = None;
+    let mut scope = None;
+    let mut output = None;
+    let mut control_dir = None;
+    let mut index = 0;
+    while index < arguments.len() {
+        match arguments[index].as_str() {
+            "--findings" => set_path_once(&mut findings, arguments, index, "--findings")?,
+            "--observed" => set_path_once(&mut observed, arguments, index, "--observed")?,
+            "--scope" => set_string_once(&mut scope, arguments, index, "--scope")?,
+            "--output" => set_path_once(&mut output, arguments, index, "--output")?,
+            "--control-dir" => {
+                set_path_once(&mut control_dir, arguments, index, "--control-dir")?;
+            }
+            unknown => return Err(format!("unknown generic-css-usage option `{unknown}`")),
+        }
+        index += 2;
+    }
+    Ok(Command::GenericCssUsage {
+        findings: findings.ok_or("`generic-css-usage` requires `--findings`")?,
+        observed: observed.ok_or("`generic-css-usage` requires `--observed`")?,
+        scope: scope.ok_or("`generic-css-usage` requires `--scope`")?,
+        output: output.ok_or("`generic-css-usage` requires `--output`")?,
+        control_dir,
+    })
+}
+
 fn parse_explain_arguments(arguments: &[String]) -> Result<Command, String> {
     let mut style = None;
     let mut config = None;
@@ -4640,32 +5052,7 @@ fn load_reachability(path: Option<&Path>) -> Result<Option<ReachabilityDocument>
 }
 
 fn read_reachability(path: &Path) -> Result<Vec<u8>, String> {
-    let map_error = |error| format!("{}: {error}", path.display());
-    validate_reachability_file(path, &fs::metadata(path).map_err(map_error)?)?;
-    let file = fs::File::open(path).map_err(|error| format!("{}: {error}", path.display()))?;
-    validate_reachability_file(path, &file.metadata().map_err(map_error)?)?;
-    let mut bytes = Vec::new();
-    file.take((MAX_DOCUMENT_BYTES + 1) as u64)
-        .read_to_end(&mut bytes)
-        .map_err(map_error)?;
-    if bytes.len() > MAX_DOCUMENT_BYTES {
-        return Err(format!(
-            "{}: reachability input exceeds {MAX_DOCUMENT_BYTES} bytes",
-            path.display()
-        ));
-    }
-    Ok(bytes)
-}
-
-fn validate_reachability_file(path: &Path, metadata: &fs::Metadata) -> Result<(), String> {
-    if metadata.is_file() && metadata.len() <= MAX_DOCUMENT_BYTES as u64 {
-        Ok(())
-    } else {
-        Err(format!(
-            "{}: reachability input must be a regular file of at most {MAX_DOCUMENT_BYTES} bytes",
-            path.display()
-        ))
-    }
+    pliego_css_io::read_bounded_regular_file(path, MAX_DOCUMENT_BYTES, "reachability input")
 }
 
 fn resolve_dtcg_theme(source: &str, inputs: &[(String, String)]) -> Result<DtcgTheme, String> {
@@ -5432,276 +5819,6 @@ fn nearest_theme_config(hint: &Path) -> Result<Option<PathBuf>, String> {
     }
 }
 
-fn collect_candidates(
-    theme: &ThemeRegistry,
-    arguments: &BuildArgs,
-) -> Result<Vec<Candidate>, CliFailure> {
-    let mut candidates = cli_candidates(&arguments.styles, &arguments.compositions);
-    if let Some(input) = &arguments.input {
-        candidates.extend(candidates_from_lines(input)?);
-    }
-    let sources = expand_source_paths(&arguments.sources)?;
-    for source in sources {
-        candidates.extend(candidates_from_rust(theme, &source)?);
-    }
-    if candidates.is_empty() {
-        return Err(CliFailure::tool("no styles found in supplied inputs"));
-    }
-    Ok(candidates)
-}
-
-fn cli_candidates(styles: &[String], compositions: &[(String, String)]) -> Vec<Candidate> {
-    let mut candidates = styles
-        .iter()
-        .enumerate()
-        .map(|(index, style)| Candidate::Direct {
-            style: style.clone(),
-            provenance: cli_provenance(style, &format!("explicit-style-{}", index + 1)),
-        })
-        .collect::<Vec<_>>();
-    candidates.extend(
-        compositions
-            .iter()
-            .enumerate()
-            .map(|(index, (base, branch))| Candidate::Composition {
-                base: base.clone(),
-                branches: vec![branch.clone()],
-                provenance: cli_provenance(
-                    &format!("{base} {branch}"),
-                    &format!("explicit-composition-{}", index + 1),
-                ),
-            }),
-    );
-    candidates
-}
-
-fn cli_provenance(source: &str, reason: &str) -> Provenance {
-    Provenance {
-        source: source.to_owned(),
-        file: None,
-        byte_start: None,
-        byte_end: None,
-        macro_kind: "cli".into(),
-        reason: reason.into(),
-    }
-}
-
-fn candidates_from_lines(path: &Path) -> Result<Vec<Candidate>, CliFailure> {
-    let source = fs::read_to_string(path)
-        .map_err(|error| CliFailure::tool(format!("cannot read `{}`: {error}", path.display())))?;
-    candidates_from_line_source(path, &source)
-}
-
-fn candidates_from_line_source(path: &Path, source: &str) -> Result<Vec<Candidate>, CliFailure> {
-    reject_isolated_carriage_returns(path, source).map_err(CliFailure::tool)?;
-    let mut candidates = Vec::new();
-    let mut offset = 0;
-    for (line_index, line) in source.split_inclusive('\n').enumerate() {
-        let without_lf = line.strip_suffix('\n').unwrap_or(line);
-        let without_newline = without_lf.strip_suffix('\r').unwrap_or(without_lf);
-        let trimmed = without_newline.trim();
-        if !trimmed.is_empty() && !trimmed.starts_with('#') {
-            let syntax = parse_style_list(without_newline).map_err(|error| {
-                let human = format!("{}:{}: {error}", path.display(), line_index + 1);
-                let provenance = Provenance {
-                    source: without_newline.to_owned(),
-                    file: Some(path.display().to_string()),
-                    byte_start: Some(offset),
-                    byte_end: Some(offset + without_newline.len()),
-                    macro_kind: "input".into(),
-                    reason: "line-oriented-input".into(),
-                };
-                let mut failure = style_failure(error, human, &provenance);
-                failure.diagnostics[0].range = Some(diagnostic_range_from_line(
-                    path,
-                    offset,
-                    line_index,
-                    without_newline,
-                ));
-                failure
-            })?;
-            let canonical = format_style_list(&syntax);
-            let byte_start = syntax
-                .items
-                .first()
-                .expect("non-empty style syntax")
-                .span
-                .start;
-            let byte_end = syntax
-                .items
-                .last()
-                .expect("non-empty style syntax")
-                .span
-                .end;
-            candidates.push(Candidate::Direct {
-                style: without_newline.to_owned(),
-                provenance: Provenance {
-                    source: canonical,
-                    file: Some(path.display().to_string()),
-                    byte_start: Some(offset + byte_start),
-                    byte_end: Some(offset + byte_end),
-                    macro_kind: "input".into(),
-                    reason: "line-oriented-input".into(),
-                },
-            });
-        }
-        offset += line.len();
-    }
-    Ok(candidates)
-}
-
-fn candidates_from_rust(theme: &ThemeRegistry, path: &Path) -> Result<Vec<Candidate>, CliFailure> {
-    let report = scan_file(path).map_err(|error| match error {
-        ScanFileError::Parse(error) => scan_failure(&[error.into()]),
-        error @ ScanFileError::Read { .. } => CliFailure::tool(error.to_string()),
-    })?;
-    candidates_from_scan_report(theme, &report)
-}
-
-fn candidates_from_scan_report(
-    theme: &ThemeRegistry,
-    report: &ScanReport,
-) -> Result<Vec<Candidate>, CliFailure> {
-    if !report.diagnostics.is_empty() {
-        return Err(scan_failure(&report.diagnostics));
-    }
-    let mut candidates = Vec::new();
-    for invocation in &report.invocations {
-        match &invocation.kind {
-            InvocationKind::Pc(pc) => candidates.push(Candidate::Direct {
-                style: pc.style.value.clone(),
-                provenance: scanner_provenance(
-                    &invocation.source,
-                    invocation.range,
-                    "pc",
-                    "visible-literal",
-                    pc.style.value.clone(),
-                ),
-            }),
-            InvocationKind::Pcx(pcx) => {
-                let compiled_clauses = pcx
-                    .clauses
-                    .iter()
-                    .map(|clause| {
-                        clause
-                            .branches
-                            .iter()
-                            .map(|branch| {
-                                lower_scanned_style(theme, &branch.style, &invocation.source)
-                            })
-                            .collect::<Result<Vec<_>, _>>()
-                    })
-                    .collect::<Result<Vec<_>, _>>()?;
-                if let Err(conflict) = analyze_cross_clause_conflicts(&compiled_clauses) {
-                    let literal =
-                        &pcx.clauses[conflict.right_clause].branches[conflict.right_branch].style;
-                    let slots = conflict
-                        .slots
-                        .iter()
-                        .map(|slot| format!("{slot:?}"))
-                        .collect::<Vec<_>>()
-                        .join(", ");
-                    let human = format!(
-                        "PCX003: independent clauses {} and {} can both assign [{slots}] under the same condition; express the combined state space in one `match` at {}:{}:{} [bytes {}..{})",
-                        conflict.left_clause + 1,
-                        conflict.right_clause + 1,
-                        invocation.source,
-                        literal.range.start.line,
-                        literal.range.start.column + 1,
-                        literal.range.start.byte,
-                        literal.range.end.byte,
-                    );
-                    return Err(CliFailure {
-                        human,
-                        diagnostics: vec![CliDiagnostic {
-                            code: "PCX003".into(),
-                            category: "composition".into(),
-                            severity: "error".into(),
-                            message: format!(
-                                "independent clauses {} and {} can both assign [{slots}] under the same condition",
-                                conflict.left_clause + 1,
-                                conflict.right_clause + 1,
-                            ),
-                            suggestion: Some(
-                                "express the combined state space in one `match`".into(),
-                            ),
-                            origin: Some(CliDiagnosticOrigin {
-                                kind: "rust".into(),
-                                label: "pcx-cross-clause-conflict".into(),
-                            }),
-                            range: Some(diagnostic_range_from_source(
-                                &invocation.source,
-                                literal.range,
-                            )),
-                            style_range: None,
-                            replacement: None,
-                        }],
-                    });
-                }
-                for composition in &pcx.compositions {
-                    let reason = pcx_composition_reason(&composition.selections);
-                    let branches = composition
-                        .selections
-                        .iter()
-                        .map(|selection| selection.style.value.clone())
-                        .collect();
-                    candidates.push(Candidate::Composition {
-                        base: pcx.base.value.clone(),
-                        branches,
-                        provenance: scanner_provenance(
-                            &invocation.source,
-                            invocation.range,
-                            "pcx",
-                            &reason,
-                            composition.composed.clone(),
-                        ),
-                    });
-                }
-            }
-        }
-    }
-    Ok(candidates)
-}
-
-fn lower_scanned_style(
-    theme: &ThemeRegistry,
-    literal: &StyleLiteral,
-    file: &str,
-) -> Result<SemanticStyle, CliFailure> {
-    let location = format!(
-        "{file}:{}:{} [bytes {}..{})",
-        literal.range.start.line,
-        literal.range.start.column + 1,
-        literal.range.start.byte,
-        literal.range.end.byte
-    );
-    let syntax = parse_style_list(&literal.value).map_err(|error| {
-        let human = format!("{error} at {location}");
-        style_literal_failure(error, human, file, literal.range, "pcx-branch")
-    })?;
-    lower_style_with_theme(theme, &syntax).map_err(|error| {
-        let human = format!("{error} at {location}");
-        style_literal_failure(error, human, file, literal.range, "pcx-branch")
-    })
-}
-
-fn scanner_provenance(
-    file: &str,
-    range: SourceRange,
-    macro_kind: &str,
-    reason: &str,
-    source: String,
-) -> Provenance {
-    Provenance {
-        source,
-        file: Some(file.to_owned()),
-        byte_start: Some(range.start.byte),
-        byte_end: Some(range.end.byte),
-        macro_kind: macro_kind.to_owned(),
-        reason: reason.to_owned(),
-    }
-}
-
 #[derive(Clone, Copy, Default)]
 struct ArtifactGraphOptions<'a> {
     reachability: Option<&'a ReachabilityDocument>,
@@ -6060,109 +6177,6 @@ fn collect_token_references(
         .collect()
 }
 
-fn enforce_compatibility_policy(
-    targets: TargetContract,
-    styles: &BTreeMap<Vec<u8>, (SemanticStyle, Vec<Provenance>)>,
-) -> Result<(), String> {
-    if !targets.rejects_unclassified_css() {
-        return Ok(());
-    }
-    let mut violations = Vec::new();
-    for (style, origins) in styles.values() {
-        let violation = if !style.arbitrary_properties.is_empty() {
-            Some(("CMP002", "arbitrary properties"))
-        } else if style
-            .selectors
-            .iter()
-            .any(|selector| !is_classified_selector_transform(selector))
-        {
-            Some(("CMP003", "arbitrary selectors"))
-        } else if !style.arbitrary_values.is_empty() {
-            Some(("CMP001", "arbitrary values"))
-        } else {
-            None
-        };
-        let Some((code, feature)) = violation else {
-            continue;
-        };
-        let origin = origins.iter().min_by(|left, right| {
-            (
-                left.file.as_deref(),
-                left.byte_start,
-                left.byte_end,
-                left.reason.as_str(),
-                left.source.as_str(),
-            )
-                .cmp(&(
-                    right.file.as_deref(),
-                    right.byte_start,
-                    right.byte_end,
-                    right.reason.as_str(),
-                    right.source.as_str(),
-                ))
-        });
-        let (file, start, end, label) = origin.map_or_else(
-            || (None, None, None, "unknown origin".to_owned()),
-            |origin| {
-                (
-                    origin.file.clone(),
-                    origin.byte_start,
-                    origin.byte_end,
-                    origin.reason.clone(),
-                )
-            },
-        );
-        violations.push((file, start, end, code, feature, label));
-    }
-    violations.sort();
-    if let Some((file, start, end, code, feature, label)) = violations.into_iter().next() {
-        let location = match (file, start, end) {
-            (Some(file), Some(start), Some(end)) => format!("{file} [bytes {start}..{end})"),
-            _ => label,
-        };
-        return Err(format!(
-            "{code}: target profile `baseline-widely` rejects unclassified {feature} at {location}; use a typed utility/token or select `--targets none` as an explicit unmanaged escape hatch"
-        ));
-    }
-    Ok(())
-}
-
-fn provenance_is_reachable(
-    index: &ReachabilityIndex,
-    provenance: &Provenance,
-) -> Result<bool, String> {
-    let (Some(file), Some(start), Some(end)) = (
-        provenance.file.as_deref(),
-        provenance.byte_start,
-        provenance.byte_end,
-    ) else {
-        return Err("origin lacks a source range".into());
-    };
-    index.origin_is_reachable(file, start, end)
-}
-
-fn normalize_provenance(provenance: &mut Vec<Provenance>) {
-    provenance.sort_by(|left, right| {
-        (
-            left.file.as_deref(),
-            left.byte_start,
-            left.byte_end,
-            left.macro_kind.as_str(),
-            left.reason.as_str(),
-            left.source.as_str(),
-        )
-            .cmp(&(
-                right.file.as_deref(),
-                right.byte_start,
-                right.byte_end,
-                right.macro_kind.as_str(),
-                right.reason.as_str(),
-                right.source.as_str(),
-            ))
-    });
-    provenance.dedup();
-}
-
 fn lower_source(
     theme: &ThemeRegistry,
     source: &str,
@@ -6177,621 +6191,6 @@ fn lower_source(
         let human = format_style_failure(index, source, &error.to_string());
         style_failure(error, human, provenance)
     })
-}
-
-fn inspect_theme(theme: &ThemeRegistry) -> ThemeInspection {
-    ThemeInspection {
-        id: theme.id().to_string(),
-        tokens: theme
-            .tokens()
-            .iter()
-            .map(|token| TokenInspection {
-                kind: format!("{:?}", token.kind),
-                name: token.name.clone(),
-                value: token.value.clone(),
-            })
-            .collect(),
-        breakpoints: theme
-            .breakpoints()
-            .iter()
-            .map(|breakpoint| BreakpointInspection {
-                name: breakpoint.name.clone(),
-                min_width: breakpoint.min_width.clone(),
-            })
-            .collect(),
-    }
-}
-
-fn descriptor_capabilities(descriptor: &UtilityDescriptor) -> CatalogCapabilities {
-    CatalogCapabilities {
-        negative: descriptor.allows_negative(),
-        arbitrary_value: descriptor.accepts_arbitrary_value(),
-        custom_property: descriptor.accepts_custom_property(),
-        modifier: descriptor.accepts_modifier(),
-    }
-}
-
-fn run_explain(arguments: &ExplainArgs) -> Result<(), CliFailure> {
-    let document = build_explanation(arguments)?;
-    match arguments.format {
-        ExplainFormat::Json => {
-            let json = serde_json::to_string_pretty(&document).map_err(|error| {
-                CliFailure::tool(format!("cannot serialize explanation: {error}"))
-            })?;
-            println!("{json}");
-        }
-        ExplainFormat::Text => print_explanation(&document),
-    }
-    Ok(())
-}
-
-fn run_cascade_explain(arguments: &CascadeExplainArgs) -> Result<(), CliFailure> {
-    let logical_path = audit_logical_path(&arguments.input).map_err(CliFailure::invalid)?;
-    let bytes = read_audit_artifact(&arguments.input, "cascade input")?;
-    let css = std::str::from_utf8(&bytes).map_err(|error| {
-        CliFailure::invalid(format!(
-            "cascade input `{}` is not valid UTF-8: {error}",
-            arguments.input.display()
-        ))
-    })?;
-    let explanation =
-        explain_stylesheet_cascade(&logical_path, css, &arguments.element, &arguments.property)
-            .map_err(|error| CliFailure::tool(error.to_string()))?;
-    match arguments.format {
-        ExplainFormat::Json => {
-            let json = serde_json::to_string_pretty(&explanation).map_err(|error| {
-                CliFailure::tool(format!("cannot serialize cascade explanation: {error}"))
-            })?;
-            println!("{json}");
-        }
-        ExplainFormat::Text => print_cascade_explanation(&explanation)?,
-    }
-    Ok(())
-}
-
-fn print_cascade_explanation(document: &CascadeExplanation) -> Result<(), CliFailure> {
-    let status = match document.status {
-        CascadeStatus::Resolved => "resolved",
-        CascadeStatus::NoMatch => "no-match",
-        CascadeStatus::BrowserRequired => "browser-required",
-    };
-    println!("Status: {status}");
-    println!("Scope: {}", document.scope);
-    println!("Input: {}", document.input);
-    println!("Element: {}", document.element.selector);
-    println!("Property: {}", document.property);
-    if let Some(winner_id) = &document.winner {
-        let winner = document
-            .candidates
-            .iter()
-            .find(|candidate| &candidate.id == winner_id)
-            .ok_or_else(|| {
-                CliFailure::tool(format!(
-                    "cascade explanation winner `{winner_id}` has no candidate record"
-                ))
-            })?;
-        println!(
-            "Winner: {} via {} at {}:{}:{}",
-            winner.effective_declaration,
-            winner.selector,
-            winner.source.path,
-            winner.source.start_line,
-            winner.source.start_column
-        );
-    }
-    println!("Candidates:");
-    for candidate in &document.candidates {
-        let criterion = candidate
-            .decisive_criterion
-            .as_deref()
-            .map_or(String::new(), |value| format!(" by {value}"));
-        println!(
-            "  {} [{}{}] {} via {} ({})",
-            candidate.id,
-            candidate.disposition,
-            criterion,
-            candidate.effective_declaration,
-            candidate.selector,
-            candidate.specificity
-        );
-    }
-    if !document.blockers.is_empty() {
-        println!("Browser evidence required:");
-        for blocker in &document.blockers {
-            println!("  {}: {}", blocker.code, blocker.message);
-        }
-    }
-    Ok(())
-}
-
-fn run_repair_plan(arguments: &RepairPlanCliArgs) -> Result<(), CliFailure> {
-    let finding_file = command_logical_path_for(
-        &arguments.findings,
-        "--findings",
-        "plan",
-        "finding document",
-    )
-    .map_err(CliFailure::invalid)?;
-    let finding_bytes = read_command_artifact(&arguments.findings, "plan", "finding document")?;
-    let proposal_bytes = read_command_artifact(&arguments.proposal, "plan", "repair proposal")?;
-    let proposal = parse_repair_proposal(&proposal_bytes)
-        .map_err(|error| CliFailure::invalid(error.to_string()))?;
-    let files = proposal.files();
-    let sources = load_repair_sources(&arguments.source_root, &files, "plan")?;
-    let plan = build_repair_plan(
-        RepairTool::new("pliegocss", env!("CARGO_PKG_VERSION"))
-            .map_err(|error| CliFailure::tool(error.to_string()))?,
-        &finding_file,
-        &finding_bytes,
-        &proposal,
-        &sources.bytes,
-    )
-    .map_err(|error| CliFailure::tool(error.to_string()))?;
-    match arguments.format {
-        RepairCliFormat::Json => print!(
-            "{}",
-            plan.to_json_pretty()
-                .map_err(|error| CliFailure::tool(error.to_string()))?
-        ),
-        RepairCliFormat::Text => print!(
-            "{}",
-            plan.to_human()
-                .map_err(|error| CliFailure::tool(error.to_string()))?
-        ),
-    }
-    Ok(())
-}
-
-fn run_repair_fix(arguments: &RepairFixCliArgs) -> Result<(), CliFailure> {
-    let plan_bytes = read_command_artifact(&arguments.plan, "fix", "repair plan")?;
-    let plan =
-        parse_repair_plan(&plan_bytes).map_err(|error| CliFailure::invalid(error.to_string()))?;
-    let finding_file =
-        command_logical_path_for(&arguments.findings, "--findings", "fix", "finding document")
-            .map_err(CliFailure::invalid)?;
-    let finding_bytes = read_command_artifact(&arguments.findings, "fix", "finding document")?;
-    let files = plan
-        .sources()
-        .iter()
-        .map(RepairSourceTransition::file)
-        .collect::<Vec<_>>();
-    let sources = load_repair_sources(&arguments.source_root, &files, "fix")?;
-    match &arguments.mode {
-        RepairFixMode::DryRun => {
-            let report = verify_repair_plan(&plan, &finding_file, &finding_bytes, &sources.bytes)
-                .map_err(|error| CliFailure::tool(error.to_string()))?;
-            match arguments.format {
-                RepairCliFormat::Json => print!(
-                    "{}",
-                    report
-                        .to_json_pretty()
-                        .map_err(|error| CliFailure::tool(error.to_string()))?
-                ),
-                RepairCliFormat::Text => print!("{}", report.to_human()),
-            }
-        }
-        RepairFixMode::Apply {
-            authorization,
-            receipt,
-        } => {
-            let published = apply_repair_plan_checked(
-                &plan,
-                &finding_file,
-                &finding_bytes,
-                &sources.bytes,
-                authorization,
-                &sources.root,
-                &sources.paths,
-                receipt,
-                [&arguments.plan, &arguments.findings].map(PathBuf::as_path),
-            )
-            .map_err(|error| CliFailure::tool(error.to_string()))?;
-            print!("{}", published.render(arguments.format));
-        }
-    }
-    Ok(())
-}
-
-fn load_repair_sources(
-    source_root: &Path,
-    files: &[&str],
-    command: &str,
-) -> Result<LoadedRepairSources, CliFailure> {
-    reject_command_link_components(source_root, command, "source root")
-        .map_err(CliFailure::invalid)?;
-    let root = existing_artifact_directory(source_root, "repair source root")
-        .map_err(CliFailure::invalid)?;
-    let mut paths = BTreeMap::new();
-    let mut bytes_by_file = BTreeMap::new();
-    for file in files {
-        let relative = Path::new(file);
-        let resolved = resolve_plan_relative_path(&root, relative, "repair source")
-            .map_err(CliFailure::invalid)?;
-        let resolved =
-            existing_regular_file(&resolved, "repair source").map_err(CliFailure::invalid)?;
-        ensure_path_within_plan(&root, &resolved, "repair source").map_err(CliFailure::invalid)?;
-        let bytes =
-            read_bounded_utf8_document(&resolved, "repair source").map_err(CliFailure::invalid)?;
-        if paths.insert((*file).to_owned(), resolved).is_some()
-            || bytes_by_file.insert((*file).to_owned(), bytes).is_some()
-        {
-            return Err(CliFailure::invalid(format!(
-                "repair source `{file}` is duplicated"
-            )));
-        }
-    }
-    Ok(LoadedRepairSources {
-        root,
-        paths,
-        bytes: bytes_by_file,
-    })
-}
-
-fn build_explanation(arguments: &ExplainArgs) -> Result<ExplainDocument, CliFailure> {
-    let config = resolve_theme_config(
-        arguments.config.as_deref(),
-        arguments.seed,
-        std::iter::empty(),
-    )?;
-    let theme = load_theme(config.as_deref())?;
-    let provenance = cli_provenance(&arguments.style, "explain");
-    let syntax = parse_style_list(&arguments.style).map_err(|error| {
-        let human = error.to_string();
-        style_failure(error, human, &provenance)
-    })?;
-    let canonical = format_style_list(&syntax);
-    let artifact = compile_candidates(
-        &theme,
-        &[Candidate::Direct {
-            style: arguments.style.clone(),
-            provenance,
-        }],
-        false,
-        arguments.targets,
-        CssFormat::Pretty,
-    )?;
-    let style = artifact
-        .styles
-        .first()
-        .expect("one explained candidate produces one style");
-    let utilities = syntax
-        .items
-        .iter()
-        .map(|item| explain_style_item(&arguments.style, item))
-        .collect::<Result<Vec<_>, _>>()
-        .map_err(CliFailure::tool)?;
-    Ok(ExplainDocument {
-        schema_version: EXPLAIN_SCHEMA_VERSION,
-        style_id_format_version: STYLE_ID_FORMAT_VERSION,
-        class_name_format_version: CLASS_NAME_FORMAT_VERSION,
-        theme_id_format_version: THEME_ID_FORMAT_VERSION,
-        source: arguments.style.clone(),
-        canonical,
-        theme_id: theme.id().to_string(),
-        targets: arguments.targets,
-        style_id: style.style_id.clone(),
-        class_name: style.class_name.clone(),
-        css: artifact.css,
-        utilities,
-    })
-}
-
-fn explain_style_item(source: &str, item: &StyleItem) -> Result<ExplainedUtility, String> {
-    let descriptor = descriptor_for_style_item(item)
-        .ok_or_else(|| "compiler accepted a utility without catalog metadata".to_owned())?;
-    let item_source = source
-        .get(item.span.start..item.span.end)
-        .ok_or_else(|| "parser returned an invalid utility source range".to_owned())?;
-    Ok(ExplainedUtility {
-        source: item_source.to_owned(),
-        byte_start: item.span.start,
-        byte_end: item.span.end,
-        pattern: descriptor.pattern().to_owned(),
-        match_name: descriptor.match_name().to_owned(),
-        form: utility_form_name(descriptor.form()).to_owned(),
-        domain: utility_domain_name(descriptor.domain()).to_owned(),
-        capabilities: descriptor_capabilities(descriptor),
-        summary: descriptor.summary().to_owned(),
-    })
-}
-
-fn descriptor_for_style_item(item: &StyleItem) -> Option<&'static UtilityDescriptor> {
-    match &item.candidate.kind {
-        CandidateKind::ArbitraryProperty { .. } => utility_catalog()
-            .iter()
-            .find(|descriptor| descriptor.form() == UtilityForm::ArbitraryProperty),
-        CandidateKind::Named(candidate) => {
-            let body = parse_named_candidate(candidate).ok()?.body;
-            utility_catalog()
-                .iter()
-                .find(|descriptor| {
-                    descriptor.form() == UtilityForm::Fixed && descriptor.match_name() == body
-                })
-                .or_else(|| {
-                    utility_catalog()
-                        .iter()
-                        .filter(|descriptor| descriptor.form() == UtilityForm::Parameterized)
-                        .filter(|descriptor| {
-                            body.strip_prefix(descriptor.match_name())
-                                .is_some_and(|suffix| suffix.starts_with('-'))
-                        })
-                        .max_by_key(|descriptor| descriptor.match_name().len())
-                })
-        }
-    }
-}
-
-fn print_explanation(document: &ExplainDocument) {
-    println!("Source: {}", document.source);
-    println!("Canonical: {}", document.canonical);
-    println!("Theme: {}", document.theme_id);
-    println!("Style ID: {}", document.style_id);
-    println!("Class: {}", document.class_name);
-    println!("Utilities:");
-    for utility in &document.utilities {
-        println!(
-            "  {} -> {} ({}, {}): {}",
-            utility.source, utility.pattern, utility.form, utility.domain, utility.summary
-        );
-    }
-    println!("CSS:\n{}", document.css.trim_end());
-}
-
-fn serialize_inspection(
-    theme: &ThemeRegistry,
-    targets: TargetContract,
-    artifact: &CompiledArtifact,
-) -> Result<String, String> {
-    let inspection = Inspection {
-        schema_version: INSPECTION_SCHEMA_VERSION,
-        style_id_format_version: STYLE_ID_FORMAT_VERSION,
-        class_name_format_version: CLASS_NAME_FORMAT_VERSION,
-        theme_id_format_version: THEME_ID_FORMAT_VERSION,
-        theme: inspect_theme(theme),
-        targets,
-        format: artifact.format,
-        css_sha256: sha256_hex(artifact.css.as_bytes()),
-        css_bytes: artifact.css.len(),
-        findings: artifact.findings.clone(),
-        styles: artifact.styles.clone(),
-    };
-    let mut json = serde_json::to_string_pretty(&inspection)
-        .map_err(|error| format!("cannot serialize inspection: {error}"))?;
-    json.push('\n');
-    Ok(json)
-}
-
-fn run_catalog(arguments: &CatalogArgs) -> Result<(), String> {
-    let resolved_config = resolve_theme_config(
-        arguments.config.as_deref(),
-        arguments.seed,
-        std::iter::empty::<&Path>(),
-    )?;
-    if let (Some(config), Some(output)) = (resolved_config.as_deref(), arguments.output.as_deref())
-    {
-        validate_path_roles(
-            &[("resolved theme configuration", config)],
-            &[("--output", output)],
-        )?;
-    }
-    let theme = load_theme(resolved_config.as_deref())?;
-    let format = match arguments.format {
-        CatalogFormat::Markdown => CatalogOutputFormat::Markdown,
-        CatalogFormat::Json => CatalogOutputFormat::Json,
-    };
-    let rendered = render_catalog(&theme, format)?;
-    if let Some(check) = &arguments.check {
-        check_catalog(check, rendered.as_bytes())
-    } else if let Some(output) = &arguments.output {
-        write_if_changed(output, rendered.as_bytes()).map(|_| ())
-    } else {
-        print!("{rendered}");
-        Ok(())
-    }
-}
-
-fn run_utility_formatter(arguments: &UtilityFormatArgs) -> Result<(), CliFailure> {
-    if !arguments.sources.is_empty() {
-        return run_rust_utility_format(&arguments.sources, arguments.apply);
-    }
-    if let Some(input) = &arguments.input {
-        let source = fs::read_to_string(input).map_err(|error| {
-            CliFailure::tool(format!("cannot read `{}`: {error}", input.display()))
-        })?;
-        let rendered = format_line_document(input, &source)?;
-        if arguments.check {
-            if source == rendered {
-                println!("ok: `{}` is formatted", input.display());
-                return Ok(());
-            }
-            return Err(CliFailure::tool(format!(
-                "formatting drift detected in `{}`; run `pliego-cssc fmt --input {} --output <path>` to inspect the canonical document",
-                input.display(),
-                input.display()
-            )));
-        }
-        return publish_formatted(arguments.output.as_deref(), &rendered).map_err(Into::into);
-    }
-
-    let formatted = arguments
-        .styles
-        .iter()
-        .enumerate()
-        .map(|(index, source)| {
-            format_utility_source(source).map_err(|error| {
-                let human = format!("style {}: {error}", index + 1);
-                style_failure(
-                    error,
-                    human,
-                    &cli_provenance(source, &format!("fmt-style-{}", index + 1)),
-                )
-            })
-        })
-        .collect::<Result<Vec<_>, _>>()?;
-    if arguments.check {
-        if let Some((index, (actual, expected))) = arguments
-            .styles
-            .iter()
-            .zip(&formatted)
-            .enumerate()
-            .find(|(_, (actual, expected))| actual != expected)
-        {
-            return Err(CliFailure::tool(format!(
-                "style {} is not formatted; expected `{expected}`, found `{actual}`",
-                index + 1
-            )));
-        }
-        println!("ok: {} style(s) are formatted", formatted.len());
-        return Ok(());
-    }
-    let mut rendered = formatted.join("\n");
-    rendered.push('\n');
-    publish_formatted(arguments.output.as_deref(), &rendered).map_err(Into::into)
-}
-
-fn run_rust_utility_format(sources: &[PathBuf], apply: bool) -> Result<(), CliFailure> {
-    let files = expand_source_paths(sources)?;
-    let inspection =
-        inspect_utility_format(&files, format_utility_source).map_err(|error| match error {
-            UtilityFormatError::Diagnostics(diagnostics) => scan_failure(&diagnostics),
-            UtilityFormatError::Format {
-                file,
-                role,
-                range,
-                error,
-            } => {
-                let human = format!("{error} in {file}");
-                style_literal_failure(error, human, &file, range, &role)
-            }
-            error => CliFailure::tool(error.to_string()),
-        })?;
-    if inspection.findings.is_empty() {
-        println!(
-            "ok: {} Rust utility literal(s) are formatted across {} file(s)",
-            inspection.checked, inspection.files
-        );
-        Ok(())
-    } else if apply {
-        publish_utility_rewrites(&inspection.rewrites).map_err(CliFailure::tool)?;
-        println!("fixed");
-        Ok(())
-    } else {
-        Err(format_failure(&inspection.findings))
-    }
-}
-
-fn publish_utility_rewrites(
-    rewrites: &[pliego_css_source::UtilityFormatRewrite],
-) -> Result<(), String> {
-    let destinations = publication_destinations(rewrites.iter().map(|item| item.path.as_path()))?;
-    let _locks = acquire_publication_locks(&destinations)?;
-    for rewrite in rewrites {
-        if fs::read(&rewrite.path)
-            .map_err(|error| format!("read `{}`: {error}", rewrite.path.display()))?
-            != rewrite.before
-        {
-            return Err(format!("`{}` changed", rewrite.path.display()));
-        }
-    }
-    let mut writes = Vec::with_capacity(rewrites.len());
-    for rewrite in rewrites {
-        let permissions = fs::metadata(&rewrite.path)
-            .map_err(|error| format!("stat `{}`: {error}", rewrite.path.display()))?
-            .permissions();
-        let write = prepare_atomic_write(&rewrite.path, &rewrite.after)?;
-        if let Some(temporary) = &write.temporary {
-            fs::set_permissions(temporary, permissions)
-                .map_err(|error| format!("chmod `{}`: {error}", rewrite.path.display()))?;
-        }
-        writes.push(write);
-    }
-    commit_prepared_locked_with(writes, |_, temporary, destination| {
-        fs::rename(temporary, destination)
-    })
-}
-
-fn format_utility_source(source: &str) -> Result<String, Diagnostic> {
-    let syntax = parse_style_list(source)?;
-    Ok(format_style_list(&syntax))
-}
-
-fn format_line_document(path: &Path, source: &str) -> Result<String, CliFailure> {
-    if source.is_empty() {
-        return Ok(String::new());
-    }
-    reject_isolated_carriage_returns(path, source).map_err(CliFailure::tool)?;
-    let mut lines = Vec::new();
-    let mut offset = 0;
-    for (index, line) in source.split_inclusive('\n').enumerate() {
-        let without_lf = line.strip_suffix('\n').unwrap_or(line);
-        let without_newline = without_lf.strip_suffix('\r').unwrap_or(without_lf);
-        let trimmed = without_newline.trim();
-        if trimmed.is_empty() {
-            lines.push(String::new());
-        } else if trimmed.starts_with('#') {
-            lines.push(trimmed.to_owned());
-        } else {
-            lines.push(format_utility_source(without_newline).map_err(|error| {
-                let human = format!("{}:{}: {error}", path.display(), index + 1);
-                let provenance = Provenance {
-                    source: without_newline.to_owned(),
-                    file: Some(path.display().to_string()),
-                    byte_start: Some(offset),
-                    byte_end: Some(offset + without_newline.len()),
-                    macro_kind: "input".into(),
-                    reason: "fmt-line".into(),
-                };
-                let mut failure = style_failure(error, human, &provenance);
-                failure.diagnostics[0].range = Some(diagnostic_range_from_line(
-                    path,
-                    offset,
-                    index,
-                    without_newline,
-                ));
-                failure
-            })?);
-        }
-        offset += line.len();
-    }
-    let mut rendered = lines.join("\n");
-    rendered.push('\n');
-    Ok(rendered)
-}
-
-fn reject_isolated_carriage_returns(path: &Path, source: &str) -> Result<(), String> {
-    let bytes = source.as_bytes();
-    if let Some(offset) = bytes.iter().enumerate().find_map(|(index, byte)| {
-        (*byte == b'\r' && bytes.get(index + 1) != Some(&b'\n')).then_some(index)
-    }) {
-        Err(format!(
-            "line-oriented input `{}` contains an isolated carriage return at byte {offset}; use LF or CRLF line endings",
-            path.display()
-        ))
-    } else {
-        Ok(())
-    }
-}
-
-fn publish_formatted(output: Option<&Path>, rendered: &str) -> Result<(), String> {
-    if let Some(output) = output {
-        write_if_changed(output, rendered.as_bytes()).map(|_| ())
-    } else {
-        print!("{rendered}");
-        Ok(())
-    }
-}
-
-fn check_catalog(path: &Path, expected: &[u8]) -> Result<(), String> {
-    let actual = fs::read(path)
-        .map_err(|error| format!("cannot check catalog `{}`: {error}", path.display()))?;
-    if actual == expected {
-        Ok(())
-    } else {
-        Err(format!(
-            "catalog drift detected in `{}`; regenerate it with `pliego-cssc catalog --output` using the same theme and format options",
-            path.display()
-        ))
-    }
 }
 
 fn write_if_changed(path: &Path, bytes: &[u8]) -> Result<bool, String> {
@@ -7421,344 +6820,6 @@ fn publish_output_group_with(
     let changed = writes.len();
     commit_prepared_locked_with(writes, publish)?;
     Ok(changed)
-}
-
-struct PreparedWrite {
-    destination: PathBuf,
-    temporary: Option<PathBuf>,
-}
-
-impl PreparedWrite {
-    fn commit(self) -> Result<(), String> {
-        commit_prepared(vec![self])
-    }
-}
-
-impl Drop for PreparedWrite {
-    fn drop(&mut self) {
-        if let Some(temporary) = &self.temporary {
-            let _ = fs::remove_file(temporary);
-        }
-    }
-}
-
-fn commit_prepared(writes: Vec<PreparedWrite>) -> Result<(), String> {
-    commit_prepared_with(writes, |_, temporary, destination| {
-        fs::rename(temporary, destination)
-    })
-}
-
-fn commit_prepared_with(
-    writes: Vec<PreparedWrite>,
-    publish: impl FnMut(usize, &Path, &Path) -> std::io::Result<()>,
-) -> Result<(), String> {
-    let destinations =
-        publication_destinations(writes.iter().map(|write| write.destination.as_path()))?;
-    let _locks = acquire_publication_locks(&destinations)?;
-    commit_prepared_locked_with(writes, publish)
-}
-
-fn publication_destinations<'a>(
-    destinations: impl IntoIterator<Item = &'a Path>,
-) -> Result<BTreeMap<String, PathBuf>, String> {
-    let mut destinations_by_key = BTreeMap::new();
-    for destination in destinations {
-        let (key, resolved) = publication_path_identity(destination)?;
-        let name = resolved
-            .file_name()
-            .and_then(|name| name.to_str())
-            .ok_or("invalid publication destination")?;
-        let reserved = name.strip_prefix('.').is_some_and(|body| {
-            body.ends_with(".pliego.lock")
-                || (body.contains(".pliego-")
-                    && (body.as_bytes().ends_with(b".tmp") || body.as_bytes().ends_with(b".bak")))
-        });
-        if reserved {
-            return Err(format!(
-                "publication destination `{}` uses the reserved coordination namespace",
-                destination.display()
-            ));
-        }
-        if destinations_by_key.insert(key, resolved).is_some() {
-            return Err(format!(
-                "duplicate publication destination `{}`",
-                destination.display()
-            ));
-        }
-    }
-    Ok(destinations_by_key)
-}
-
-fn commit_prepared_locked_with(
-    mut writes: Vec<PreparedWrite>,
-    mut publish: impl FnMut(usize, &Path, &Path) -> std::io::Result<()>,
-) -> Result<(), String> {
-    let mut backups = vec![None; writes.len()];
-    for (index, write) in writes.iter().enumerate() {
-        match move_destination_to_backup(&write.destination) {
-            Ok(backup) => backups[index] = backup,
-            Err(error) => {
-                let rollback = rollback_prepared(&writes, &mut backups, 0);
-                return Err(publication_error(&error, &rollback));
-            }
-        }
-    }
-
-    for (published, index) in (0..writes.len()).enumerate() {
-        let temporary = writes[index]
-            .temporary
-            .take()
-            .expect("prepared write retains its temporary path");
-        if let Err(error) = publish(index, &temporary, &writes[index].destination) {
-            let _ = fs::remove_file(&temporary);
-            let message = format!(
-                "cannot publish `{}` from `{}`: {error}",
-                writes[index].destination.display(),
-                temporary.display()
-            );
-            let rollback = rollback_prepared(&writes, &mut backups, published);
-            return Err(publication_error(&message, &rollback));
-        }
-    }
-
-    for backup in backups.into_iter().flatten() {
-        if let Err(error) = fs::remove_file(&backup) {
-            eprintln!(
-                "warning: published outputs but could not remove backup `{}`: {error}",
-                backup.display()
-            );
-        }
-    }
-    Ok(())
-}
-
-#[derive(Debug)]
-struct PublicationLock {
-    file: std::fs::File,
-}
-
-impl Drop for PublicationLock {
-    fn drop(&mut self) {
-        let _ = FileExt::unlock(&self.file);
-    }
-}
-
-fn acquire_publication_locks(
-    destinations: &BTreeMap<String, PathBuf>,
-) -> Result<Vec<PublicationLock>, String> {
-    destinations
-        .values()
-        .map(|destination| {
-            let file_name = destination
-                .file_name()
-                .ok_or("invalid publication destination")?;
-            let mut lock_name = OsString::from(".");
-            lock_name.push(file_name);
-            lock_name.push(".pliego.lock");
-            let lock_path = destination.with_file_name(lock_name);
-            let file = OpenOptions::new()
-                .read(true)
-                .write(true)
-                .create(true)
-                .truncate(false)
-                .open(&lock_path)
-                .map_err(|error| {
-                    format!(
-                        "cannot open publication lock `{}`: {error}",
-                        lock_path.display()
-                    )
-                })?;
-            file.try_lock_exclusive().map_err(|error| {
-                format!(
-                    "cannot acquire publication lock `{}`; another writer may be active: {error}",
-                    lock_path.display()
-                )
-            })?;
-            Ok(PublicationLock { file })
-        })
-        .collect()
-}
-
-fn move_destination_to_backup(destination: &Path) -> Result<Option<PathBuf>, String> {
-    match fs::symlink_metadata(destination) {
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(None),
-        Err(error) => {
-            return Err(format!(
-                "cannot inspect existing output `{}` before publication: {error}",
-                destination.display()
-            ));
-        }
-        Ok(metadata) if metadata.file_type().is_dir() => {
-            return Err(format!(
-                "output destination `{}` is a directory",
-                destination.display()
-            ));
-        }
-        Ok(_) => {}
-    }
-
-    let file_name = destination
-        .file_name()
-        .and_then(|name| name.to_str())
-        .ok_or_else(|| format!("invalid output path `{}`", destination.display()))?;
-    for _ in 0..32 {
-        let sequence = TEMP_FILE_COUNTER.fetch_add(1, Ordering::Relaxed);
-        let backup = destination.with_file_name(format!(
-            ".{file_name}.pliego-{}-{sequence}.bak",
-            std::process::id()
-        ));
-        match fs::symlink_metadata(&backup) {
-            Ok(_) => continue,
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
-            Err(error) => {
-                return Err(format!(
-                    "cannot inspect backup path `{}`: {error}",
-                    backup.display()
-                ));
-            }
-        }
-        fs::rename(destination, &backup).map_err(|error| {
-            format!(
-                "cannot stage existing output `{}` through `{}`: {error}",
-                destination.display(),
-                backup.display()
-            )
-        })?;
-        return Ok(Some(backup));
-    }
-    Err(format!(
-        "cannot reserve a backup path for `{}` after 32 attempts",
-        destination.display()
-    ))
-}
-
-fn rollback_prepared(
-    writes: &[PreparedWrite],
-    backups: &mut [Option<PathBuf>],
-    published: usize,
-) -> RollbackSummary {
-    let mut summary = RollbackSummary::default();
-    for index in (0..writes.len()).rev() {
-        let destination = &writes[index].destination;
-        if index < published {
-            match fs::remove_file(destination) {
-                Ok(()) => summary.removed_partial += 1,
-                Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
-                Err(error) => summary.errors.push(format!(
-                    "cannot remove partially published `{}`: {error}",
-                    destination.display()
-                )),
-            }
-        }
-        if let Some(backup) = backups[index].take() {
-            if let Err(error) = fs::rename(&backup, destination) {
-                summary.errors.push(format!(
-                    "cannot restore `{}` from `{}`: {error}",
-                    destination.display(),
-                    backup.display()
-                ));
-            } else {
-                summary.restored += 1;
-            }
-        }
-    }
-    summary
-}
-
-#[derive(Default)]
-struct RollbackSummary {
-    restored: usize,
-    removed_partial: usize,
-    errors: Vec<String>,
-}
-
-fn publication_error(primary: &str, rollback: &RollbackSummary) -> String {
-    if !rollback.errors.is_empty() {
-        format!(
-            "{primary}; rollback also failed: {}",
-            rollback.errors.join("; ")
-        )
-    } else if rollback.restored != 0 && rollback.removed_partial != 0 {
-        format!(
-            "{primary}; rollback restored {} previous output(s) and removed {} partial output(s)",
-            rollback.restored, rollback.removed_partial
-        )
-    } else if rollback.restored != 0 {
-        format!(
-            "{primary}; rollback restored {} previous output(s)",
-            rollback.restored
-        )
-    } else if rollback.removed_partial != 0 {
-        format!(
-            "{primary}; rollback removed {} partial output(s); no previous outputs existed",
-            rollback.removed_partial
-        )
-    } else {
-        format!("{primary}; no destination changes required rollback")
-    }
-}
-
-fn prepare_atomic_write(destination: &Path, bytes: &[u8]) -> Result<PreparedWrite, String> {
-    let file_name = destination
-        .file_name()
-        .and_then(|name| name.to_str())
-        .ok_or_else(|| format!("invalid output path `{}`", destination.display()))?;
-    for _ in 0..32 {
-        let sequence = TEMP_FILE_COUNTER.fetch_add(1, Ordering::Relaxed);
-        let temporary = destination.with_file_name(format!(
-            ".{file_name}.pliego-{}-{sequence}.tmp",
-            std::process::id()
-        ));
-        match OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .open(&temporary)
-        {
-            Ok(mut file) => {
-                if let Err(error) = file.write_all(bytes).and_then(|()| file.sync_all()) {
-                    let _ = fs::remove_file(&temporary);
-                    return Err(format!(
-                        "cannot prepare `{}` through `{}`: {error}",
-                        destination.display(),
-                        temporary.display()
-                    ));
-                }
-                return Ok(PreparedWrite {
-                    destination: destination.to_path_buf(),
-                    temporary: Some(temporary),
-                });
-            }
-            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {}
-            Err(error) => {
-                return Err(format!(
-                    "cannot prepare `{}` through `{}`: {error}",
-                    destination.display(),
-                    temporary.display()
-                ));
-            }
-        }
-    }
-    Err(format!(
-        "cannot allocate a temporary output beside `{}`",
-        destination.display()
-    ))
-}
-
-fn prepare_atomic_write_if_changed(
-    destination: &Path,
-    bytes: &[u8],
-) -> Result<Option<PreparedWrite>, String> {
-    match fs::read(destination) {
-        Ok(existing) if existing == bytes => Ok(None),
-        Ok(_) => prepare_atomic_write(destination, bytes).map(Some),
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
-            prepare_atomic_write(destination, bytes).map(Some)
-        }
-        Err(error) => Err(format!(
-            "cannot compare existing output `{}` before publication: {error}",
-            destination.display()
-        )),
-    }
 }
 
 #[cfg(all(test, not(feature = "package-verify")))]

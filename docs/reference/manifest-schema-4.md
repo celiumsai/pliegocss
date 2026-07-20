@@ -54,8 +54,8 @@ The nested graph has this fixed shape:
   "applicationCoverage": "adapter-attested-complete",
   "declarations": [
     {
-      "id": "decl:321e429fcbcbbfd069227acdeda4bb0a:00000000",
-      "styleId": "321e429fcbcbbfd069227acdeda4bb0a",
+      "id": "decl:70cb04ef9bf9621f5826351f1778f68e:00000000",
+      "styleId": "70cb04ef9bf9621f5826351f1778f68e",
       "ordinal": 0
     }
   ],
@@ -74,7 +74,7 @@ The nested graph has this fixed shape:
     {
       "kind": "componentUsesDeclaration",
       "from": "component:app::card",
-      "to": "decl:321e429fcbcbbfd069227acdeda4bb0a:00000000"
+      "to": "decl:70cb04ef9bf9621f5826351f1778f68e:00000000"
     }
   ]
 }

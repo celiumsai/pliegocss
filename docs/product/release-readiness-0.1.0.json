@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "targetVersion": "0.1.0",
+  "candidateVersion": "0.1.0-rc.1",
+  "repository": "https://github.com/celiumsai/pliegocss",
+  "result": "blocked",
+  "localGates": [
+    {"id":"fast-profile","status":"passed"},
+    {"id":"integration-segments","status":"passed","limit":"Windows and WSL segments; one continuous invocation exceeded the tool timeout"},
+    {"id":"public-api-msrv","status":"passed","rust":"1.85"},
+    {"id":"properties","status":"passed"},
+    {"id":"determinism","status":"passed"},
+    {"id":"portability-windows","status":"passed"},
+    {"id":"package-replay","status":"passed","packages":19,"published":false},
+    {"id":"chrome-edge-local","status":"passed","claim":"local-computed-style-smoke"}
+  ],
+  "externalBlockers": [
+    {
+      "id":"canonical-repository-private",
+      "status":"pending-push",
+      "requiredAction":"Push the consolidated RC commit and run hosted CI while preserving private visibility.",
+      "evidence":"GitHub repository exists as PRIVATE"
+    },
+    {
+      "id":"hosted-cross-os-browser-evidence",
+      "status":"not-configured",
+      "requiredAction":"Run committed CI on Windows, Ubuntu, and macOS with Firefox/WebKit/Safari evidence where supported.",
+      "missing":["windows-firefox","linux-chromium","macos-safari-webkit"]
+    },
+    {
+      "id":"historical-benchmark-provenance",
+      "status":"blocked",
+      "requiredAction":"Restore commit c47239c or supersede its snapshots from a clean reviewed commit.",
+      "evidence":"git cat-file cannot resolve c47239c"
+    },
+    {
+      "id":"published-rc-replay",
+      "status":"not-authorized",
+      "requiredAction":"Commit, publish RC crates in dependency order, and replay installation from registry artifacts.",
+      "constraint":"No commit, push, or publication has been authorized."
+    }
+  ],
+  "promotionRule":"0.1.0 may replace 0.1.0-rc.1 only after every external blocker is passed or moved by a reviewed release ADR."
+}

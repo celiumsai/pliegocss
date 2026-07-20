@@ -2,6 +2,93 @@ use lightningcss::rules::{CssRule, CssRuleList};
 use lightningcss::stylesheet::{ParserOptions, PrinterOptions, StyleSheet};
 use lightningcss::targets::Targets;
 
+use pliego_css_config::compatibility_data::CompatibilityProfile;
+
+use super::sha256_hex;
+
+const MAX_STANDARD_CSS_BYTES: usize = 16 * 1024 * 1024;
+
+/// Deterministic printer mode for ordinary CSS transformation.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum StandardCssFormat {
+    /// Compact production CSS.
+    Minified,
+    /// Stable readable CSS.
+    Pretty,
+}
+
+/// Exact result of transforming one ordinary CSS artifact.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct StandardCssOutput {
+    css: String,
+    source_sha256: String,
+    output_sha256: String,
+}
+
+impl StandardCssOutput {
+    /// Returns the transformed CSS, including one final LF.
+    #[must_use]
+    pub fn css(&self) -> &str {
+        &self.css
+    }
+
+    /// Returns the SHA-256 of the exact input bytes.
+    #[must_use]
+    pub fn source_sha256(&self) -> &str {
+        &self.source_sha256
+    }
+
+    /// Returns the SHA-256 of the exact output bytes.
+    #[must_use]
+    pub fn output_sha256(&self) -> &str {
+        &self.output_sha256
+    }
+}
+
+/// Transforms ordinary CSS through the existing deterministic Lightning CSS boundary.
+///
+/// # Errors
+///
+/// Returns an error for unsafe logical paths, inputs over 16 MiB, or CSS parse/print failures.
+pub fn transform_standard_css(
+    logical_path: &str,
+    css: &str,
+    profile: CompatibilityProfile,
+    format: StandardCssFormat,
+) -> Result<StandardCssOutput, String> {
+    validate_standard_css_path(logical_path)?;
+    if css.len() > MAX_STANDARD_CSS_BYTES {
+        return Err("standard CSS input exceeds 16 MiB".into());
+    }
+    let mut output = optimize_css(
+        css,
+        profile.lightning(),
+        format == StandardCssFormat::Minified,
+    )?;
+    if !output.ends_with('\n') {
+        output.push('\n');
+    }
+    Ok(StandardCssOutput {
+        source_sha256: sha256_hex(css.as_bytes()),
+        output_sha256: sha256_hex(output.as_bytes()),
+        css: output,
+    })
+}
+
+fn validate_standard_css_path(path: &str) -> Result<(), String> {
+    if path.is_empty()
+        || path.starts_with('/')
+        || path.contains('\\')
+        || path
+            .split('/')
+            .any(|segment| segment.is_empty() || matches!(segment, "." | ".."))
+        || path.as_bytes().get(1) == Some(&b':')
+    {
+        return Err("standard CSS path must be a portable relative path".into());
+    }
+    Ok(())
+}
+
 /// Reuses final CSS when raw input is unchanged within one fixed-settings run.
 #[doc(hidden)]
 #[derive(Default)]

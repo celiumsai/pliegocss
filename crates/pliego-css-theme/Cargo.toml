@@ -13,8 +13,6 @@ categories.workspace = true
 
 [dependencies]
 pliego-css-ir.workspace = true
-
-[dev-dependencies]
 sha2 = "0.10"
 
 [lints]

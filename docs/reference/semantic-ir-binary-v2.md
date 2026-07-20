@@ -42,7 +42,7 @@ All multibyte integers are unsigned big-endian.
 | 0 | 8 | magic | `PLGCIR\0\0` |
 | 8 | 2 | semantic IR format | `2` |
 | 10 | 2 | StyleId format | `2` |
-| 12 | 2 | ThemeId format | `1` |
+| 12 | 2 | ThemeId format | `2` |
 | 14 | 16 | active `ThemeId` | complete `u128` |
 | 30 | 16 | stored `StyleId` | complete `u128` |
 | 46 | 32 | payload SHA-256 | digest of bytes from offset 78 through EOF |
@@ -124,10 +124,10 @@ drift, StyleId drift, and noncanonical re-encoding fail loudly.
 
 The inherited golden source remains 309 bytes because it has no container dimension. Its header now
 declares format 2 and the complete artifact SHA-256 is
-`c241b5450f3b4bf1abd4f48056a6c2fcadd1e4243e3d5b6648006210384c3e0f`.
+`337865f8e7b5b32fe58f67442537ad1d2926d94164d1692863a2616dddc85023`.
 
 The container contract additionally freezes `container-inline cq-sm:grid` to StyleId
-`f976f6d0e7835e3e5e32fa888d761f24` and class `pc_eroigm87atuqahmzr9eeddu78`, plus round-trip and
+`11893074aaaf88f7b356ad6d53a913e2` and class `pc_11dgqogrs5aq1d9ocwyulg6w2`, plus round-trip and
 nested-condition tests. Layered conditions have separate round-trip and canonical-order tests while
 the inherited unlayered golden bytes remain exact.
 

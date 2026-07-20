@@ -11,6 +11,9 @@ readme = "README.md"
 keywords.workspace = true
 categories.workspace = true
 
+[dependencies]
+pliego-css-io.workspace = true
+
 [target.'cfg(target_os = "linux")'.dependencies]
 inotify = { version = "=0.11.0", default-features = false }
 

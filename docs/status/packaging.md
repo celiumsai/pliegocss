@@ -3,14 +3,14 @@
 Status: **token-usage reporting and the complete exact-clean `af9c2c5` Rust package replay
 passed; no registry or editor Marketplace upload performed**
 
-The publishable workspace boundary has seventeen crates in six dependency waves. `pliego-css-usage` and
+The publishable workspace boundary has eighteen crates in six dependency waves. `pliego-css-usage` and
 `pliego-css-control` follow `pliego-css-build` because direct and optional Cargo dependencies both
 affect registry publication order.
 
 | Wave | Packages |
 |---|---|
-| 1 | `pliego-css-ir`, `pliego-css-cascade`, `pliego-css-ownership`, `pliego-css-source`, `pliego-css-watch` |
-| 2 | `pliego-css-parser`, `pliego-css-theme` |
+| 1 | `pliego-css-ir`, `pliego-css-cascade`, `pliego-css-ownership`, `pliego-css-io` |
+| 2 | `pliego-css-source`, `pliego-css-watch`, `pliego-css-parser`, `pliego-css-theme` |
 | 3 | `pliego-css-config`, `pliego-css-compiler` |
 | 4 | `pliego-css-build`, `pliego-css-macros` |
 | 5 | `pliego-css-agent`, `pliego-css-usage`, `pliego-css-control`, `pliego-css` |

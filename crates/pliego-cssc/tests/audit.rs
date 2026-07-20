@@ -584,3 +584,101 @@ fn failed_syntax_audit_emits_an_honest_failed_receipt() {
     assert_eq!(parsed_receipt.findings.unexcepted_errors, 1);
     fs::remove_dir_all(directory).expect("remove fixture");
 }
+
+#[test]
+fn generic_css_usage_cli_projects_audit_identities_and_positive_observations() {
+    let directory = temp_dir("generic-usage");
+    fs::write(
+        directory.join("app.css"),
+        ".a { color: red; } .b { display: block; }
+",
+    )
+    .unwrap();
+    let audit = Command::new(env!("CARGO_BIN_EXE_pliego-cssc"))
+        .current_dir(&directory)
+        .args([
+            "audit",
+            "--input",
+            "app.css",
+            "--targets",
+            "none",
+            "--format",
+            "json",
+        ])
+        .output()
+        .unwrap();
+    assert!(
+        audit.status.success(),
+        "{}",
+        String::from_utf8_lossy(&audit.stderr)
+    );
+    fs::write(directory.join("findings.json"), &audit.stdout).unwrap();
+    let finding: serde_json::Value = serde_json::from_slice(&audit.stdout).unwrap();
+    let identities = finding["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|finding| finding["code"] == "PCSS-AUDIT-000")
+        .unwrap()["evidence"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|item| item["kind"] == "identity")
+        .map(|item| {
+            item["value"]
+                .as_str()
+                .unwrap()
+                .split(';')
+                .next()
+                .unwrap()
+                .to_owned()
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(identities.len(), 2);
+    fs::write(
+        directory.join("observed.json"),
+        serde_json::to_vec(&[&identities[0]]).unwrap(),
+    )
+    .unwrap();
+    let output = Command::new(env!("CARGO_BIN_EXE_pliego-cssc"))
+        .current_dir(&directory)
+        .args([
+            "generic-css-usage",
+            "--findings",
+            "findings.json",
+            "--observed",
+            "observed.json",
+            "--scope",
+            "test-browser-session",
+            "--output",
+            "generic.json",
+            "--control-dir",
+            ".",
+        ])
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let report = pliego_css_usage::parse_generic_css_usage_report(
+        &fs::read(directory.join("generic.json")).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(report.entries().len(), 2);
+    assert_eq!(
+        report
+            .entries()
+            .iter()
+            .filter(|entry| matches!(
+                entry.status(),
+                pliego_css_usage::GenericCssUsageStatus::Observed
+            ))
+            .count(),
+        1
+    );
+    assert!(directory.join("pliego.css.manifest.json").exists());
+    assert!(directory.join("pliego.css.receipt.json").exists());
+    fs::remove_dir_all(directory).expect("cleanup");
+}

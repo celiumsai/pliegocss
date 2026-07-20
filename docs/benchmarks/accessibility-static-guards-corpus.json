@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "corpusVersion": "static-guards-1",
+  "claimLimit": "Synthetic closed static CSS guard cases only; no browser, manual, or WCAG certification claim.",
+  "cases": [
+    {
+      "id": "motion-guarded",
+      "check": "motion",
+      "css": "@media (prefers-reduced-motion: no-preference) { .safe { animation: spin 1s infinite; } }",
+      "expectedCode": "PCSS-A11Y-200"
+    },
+    {
+      "id": "motion-unguarded",
+      "check": "motion",
+      "css": ".unsafe { transition: opacity 200ms; }",
+      "expectedCode": "PCSS-A11Y-201"
+    },
+    {
+      "id": "focus-suppressed",
+      "check": "focusVisibility",
+      "css": ".button:focus-visible { outline: none; }",
+      "expectedCode": "PCSS-A11Y-301"
+    },
+    {
+      "id": "focus-runtime",
+      "check": "focusVisibility",
+      "css": ".button:focus-visible { box-shadow: 0 0 0 2px blue; }",
+      "expectedCode": "PCSS-A11Y-309"
+    },
+    {
+      "id": "forced-colors-none",
+      "check": "forcedColors",
+      "css": ".icon { forced-color-adjust: none; }",
+      "expectedCode": "PCSS-A11Y-401"
+    },
+    {
+      "id": "forced-colors-auto",
+      "check": "forcedColors",
+      "css": ".icon { forced-color-adjust: auto; }",
+      "expectedCode": "PCSS-A11Y-400"
+    },
+    {
+      "id": "input-paired",
+      "check": "inputModality",
+      "css": ".link:hover, .link:focus { color: red; }",
+      "expectedCode": "PCSS-A11Y-500"
+    },
+    {
+      "id": "input-second-safe-pair",
+      "check": "inputModality",
+      "css": ".button:hover, .button:focus-visible { background: blue; }",
+      "expectedCode": "PCSS-A11Y-500"
+    }
+  ]
+}

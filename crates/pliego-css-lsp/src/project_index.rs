@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write as _;
-use std::fs;
+
 use std::path::{Component, Path, PathBuf};
 
 use serde::Deserialize;
@@ -192,12 +192,8 @@ fn verified_artifact(
 }
 
 fn read_bounded(path: &Path, limit: u64, label: &str) -> Result<Vec<u8>, String> {
-    let metadata =
-        fs::symlink_metadata(path).map_err(|error| format!("cannot inspect {label}: {error}"))?;
-    if metadata.file_type().is_symlink() || !metadata.is_file() || metadata.len() > limit {
-        return Err(format!("{label} is not a bounded regular file"));
-    }
-    fs::read(path).map_err(|error| format!("cannot read {label}: {error}"))
+    let limit = usize::try_from(limit).map_err(|_| format!("{label} limit exceeds this host"))?;
+    pliego_css_io::read_bounded_regular_file(path, limit, label)
 }
 
 fn sha256(bytes: &[u8]) -> String {
@@ -559,6 +555,7 @@ struct PhysicalDeclaration {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs;
     use std::time::{SystemTime, UNIX_EPOCH};
 
     #[test]
@@ -573,6 +570,41 @@ mod tests {
     fn file_uri_encodes_spaces() {
         let uri = path_to_file_uri(Path::new("/tmp/Pliego CSS/app.css")).unwrap();
         assert!(uri.ends_with("/tmp/Pliego%20CSS/app.css"));
+    }
+
+    #[cfg(any(unix, windows))]
+    #[test]
+    fn project_index_reader_rejects_file_and_parent_links() {
+        let root = std::env::temp_dir().join(format!("pliego-index-links-{}", std::process::id()));
+        fs::create_dir_all(root.join("real")).unwrap();
+        fs::write(root.join("real/index.json"), b"{}").unwrap();
+        let file_link = root.join("index.json");
+        let parent_link = root.join("linked");
+        #[cfg(unix)]
+        {
+            std::os::unix::fs::symlink(root.join("real/index.json"), &file_link).unwrap();
+            std::os::unix::fs::symlink(root.join("real"), &parent_link).unwrap();
+        }
+        #[cfg(windows)]
+        {
+            if std::os::windows::fs::symlink_file(root.join("real/index.json"), &file_link).is_err()
+                || std::os::windows::fs::symlink_dir(root.join("real"), &parent_link).is_err()
+            {
+                fs::remove_dir_all(root).unwrap();
+                return;
+            }
+        }
+        assert!(
+            read_bounded(&file_link, 1024, "project index")
+                .unwrap_err()
+                .contains("bounded regular file")
+        );
+        assert!(
+            read_bounded(&parent_link.join("index.json"), 1024, "project index")
+                .unwrap_err()
+                .contains("unsafe path component")
+        );
+        fs::remove_dir_all(root).unwrap();
     }
 
     #[test]
@@ -627,7 +659,7 @@ mod tests {
             "physicalCoverage":"compiler-verified-complete",
             "styleIdFormatVersion":2,
             "classNameFormatVersion":1,
-            "themeIdFormatVersion":1,
+            "themeIdFormatVersion":2,
             "themeId":"theme","targets":"modern","format":"minified",
             "ruleSelection":"all-compiled",
             "assetPlanFile":"pliego.assets.json",

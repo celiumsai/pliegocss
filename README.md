@@ -26,6 +26,13 @@ fn button() -> Style {
 
 The workspace is unreleased at `0.0.0`; syntax and crate boundaries may still change.
 
+Capabilities are classified as stable candidates, beta, or experimental in the
+[product maturity map](./docs/product/maturity-map.md). The label controls the scope of claims; the
+stable compatibility promise begins only when a release candidate is cut.
+The [Tailwind CSS v4.3.2 competitive matrix](./docs/benchmarks/tailwind-v4-competitive-matrix.md)
+records matched behavior, Pliego differentiators, Tailwind advantages, design differences, and open
+release gaps without claiming complete catalog parity.
+
 > **Development pause (2026-07-18):** PliegoCSS is preserved as an experimental research
 > workspace and is not on the active PliegoRS release path. No `0.1.0` release is currently
 > scheduled. The verified pause checkpoint and reactivation gates are recorded in
@@ -176,8 +183,8 @@ The workspace is unreleased at `0.0.0`; syntax and crate boundaries may still ch
   checks, symlink/junction escape, and case-insensitive filesystem aliases. CI is configured for Ubuntu, Windows, and
   macOS on Rust 1.85/1.96 plus Node 22.13; hosted green-run evidence remains pending because this
   checkout has no configured remote.
-- The publishable boundary candidate is now seventeen exact-version crates in six dependency waves.
-  The independent cascade core sits in wave 1 and the bounded repair core in wave 5 so neither
+- The publishable boundary candidate is now eighteen exact-version crates in six dependency waves.
+  The independent cascade and bounded-I/O cores sit in wave 1, while the bounded repair core is in wave 5, so none
   pushes the already-tight build or CLI archives over the fixed 61,440-byte ceiling. The latest
   exact clean `8e63039` replay packaged and compiled all seventeen extracted archives and passed its
   registry-shaped Rust 1.85 consumer. `pliego-css-watch` was 9,541 bytes,

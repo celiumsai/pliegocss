@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-500: oklch(68% 0.17 230);
+}
+
+@utility content-auto {
+  content-visibility: auto;
+}

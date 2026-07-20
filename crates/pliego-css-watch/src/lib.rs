@@ -3,7 +3,6 @@
 #![allow(unsafe_code)]
 
 use std::collections::BTreeMap;
-use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{self, Receiver, RecvTimeoutError};
 use std::time::Duration;
@@ -47,8 +46,7 @@ impl FileSnapshot {
 pub fn snapshot_file(path: &Path, role: &str) -> FileSnapshot {
     FileSnapshot {
         path: path.to_path_buf(),
-        contents: fs::read(path)
-            .map_err(|error| format!("cannot read {role} `{}`: {error}", path.display())),
+        contents: pliego_css_io::read_bounded_regular_file(path, 16 * 1024 * 1024, role),
     }
 }
 
@@ -325,7 +323,7 @@ mod platform {
 
 #[cfg(test)]
 mod tests {
-    use super::watch_roots;
+    use super::{snapshot_file, watch_roots};
     use std::fs;
     use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
@@ -365,5 +363,50 @@ mod tests {
         fs::write(root.join("changed.rs"), "fn changed() {}").expect("write event");
         assert!(wake.wait(Duration::from_secs(2)));
         fs::remove_dir_all(root).expect("remove fixture");
+    }
+
+    #[test]
+    fn snapshots_reject_oversized_and_non_regular_inputs() {
+        let root = std::env::temp_dir().join(format!("pliego-watch-safe-{}", std::process::id()));
+        fs::create_dir_all(&root).unwrap();
+        let large = root.join("large.rs");
+        fs::write(&large, vec![b'x'; 16 * 1024 * 1024 + 1]).unwrap();
+        assert!(
+            snapshot_file(&large, "Rust source")
+                .bytes()
+                .unwrap_err()
+                .contains("bounded regular file")
+        );
+        assert!(
+            snapshot_file(&root, "Rust source")
+                .bytes()
+                .unwrap_err()
+                .contains("bounded regular file")
+        );
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[cfg(any(unix, windows))]
+    #[test]
+    fn snapshots_reject_links() {
+        let root = std::env::temp_dir().join(format!("pliego-watch-link-{}", std::process::id()));
+        fs::create_dir_all(&root).unwrap();
+        let target = root.join("target.rs");
+        let link = root.join("link.rs");
+        fs::write(&target, "fn main() {}").unwrap();
+        #[cfg(unix)]
+        std::os::unix::fs::symlink(&target, &link).unwrap();
+        #[cfg(windows)]
+        if std::os::windows::fs::symlink_file(&target, &link).is_err() {
+            fs::remove_dir_all(root).unwrap();
+            return;
+        }
+        assert!(
+            snapshot_file(&link, "Rust source")
+                .bytes()
+                .unwrap_err()
+                .contains("bounded regular file")
+        );
+        fs::remove_dir_all(root).unwrap();
     }
 }

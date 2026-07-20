@@ -189,7 +189,7 @@ Cargo macro uses the direct Resolver form above rather than reading the bundle p
 ## Identity is a correctness boundary
 
 Changing any token or breakpoint changes `ThemeId`, even if one particular style does not reference
-the changed definition. StyleId format 2 encodes both `THEME_ID_FORMAT_VERSION = 1` and the complete
+the changed definition. StyleId format 2 encodes both `THEME_ID_FORMAT_VERSION = 2` and the complete
 `ThemeId` before hashing the tagged semantic stream with SHA-256. This partitions identities from
 different registries. The emitter independently recomputes the
 expected identity and reports a mismatch if a style compiled under one theme is emitted under

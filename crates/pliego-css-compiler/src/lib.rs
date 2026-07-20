@@ -877,22 +877,68 @@ pub fn lower_style_with_theme(
     Ok(output)
 }
 
-/// Composes one prevalidated branch over a prevalidated base style by semantic slot.
+/// Composes one compiler-validated branch over a compiler-validated base style by semantic slot.
 ///
 /// Assignments in the branch replace overlapping base slots only within the same normalized
-/// condition. Non-overlapping base footprints remain in the returned style.
+/// condition. Non-overlapping base footprints remain in the returned style. Use
+/// [`try_compose_style_override`] for semantic IR from an untrusted or mutable source.
+///
+/// # Panics
+///
+/// Panics when either style violates a semantic-IR invariant. Compiler lowering produces validated
+/// styles; callers handling manually assembled or decoded mutable IR must use the fallible variant.
 #[must_use]
 pub fn compose_style_override(base: SemanticStyle, branch: SemanticStyle) -> SemanticStyle {
-    compose_style_override_with_theme(seed_theme(), base, branch)
+    try_compose_style_override(base, branch)
+        .expect("compiler-produced semantic IR must remain valid during composition")
 }
 
-/// Composes a branch over a base style and derives the result under an explicit theme.
+/// Composes one compiler-validated branch over a compiler-validated base style under a theme.
+///
+/// Use [`try_compose_style_override_with_theme`] for semantic IR from an untrusted or mutable
+/// source.
+///
+/// # Panics
+///
+/// Panics when either style violates a semantic-IR invariant. Compiler lowering produces validated
+/// styles; callers handling manually assembled or decoded mutable IR must use the fallible variant.
 #[must_use]
 pub fn compose_style_override_with_theme(
     theme: &ThemeRegistry,
-    mut base: SemanticStyle,
+    base: SemanticStyle,
     branch: SemanticStyle,
 ) -> SemanticStyle {
+    try_compose_style_override_with_theme(theme, base, branch)
+        .expect("compiler-produced semantic IR must remain valid during composition")
+}
+
+/// Validates and composes a branch over a base style by semantic slot.
+///
+/// # Errors
+///
+/// Returns the first structural invariant error in the base, branch, or composed result.
+pub fn try_compose_style_override(
+    base: SemanticStyle,
+    branch: SemanticStyle,
+) -> Result<SemanticStyle, pliego_css_ir::InvariantError> {
+    try_compose_style_override_with_theme(seed_theme(), base, branch)
+}
+
+/// Validates and composes a branch over a base style under an explicit theme.
+///
+/// Validation occurs before any intern-table indexing, so malformed public semantic IR is returned
+/// as a stable structural error instead of panicking.
+///
+/// # Errors
+///
+/// Returns the first structural invariant error in the base, branch, or composed result.
+pub fn try_compose_style_override_with_theme(
+    theme: &ThemeRegistry,
+    mut base: SemanticStyle,
+    branch: SemanticStyle,
+) -> Result<SemanticStyle, pliego_css_ir::InvariantError> {
+    base.validate()?;
+    branch.validate()?;
     let selector_map = branch
         .selectors
         .iter()
@@ -964,9 +1010,9 @@ pub fn compose_style_override_with_theme(
     base.assignments.extend(imported);
     canonicalize_conditions(&mut base);
     canonicalize_assignments(&mut base);
-    debug_assert!(base.validate().is_ok());
+    base.validate()?;
     base.id = derive_style_id_with_theme(theme, &base);
-    base
+    Ok(base)
 }
 
 /// One ambiguous overlap between independently selectable conditional clauses.
@@ -2415,13 +2461,13 @@ mod tests {
         assert_eq!(pliego_css_ir::CLASS_NAME_FORMAT_VERSION, 1);
         assert_eq!(
             format!("{:032x}", theme.id().get()),
-            "bdcf7d279f16eef34e3be1db98ab3894"
+            "cf5c4c0674fd1c7e5121da0d27222ae0"
         );
         assert_eq!(
             format!("{:032x}", style.id.get()),
-            "c6f70f4026b80188f017e1653097eaab"
+            "e0b572e3fdfbf091d9a2ddb126278634"
         );
-        assert_eq!(style.id.to_class_name(), "pc_bs1v0evmt6fek89jw23w99xgr");
+        assert_eq!(style.id.to_class_name(), "pc_dax2y1pql4op1rjk97yv9e88k");
     }
 
     #[test]
@@ -2432,13 +2478,13 @@ mod tests {
 
         assert_eq!(
             format!("{:032x}", theme.id().get()),
-            "c46b8b7ec8c3aa6daadf15cc9196ba3e"
+            "b3d5ad77175995c2b8f51ef7c0d41991"
         );
         assert_eq!(
             format!("{:032x}", style.id.get()),
-            "321e429fcbcbbfd069227acdeda4bb0a"
+            "70cb04ef9bf9621f5826351f1778f68e"
         );
-        assert_eq!(style.id.to_class_name(), "pc_2ytdwih5nln6228oqp6k413be");
+        assert_eq!(style.id.to_class_name(), "pc_6oe73ec16rbb7ublcoa3bpzf2");
     }
 
     #[test]
@@ -2919,6 +2965,42 @@ mod tests {
             lower_style(&branch_syntax).expect("must succeed"),
         );
         assert_ne!(custom_composed.id, seed_composed.id);
+    }
+
+    #[test]
+    fn fallible_composition_rejects_invalid_branch_ir_without_panicking() {
+        let base = lower("block").expect("must succeed");
+        let mut branch = lower("hover:opacity-50").expect("must succeed");
+        branch.conditions[1].selectors = vec![SelectorId::new(u32::MAX)];
+
+        let error = try_compose_style_override_with_theme(seed_theme(), base, branch)
+            .expect_err("invalid semantic IR must be rejected");
+
+        assert_eq!(
+            error,
+            pliego_css_ir::InvariantError {
+                violation: pliego_css_ir::InvariantViolation::SelectorOutOfBounds,
+                location: pliego_css_ir::InvariantLocation::Condition(1),
+            }
+        );
+    }
+
+    #[test]
+    fn fallible_composition_rejects_invalid_base_ir_without_panicking() {
+        let mut base = lower("block").expect("must succeed");
+        base.conditions.clear();
+        let branch = lower("opacity-50").expect("must succeed");
+
+        let error = try_compose_style_override(base, branch)
+            .expect_err("invalid semantic IR must be rejected");
+
+        assert_eq!(
+            error,
+            pliego_css_ir::InvariantError {
+                violation: pliego_css_ir::InvariantViolation::MissingBaseCondition,
+                location: pliego_css_ir::InvariantLocation::Style,
+            }
+        );
     }
 
     #[test]

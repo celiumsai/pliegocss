@@ -12,7 +12,7 @@ use super::{
 pub const THEME_BINARY_MAGIC: [u8; 8] = *b"PLGCTHM\0";
 
 /// Current canonical theme artifact format version.
-pub const THEME_BINARY_FORMAT_VERSION: u16 = 1;
+pub const THEME_BINARY_FORMAT_VERSION: u16 = 2;
 
 /// Maximum accepted size of one encoded theme artifact (16 MiB).
 pub const MAX_THEME_BINARY_BYTES: usize = 16 * 1024 * 1024;
@@ -569,11 +569,11 @@ mod tests {
 
         let mut bad_version = encode(&registry).unwrap();
         let version_offset = THEME_BINARY_MAGIC.len();
-        bad_version[version_offset..version_offset + 2].copy_from_slice(&2_u16.to_be_bytes());
+        bad_version[version_offset..version_offset + 2].copy_from_slice(&1_u16.to_be_bytes());
         assert!(matches!(
             decode(&bad_version),
             Err(ThemeBinaryError::UnsupportedVersion {
-                found: 2,
+                found: 1,
                 expected: THEME_BINARY_FORMAT_VERSION
             })
         ));

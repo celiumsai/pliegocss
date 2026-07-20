@@ -8,7 +8,6 @@
 
 use std::collections::BTreeMap;
 use std::fmt;
-use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
@@ -49,6 +48,7 @@ pub use token_graph::{
 
 /// Theme configuration schema supported by this crate.
 pub const SCHEMA_VERSION: u32 = 1;
+const MAX_CONFIG_BYTES: usize = 16 * 1024 * 1024;
 
 /// Errors returned while loading a theme configuration.
 #[non_exhaustive]
@@ -183,10 +183,14 @@ pub fn parse_str(source: &str) -> Result<ThemeRegistry, ConfigError> {
 /// configuration.
 pub fn parse_path(path: impl AsRef<Path>) -> Result<ThemeRegistry, ConfigError> {
     let path = path.as_ref();
-    let source = fs::read_to_string(path).map_err(|source| ConfigError::Read {
-        path: path.to_path_buf(),
-        source,
-    })?;
+    let source =
+        dtcg::read_bounded_utf8_document(path, "theme TOML exceeds 16 MiB").map_err(|error| {
+            ConfigError::Read {
+                path: path.to_path_buf(),
+                source: io::Error::new(io::ErrorKind::InvalidInput, error.to_string()),
+            }
+        })?;
+    debug_assert!(source.len() <= MAX_CONFIG_BYTES);
     parse_str(&source)
 }
 
@@ -443,6 +447,7 @@ fn normalize_breakpoint(
 
 #[cfg(test)]
 mod tests {
+    use std::fs;
     use std::time::{SystemTime, UNIX_EPOCH};
 
     use super::*;
@@ -662,5 +667,35 @@ hover = "48rem"
         let registry = parse_path(&path).expect("parse fixture path");
         fs::remove_file(path).expect("remove fixture");
         assert_eq!(registry.id(), ThemeRegistry::seed().id());
+    }
+
+    #[test]
+    fn configuration_path_rejects_oversized_files() {
+        let path =
+            std::env::temp_dir().join(format!("pliego-theme-large-{}.toml", std::process::id()));
+        fs::write(&path, vec![b' '; 16 * 1024 * 1024 + 1]).unwrap();
+        let error = parse_path(&path).expect_err("oversized TOML must fail");
+        fs::remove_file(path).unwrap();
+        assert!(error.to_string().contains("16 MiB"));
+    }
+
+    #[cfg(any(unix, windows))]
+    #[test]
+    fn configuration_path_rejects_links() {
+        let root = std::env::temp_dir().join(format!("pliego-theme-link-{}", std::process::id()));
+        fs::create_dir_all(&root).unwrap();
+        let target = root.join("target.toml");
+        let link = root.join("link.toml");
+        fs::write(&target, MINIMAL).unwrap();
+        #[cfg(unix)]
+        std::os::unix::fs::symlink(&target, &link).unwrap();
+        #[cfg(windows)]
+        if std::os::windows::fs::symlink_file(&target, &link).is_err() {
+            fs::remove_dir_all(root).unwrap();
+            return;
+        }
+        let error = parse_path(&link).expect_err("linked TOML must fail");
+        fs::remove_dir_all(root).unwrap();
+        assert!(error.to_string().contains("symbolic link or reparse point"));
     }
 }

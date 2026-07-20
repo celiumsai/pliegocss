@@ -168,7 +168,7 @@ Every bundle runs the normal source scan, semantic compilation, deterministic ca
 identity-stream ordering,
 optional theme emission, and Lightning CSS target/format pipeline. Each `.manifest.json` is an
 independent [schema-3 manifest](./cli.md#manifest-schema-3) by default, whose digest and byte count describe its
-adjacent CSS file. Each manifest reports StyleId format 2, class-name format 1, and ThemeId format 1
+adjacent CSS file. Each manifest reports StyleId format 2, class-name format 1, and ThemeId format 2
 in required top-level fields. This output-schema change does not alter the independently selected
 bundle-plan schema 1 or 2.
 

@@ -18,72 +18,119 @@ import { fileURLToPath } from "node:url";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const executable = resolve(
   process.env.PLIEGO_CSSC ??
-    join(root, "target", "debug", process.platform === "win32" ? "pliego-cssc.exe" : "pliego-cssc"),
+    join(
+      root,
+      "target",
+      "debug",
+      process.platform === "win32" ? "pliego-cssc.exe" : "pliego-cssc",
+    ),
 );
 const runtime = resolve(
   process.env.PLIEGO_PORTABILITY_RUNTIME ??
-    join(root, "target", "portability contract", `run-${process.pid}-${Date.now()}`),
+    join(
+      root,
+      "target",
+      "portability contract",
+      `run-${process.pid}-${Date.now()}`,
+    ),
 );
 const project = join(runtime, "project");
 const foreignCwd = join(runtime, "foreign-cwd");
 const sourceName = "café.rs";
 const logicalSource = `src/${sourceName}`;
-const expectedCssSha256 = "d208d2960bd28fb29354b1a89c74c106686c8a8a2d71a9cc7cc9971eb2e97070";
-const expectedManifestSha256 = "3a89e04856d5ff8244c29e91325271d6a57e33eec99242b121308c477facd169";
+const expectedCssSha256 =
+  "acdb0bfee613ddb3fdae0feb9a8e5118dc5f74d385ed53eb610ff4eefd05d454";
+const expectedManifestSha256 =
+  "8c1dc690c2cbb8102b6935a970e60938bbda7e50a0c0bf766c5c800305cce598";
 const expectedControlHashes = {
-  "pliego.css.findings.json": "75015787cd20bd52e4c1d504943b675785f55d7376a583a103cad4ab5c7de464",
-  "pliego.css.manifest.json": "bac4099153b23cfd990fc2e70506153d08b725ca27661ad102934f45df721ac1",
-  "pliego.css.receipt.json": "cb680d32a41321b089cf2fd98b7f60501fa8ba306f408d5f448a11551598b9b1",
+  "pliego.css.findings.json":
+    "6f91886e092b5ceb347e85530093b2f3d5542a62da62e212a4908f8dcdd53a1e",
+  "pliego.css.manifest.json":
+    "89025dc34035d177097acdeaba353132261be317660ae01babda435ce8207c36",
+  "pliego.css.receipt.json":
+    "44c42200500dace75491ad01fe3885717d945dc1cdf8f3111ccaedbb4158973d",
 };
 const expectedBundleControlHashes = {
-  "app.css": "d208d2960bd28fb29354b1a89c74c106686c8a8a2d71a9cc7cc9971eb2e97070",
-  "app.css.map": "39a03b016583b0827ec8bc92a2a1677dcb4d151324dcdd9c77d303af29b1dddf",
-  "app.manifest.json": "0b04b7cf34339e598aeb256c5667a808461dfd02e90ce18aaec0a60de501eb9a",
-  "pliego.assets.json": "b004fd1b8c28a13b1af0f80c105fc71a7615bab45ea3a1619f7f65084d1b343e",
-  "pliego.css.findings.json": "e03d275890f0db3ccceaddfb6dc5b43acd0f0f731b99c77bd0b9bd9b6bf61d40",
-  "pliego.css.manifest.json": "19bbb01d407c958d0938ae536c4c08889d1084fd86f6ee246bae0d0326a98db3",
-  "pliego.css.receipt.json": "2bac654c6060a50f4a1fa21ea22baa1ef5d87c7f741aa37c41a5068dba1bf52d",
-  "pliego.index.json": "6d60bcce6f91e4dc71ca98d921e9ce8bb267cb4d027d51d664b4e87477313dec",
-  "pliego.tokens.json": "bb525a903714688d1ada713bff7a0c831631ee1c08b10434d1d03c79d742d204",
+  "app.css": "acdb0bfee613ddb3fdae0feb9a8e5118dc5f74d385ed53eb610ff4eefd05d454",
+  "app.css.map":
+    "39a03b016583b0827ec8bc92a2a1677dcb4d151324dcdd9c77d303af29b1dddf",
+  "app.manifest.json":
+    "4328616cd9a2a9e57add1cd6b3aaa735cc8a2d7aa2721c8a2e591ecc0b2bba2c",
+  "pliego.assets.json":
+    "f24ee1ccb288a3e9243d686caa4f0cc1e83f6d12021a7715cee9cd5eff0dce66",
+  "pliego.css.findings.json":
+    "669ded93c85628a858e89ca14667139066935b98cb4e62e598a88c484319fd23",
+  "pliego.css.manifest.json":
+    "7e5edb256f8d60974bbf9a648efd54b9dc23b1030aad55c7f1be9424ab085020",
+  "pliego.css.receipt.json":
+    "fee7faf4db03c6df5b5504cce01bf1e6f97273d07bd5092d63a6e6f8e918e40d",
+  "pliego.index.json":
+    "4338ee784241b023b9bbb2b4959187d6f9dddaa75c7c6cdf021ec60346bc1393",
+  "pliego.tokens.json":
+    "0a45f1d6e48280ee7b357e2e4d58d82bfc27be715c9fd3f3385098608edd4e42",
 };
 const expectedAssetPlanControlHashes = {
-  "pliego.css.findings.json": "67e1d24a75adc042312286ade5572379ec706df1ad177031b9160862d27c5e59",
-  "pliego.css.manifest.json": "004d39320c6aab32a6293896db98bbef21a040ec457afc2114e82fc67e7ab795",
-  "pliego.css.receipt.json": "d392124440e0295760fb5e8629fb5e4d07271c1f5fcffc03b628bdfbdbab65ce",
+  "pliego.css.findings.json":
+    "d4682d6812246384cb381235a75a101709a120aa21fdd49d25707d9f515fa7bc",
+  "pliego.css.manifest.json":
+    "8942c5cf96c9dc0674fb35d635471c64f4a34cf3f95dd8c9bc39e2163cbcb118",
+  "pliego.css.receipt.json":
+    "f321246028ea1eabd554aa9e44bd7e790bc2523d28c7c57deeaeffef57f3db75",
 };
 const expectedCompileControlHashes = {
-  "app.css": "d208d2960bd28fb29354b1a89c74c106686c8a8a2d71a9cc7cc9971eb2e97070",
-  "app.css.map": "39a03b016583b0827ec8bc92a2a1677dcb4d151324dcdd9c77d303af29b1dddf",
-  "app.manifest.json": "3a89e04856d5ff8244c29e91325271d6a57e33eec99242b121308c477facd169",
-  "pliego.css.findings.json": "b59823b27e3f045625bcc9a8ecc3842de039ae1d70d2c98348bd0444550abe04",
-  "pliego.css.manifest.json": "51bd81698f58ea3c4ab66c6f5c111135523b62e0177f970a6ae40229ac96d247",
-  "pliego.css.receipt.json": "f94939da3e2c04c8d373b2fe881e9234b5abcee8bbb81b6b0d7e1a9c3fdb4fce",
-  "pliego.tokens.json": "bb525a903714688d1ada713bff7a0c831631ee1c08b10434d1d03c79d742d204",
+  "app.css": "acdb0bfee613ddb3fdae0feb9a8e5118dc5f74d385ed53eb610ff4eefd05d454",
+  "app.css.map":
+    "39a03b016583b0827ec8bc92a2a1677dcb4d151324dcdd9c77d303af29b1dddf",
+  "app.manifest.json":
+    "8c1dc690c2cbb8102b6935a970e60938bbda7e50a0c0bf766c5c800305cce598",
+  "pliego.css.findings.json":
+    "653a2108645b8396a4878c9d6e139b78005a4470550e7f740293b3e891eafe2e",
+  "pliego.css.manifest.json":
+    "e2f08275c5ba3eec5f984d637585fe2eff99e3086b3e61e8c2c67b614c1b043f",
+  "pliego.css.receipt.json":
+    "7a8f55ff85f0726c01fe43d5958429deb77268387be718ca99df539c41e0d14f",
+  "pliego.tokens.json":
+    "0a45f1d6e48280ee7b357e2e4d58d82bfc27be715c9fd3f3385098608edd4e42",
 };
 const expectedWatchControlHashes = {
-  "app.css": "d208d2960bd28fb29354b1a89c74c106686c8a8a2d71a9cc7cc9971eb2e97070",
-  "app.css.map": "39a03b016583b0827ec8bc92a2a1677dcb4d151324dcdd9c77d303af29b1dddf",
-  "app.manifest.json": "3a89e04856d5ff8244c29e91325271d6a57e33eec99242b121308c477facd169",
-  "pliego.css.findings.json": "3df2586a1041d39a0e3e66db4e6674df39479157b3ac413c0fea8b7f85ad23bd",
-  "pliego.css.manifest.json": "b0713b0a3957f267e960ec026088441f4a4e3d476e52becd30c1cfe08af0aa64",
-  "pliego.css.receipt.json": "fe5633bfa90a7edb953e390e5185597fd909d5f9b696059f36dd1e2c0ed6d2e9",
-  "pliego.tokens.json": "bb525a903714688d1ada713bff7a0c831631ee1c08b10434d1d03c79d742d204",
+  "app.css": "acdb0bfee613ddb3fdae0feb9a8e5118dc5f74d385ed53eb610ff4eefd05d454",
+  "app.css.map":
+    "39a03b016583b0827ec8bc92a2a1677dcb4d151324dcdd9c77d303af29b1dddf",
+  "app.manifest.json":
+    "8c1dc690c2cbb8102b6935a970e60938bbda7e50a0c0bf766c5c800305cce598",
+  "pliego.css.findings.json":
+    "f994e2d80c19ae3f39d8c9b1e8682b640877a558ae1795b1d1e000f690d2d311",
+  "pliego.css.manifest.json":
+    "2206b51abe36634e00d351f178f9be19320b63e00e40e00d3b2ee43278f82f21",
+  "pliego.css.receipt.json":
+    "80ecaf9f8ebb74d0d82b94510842447adc4e14b392b20b3b14a568effbd8fe8c",
+  "pliego.tokens.json":
+    "0a45f1d6e48280ee7b357e2e4d58d82bfc27be715c9fd3f3385098608edd4e42",
 };
 const expectedDtcgControlHashes = {
-  "app.css": "cec35891bc4d167bb359b57cf5fcda10a06e2b0665398424ff63b8e01c8b4850",
-  "app.css.map": "ce30a183a990c8dca861721b4c5ea953884fd4fb4898220023192e20abc62c3c",
-  "app.manifest.json": "88597038d0aab327fc11d11a4371b03e1aa53b44199cc137eb84729f3eddd00a",
-  "pliego.css.findings.json": "2135fdb346d08d7e25516006a9d7829780d155b8e1e2374f19ddd7a08a7916c9",
-  "pliego.css.manifest.json": "9fb936c7c415af5c78a3edd298e31e6a4d750a84374e830961b2472117ac3e97",
-  "pliego.css.receipt.json": "b24d23b286df8c35711684c585962a2b25d84bf1c6de84b7c618c08101738183",
-  "pliego.tokens.json": "7a0862dcd2cd8152cface3ea82fbccf1877e75c6f505efa8a3032f8652f354f0",
+  "app.css": "5991b204608619242608e12e9b60ffad378c6ab185b91ca173260d9adf9dfdc3",
+  "app.css.map":
+    "ce30a183a990c8dca861721b4c5ea953884fd4fb4898220023192e20abc62c3c",
+  "app.manifest.json":
+    "b402c1804da5ac08d31000b8ecec1924b6c4955e6535d538c50fc4bd030ff8f2",
+  "pliego.css.findings.json":
+    "115182f78adbecdddc5400bb2ab9bb9fa32e7c2b4399cea3e09c6cefda2da09d",
+  "pliego.css.manifest.json":
+    "1a4d5f1f4e603080e1800856038dc7f34c38e2dccedcdb5e260b3ddc9335014e",
+  "pliego.css.receipt.json":
+    "3e0668c3e57c0a506887d2dc0617c076e0ed6dee20f275a1f1974307db5cff14",
+  "pliego.tokens.json":
+    "59422650b57f45d5601a0dadce3ab1e9fc9bbf7e3c35d089f203516cf1c9a553",
 };
 const expectedDtcgResolverSha256 =
   "5965f868707ad92b0164788b5a7b8b8a2234ce03d7e6c71e1df66d612801b876";
 const expectedDtcgConfigHashes = {
-  darkLight: "sha256:e06966ae5f001ba6b1b29bfa4d52a3c3d26f9c4ba588d8ff558bd820c23767a9",
-  darkDark: "sha256:d0ab9d7cdc46d564adc14142be10d15b14dee36066966a29f4857e22a0f3616c",
+  darkLight:
+    "sha256:1aa3a252d70b115f68861b96d8ecd9b485fdd62ad6408777d00ae46c2893d584",
+  darkDark:
+    "sha256:e0c65ea08fe97f14b426058a23e4b42d31047afec100fb4164c41798f65f532e",
 };
+const updateGoldens = process.env.PLIEGOCSS_UPDATE_GOLDENS === "1";
 
 function fail(message) {
   throw new Error(message);
@@ -126,8 +173,12 @@ async function runWatchUntilPublished(cliArguments, cwd, receipt) {
   try {
     const deadline = Date.now() + 30_000;
     while (!existsSync(receipt)) {
-      if (exited) fail(`watch exited before publication\nstdout:\n${stdout}\nstderr:\n${stderr}`);
-      if (Date.now() >= deadline) fail(`watch publication timed out\nstderr:\n${stderr}`);
+      if (exited)
+        fail(
+          `watch exited before publication\nstdout:\n${stdout}\nstderr:\n${stderr}`,
+        );
+      if (Date.now() >= deadline)
+        fail(`watch publication timed out\nstderr:\n${stderr}`);
       await new Promise((resolveDelay) => setTimeout(resolveDelay, 25));
     }
   } finally {
@@ -138,7 +189,8 @@ async function runWatchUntilPublished(cliArguments, cwd, receipt) {
     ]);
   }
   if (stdout !== "") fail(`watch emitted unexpected stdout:\n${stdout}`);
-  if (!stderr.includes("watching `src`")) fail(`watch lost its startup event:\n${stderr}`);
+  if (!stderr.includes("watching `src`"))
+    fail(`watch lost its startup event:\n${stderr}`);
 }
 
 function sha256(bytes) {
@@ -151,7 +203,13 @@ function outputSnapshot(directory) {
     .map((name) => {
       const path = join(directory, name);
       const metadata = statSync(path);
-      return [name, metadata.size, metadata.mtimeMs, metadata.ino, readFileSync(path).toString("base64")];
+      return [
+        name,
+        metadata.size,
+        metadata.mtimeMs,
+        metadata.ino,
+        readFileSync(path).toString("base64"),
+      ];
     });
 }
 
@@ -163,8 +221,9 @@ function publishedFiles(directory) {
 
 function treeSnapshot(directory, prefix = "") {
   const snapshot = [];
-  for (const entry of readdirSync(directory, { withFileTypes: true }).sort((left, right) =>
-    left.name < right.name ? -1 : left.name > right.name ? 1 : 0,
+  for (const entry of readdirSync(directory, { withFileTypes: true }).sort(
+    (left, right) =>
+      left.name < right.name ? -1 : left.name > right.name ? 1 : 0,
   )) {
     const relative = prefix === "" ? entry.name : `${prefix}/${entry.name}`;
     const path = join(directory, entry.name);
@@ -182,13 +241,21 @@ function treeSnapshot(directory, prefix = "") {
 
 function assertEqual(actual, expected, message) {
   if (JSON.stringify(actual) !== JSON.stringify(expected)) {
-    fail(`${message}\nactual: ${JSON.stringify(actual)}\nexpected: ${JSON.stringify(expected)}`);
+    fail(
+      `${message}\nactual: ${JSON.stringify(actual)}\nexpected: ${JSON.stringify(expected)}`,
+    );
   }
 }
 
 function assertFrozenHashes(actual, expected, label) {
-  const mismatches = Object.keys(expected).filter((name) => actual[name] !== expected[name]);
+  const mismatches = Object.keys(expected).filter(
+    (name) => actual[name] !== expected[name],
+  );
   if (mismatches.length > 0) {
+    if (updateGoldens) {
+      process.stdout.write(`${label}: ${JSON.stringify(actual)}\n`);
+      return;
+    }
     fail(
       `${label} frozen hashes drifted for ${mismatches.join(", ")}:\n${JSON.stringify(actual, null, 2)}`,
     );
@@ -198,8 +265,12 @@ function assertFrozenHashes(actual, expected, label) {
 function assertTokenGraphProjection(directory, cssFile, manifestFile, label) {
   const graphBytes = readFileSync(join(directory, "pliego.tokens.json"));
   const graph = JSON.parse(graphBytes);
-  const manifest = JSON.parse(readFileSync(join(directory, "pliego.css.manifest.json"), "utf8"));
-  const receipt = JSON.parse(readFileSync(join(directory, "pliego.css.receipt.json"), "utf8"));
+  const manifest = JSON.parse(
+    readFileSync(join(directory, "pliego.css.manifest.json"), "utf8"),
+  );
+  const receipt = JSON.parse(
+    readFileSync(join(directory, "pliego.css.receipt.json"), "utf8"),
+  );
   const tokens = manifest.tokens;
   if (
     tokens.observation !== "measured" ||
@@ -217,7 +288,9 @@ function assertTokenGraphProjection(directory, cssFile, manifestFile, label) {
     tokens.contrastPairs !== 0 ||
     tokens.deprecations !== 0
   ) {
-    fail(`${label} lost its bounded token projection: ${JSON.stringify(tokens)}`);
+    fail(
+      `${label} lost its bounded token projection: ${JSON.stringify(tokens)}`,
+    );
   }
   if (
     graph.schemaVersion !== 1 ||
@@ -235,35 +308,54 @@ function assertTokenGraphProjection(directory, cssFile, manifestFile, label) {
   ) {
     fail(`${label} emitted an invalid or non-canonical token graph`);
   }
-  const graphOutput = manifest.outputs.find((output) => output.role === "token-graph");
-  const cssOutput = manifest.outputs.find((output) => output.role === "generated-css");
-  const manifestOutput = manifest.outputs.find((output) => output.role === "style-manifest");
-  const graphCheck = receipt.checks.find((check) => check.id === "token-graph-integrity");
+  const graphOutput = manifest.outputs.find(
+    (output) => output.role === "token-graph",
+  );
+  const cssOutput = manifest.outputs.find(
+    (output) => output.role === "generated-css",
+  );
+  const manifestOutput = manifest.outputs.find(
+    (output) => output.role === "style-manifest",
+  );
+  const graphCheck = receipt.checks.find(
+    (check) => check.id === "token-graph-integrity",
+  );
   if (
     graphOutput?.artifact?.file !== "pliego.tokens.json" ||
     graphOutput.artifact.bytes !== graphBytes.length ||
     graphOutput.artifact.sha256 !== tokens.graphHash ||
     graphOutput.mediaType !== "application/json" ||
     graphOutput.sourceMap != null ||
-    JSON.stringify(graphOutput.relationships) !== JSON.stringify([cssFile, manifestFile]) ||
+    JSON.stringify(graphOutput.relationships) !==
+      JSON.stringify([cssFile, manifestFile]) ||
     !cssOutput?.relationships.includes("pliego.tokens.json") ||
     !manifestOutput?.relationships.includes("pliego.tokens.json") ||
     !manifest.receipt.requiredChecks.includes("token-graph-integrity") ||
     graphCheck?.status !== "passed" ||
     graphCheck.evidenceKind !== "integrity" ||
     graphCheck.required !== true ||
-    JSON.stringify(graphCheck.evidenceArtifact) !== JSON.stringify(graphOutput.artifact)
+    JSON.stringify(graphCheck.evidenceArtifact) !==
+      JSON.stringify(graphOutput.artifact)
   ) {
     fail(`${label} did not integrity-bind its canonical token graph`);
   }
 }
 
-function assertDtcgTokenGraphProjection(directory, cssFile, manifestFile, label) {
+function assertDtcgTokenGraphProjection(
+  directory,
+  cssFile,
+  manifestFile,
+  label,
+) {
   const graphBytes = readFileSync(join(directory, "pliego.tokens.json"));
   const graph = JSON.parse(graphBytes);
-  const manifestBytes = readFileSync(join(directory, "pliego.css.manifest.json"));
+  const manifestBytes = readFileSync(
+    join(directory, "pliego.css.manifest.json"),
+  );
   const manifest = JSON.parse(manifestBytes);
-  const receipt = JSON.parse(readFileSync(join(directory, "pliego.css.receipt.json"), "utf8"));
+  const receipt = JSON.parse(
+    readFileSync(join(directory, "pliego.css.receipt.json"), "utf8"),
+  );
   const tokens = manifest.tokens;
   const expectedSelections = [
     { appearance: "dark", channel: "dark" },
@@ -294,17 +386,24 @@ function assertDtcgTokenGraphProjection(directory, cssFile, manifestFile, label)
     `${JSON.stringify(graph)}\n` !== graphBytes.toString("utf8") ||
     sha256(graphBytes) !== expectedDtcgControlHashes["pliego.tokens.json"]
   ) {
-    fail(`${label} did not publish the complete canonical Resolver 2025.10 graph`);
+    fail(
+      `${label} did not publish the complete canonical Resolver 2025.10 graph`,
+    );
   }
-  const resolverInput = manifest.inputs.files.find((input) => input.role === "token-resolver");
-  const adapter = manifest.inputs.adapters.find((identity) => identity.name === "dtcg-resolver");
+  const resolverInput = manifest.inputs.files.find(
+    (input) => input.role === "token-resolver",
+  );
+  const adapter = manifest.inputs.adapters.find(
+    (identity) => identity.name === "dtcg-resolver",
+  );
   if (
     resolverInput?.file !== "examples/product.resolver.json" ||
     resolverInput.sha256 !== `sha256:${expectedDtcgResolverSha256}` ||
     adapter?.version !== "2025.10/same-document-1" ||
     tokens.observation !== "measured" ||
     tokens.graphVersion !== graph.graphVersion ||
-    tokens.graphHash !== `sha256:${expectedDtcgControlHashes["pliego.tokens.json"]}` ||
+    tokens.graphHash !==
+      `sha256:${expectedDtcgControlHashes["pliego.tokens.json"]}` ||
     tokens.tokens !== 53 ||
     tokens.aliases !== 1 ||
     tokens.themes !== 4 ||
@@ -314,30 +413,46 @@ function assertDtcgTokenGraphProjection(directory, cssFile, manifestFile, label)
   ) {
     fail(`${label} lost its exact resolver input or DTCG measurement identity`);
   }
-  const graphOutput = manifest.outputs.find((output) => output.role === "token-graph");
-  const cssOutput = manifest.outputs.find((output) => output.role === "generated-css");
-  const manifestOutput = manifest.outputs.find((output) => output.role === "style-manifest");
-  const graphCheck = receipt.checks.find((check) => check.id === "token-graph-integrity");
+  const graphOutput = manifest.outputs.find(
+    (output) => output.role === "token-graph",
+  );
+  const cssOutput = manifest.outputs.find(
+    (output) => output.role === "generated-css",
+  );
+  const manifestOutput = manifest.outputs.find(
+    (output) => output.role === "style-manifest",
+  );
+  const graphCheck = receipt.checks.find(
+    (check) => check.id === "token-graph-integrity",
+  );
   if (
     graphOutput?.artifact?.file !== "pliego.tokens.json" ||
     graphOutput.artifact.bytes !== graphBytes.length ||
     graphOutput.artifact.sha256 !== tokens.graphHash ||
     graphOutput.mediaType !== "application/json" ||
     graphOutput.sourceMap != null ||
-    JSON.stringify(graphOutput.relationships) !== JSON.stringify([cssFile, manifestFile]) ||
+    JSON.stringify(graphOutput.relationships) !==
+      JSON.stringify([cssFile, manifestFile]) ||
     !cssOutput?.relationships.includes("pliego.tokens.json") ||
     !manifestOutput?.relationships.includes("pliego.tokens.json") ||
     !manifest.receipt.requiredChecks.includes("token-graph-integrity") ||
     graphCheck?.status !== "passed" ||
     graphCheck.evidenceKind !== "integrity" ||
     graphCheck.required !== true ||
-    JSON.stringify(graphCheck.evidenceArtifact) !== JSON.stringify(graphOutput.artifact)
+    JSON.stringify(graphCheck.evidenceArtifact) !==
+      JSON.stringify(graphOutput.artifact)
   ) {
     fail(`${label} did not integrity-bind its complete DTCG token graph`);
   }
 }
 
-function assertControlArtifactDriftReadOnly(arguments_, cwd, directory, artifact, label) {
+function assertControlArtifactDriftReadOnly(
+  arguments_,
+  cwd,
+  directory,
+  artifact,
+  label,
+) {
   const path = join(directory, artifact);
   const original = readFileSync(path);
   writeFileSync(path, Buffer.concat([original, Buffer.from("drift\n")]));
@@ -346,7 +461,11 @@ function assertControlArtifactDriftReadOnly(arguments_, cwd, directory, artifact
   if (!result.stderr.includes("drift")) {
     fail(`${label} drift failure lost its diagnostic: ${result.stderr}`);
   }
-  assertEqual(outputSnapshot(directory), drifted, `${label} drift check mutated outputs`);
+  assertEqual(
+    outputSnapshot(directory),
+    drifted,
+    `${label} drift check mutated outputs`,
+  );
   runCli(arguments_, cwd);
 }
 
@@ -357,7 +476,8 @@ function assertSourceMapProjection(directory, cssFile, expectedSource, label) {
   const map = JSON.parse(mapBytes);
   if (
     map.version !== 3 ||
-    JSON.stringify(Object.keys(map)) !== JSON.stringify(["version", "sources", "names", "mappings"]) ||
+    JSON.stringify(Object.keys(map)) !==
+      JSON.stringify(["version", "sources", "names", "mappings"]) ||
     !Array.isArray(map.sources) ||
     !map.sources.includes(expectedSource) ||
     !Array.isArray(map.names) ||
@@ -366,16 +486,25 @@ function assertSourceMapProjection(directory, cssFile, expectedSource, label) {
     map.mappings.length === 0 ||
     css.includes("sourceMappingURL")
   ) {
-    fail(`${label} emitted an invalid or unstable Source Map v3: ${JSON.stringify(map)}`);
+    fail(
+      `${label} emitted an invalid or unstable Source Map v3: ${JSON.stringify(map)}`,
+    );
   }
-  const manifest = JSON.parse(readFileSync(join(directory, "pliego.css.manifest.json"), "utf8"));
-  const cssOutput = manifest.outputs.find((output) => output.artifact.file === cssFile);
-  const mapOutput = manifest.outputs.find((output) => output.artifact.file === mapFile);
+  const manifest = JSON.parse(
+    readFileSync(join(directory, "pliego.css.manifest.json"), "utf8"),
+  );
+  const cssOutput = manifest.outputs.find(
+    (output) => output.artifact.file === cssFile,
+  );
+  const mapOutput = manifest.outputs.find(
+    (output) => output.artifact.file === mapFile,
+  );
   if (
     cssOutput?.sourceMap?.file !== mapFile ||
     cssOutput.sourceMap.bytes !== mapBytes.length ||
     cssOutput.sourceMap.sha256 !== `sha256:${sha256(mapBytes)}` ||
-    JSON.stringify(cssOutput.sourceMap) !== JSON.stringify(mapOutput?.artifact) ||
+    JSON.stringify(cssOutput.sourceMap) !==
+      JSON.stringify(mapOutput?.artifact) ||
     mapOutput?.role !== "css-source-map" ||
     mapOutput.mediaType !== "application/json" ||
     !mapOutput.relationships.includes(cssFile)
@@ -385,7 +514,14 @@ function assertSourceMapProjection(directory, cssFile, expectedSource, label) {
 }
 
 function bundleArguments(plan, outputDir, check = false) {
-  return ["bundle", "--plan", plan, "--output-dir", outputDir, ...(check ? ["--check"] : [])];
+  return [
+    "bundle",
+    "--plan",
+    plan,
+    "--output-dir",
+    outputDir,
+    ...(check ? ["--check"] : []),
+  ];
 }
 
 function directDtcgArguments(outputDir, inputs) {
@@ -420,7 +556,7 @@ mkdirSync(join(project, "src"), { recursive: true });
 mkdirSync(foreignCwd, { recursive: true });
 
 const portableSource =
-  "fn portable_view() {\r\n    let _marker = \"🦀\";\r\n    let _ = pc!(\"flex gap-4\");\r\n}\r\n";
+  'fn portable_view() {\r\n    let _marker = "🦀";\r\n    let _ = pc!("flex gap-4");\r\n}\r\n';
 writeFileSync(join(project, "src", sourceName), portableSource);
 const plan = join(project, "pliego.bundles.toml");
 writeFileSync(
@@ -428,7 +564,9 @@ writeFileSync(
   `schema = 1\ntargets = "modern"\nformat = "minified"\n\n[theme]\nkind = "seed"\n\n[bundles.app]\nsources = [${JSON.stringify(logicalSource)}]\nemit-theme = true\n`,
 );
 const macroText = 'pc!("flex gap-4")';
-const macroStart = Buffer.byteLength(portableSource.slice(0, portableSource.indexOf(macroText)));
+const macroStart = Buffer.byteLength(
+  portableSource.slice(0, portableSource.indexOf(macroText)),
+);
 const reachability = join(project, "pliego.reachability.json");
 writeFileSync(
   reachability,
@@ -470,31 +608,46 @@ const secondCss = readFileSync(join(secondOutput, cssName));
 const firstManifestBytes = readFileSync(join(firstOutput, manifestName));
 const secondManifestBytes = readFileSync(join(secondOutput, manifestName));
 assertEqual(firstCss, secondCss, "CSS bytes changed with process CWD");
-assertEqual(firstManifestBytes, secondManifestBytes, "manifest bytes changed with process CWD");
+assertEqual(
+  firstManifestBytes,
+  secondManifestBytes,
+  "manifest bytes changed with process CWD",
+);
 
 const manifest = JSON.parse(firstManifestBytes);
 if (
   manifest.schemaVersion !== 3 ||
   manifest.styleIdFormatVersion !== 2 ||
   manifest.classNameFormatVersion !== 1 ||
-  manifest.themeIdFormatVersion !== 1 ||
+  manifest.themeIdFormatVersion !== 2 ||
   manifest.cssBytes !== firstCss.byteLength ||
   manifest.cssSha256 !== sha256(firstCss) ||
   manifest.styles.length !== 1
 ) {
   fail("bundle manifest integrity contract drifted");
 }
-if (manifest.cssSha256 !== expectedCssSha256 || sha256(firstManifestBytes) !== expectedManifestSha256) {
-  fail(
-    `frozen cross-platform hashes drifted: CSS ${manifest.cssSha256}, manifest ${sha256(firstManifestBytes)}`,
-  );
+if (
+  manifest.cssSha256 !== expectedCssSha256 ||
+  sha256(firstManifestBytes) !== expectedManifestSha256
+) {
+  if (updateGoldens) {
+    process.stdout.write(
+      `bundle: ${JSON.stringify({ css: manifest.cssSha256, manifest: sha256(firstManifestBytes) })}\n`,
+    );
+  } else {
+    fail(
+      `frozen cross-platform hashes drifted: CSS ${manifest.cssSha256}, manifest ${sha256(firstManifestBytes)}`,
+    );
+  }
 }
 if (
   !manifest.styles[0].origins.every(
     (origin) => origin.file === logicalSource && !origin.file.includes("\\"),
   )
 ) {
-  fail("bundle provenance is not stable plan-relative UTF-8 with forward slashes");
+  fail(
+    "bundle provenance is not stable plan-relative UTF-8 with forward slashes",
+  );
 }
 
 const controlOutput = join(runtime, "audit-control");
@@ -520,7 +673,10 @@ runCli(controlArguments, root);
 for (const [name, expected] of Object.entries(expectedControlHashes)) {
   const actual = sha256(readFileSync(join(controlOutput, name)));
   if (actual !== expected) {
-    fail(`frozen cross-platform control hash drifted for ${name}: ${actual}`);
+    if (updateGoldens)
+      process.stdout.write(`audit control ${name}: ${actual}\n`);
+    else
+      fail(`frozen cross-platform control hash drifted for ${name}: ${actual}`);
   }
 }
 const beforeControlCheck = outputSnapshot(controlOutput);
@@ -559,9 +715,16 @@ const bundleControlFiles = [
   "pliego.tokens.json",
 ];
 const bundleControlHashes = Object.fromEntries(
-  bundleControlFiles.map((name) => [name, sha256(readFileSync(join(bundleControlOutput, name)))]),
+  bundleControlFiles.map((name) => [
+    name,
+    sha256(readFileSync(join(bundleControlOutput, name))),
+  ]),
 );
-assertFrozenHashes(bundleControlHashes, expectedBundleControlHashes, "bundle control");
+assertFrozenHashes(
+  bundleControlHashes,
+  expectedBundleControlHashes,
+  "bundle control",
+);
 assertEqual(
   publishedFiles(bundleControlOutput),
   bundleControlFiles,
@@ -573,7 +736,12 @@ assertTokenGraphProjection(
   "app.manifest.json",
   "bundle control",
 );
-assertSourceMapProjection(bundleControlOutput, "app.css", logicalSource, "bundle control");
+assertSourceMapProjection(
+  bundleControlOutput,
+  "app.css",
+  logicalSource,
+  "bundle control",
+);
 const beforeBundleControlCheck = outputSnapshot(bundleControlOutput);
 runCli([...bundleControlArguments, "--check"], root);
 assertEqual(
@@ -608,18 +776,36 @@ const assetPlanControlFiles = [
   "pliego.css.receipt.json",
 ];
 const assetPlanControlHashes = Object.fromEntries(
-  assetPlanControlFiles.map((name) => [name, sha256(readFileSync(join(assetPlanControlOutput, name)))]),
+  assetPlanControlFiles.map((name) => [
+    name,
+    sha256(readFileSync(join(assetPlanControlOutput, name))),
+  ]),
 );
 for (const [name, expected] of Object.entries(expectedAssetPlanControlHashes)) {
   if (assetPlanControlHashes[name] !== expected) {
-    fail(`frozen Asset Plan control hash drifted for ${name}: ${assetPlanControlHashes[name]}`);
+    if (updateGoldens)
+      process.stdout.write(
+        `asset plan control ${name}: ${assetPlanControlHashes[name]}\n`,
+      );
+    else
+      fail(
+        `frozen Asset Plan control hash drifted for ${name}: ${assetPlanControlHashes[name]}`,
+      );
   }
 }
 const reopenedAssetPlanTokens = JSON.parse(
-  readFileSync(join(assetPlanControlOutput, "pliego.css.manifest.json"), "utf8"),
+  readFileSync(
+    join(assetPlanControlOutput, "pliego.css.manifest.json"),
+    "utf8",
+  ),
 ).tokens;
-if (reopenedAssetPlanTokens.observation !== "unavailable" || !reopenedAssetPlanTokens.unavailableReason) {
-  fail(`reopened Asset Plan invented token evidence: ${JSON.stringify(reopenedAssetPlanTokens)}`);
+if (
+  reopenedAssetPlanTokens.observation !== "unavailable" ||
+  !reopenedAssetPlanTokens.unavailableReason
+) {
+  fail(
+    `reopened Asset Plan invented token evidence: ${JSON.stringify(reopenedAssetPlanTokens)}`,
+  );
 }
 const beforeAssetPlanControlCheck = outputSnapshot(assetPlanControlOutput);
 runCli([...assetPlanControlArguments, "--check"], runtime);
@@ -656,9 +842,16 @@ const compileControlFiles = [
   "pliego.tokens.json",
 ];
 const compileControlHashes = Object.fromEntries(
-  compileControlFiles.map((name) => [name, sha256(readFileSync(join(compileControlOutput, name)))]),
+  compileControlFiles.map((name) => [
+    name,
+    sha256(readFileSync(join(compileControlOutput, name))),
+  ]),
 );
-assertFrozenHashes(compileControlHashes, expectedCompileControlHashes, "compile control");
+assertFrozenHashes(
+  compileControlHashes,
+  expectedCompileControlHashes,
+  "compile control",
+);
 assertEqual(
   publishedFiles(compileControlOutput),
   compileControlFiles,
@@ -670,7 +863,12 @@ assertTokenGraphProjection(
   "app.manifest.json",
   "compile control",
 );
-assertSourceMapProjection(compileControlOutput, "app.css", logicalSource, "compile control");
+assertSourceMapProjection(
+  compileControlOutput,
+  "app.css",
+  logicalSource,
+  "compile control",
+);
 const beforeCompileControlCheck = outputSnapshot(compileControlOutput);
 runCli([...compileControlArguments, "--check"], project);
 assertEqual(
@@ -717,9 +915,16 @@ const watchControlFiles = [
   "pliego.tokens.json",
 ];
 const watchControlHashes = Object.fromEntries(
-  watchControlFiles.map((name) => [name, sha256(readFileSync(join(watchControlOutput, name)))]),
+  watchControlFiles.map((name) => [
+    name,
+    sha256(readFileSync(join(watchControlOutput, name))),
+  ]),
 );
-assertFrozenHashes(watchControlHashes, expectedWatchControlHashes, "watch control");
+assertFrozenHashes(
+  watchControlHashes,
+  expectedWatchControlHashes,
+  "watch control",
+);
 assertEqual(
   publishedFiles(watchControlOutput),
   watchControlFiles,
@@ -731,7 +936,12 @@ assertTokenGraphProjection(
   "app.manifest.json",
   "watch control",
 );
-assertSourceMapProjection(watchControlOutput, "app.css", logicalSource, "watch control");
+assertSourceMapProjection(
+  watchControlOutput,
+  "app.css",
+  logicalSource,
+  "watch control",
+);
 const dtcgControlOutput = join(runtime, "dtcg-control");
 mkdirSync(dtcgControlOutput);
 const dtcgControlArguments = directDtcgArguments(dtcgControlOutput, [
@@ -749,9 +959,16 @@ const dtcgControlFiles = [
   "pliego.tokens.json",
 ];
 const dtcgControlHashes = Object.fromEntries(
-  dtcgControlFiles.map((name) => [name, sha256(readFileSync(join(dtcgControlOutput, name)))]),
+  dtcgControlFiles.map((name) => [
+    name,
+    sha256(readFileSync(join(dtcgControlOutput, name))),
+  ]),
 );
-assertFrozenHashes(dtcgControlHashes, expectedDtcgControlHashes, "direct DTCG control");
+assertFrozenHashes(
+  dtcgControlHashes,
+  expectedDtcgControlHashes,
+  "direct DTCG control",
+);
 assertEqual(
   publishedFiles(dtcgControlOutput),
   dtcgControlFiles,
@@ -777,11 +994,20 @@ const dtcgStyleManifest = JSON.parse(
 );
 const dtcgCss = readFileSync(join(dtcgControlOutput, "app.css"));
 if (
-  dtcgControlManifest.inputs.configHash !== expectedDtcgConfigHashes.darkLight ||
-  dtcgStyleManifest.themeId !== "8be8798dad4dc86f1a8e58a4f4b493eb" ||
+  dtcgControlManifest.inputs.configHash !==
+    expectedDtcgConfigHashes.darkLight ||
+  dtcgStyleManifest.themeId !== "a3a372ca8c3407a68302c8a71e89b121" ||
   !dtcgCss.toString("utf8").includes("--color-brand:color(srgb .1 .1 .1)")
 ) {
-  fail("direct DTCG control lost its exact canonical dark/light selection identity");
+  if (updateGoldens) {
+    process.stdout.write(
+      `dtcg darkLight: ${JSON.stringify({ configHash: dtcgControlManifest.inputs.configHash, themeId: dtcgStyleManifest.themeId })}\n`,
+    );
+  } else {
+    fail(
+      "direct DTCG control lost its exact canonical dark/light selection identity",
+    );
+  }
 }
 const canonicalDtcgSnapshot = treeSnapshot(dtcgControlOutput);
 const canonicalDtcgArguments = directDtcgArguments(dtcgControlOutput, [
@@ -819,8 +1045,10 @@ const dtcgIdentityManifest = JSON.parse(
   readFileSync(join(dtcgIdentityOutput, "pliego.css.manifest.json"), "utf8"),
 );
 if (
-  dtcgIdentityManifest.inputs.configHash !== expectedDtcgConfigHashes.darkDark ||
-  dtcgIdentityManifest.inputs.configHash === dtcgControlManifest.inputs.configHash ||
+  dtcgIdentityManifest.inputs.configHash !==
+    expectedDtcgConfigHashes.darkDark ||
+  dtcgIdentityManifest.inputs.configHash ===
+    dtcgControlManifest.inputs.configHash ||
   !readFileSync(join(dtcgIdentityOutput, "app.css")).equals(dtcgCss) ||
   !readFileSync(join(dtcgIdentityOutput, "app.manifest.json")).equals(
     readFileSync(join(dtcgControlOutput, "app.manifest.json")),
@@ -829,16 +1057,27 @@ if (
     readFileSync(join(dtcgControlOutput, "pliego.tokens.json")),
   )
 ) {
-  fail("canonical DTCG selections stopped participating in configHash independently of ThemeId");
+  if (updateGoldens) {
+    process.stdout.write(
+      `dtcg darkDark: ${JSON.stringify({ configHash: dtcgIdentityManifest.inputs.configHash })}\n`,
+    );
+  } else {
+    fail(
+      "canonical DTCG selections stopped participating in configHash independently of ThemeId",
+    );
+  }
 }
 const sourceBytes = readFileSync(join(project, "src", sourceName));
 for (const origin of manifest.styles[0].origins) {
   if (
     !Number.isInteger(origin.byteStart) ||
     !Number.isInteger(origin.byteEnd) ||
-    sourceBytes.subarray(origin.byteStart, origin.byteEnd).toString("utf8") !== 'pc!("flex gap-4")'
+    sourceBytes.subarray(origin.byteStart, origin.byteEnd).toString("utf8") !==
+      'pc!("flex gap-4")'
   ) {
-    fail(`manifest origin does not select the exact macro bytes: ${JSON.stringify(origin)}`);
+    fail(
+      `manifest origin does not select the exact macro bytes: ${JSON.stringify(origin)}`,
+    );
   }
 }
 
@@ -848,30 +1087,49 @@ copyFileSync(join(firstOutput, cssName), join(checkOutput, cssName));
 copyFileSync(join(firstOutput, manifestName), join(checkOutput, manifestName));
 const beforeCheck = outputSnapshot(checkOutput);
 runCli(bundleArguments(plan, checkOutput, true), foreignCwd);
-assertEqual(outputSnapshot(checkOutput), beforeCheck, "successful --check wrote to the output directory");
+assertEqual(
+  outputSnapshot(checkOutput),
+  beforeCheck,
+  "successful --check wrote to the output directory",
+);
 
 const emptyCheckOutput = join(runtime, "output-empty-check");
 mkdirSync(emptyCheckOutput);
-const emptyCheck = runCli(bundleArguments(plan, emptyCheckOutput, true), foreignCwd, 1);
+const emptyCheck = runCli(
+  bundleArguments(plan, emptyCheckOutput, true),
+  foreignCwd,
+  1,
+);
 if (!emptyCheck.stderr.includes("bundle output drift detected")) {
   fail(`empty --check failure lost its diagnostic: ${emptyCheck.stderr}`);
 }
-assertEqual(readdirSync(emptyCheckOutput), [], "failed --check created output or lock files");
+assertEqual(
+  readdirSync(emptyCheckOutput),
+  [],
+  "failed --check created output or lock files",
+);
 
-writeFileSync(join(checkOutput, cssName), Buffer.concat([firstCss, Buffer.from("/* drift */\n")]));
+writeFileSync(
+  join(checkOutput, cssName),
+  Buffer.concat([firstCss, Buffer.from("/* drift */\n")]),
+);
 const beforeDriftCheck = outputSnapshot(checkOutput);
 const drift = runCli(bundleArguments(plan, checkOutput, true), foreignCwd, 1);
 if (!drift.stderr.includes("bundle output drift detected")) {
   fail(`drift failure lost its diagnostic: ${drift.stderr}`);
 }
-assertEqual(outputSnapshot(checkOutput), beforeDriftCheck, "failed --check mutated drifted outputs");
+assertEqual(
+  outputSnapshot(checkOutput),
+  beforeDriftCheck,
+  "failed --check mutated drifted outputs",
+);
 
 const outside = join(runtime, "outside-plan");
 const escape = join(project, "escape");
 const escapeOutput = join(runtime, "output-escape");
 mkdirSync(outside);
 mkdirSync(escapeOutput);
-writeFileSync(join(outside, "leak.rs"), "fn leak() { let _ = pc!(\"grid\"); }\n");
+writeFileSync(join(outside, "leak.rs"), 'fn leak() { let _ = pc!("grid"); }\n');
 symlinkSync(outside, escape, process.platform === "win32" ? "junction" : "dir");
 const escapePlan = join(project, "escape.bundles.toml");
 writeFileSync(
@@ -879,20 +1137,36 @@ writeFileSync(
   'schema=1\ntargets="modern"\nformat="minified"\n[theme]\nkind="seed"\n[bundles.escape]\nsources=["escape/leak.rs"]\n',
 );
 const escaped = runCli(bundleArguments(escapePlan, escapeOutput), root, 1);
-if (!/symbolic link|reparse|outside bundle plan directory/.test(escaped.stderr)) {
+if (
+  !/symbolic link|reparse|outside bundle plan directory/.test(escaped.stderr)
+) {
   fail(`link escape did not fail closed: ${escaped.stderr}`);
 }
-assertEqual(readdirSync(escapeOutput), [], "link escape published output or lock files");
+assertEqual(
+  readdirSync(escapeOutput),
+  [],
+  "link escape published output or lock files",
+);
 
 const linkedOutputTarget = join(runtime, "linked-output-target");
 const linkedOutput = join(runtime, "linked-output");
 mkdirSync(linkedOutputTarget);
-symlinkSync(linkedOutputTarget, linkedOutput, process.platform === "win32" ? "junction" : "dir");
+symlinkSync(
+  linkedOutputTarget,
+  linkedOutput,
+  process.platform === "win32" ? "junction" : "dir",
+);
 const linkedDestination = runCli(bundleArguments(plan, linkedOutput), root, 1);
 if (!/symbolic link|reparse/.test(linkedDestination.stderr)) {
-  fail(`linked output directory did not fail closed: ${linkedDestination.stderr}`);
+  fail(
+    `linked output directory did not fail closed: ${linkedDestination.stderr}`,
+  );
 }
-assertEqual(readdirSync(linkedOutputTarget), [], "linked output directory received artifacts");
+assertEqual(
+  readdirSync(linkedOutputTarget),
+  [],
+  "linked output directory received artifacts",
+);
 
 const outsideTheme = join(runtime, "outside-theme");
 const linkedTheme = join(project, "linked-theme");
@@ -900,7 +1174,11 @@ const linkedThemeOutput = join(runtime, "output-linked-theme");
 mkdirSync(outsideTheme);
 mkdirSync(linkedThemeOutput);
 writeFileSync(join(outsideTheme, "theme.toml"), 'schema=1\nextends="seed"\n');
-symlinkSync(outsideTheme, linkedTheme, process.platform === "win32" ? "junction" : "dir");
+symlinkSync(
+  outsideTheme,
+  linkedTheme,
+  process.platform === "win32" ? "junction" : "dir",
+);
 const linkedThemePlan = join(project, "linked-theme.bundles.toml");
 writeFileSync(
   linkedThemePlan,
@@ -911,10 +1189,20 @@ const linkedConfiguration = runCli(
   root,
   1,
 );
-if (!/symbolic link|reparse|outside bundle plan directory/.test(linkedConfiguration.stderr)) {
-  fail(`linked theme configuration did not fail closed: ${linkedConfiguration.stderr}`);
+if (
+  !/symbolic link|reparse|outside bundle plan directory/.test(
+    linkedConfiguration.stderr,
+  )
+) {
+  fail(
+    `linked theme configuration did not fail closed: ${linkedConfiguration.stderr}`,
+  );
 }
-assertEqual(readdirSync(linkedThemeOutput), [], "linked theme path published output or lock files");
+assertEqual(
+  readdirSync(linkedThemeOutput),
+  [],
+  "linked theme path published output or lock files",
+);
 
 const dotOutput = join(runtime, "output-dot-segment");
 mkdirSync(dotOutput);
@@ -927,7 +1215,11 @@ const dotted = runCli(bundleArguments(dotPlan, dotOutput), root, 1);
 if (!dotted.stderr.includes("without `.` or `..` components")) {
   fail(`dot-segment path did not fail closed: ${dotted.stderr}`);
 }
-assertEqual(readdirSync(dotOutput), [], "invalid dot path published output or lock files");
+assertEqual(
+  readdirSync(dotOutput),
+  [],
+  "invalid dot path published output or lock files",
+);
 
 const configAlias = join(project, "APP.CSS");
 const configBytes = 'schema=1\nextends="seed"\n';
@@ -940,12 +1232,18 @@ writeFileSync(
 const beforeAlias = treeSnapshot(project);
 const aliased = runCli(bundleArguments(casePlan, project), root, 1);
 if (!aliased.stderr.includes("aliases input")) {
-  fail(`case-insensitive input/output alias was not rejected: ${aliased.stderr}`);
+  fail(
+    `case-insensitive input/output alias was not rejected: ${aliased.stderr}`,
+  );
 }
 if (readFileSync(configAlias, "utf8") !== configBytes) {
   fail("case-insensitive alias check modified the theme configuration");
 }
-assertEqual(treeSnapshot(project), beforeAlias, "case-insensitive alias failure mutated project files");
+assertEqual(
+  treeSnapshot(project),
+  beforeAlias,
+  "case-insensitive alias failure mutated project files",
+);
 const caseAlias = "rejected";
 
 const report = {

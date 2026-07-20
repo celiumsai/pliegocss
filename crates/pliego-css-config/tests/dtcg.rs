@@ -142,6 +142,34 @@ fn resolves_json_pointer_properties_and_root_tokens() {
 }
 
 #[test]
+fn resolves_json_pointer_properties_at_arbitrary_nested_depth() {
+    let source = r##"
+{
+  "foundation": {
+    "$type": "number",
+    "scale": {"$value": {"semantic": {"overlay": [3, 7, 11]}}}
+  },
+  "z-index": {
+    "overlay": {
+      "$type": "number",
+      "$ref": "#/foundation/scale/$value/semantic/overlay/2"
+    }
+  }
+}
+"##;
+
+    let theme = parse_dtcg_str(source).expect("deep property pointer theme");
+    assert_eq!(
+        theme
+            .registry()
+            .token_by_name(TokenKind::ZIndex, "overlay")
+            .expect("overlay")
+            .value,
+        "11"
+    );
+}
+
+#[test]
 fn rejects_reference_cycles_and_type_mismatches() {
     let cycle = r#"
 {
@@ -164,6 +192,63 @@ fn rejects_reference_cycles_and_type_mismatches() {
 "#;
     let error = parse_dtcg_str(mismatch).expect_err("type mismatch must fail");
     assert!(error.to_string().contains("cannot project"));
+}
+
+fn alias_chain(length: usize, cycle: bool) -> String {
+    let mut tokens = serde_json::Map::new();
+    for index in 0..length {
+        let target = if index + 1 == length {
+            cycle.then(|| "token0000".to_owned())
+        } else {
+            Some(format!("token{:04}", index + 1))
+        };
+        let value = target.map_or_else(
+            || serde_json::json!(1),
+            |target| serde_json::json!(format!("{{number.tokens.{target}}}")),
+        );
+        tokens.insert(
+            format!("token{index:04}"),
+            serde_json::json!({"$value": value}),
+        );
+    }
+    serde_json::json!({"number": {"$type": "number", "tokens": tokens}}).to_string()
+}
+
+#[test]
+fn rejects_deep_acyclic_alias_chains_at_the_explicit_depth_limit() {
+    let source = alias_chain(258, false);
+    assert!(matches!(
+        parse_dtcg_str(&source),
+        Err(DtcgError::Limit("alias reference depth exceeds 256 tokens"))
+    ));
+}
+
+#[test]
+fn rejects_deep_alias_cycles_without_recursive_stack_growth() {
+    let source = alias_chain(256, true);
+    let error = parse_dtcg_str(&source).expect_err("deep cycle must fail safely");
+    assert!(matches!(error, DtcgError::Invalid { .. }));
+    assert!(error.to_string().contains("circular reference"));
+}
+
+#[test]
+fn rejects_alias_resolution_that_exhausts_the_explicit_work_budget() {
+    const REFERENCES_OVER_BUDGET: usize = 100_001;
+    let references = vec![serde_json::json!("{number.base}"); REFERENCES_OVER_BUDGET];
+    let source = serde_json::json!({
+        "number": {
+            "$type": "number",
+            "base": {"$value": 1},
+            "fanout": {"$value": references}
+        }
+    })
+    .to_string();
+    assert!(matches!(
+        parse_dtcg_str(&source),
+        Err(DtcgError::Limit(
+            "alias resolution exceeds 100,000 work units"
+        ))
+    ));
 }
 
 #[test]

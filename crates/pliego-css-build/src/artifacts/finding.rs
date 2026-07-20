@@ -374,6 +374,24 @@ impl FindingEvidence {
         Ok(self)
     }
 
+    /// Returns the stable evidence kind.
+    #[must_use]
+    pub fn kind(&self) -> &str {
+        &self.kind
+    }
+
+    /// Returns the stable evidence name.
+    #[must_use]
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    /// Returns the evidence value.
+    #[must_use]
+    pub fn value(&self) -> &str {
+        &self.value
+    }
+
     fn validate(&self) -> Result<(), FindingContractError> {
         validate_slug("evidence.kind", &self.kind)?;
         validate_slug("evidence.name", &self.name)?;
@@ -692,6 +710,12 @@ impl Finding {
     #[must_use]
     pub fn suggestions(&self) -> &[FindingSuggestion] {
         &self.suggestions
+    }
+
+    /// Returns canonical supporting evidence.
+    #[must_use]
+    pub fn evidence(&self) -> &[FindingEvidence] {
+        &self.evidence
     }
 
     /// Returns whether a reviewed exception is attached.

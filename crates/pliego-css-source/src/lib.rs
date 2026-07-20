@@ -23,6 +23,8 @@ mod formatting;
 mod inventory;
 mod migration;
 
+pub use pliego_css_io::read_bounded_regular_file;
+
 use std::fmt;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -51,9 +53,16 @@ pub use migration::{
     MigrationDependencyResolution, MigrationDisposition, MigrationInventory,
     MigrationInventoryError, MigrationPreflightReliance, MigrationProject,
     MigrationProjectAuxiliary, MigrationProjectConsumer, MigrationProjectInventory,
-    MigrationProjectSource, MigrationSourceKind, inventory_migration_auxiliary_file,
+    MigrationProjectSource, MigrationSourceKind, ReversibleAdditionReceipt,
+    ReversibleMigrationPlan, ReversibleReplacementGroupReceipt, ReversibleReplacementReceipt,
+    apply_reversible_addition, apply_reversible_replacement, apply_reversible_replacement_group,
+    build_reversible_migration_plan, inventory_migration_auxiliary_file,
     inventory_migration_auxiliary_source, inventory_migration_consumer_file,
     inventory_migration_consumer_source, inventory_migration_file, inventory_migration_source,
+    prepare_static_template_class_alias, prepare_tailwind_marker_replacement,
+    prepare_tailwind_theme_root_projection, prepare_tailwind_utility_projection,
+    rollback_reversible_addition, rollback_reversible_replacement,
+    rollback_reversible_replacement_group,
 };
 
 /// A zero-based byte offset plus a human-readable source position.

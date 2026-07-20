@@ -20,12 +20,15 @@ use std::time::{Duration, Instant};
 use pliego_css_parser::{format_style_list, parse_style_list};
 use pliego_css_source::{InvocationKind, ScanReport, SourceRange, StyleLiteral, scan_source_named};
 use serde_json::{Value, json};
+use sha2::{Digest, Sha256};
 
 mod project_index;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const MAX_SEMANTIC_CACHE_ITEMS: usize = 4_096;
 const MAX_SEMANTIC_CHECKS_PER_DOCUMENT: usize = 256;
+const MAX_CONFIG_FINGERPRINT_BYTES: u64 = 1024 * 1024;
+const MAX_HEADER_BYTES: usize = 64 * 1024;
 const SEMANTIC_DEBOUNCE: Duration = Duration::from_millis(150);
 const SEMANTIC_PROCESS_POLL: Duration = Duration::from_millis(10);
 static TEMP_SOURCE_COUNTER: AtomicU64 = AtomicU64::new(0);
@@ -114,7 +117,7 @@ struct Server {
     config: ServerConfig,
     root: PathBuf,
     documents: BTreeMap<String, Document>,
-    catalog: Option<Vec<Value>>,
+    catalog: Option<(String, Vec<Value>)>,
     shutdown: bool,
 }
 
@@ -149,20 +152,22 @@ impl Server {
     }
 
     fn catalog(&mut self) -> Result<&[Value], String> {
-        if self.catalog.is_none() {
+        let identity = cache_identity(&self.root, &self.config)?;
+        if self.catalog.as_ref().map(|(key, _)| key) != Some(&identity) {
             let document = self.tool("catalog", &[])?;
             if document.get("schemaVersion") != Some(&json!(3)) {
                 return Err("unsupported catalog schema".into());
             }
-            self.catalog = Some(
+            self.catalog = Some((
+                identity,
                 document
                     .get("utilities")
                     .and_then(Value::as_array)
                     .ok_or("catalog has no utilities")?
                     .clone(),
-            );
+            ));
         }
-        Ok(self.catalog.as_deref().unwrap_or_default())
+        Ok(self.catalog.as_ref().map_or(&[], |(_, values)| values))
     }
 }
 
@@ -186,17 +191,18 @@ impl SemanticEngine {
         cancellation: &Cancellation,
         job: &SemanticJob,
     ) -> Result<Option<&[Value]>, String> {
-        if !self.cache.contains_key(style) {
+        let key = format!("{}\0style:{style}", cache_identity(root, &self.config)?);
+        if !self.cache.contains_key(&key) {
             if self.cache.len() >= MAX_SEMANTIC_CACHE_ITEMS {
                 self.cache.clear();
             }
             let Some(result) = self.run_check(root, style, cancellation, job)? else {
                 return Ok(None);
             };
-            self.cache.insert(style.to_owned(), result);
+            self.cache.insert(key.clone(), result);
         }
         self.cache
-            .get(style)
+            .get(&key)
             .expect("semantic result inserted")
             .as_deref()
             .map_err(Clone::clone)
@@ -210,7 +216,7 @@ impl SemanticEngine {
         cancellation: &Cancellation,
         job: &SemanticJob,
     ) -> Result<Option<&[Value]>, String> {
-        let key = format!("\0pcx:{source}");
+        let key = format!("{}\0pcx:{source}", cache_identity(root, &self.config)?);
         if !self.cache.contains_key(&key) {
             if self.cache.len() >= MAX_SEMANTIC_CACHE_ITEMS {
                 self.cache.clear();
@@ -287,8 +293,7 @@ type Cancellation = Arc<Mutex<BTreeMap<String, i64>>>;
 fn semantic_job_is_current(cancellation: &Cancellation, job: &SemanticJob) -> bool {
     cancellation
         .lock()
-        .map(|versions| versions.get(&job.uri) == Some(&job.version))
-        .unwrap_or(false)
+        .is_ok_and(|versions| versions.get(&job.uri) == Some(&job.version))
 }
 
 fn cancellable_output(
@@ -509,18 +514,21 @@ pub fn serve(
                         };
                         write_message(&mut output, &response)?;
                     } else {
-                        if let Some(notification) =
-                            handle_notification(&mut server, method, &params)?
-                        {
-                            write_message(&mut output, &notification)?;
+                        let notification = handle_notification(&mut server, method, &params);
+                        if let Ok(Some(notification)) = &notification {
+                            write_message(&mut output, notification)?;
                         }
-                        update_semantic_schedule(
-                            &server,
-                            method,
-                            &params,
-                            &mut pending,
-                            &cancellation,
-                        )?;
+                        if notification.is_ok() {
+                            // Invalid notifications have no JSON-RPC response and must not
+                            // terminate the session or schedule work from rejected state.
+                            let _ = update_semantic_schedule(
+                                &server,
+                                method,
+                                &params,
+                                &mut pending,
+                                &cancellation,
+                            );
+                        }
                     }
                 }
                 Some(ProtocolEvent::Semantic(result)) => {
@@ -663,7 +671,15 @@ fn handle_request(server: &mut Server, method: &str, params: &Value) -> Result<V
     }
     match method {
         "initialize" => {
-            if let Some(uri) = params.get("rootUri").and_then(Value::as_str) {
+            let root_uri = params.get("rootUri").and_then(Value::as_str).or_else(|| {
+                params
+                    .get("workspaceFolders")
+                    .and_then(Value::as_array)
+                    .and_then(|folders| folders.first())
+                    .and_then(|folder| folder.get("uri"))
+                    .and_then(Value::as_str)
+            });
+            if let Some(uri) = root_uri {
                 server.root = file_uri_path(uri)?;
             }
             Ok(json!({
@@ -1501,14 +1517,52 @@ fn string_field<'a>(value: &'a Value, name: &str) -> Result<&'a str, String> {
         .ok_or_else(|| format!("missing {name}"))
 }
 
+fn cache_identity(root: &Path, config: &ServerConfig) -> Result<String, String> {
+    let mut digest = Sha256::new();
+    digest.update(root.as_os_str().to_string_lossy().as_bytes());
+    digest.update(b"\0compiler:");
+    digest.update(config.compiler.to_string_lossy().as_bytes());
+    if config.seed {
+        digest.update(b"\0seed");
+    } else if let Some(path) = &config.config {
+        digest.update(b"\0config:");
+        digest.update(path.as_os_str().to_string_lossy().as_bytes());
+        let metadata = std::fs::metadata(path)
+            .map_err(|error| format!("cannot inspect config {}: {error}", path.display()))?;
+        if metadata.len() > MAX_CONFIG_FINGERPRINT_BYTES {
+            return Err(format!(
+                "config {} exceeds fingerprint limit of {MAX_CONFIG_FINGERPRINT_BYTES} bytes",
+                path.display()
+            ));
+        }
+        let bytes = std::fs::read(path)
+            .map_err(|error| format!("cannot read config {}: {error}", path.display()))?;
+        digest.update(metadata.len().to_le_bytes());
+        digest.update(bytes);
+    } else {
+        digest.update(b"\0discovery");
+    }
+    Ok(format!("{:x}", digest.finalize()))
+}
+
 fn file_uri_path(uri: &str) -> Result<PathBuf, String> {
-    let encoded = uri
-        .strip_prefix("file://")
-        .ok_or("rootUri must use file:")?;
-    let decoded = percent_decode(encoded)?;
+    let encoded = uri.strip_prefix("file://").ok_or("URI must use file:")?;
+    if encoded.contains(['?', '#']) {
+        return Err("file URI must not contain a query or fragment".into());
+    }
+    let (authority, path) = encoded
+        .split_once('/')
+        .map_or((encoded, ""), |(authority, path)| (authority, path));
+    let decoded = percent_decode(path)?;
+    let decoded = if authority.is_empty() || authority.eq_ignore_ascii_case("localhost") {
+        format!("/{decoded}")
+    } else {
+        format!("//{authority}/{decoded}")
+    };
     #[cfg(windows)]
     let decoded = decoded
         .strip_prefix('/')
+        .filter(|_| !decoded.starts_with("//"))
         .unwrap_or(&decoded)
         .replace('/', "\\");
     Ok(PathBuf::from(decoded))
@@ -1536,6 +1590,7 @@ fn percent_decode(value: &str) -> Result<String, String> {
 
 fn read_message(input: &mut impl BufRead) -> Result<Option<Value>, String> {
     let mut length = None;
+    let mut header_bytes = 0usize;
     loop {
         let mut line = String::new();
         if input
@@ -1549,6 +1604,12 @@ fn read_message(input: &mut impl BufRead) -> Result<Option<Value>, String> {
                 Err("truncated headers".into())
             };
         }
+        header_bytes = header_bytes
+            .checked_add(line.len())
+            .ok_or("headers exceed 64 KiB")?;
+        if header_bytes > MAX_HEADER_BYTES {
+            return Err("headers exceed 64 KiB".into());
+        }
         if line == "\r\n" || line == "\n" {
             break;
         }
@@ -1557,6 +1618,9 @@ fn read_message(input: &mut impl BufRead) -> Result<Option<Value>, String> {
             .strip_prefix("Content-Length:")
             .map(str::trim)
         {
+            if length.is_some() {
+                return Err("repeated Content-Length".into());
+            }
             length = Some(
                 value
                     .parse::<usize>()
@@ -1708,6 +1772,120 @@ mod tests {
     }
 
     #[test]
+    fn framing_rejects_excessive_headers_and_repeated_content_length() {
+        let oversized = format!(
+            "X-Fill: {}\r\nContent-Length: 2\r\n\r\n{{}}",
+            "x".repeat(70_000)
+        );
+        assert!(
+            read_message(&mut BufReader::new(oversized.as_bytes()))
+                .unwrap_err()
+                .contains("headers exceed")
+        );
+
+        let repeated = b"Content-Length: 2\r\nContent-Length: 2\r\n\r\n{}";
+        assert!(
+            read_message(&mut BufReader::new(repeated.as_slice()))
+                .unwrap_err()
+                .contains("repeated Content-Length")
+        );
+    }
+
+    #[test]
+    fn invalid_did_change_does_not_end_the_session_or_emit_a_response() {
+        let uri = "file:///workspace/view.rs";
+        let mut input = Vec::new();
+        for message in [
+            json!({"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}),
+            json!({"jsonrpc":"2.0","method":"textDocument/didOpen","params":{"textDocument":{
+                "uri":uri,"languageId":"rust","version":1,"text":"fn view(){}"
+            }}}),
+            json!({"jsonrpc":"2.0","method":"textDocument/didChange","params":{
+                "textDocument":{"uri":uri,"version":2},"contentChanges":[]
+            }}),
+            json!({"jsonrpc":"2.0","id":2,"method":"textDocument/formatting","params":{
+                "textDocument":{"uri":uri},"options":{"tabSize":4,"insertSpaces":true}
+            }}),
+            json!({"jsonrpc":"2.0","method":"exit","params":null}),
+        ] {
+            write_message(&mut input, &message).unwrap();
+        }
+        let mut bytes = Vec::new();
+        serve(
+            BufReader::new(input.as_slice()),
+            &mut bytes,
+            ServerConfig::default(),
+        )
+        .unwrap();
+        let mut output = BufReader::new(bytes.as_slice());
+        assert_eq!(read_message(&mut output).unwrap().unwrap()["id"], 1);
+        assert_eq!(
+            read_message(&mut output).unwrap().unwrap()["method"],
+            "textDocument/publishDiagnostics"
+        );
+        assert_eq!(read_message(&mut output).unwrap().unwrap()["id"], 2);
+        assert!(read_message(&mut output).unwrap().is_none());
+    }
+
+    #[test]
+    fn initialize_uses_first_workspace_folder_when_root_uri_is_null() {
+        let mut server = Server::new(ServerConfig::default());
+        handle_request(
+            &mut server,
+            "initialize",
+            &json!({
+                "rootUri":null,
+                "workspaceFolders":[{"uri":"file:///workspace/first","name":"first"}]
+            }),
+        )
+        .unwrap();
+        assert_eq!(
+            server.root,
+            file_uri_path("file:///workspace/first").unwrap()
+        );
+    }
+
+    #[test]
+    fn file_uri_handles_authority_and_rejects_query_or_fragment() {
+        let unc = file_uri_path("file://server/share/Pliego%20CSS").unwrap();
+        #[cfg(windows)]
+        assert_eq!(unc, PathBuf::from(r"\\server\share\Pliego CSS"));
+        #[cfg(not(windows))]
+        assert_eq!(unc, PathBuf::from("//server/share/Pliego CSS"));
+        assert!(file_uri_path("file:///tmp/project?config=other").is_err());
+        assert!(file_uri_path("file:///tmp/project#fragment").is_err());
+    }
+
+    #[test]
+    fn cache_identity_tracks_root_config_bytes_and_compiler() {
+        let directory = std::env::temp_dir().join(format!(
+            "pliego-lsp-cache-{}-{}",
+            std::process::id(),
+            TEMP_SOURCE_COUNTER.fetch_add(1, Ordering::Relaxed)
+        ));
+        std::fs::create_dir_all(&directory).unwrap();
+        let config_path = directory.join("theme.json");
+        std::fs::write(&config_path, b"one").unwrap();
+        let mut config = ServerConfig {
+            compiler: OsString::from("compiler-a"),
+            seed: false,
+            config: Some(config_path.clone()),
+            project_index: None,
+        };
+        let first = cache_identity(&directory, &config).unwrap();
+        std::fs::write(&config_path, b"two").unwrap();
+        let second = cache_identity(&directory, &config).unwrap();
+        assert_ne!(first, second);
+        config.compiler = OsString::from("compiler-b");
+        assert_ne!(second, cache_identity(&directory, &config).unwrap());
+        assert_ne!(
+            cache_identity(&directory, &config).unwrap(),
+            cache_identity(&directory.join("other"), &config).unwrap()
+        );
+        std::fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
     fn percent_decodes_file_paths() {
         assert_eq!(
             percent_decode("/tmp/Pliego%20CSS").unwrap(),
@@ -1739,10 +1917,13 @@ mod tests {
                 version: 1,
             },
         );
-        server.catalog = Some(vec![json!({
-            "example":"gap-4","pattern":"gap-{space}","matchName":"gap",
-            "summary":"Set gap."
-        })]);
+        server.catalog = Some((
+            cache_identity(&server.root, &server.config).unwrap(),
+            vec![json!({
+                "example":"gap-4","pattern":"gap-{space}","matchName":"gap",
+                "summary":"Set gap."
+            })],
+        ));
         let result = completion(
             &mut server,
             &json!({

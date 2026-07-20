@@ -523,7 +523,7 @@ if (
   manifest.schemaVersion !== 3 ||
   manifest.styleIdFormatVersion !== 2 ||
   manifest.classNameFormatVersion !== 1 ||
-  manifest.themeIdFormatVersion !== 1 ||
+  manifest.themeIdFormatVersion !== 2 ||
   manifest.cssSha256 !== cssSha256 ||
   manifest.cssBytes !== Buffer.byteLength(css)
 ) {
@@ -667,7 +667,7 @@ for (const bundle of bundles) {
     bundle.manifestDocument.schemaVersion !== 5 ||
     bundle.manifestDocument.styleIdFormatVersion !== 2 ||
     bundle.manifestDocument.classNameFormatVersion !== 1 ||
-    bundle.manifestDocument.themeIdFormatVersion !== 1 ||
+    bundle.manifestDocument.themeIdFormatVersion !== 2 ||
     bundle.manifestDocument.targets !== "modern" ||
     bundle.manifestDocument.format !== "minified" ||
     bundle.manifestDocument.cssSha256 !== digest ||

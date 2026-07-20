@@ -76,11 +76,13 @@ owned route bundles. `pliego-cssc watch` only regenerates artifacts; composed wi
 - [Control manifest and build receipt schema 1.0.0](./reference/control-artifacts-schema-1.md)
 - [Canonical CSS Source Map v3 contract](./reference/css-source-maps.md)
 - [Standard CSS audit command](./reference/audit-command.md)
+- [Bounded standard-CSS classifier corpus](./reference/standard-css-classifier-corpus.json)
 - [Bounded cascade explanation command](./reference/cascade-explain-command.md)
 - [Repair proposal, plan, dry-run, and Change Receipt schemas 1.0.0](./reference/repair-plan-schema.md)
 - [Repair check policy and Verification Receipt schemas 1.4.0](./reference/repair-verification-schema.md)
 - [Migration inventory schema 1](./reference/migration-inventory-schema-1.md)
 - [Migration project inventory schema 1](./reference/migration-project-inventory-schema-1.md)
+- [Reversible migration plan schema 1](./reference/reversible-migration-plan-schema-1.md)
 - [CSS budget policy schema 1](./reference/budget-policy.md)
 - [Accessibility policy schema 1](./reference/accessibility-policy.md)
 - [Standards and third-party provenance schema 1](./reference/standards-provenance.md)
@@ -96,6 +98,8 @@ owned route bundles. `pliego-cssc watch` only regenerates artifacts; composed wi
 
 - [Research-derived product requirements and alpha gates](./product/research-requirements.md)
 - [Strategic CSS/Rust/AI product contract and R0-R3 gates](./product/strategic-product-contract-2026.md)
+- [Product maturity map](./product/maturity-map.md)
+- [Representative applications and selected gaps](./product/representative-applications-gap-map.md)
 - [R0 unified manifest and receipt design](./product/r0-manifest-receipt-design.md)
 - [Typed IR](./concepts/typed-ir.md)
 - [Conflict model](./concepts/conflict-model.md)
@@ -105,6 +109,7 @@ owned route bundles. `pliego-cssc watch` only regenerates artifacts; composed wi
 
 ## Status and evidence
 
+- [Active development checkpoint (2026-07-19)](./status/active-development-checkpoint-2026-07-19.md)
 - [F0 verification](./status/f0-verification.md)
 - [F1 parser and IR](./status/f1.md)
 - [F2 semantic compiler](./status/f2.md)
@@ -122,11 +127,19 @@ owned route bundles. `pliego-cssc watch` only regenerates artifacts; composed wi
 - [Gate A status](./status/gate-a.md)
 - [Gate A benchmark](./benchmarks/pliego-gate-a.md)
 - [Gate B complete-fixture benchmark](./benchmarks/pliego-gate-b.md)
+- [Competitive matrix against Tailwind CSS v4.3.2](./benchmarks/tailwind-v4-competitive-matrix.md)
+- [Representative application 1: plain HTML audit-first](./benchmarks/representative-plain-html-audit.md)
+- [Representative application 2: Vite/Tailwind inventory-first](./benchmarks/representative-vite-tailwind.md)
+- [Representative application 3: CSS Modules consumer](./benchmarks/representative-css-modules.md)
+- [Representative application 4: typed Rust controlled build](./benchmarks/representative-rust-control.md)
+- [Representative application 5: framework-neutral multiroute bundles](./benchmarks/representative-framework-routes.md)
 - [Adjacent media-query merge benchmark](./benchmarks/media-query-merging.md)
 - [Rust check baseline](./benchmarks/rust-check-baseline.md)
 - [Frozen machine snapshots](../benchmarks/evidence/README.md)
 - [Browser validation](./benchmarks/browser-validation.md)
+- [Hosted browser/OS evidence matrix](./benchmarks/hosted-browser-matrix.json)
 - [PliegoRS development-loop latency and browser reload](./benchmarks/pliegors-dev-loop.md)
+- [Migration inventory and plan adoption latency](./benchmarks/migration-adoption-latency.md)
 - [WASM runtime overhead](./benchmarks/wasm-overhead.md)
 
 ## Contributing and releases

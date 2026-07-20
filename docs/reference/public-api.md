@@ -36,9 +36,10 @@ use pliego_css::{Style, StyleId, pc, pcx};
 as an empty string, and has no emitted CSS selector. Its raw `StyleId` still encodes mechanically as
 `pc_0`; render a `Style` through `Style::class_name` or `Display`, not by formatting the empty ID.
 
-The hidden `Style::__from_compiled_id` entrypoint exists only so the matching procedural-macro crate
-can construct a validated handle. It is not a supported direct-call API. Exact internal package
-versions keep that expansion and the facade in lockstep.
+`Style` has no integer constructor. The hygienic `pc!` and `pcx!` expansions construct handles through
+the exact-version facade internals after procedural validation; application code can only obtain a
+non-empty `Style` from those macros. This remains compatible with Cargo dependency renames because
+the declarative facade resolves helpers through `$crate`.
 
 ## Custom-theme bridge
 

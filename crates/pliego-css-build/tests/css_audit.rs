@@ -1,7 +1,8 @@
 //! Standards-first CSS audit contract tests.
 
 use pliego_css_build::artifacts::{
-    CompatibilityProfile, audit_standard_css, audit_standard_css_with_budgets, sha256_hex,
+    CompatibilityProfile, StandardCssFormat, audit_standard_css, audit_standard_css_with_budgets,
+    sha256_hex, transform_standard_css,
 };
 use pliego_css_config::{BudgetSubject, BudgetSubjectKind, parse_budget_policy};
 
@@ -38,11 +39,82 @@ fn valid_standard_css_emits_deterministic_inventory_evidence() {
     assert_eq!(metric("selectors"), "3");
     assert_eq!(metric("style-declarations"), "3");
     assert_eq!(metric("important-declarations"), "1");
+    assert_eq!(metric("generic-css-declaration-identities"), "3");
+    assert_eq!(
+        metric("generic-css-declaration-identity-evidence-truncated"),
+        "false"
+    );
+    let identities = evidence
+        .iter()
+        .filter(|item| item["kind"] == "identity")
+        .collect::<Vec<_>>();
+    assert_eq!(identities.len(), 3);
+    assert!(identities.iter().all(|item| {
+        item["source"] == "pliegocss-generic-css-declaration-v1"
+            && item["value"].as_str().unwrap().starts_with("sha256:")
+    }));
     assert_eq!(metric("maximum-specificity"), "1,1,0");
     assert_eq!(
         sha256_hex(json.as_bytes()),
-        "dcd1fb52b9ee314eb3751f6aec2307283083089cc15427bfc83349e9f9b5e15a"
+        "f7a396013d107a2988196dc1f50535f47c41e2d2937da9c0a3dc1fac2cccd752"
     );
+}
+
+#[test]
+fn standard_css_transform_is_deterministic_targeted_and_read_only() {
+    let css = ".card {\n  color: color(display-p3 1 0 0);\n  user-select: none;\n}\n";
+    let first = transform_standard_css(
+        "src/app.css",
+        css,
+        CompatibilityProfile::Modern,
+        StandardCssFormat::Minified,
+    )
+    .expect("transform");
+    let second = transform_standard_css(
+        "src/app.css",
+        css,
+        CompatibilityProfile::Modern,
+        StandardCssFormat::Minified,
+    )
+    .expect("repeat transform");
+    assert_eq!(first, second);
+    assert_eq!(first.source_sha256(), sha256_hex(css.as_bytes()));
+    assert_eq!(first.output_sha256(), sha256_hex(first.css().as_bytes()));
+    assert!(first.css().ends_with('\n'));
+    assert!(first.css().contains(".card{"));
+    assert_ne!(first.css(), css);
+}
+
+#[test]
+fn standard_css_transform_fails_closed_for_path_size_and_syntax() {
+    for path in ["", "/app.css", "../app.css", "src\\app.css", "C:/app.css"] {
+        let error = transform_standard_css(
+            path,
+            ".ok {}",
+            CompatibilityProfile::Modern,
+            StandardCssFormat::Pretty,
+        )
+        .expect_err("unsafe path");
+        assert!(error.contains("portable relative"), "{path}: {error}");
+    }
+    let oversized = " ".repeat(16 * 1024 * 1024 + 1);
+    let error = transform_standard_css(
+        "src/app.css",
+        &oversized,
+        CompatibilityProfile::Modern,
+        StandardCssFormat::Pretty,
+    )
+    .expect_err("oversized");
+    assert!(error.contains("16 MiB"));
+
+    let error = transform_standard_css(
+        "src/app.css",
+        ".bad > { color: red; }",
+        CompatibilityProfile::Modern,
+        StandardCssFormat::Pretty,
+    )
+    .expect_err("invalid CSS");
+    assert!(!error.is_empty());
 }
 
 #[test]
@@ -145,6 +217,46 @@ fn unknown_at_rules_never_become_implicit_compatibility_proof() {
 }
 
 #[test]
+fn supported_rule_classifier_corpus_covers_every_frozen_feature_family() {
+    let cases = [
+        ("cascade-layers", "@layer app { .x { color: red; } }"),
+        (
+            "container-queries",
+            "@container (width > 20rem) { .x { color: red; } }",
+        ),
+        (
+            "container-style-queries",
+            "@container style(--theme: dark) { .x { color: red; } }",
+        ),
+        (
+            "container-scroll-state-queries",
+            "@container scroll-state(stuck: top) { .x { color: red; } }",
+        ),
+        ("nesting", ".x { & .y { color: red; } }"),
+        (
+            "registered-custom-properties",
+            "@property --tone { syntax: \"<color>\"; inherits: false; initial-value: red; }",
+        ),
+        ("scope", "@scope (.shell) { .x { color: red; } }"),
+        ("starting-style", "@starting-style { .x { opacity: 0; } }"),
+    ];
+    for (feature, css) in cases {
+        let outcome = audit_standard_css("src/corpus.css", css, CompatibilityProfile::None)
+            .unwrap_or_else(|error| panic!("{feature}: {error}"));
+        let value: serde_json::Value =
+            serde_json::from_str(&outcome.document().to_json_pretty().expect("finding JSON"))
+                .expect("document");
+        assert!(
+            value["findings"].as_array().unwrap().iter().any(|finding| {
+                finding["context"]["feature-id"] == feature
+                    && finding["context"]["classifier-version"] == "css-rule-features-1"
+            }),
+            "missing classifier evidence for {feature}: {value}"
+        );
+    }
+}
+
+#[test]
 fn unknown_container_conditions_fail_as_unclassified_syntax() {
     let css = "@container (mystery) { .card { color: red; } }\n";
     let outcome = audit_standard_css(
@@ -166,6 +278,233 @@ fn unknown_container_conditions_fail_as_unclassified_syntax() {
     assert_eq!(finding["context"]["syntax"], "@container condition");
     assert_eq!(finding["source"]["byteStart"], 0);
     assert_eq!(finding["source"]["byteEnd"], 10);
+}
+
+#[test]
+fn declaration_shape_inventory_distinguishes_typed_unparsed_and_custom_values() {
+    let css = ".card { display: grid; color: var(--ink); --gap: 1rem; mystery-prop: value; }";
+    let outcome =
+        audit_standard_css("src/declarations.css", css, CompatibilityProfile::None).expect("audit");
+    let value: serde_json::Value =
+        serde_json::from_str(&outcome.document().to_json_pretty().expect("finding JSON"))
+            .expect("document");
+    let inventory = value["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|finding| finding["code"] == "PCSS-AUDIT-000")
+        .unwrap();
+    let metric = |name: &str| {
+        inventory["evidence"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|evidence| evidence["name"] == name)
+            .and_then(|evidence| evidence["value"].as_str())
+            .unwrap()
+    };
+    assert_eq!(metric("typed-declarations"), "1");
+    assert_eq!(metric("unparsed-declarations"), "1");
+    assert_eq!(metric("custom-declarations"), "2");
+}
+
+#[test]
+fn user_select_declaration_is_a_frozen_compatibility_decision() {
+    let css = ".card { user-select: none; }";
+    let modern = audit_standard_css("src/user-select.css", css, CompatibilityProfile::Modern)
+        .expect("modern audit");
+    assert!(
+        !modern.passed(),
+        "Safari support is absent from the frozen feature data"
+    );
+    let value: serde_json::Value =
+        serde_json::from_str(&modern.document().to_json_pretty().expect("finding JSON"))
+            .expect("document");
+    let finding = value["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|finding| finding["context"]["feature-id"] == "user-select")
+        .expect("user-select decision");
+    assert_eq!(finding["code"], "PCSS-COMPAT-101");
+    assert_eq!(
+        finding["context"]["compat-key"],
+        "css.properties.user-select"
+    );
+    assert_eq!(
+        finding["context"]["classifier-version"],
+        "css-rule-features-1"
+    );
+}
+
+#[test]
+fn aspect_ratio_declaration_is_a_frozen_widely_available_decision() {
+    let css = ".media { aspect-ratio: 16 / 9; }";
+    let outcome = audit_standard_css(
+        "src/aspect-ratio.css",
+        css,
+        CompatibilityProfile::BaselineWidely,
+    )
+    .expect("audit");
+    assert!(outcome.passed());
+    let value: serde_json::Value =
+        serde_json::from_str(&outcome.document().to_json_pretty().expect("finding JSON"))
+            .expect("document");
+    let finding = value["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|finding| finding["context"]["feature-id"] == "aspect-ratio")
+        .expect("aspect-ratio decision");
+    assert_eq!(finding["code"], "PCSS-COMPAT-100");
+    assert_eq!(
+        finding["context"]["compat-key"],
+        "css.properties.aspect-ratio"
+    );
+    assert_eq!(
+        finding["context"]["classifier-version"],
+        "css-rule-features-1"
+    );
+    let baseline = finding["evidence"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|evidence| evidence["name"] == "baseline-status")
+        .and_then(|evidence| evidence["value"].as_str())
+        .unwrap();
+    assert_eq!(baseline, "high");
+}
+
+#[test]
+fn modern_color_values_are_frozen_widely_available_decisions() {
+    let css = ".wide { color: color(display-p3 1 0 0); } .tone { color: oklch(60% 0.2 250); }";
+    let outcome = audit_standard_css(
+        "src/color-values.css",
+        css,
+        CompatibilityProfile::BaselineWidely,
+    )
+    .expect("audit");
+    assert!(outcome.passed());
+    let value: serde_json::Value =
+        serde_json::from_str(&outcome.document().to_json_pretty().expect("finding JSON"))
+            .expect("document");
+    let findings = value["findings"].as_array().unwrap();
+    for (id, key) in [
+        ("color-function", "css.types.color.color"),
+        ("oklab", "css.types.color.oklch"),
+    ] {
+        let finding = findings
+            .iter()
+            .find(|finding| finding["context"]["feature-id"] == id)
+            .unwrap();
+        assert_eq!(finding["code"], "PCSS-COMPAT-100");
+        assert_eq!(finding["context"]["compat-key"], key);
+    }
+}
+
+#[test]
+fn color_mix_is_a_frozen_widely_available_decision() {
+    let css = ".mix { color: color-mix(in srgb, currentColor, blue); }";
+    let outcome = audit_standard_css(
+        "src/color-mix.css",
+        css,
+        CompatibilityProfile::BaselineWidely,
+    )
+    .expect("audit");
+    assert!(outcome.passed());
+    let value: serde_json::Value =
+        serde_json::from_str(&outcome.document().to_json_pretty().expect("finding JSON"))
+            .expect("document");
+    let finding = value["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|finding| finding["context"]["feature-id"] == "color-mix")
+        .expect("color-mix decision");
+    assert_eq!(finding["code"], "PCSS-COMPAT-100");
+    assert_eq!(
+        finding["context"]["compat-key"],
+        "css.types.color.color-mix"
+    );
+}
+
+#[test]
+fn variadic_color_mix_fails_closed_instead_of_inheriting_two_color_support() {
+    let css = ".mix { color: color-mix(in srgb, red, blue, green); }";
+    let outcome = audit_standard_css(
+        "src/color-mix-variadic.css",
+        css,
+        CompatibilityProfile::BaselineWidely,
+    )
+    .expect("audit");
+    assert!(!outcome.passed());
+    let value: serde_json::Value =
+        serde_json::from_str(&outcome.document().to_json_pretty().expect("finding JSON"))
+            .expect("document");
+    let finding = value["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|finding| finding["context"]["feature-id"] == "color-mix-variadic")
+        .expect("variadic decision");
+    assert_eq!(finding["code"], "PCSS-COMPAT-101");
+}
+
+#[test]
+fn selector_shape_inventory_counts_application_selector_families() {
+    let css = "main, .card:hover, #app > [data-state=open]::before { color: red; }";
+    let outcome =
+        audit_standard_css("src/selectors.css", css, CompatibilityProfile::None).expect("audit");
+    let value: serde_json::Value =
+        serde_json::from_str(&outcome.document().to_json_pretty().expect("finding JSON"))
+            .expect("document");
+    let inventory = value["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|finding| finding["code"] == "PCSS-AUDIT-000")
+        .unwrap();
+    let metric = |name: &str| {
+        inventory["evidence"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|evidence| evidence["name"] == name)
+            .and_then(|evidence| evidence["value"].as_str())
+            .unwrap()
+    };
+    assert_eq!(metric("selector-components"), "8");
+    assert_eq!(metric("selector-combinators"), "2");
+    assert_eq!(metric("selector-attributes"), "1");
+    assert_eq!(metric("selector-pseudo-classes"), "1");
+    assert_eq!(metric("selector-pseudo-elements"), "1");
+}
+
+#[test]
+fn selector_features_are_frozen_compatibility_decisions() {
+    let css = ".button:focus-visible, .card:has(> img), :is(main, article) .title, :where(section, aside) .note, button:not(.primary, .secondary) { outline: 2px solid; }";
+    let baseline = audit_standard_css(
+        "src/selector-features.css",
+        css,
+        CompatibilityProfile::BaselineWidely,
+    )
+    .expect("baseline audit");
+    assert!(baseline.passed());
+    let value: serde_json::Value =
+        serde_json::from_str(&baseline.document().to_json_pretty().expect("finding JSON"))
+            .expect("document");
+    let findings = value["findings"].as_array().unwrap();
+    for feature in ["focus-visible", "has", "is", "where", "not"] {
+        let finding = findings
+            .iter()
+            .find(|finding| finding["context"]["feature-id"] == feature)
+            .unwrap_or_else(|| panic!("missing {feature}"));
+        assert_eq!(finding["code"], "PCSS-COMPAT-100");
+        assert_eq!(
+            finding["context"]["classifier-version"],
+            "css-rule-features-1"
+        );
+    }
 }
 
 #[test]

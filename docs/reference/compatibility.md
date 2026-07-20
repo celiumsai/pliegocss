@@ -23,17 +23,17 @@ distributed by checkout revision plus `Cargo.lock`, not by registry packages.
 | Surface | Version/vector | Enforced by |
 |---|---|---|
 | Representative StyleId vector | `STYLE_ID_FORMAT_VERSION = 2`; minimal-theme vector below | `v2_style_identity_and_class_are_frozen` |
-| Minimal-theme style | `flex gap-gutter tablet:grid` → `c6f70f4026b80188f017e1653097eaab` | compiler unit test |
-| Class-name encoding | `CLASS_NAME_FORMAT_VERSION = 1`; same style → `pc_bs1v0evmt6fek89jw23w99xgr` | IR/compiler unit tests |
+| Minimal-theme style | `flex gap-gutter tablet:grid` → `e0b572e3fdfbf091d9a2ddb126278634` | compiler unit test |
+| Class-name encoding | `CLASS_NAME_FORMAT_VERSION = 1`; same style → `pc_dax2y1pql4op1rjk97yv9e88k` | IR/compiler unit tests |
 | Full-width class boundary | `u128::MAX` → `pc_f5lxx1zz5pnorynqglhzmsp33` | IR unit test |
-| Candidate seed ThemeId | `c46b8b7ec8c3aa6daadf15cc9196ba3e` | seed/portability vectors |
-| Candidate seed style | `flex gap-4` → `321e429fcbcbbfd069227acdeda4bb0a` / `pc_2ytdwih5nln6228oqp6k413be` | compiler unit test |
-| Theme identity stream | `THEME_ID_FORMAT_VERSION = 1` | `v1_theme_identity_and_binary_format_are_frozen` |
-| Theme binary | magic `PLGCTHM\0`, format 1 | theme unit test |
+| Candidate seed ThemeId | `b3d5ad77175995c2b8f51ef7c0d41991` | seed/portability vectors |
+| Candidate seed style | `flex gap-4` → `70cb04ef9bf9621f5826351f1778f68e` / `pc_6oe73ec16rbb7ublcoa3bpzf2` | compiler unit test |
+| Theme identity stream | `THEME_ID_FORMAT_VERSION = 2`; SHA-256 truncated to its first 128 bits | `v2_theme_identity_stream_digest_and_id_are_frozen` |
+| Theme binary | magic `PLGCTHM\0`, format 2; format 1 rejected explicitly | theme unit test |
 | Cargo theme bridge | legacy TOML `theme!(PATH)` plus DTCG `theme!(tokens = PATH, inputs = { "modifier" => "context" })`; one selected registry artifact per package | build unit tests, Debian WSL2 full-workspace/Rust 1.85 public-API smoke, Windows dirty-package extracted DTCG/TOML consumers, and clean package gate at `9714b09` |
-| Semantic IR binary | magic `PLGCIR\0\0`, format 2; inherited 309-byte golden SHA-256 `c241b5450f3b4bf1abd4f48056a6c2fcadd1e4243e3d5b6648006210384c3e0f`; append-only container, writing-mode, and cascade-layer extensions; embeds StyleId format 2 and ThemeId format 1 | compiler golden/round-trip tests |
-| Minimal theme fixture | ID `bdcf7d279f16eef34e3be1db98ab3894` | theme unit test |
-| Minimal theme binary | 102 bytes, SHA-256 `752152810d22f8257d1770ebd2e3aae57ff806ab53564fba16cea2bf3e1a5413` | theme unit test |
+| Semantic IR binary | magic `PLGCIR\0\0`, format 2; 309-byte golden SHA-256 `337865f8e7b5b32fe58f67442537ad1d2926d94164d1692863a2616dddc85023`; append-only container, writing-mode, and cascade-layer extensions; embeds StyleId format 2 and ThemeId format 2 | compiler golden/round-trip tests |
+| Minimal theme fixture | ID `cf5c4c0674fd1c7e5121da0d27222ae0` | theme unit test |
+| Minimal theme binary | format 2, 102 bytes, SHA-256 `19ee963bb9476a70732eaf338497e977eaa6abcffaddcd35c9ebbbeeac615bc3` | theme unit test |
 | Theme configuration | schema 1 | config tests and reference |
 | CSS manifest | schema 3 default; schema 4 semantic graph; schema 5 physical trace | CLI, manifest-graph, and physical-trace gates |
 | Nested provenance graph | schema 1 semantic; schema 2 physical superset; declaration/physical ID formats 1 | graph/trace gates and references |
@@ -73,6 +73,25 @@ authentication or authorization. CLI aggregation compares canonical streams and 
 streams map to the same `StyleId`; the hash alone does not prove semantic equality. See the complete
 [StyleId format-2 specification](./style-id-format-v2.md).
 
+## Publication filesystem guarantee
+
+Grouped CLI outputs and agent repair writes use a shared coordination primitive owned by
+`pliego-css-build`. Lock leaves reject symlinks/reparse points, and temporary siblings are reserved
+with `create_new` while retaining the created file identity. Existing outputs are staged through
+collision-safe backup reservations.
+
+The guarantee is **rollback-capable, durable when requested, not crash-atomic**. A failure observed
+by the live process restores previous bytes and cleans temporary/backup siblings. Durable mode
+synchronizes prepared files and, on Unix where directory handles support it, parent directories
+after rename/removal. Abrupt process or machine loss can still expose an intermediate multi-file
+rename state; no claim of cross-file crash atomicity is made.
+
+Transaction migration is intentionally staged: CLI and agent now share hardened lock and temporary
+reservation code while their established transaction/error adapters remain in place to preserve
+coordination names and public diagnostics. Backup/rollback adapters will converge on the shared
+transaction only after compatibility fixtures cover every existing public error projection; no
+third transaction implementation should be introduced.
+
 ## Change rules before 0.1.0
 
 - A failing vector is a compatibility decision, not snapshot churn. The change must explain why the
@@ -101,7 +120,7 @@ The JSON schema bumps associated with StyleId format 2 make identity versions se
 the document boundary. Manifest schemas 3, 4, and 5, inspection schema 2, catalog schema 3, and
 utility explain schema 2 require the top-level `styleIdFormatVersion`, `classNameFormatVersion`, and
 `themeIdFormatVersion` fields. Diagnostic schema 1, theme configuration schema 1, theme identity and
-binary format 1, semantic IR binary format 2, bundle-plan schemas 1/2, reachability schema 1, nested
+binary format 2, semantic IR binary format 2, bundle-plan schemas 1/2, reachability schema 1, nested
 graph schemas 1/2, cascade explain schema 1, repair proposal/plan/dry-run/Change Receipt schemas
 1.0.0, check-policy/Verification Receipt schemas 1.4.0 with canonical
 1.0.0/1.1.0/1.2.0/1.3.0 read support, fixed test/browser evidence schemas 1.0.0, patch format 1,
@@ -134,8 +153,10 @@ Consumers moving an existing checkout must:
 
 `CLASS_NAME_FORMAT_VERSION` remains 1 because `pc_` plus lowercase base 36 did not change. Every
 previously generated class must nevertheless be treated as obsolete because the encoded StyleId
-contract changed. ThemeId and the theme binary remain format 1; unchanged theme bytes do not
-preserve a style ID across the StyleId format transition.
+contract changed. ThemeId format 2 and theme-binary format 2 are also incompatible with their format-1 candidates.
+Consumers must regenerate theme binaries and every ThemeId-derived artifact; the decoder rejects a
+format-1 theme binary with an explicit unsupported-version error rather than reinterpreting its
+stored FNV identity under SHA-256 semantics.
 
 ## Candidate SemVer policy
 

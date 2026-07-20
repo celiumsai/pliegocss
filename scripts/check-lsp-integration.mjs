@@ -113,7 +113,7 @@ const index = {
   physicalCoverage: "compiler-verified-complete",
   styleIdFormatVersion: 2,
   classNameFormatVersion: 1,
-  themeIdFormatVersion: 1,
+  themeIdFormatVersion: 2,
   themeId: "seed",
   targets: "modern",
   format: "minified",

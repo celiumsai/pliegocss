@@ -118,14 +118,18 @@ contrast/focus/motion/forced-colors policy relationships and hosted evidence are
 The path loaders accept only regular, non-link UTF-8 files and reject directories, symbolic links,
 Windows reparse points, and documents larger than 16 MiB. This is a fail-closed source-input
 contract: repositories must materialize the Resolver/token file rather than route it through a
-symlink. The format parser accepts up to 64 nested group levels and 65,536 tokens.
+symlink. The format parser accepts up to 64 nested group levels and 65,536 tokens. Alias resolution
+uses indexed token paths and pointers plus an iterative state machine rather than recursive token
+calls. It rejects dependency chains deeper than 256 tokens and resolution traversals above 100,000
+work units before retaining an unbounded expansion.
 It:
 
 - resolves curly-brace aliases and same-document JSON Pointer references, including references into
   composite token properties;
 - inherits `$type` and `$deprecated` from parent groups;
 - accepts group `$root` tokens;
-- detects reference cycles and declared/referenced type mismatches;
+- detects shallow or deep reference cycles without growing the native stack and rejects
+  declared/referenced type mismatches;
 - validates every value projected into the PliegoCSS registry;
 - preserves the semantic JSON value and unknown extension metadata in `DtcgTheme`;
 - rejects malformed `$extensions` and canonical-name collisions instead of selecting a winner;

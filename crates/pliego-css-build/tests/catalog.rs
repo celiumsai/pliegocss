@@ -13,11 +13,11 @@ fn seed_catalog_bytes_match_the_existing_cli_contract() {
 
     assert_eq!(
         sha256_hex(json.as_bytes()),
-        "02221dc2336517805578366f8d5af2d45ae28eeae7cd9de9f398479069cb018f"
+        "b5a2092fdfd079e2b586ac9bd850ead20599e4d9176cc358cc8bd1f10ea6273c"
     );
     assert_eq!(
         sha256_hex(markdown.as_bytes()),
-        "a58b55b2b947ae62e341027c1d81e40edbcb9bd2f3c55532b796104618f3d5c0"
+        "2efd4bf3cc25162de2996ae364876f61e4c8c98626006782bd0648ee149d335e"
     );
     assert!(json.ends_with('\n'));
     assert!(markdown.ends_with('\n'));

@@ -13,6 +13,7 @@ use pliego_css_ir::StyleId;
 use serde::{Deserialize, Serialize};
 
 mod critical;
+mod generic_css;
 mod token_usage;
 
 pub use critical::{
@@ -21,6 +22,12 @@ pub use critical::{
     CriticalCssRouteInput, CriticalEvidenceInput, CriticalRouteInput, CriticalSelection,
     CriticalStyleInput, build_critical_css_manifest, build_critical_evidence,
     parse_critical_css_manifest, parse_critical_evidence, verify_critical_evidence,
+};
+
+pub use generic_css::{
+    GENERIC_CSS_USAGE_FILE, GENERIC_CSS_USAGE_SCHEMA_VERSION, GenericCssUsageEntry,
+    GenericCssUsageReport, GenericCssUsageStatus, build_generic_css_usage_report,
+    parse_generic_css_usage_report,
 };
 
 pub use token_usage::{

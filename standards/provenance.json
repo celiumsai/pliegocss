@@ -145,7 +145,7 @@
         },
         {
           "subject": "pnpm-lock.yaml",
-          "value": "sha256:c4f9b91705418524bd91178fd417e3b02585dfce613c2a56e6cef25a6c8c1049"
+          "value": "sha256:cac9737002a9ce759757ac63e20b3615f230f9fbc41c8240f65dcde41decb34e"
         },
         {
           "subject": "tailwindcss@4.3.2",

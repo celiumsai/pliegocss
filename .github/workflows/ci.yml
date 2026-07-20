@@ -101,6 +101,12 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22.13.0
+      - name: Verify release profile registry
+        run: node scripts/check-release.test.mjs
+      - name: Check documentation graph
+        run: node scripts/check-docs.mjs
+      - name: Check compatibility policy
+        run: node scripts/check-compatibility-policy.mjs
       - name: Install rustfmt
         run: rustup toolchain install 1.96.0 --profile minimal --component rustfmt
       - name: Check formatting

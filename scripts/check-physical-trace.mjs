@@ -21,6 +21,7 @@ const targetDir = join(root, "target");
 const reachabilityName = "pliego.reachability.json";
 const expectedCss = readFileSync(join(fixture, "expected.css"));
 const expectedManifest = readFileSync(join(fixture, "expected.manifest.json"));
+const updateGoldens = process.env.PLIEGOCSS_UPDATE_GOLDENS === "1";
 
 const physicalEdgeKinds = new Set([
   "declarationContributesToPhysicalDeclaration",
@@ -447,7 +448,7 @@ function assertManifest(manifest, css, schemaVersion, targets, format) {
   assert(manifest.schemaVersion === schemaVersion, `expected manifest schema ${schemaVersion}`);
   assert(manifest.styleIdFormatVersion === 2, "StyleId format version drifted");
   assert(manifest.classNameFormatVersion === 1, "class-name format version drifted");
-  assert(manifest.themeIdFormatVersion === 1, "theme ID format version drifted");
+  assert(manifest.themeIdFormatVersion === 2, "theme ID format version drifted");
   assert(/^[0-9a-f]{32}$/.test(manifest.themeId), "ThemeId is not fixed-width hex");
   assert(manifest.targets === targets, `expected target contract ${targets}`);
   assert(manifest.format === format, `expected CSS format ${format}`);
@@ -995,6 +996,13 @@ const manifestThree = JSON.parse(readFileSync(join(project, "out", "schema-3.man
 const manifestFour = JSON.parse(readFileSync(join(project, "out", "schema-4.manifest.json")));
 const manifestFiveBytes = readFileSync(join(project, "out", "schema-5.manifest.json"));
 const manifestFive = JSON.parse(manifestFiveBytes);
+
+if (updateGoldens) {
+  writeFileSync(join(fixture, "expected.css"), cssFive);
+  writeFileSync(join(fixture, "expected.manifest.json"), manifestFiveBytes);
+  process.stdout.write("physical trace goldens updated\n");
+  process.exit(0);
+}
 
 assertEqual(cssThree, cssFour, "schema 4 changed schema-3 CSS bytes");
 assertEqual(cssFour, cssFive, "schema 5 changed established CSS bytes");

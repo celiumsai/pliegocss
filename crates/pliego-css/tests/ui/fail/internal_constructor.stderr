@@ -1,0 +1,5 @@
+error[E0599]: no associated function or constant named `__from_compiled_id` found for struct `Style` in the current scope
+ --> tests/ui/fail/internal_constructor.rs:4:26
+  |
+4 |     let _forged = Style::__from_compiled_id(42);
+  |                          ^^^^^^^^^^^^^^^^^^ associated function or constant not found in `Style`

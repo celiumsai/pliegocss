@@ -1,0 +1,14 @@
+.card {
+  composes: base from "./base.module.css";
+  border: 1px solid #cbd5e1;
+  border-radius: 1rem;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.selected {
+  border-color: #2563eb;
+}

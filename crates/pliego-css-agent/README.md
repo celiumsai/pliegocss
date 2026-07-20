@@ -16,6 +16,6 @@ launches either runner. Supplementary policies/evidence are exact path/bytes/SHA
 below the source root. Plan or policy content cannot provide an executable or shell command.
 Every check publishes its complete canonical FindingDocument beside the receipt with
 create-if-absent, receipt-last rollback. See the
-[repair-plan reference](https://github.com/celiums/pliegocss/blob/main/docs/reference/repair-plan-schema.md).
+[repair-plan reference](https://github.com/celiumsai/pliegocss/blob/main/docs/reference/repair-plan-schema.md).
 The post-change policy, supplementary-input, evidence, and receipt contract is documented in the
-[repair-verification reference](https://github.com/celiums/pliegocss/blob/main/docs/reference/repair-verification-schema.md).
+[repair-verification reference](https://github.com/celiumsai/pliegocss/blob/main/docs/reference/repair-verification-schema.md).

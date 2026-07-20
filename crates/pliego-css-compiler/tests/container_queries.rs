@@ -20,9 +20,9 @@ fn establishes_and_queries_an_inline_size_container() {
 
     assert_eq!(
         format!("{:032x}", style.id.get()),
-        "f976f6d0e7835e3e5e32fa888d761f24"
+        "11893074aaaf88f7b356ad6d53a913e2"
     );
-    assert_eq!(class, "pc_eroigm87atuqahmzr9eeddu78");
+    assert_eq!(class, "pc_11dgqogrs5aq1d9ocwyulg6w2");
 
     assert_eq!(
         emit_css(&style).expect("container fixture must emit"),

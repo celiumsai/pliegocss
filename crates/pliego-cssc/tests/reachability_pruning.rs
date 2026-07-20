@@ -194,6 +194,40 @@ fn reachability_pruning_is_fail_closed_deterministic_and_shared_by_artifact_comm
     assert_bundle_contract(&fixture, &evidence);
 }
 
+#[cfg(any(unix, windows))]
+#[test]
+fn reachability_rejects_link_like_inputs() {
+    let fixture = Fixture::new();
+    let target = fixture.root().join("reachability.json");
+    let link = fixture.root().join("linked-reachability.json");
+    #[cfg(unix)]
+    std::os::unix::fs::symlink(&target, &link).unwrap();
+    #[cfg(windows)]
+    if std::os::windows::fs::symlink_file(&target, &link).is_err() {
+        return;
+    }
+    let output = run(
+        fixture.root(),
+        &arguments(&[
+            "compile",
+            "--source",
+            "src",
+            "--seed",
+            "--output",
+            "out/linked.css",
+            "--manifest",
+            "out/linked.manifest.json",
+            "--manifest-version",
+            "4",
+            "--reachability",
+            "linked-reachability.json",
+            "--prune-unreachable",
+        ]),
+    );
+    assert_failure(&output, "bounded regular file");
+    assert!(!fixture.root().join("out/linked.css").exists());
+}
+
 #[test]
 fn pruned_theme_uses_application_wide_references_across_bundles() {
     const THEME_SOURCE: &str = "fn shell() { let _ = pc!(\"p-4\"); }\n";

@@ -6,14 +6,14 @@ rust-version = "1.85"
 publish = false
 
 [dependencies]
-css = { package = "pliego-css", path = "../../crates/pliego-css", version = "=0.0.0" }
-pliego-css-agent = { path = "../../crates/pliego-css-agent", version = "=0.0.0" }
-pliego-css-ownership = { path = "../../crates/pliego-css-ownership", version = "=0.0.0" }
-pliego-css-source = { path = "../../crates/pliego-css-source", version = "=0.0.0" }
-pliego-css-usage = { path = "../../crates/pliego-css-usage", version = "=0.0.0" }
+css = { package = "pliego-css", path = "../../crates/pliego-css", version = "=0.1.0-rc.1" }
+pliego-css-agent = { path = "../../crates/pliego-css-agent", version = "=0.1.0-rc.1" }
+pliego-css-ownership = { path = "../../crates/pliego-css-ownership", version = "=0.1.0-rc.1" }
+pliego-css-source = { path = "../../crates/pliego-css-source", version = "=0.1.0-rc.1" }
+pliego-css-usage = { path = "../../crates/pliego-css-usage", version = "=0.1.0-rc.1" }
 
 [build-dependencies]
-pliego-css-build = { path = "../../crates/pliego-css-build", version = "=0.0.0" }
+pliego-css-build = { path = "../../crates/pliego-css-build", version = "=0.1.0-rc.1" }
 
 [workspace]
 resolver = "2"

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "corpusVersion": "contrast-literal-srgb-1",
+  "claimLimit": "Synthetic declared literal opaque in-gamut sRGB contrast only; not WCAG certification.",
+  "abstentionCases": [
+    {"id":"runtime-var","foreground":"var(--text)","background":"#ffffff","minimumRatioMilli":4500,"expected":"unverified"},
+    {"id":"current-color","foreground":"currentColor","background":"#ffffff","minimumRatioMilli":4500,"expected":"unverified"},
+    {"id":"system-color","foreground":"CanvasText","background":"Canvas","minimumRatioMilli":4500,"expected":"unverified"},
+    {"id":"alpha-color","foreground":"rgb(0 0 0 / 50%)","background":"#ffffff","minimumRatioMilli":4500,"expected":"unverified"}
+  ],
+  "cases": [
+    {"id":"black-white-aa","foreground":"#000000","background":"#ffffff","minimumRatioMilli":4500,"expected":"pass"},
+    {"id":"white-black-aaa","foreground":"#ffffff","background":"#000000","minimumRatioMilli":7000,"expected":"pass"},
+    {"id":"navy-white-aa","foreground":"#000080","background":"#ffffff","minimumRatioMilli":4500,"expected":"pass"},
+    {"id":"red-white-large","foreground":"#ff0000","background":"#ffffff","minimumRatioMilli":3000,"expected":"pass"},
+    {"id":"gray-white-aa-fail","foreground":"#777777","background":"#ffffff","minimumRatioMilli":4500,"expected":"violation"},
+    {"id":"white-yellow-aa-fail","foreground":"#ffffff","background":"#ffff00","minimumRatioMilli":4500,"expected":"violation"},
+    {"id":"black-navy-aa-fail","foreground":"#000000","background":"#000080","minimumRatioMilli":4500,"expected":"violation"},
+    {"id":"red-white-aaa-fail","foreground":"#ff0000","background":"#ffffff","minimumRatioMilli":7000,"expected":"violation"}
+  ]
+}

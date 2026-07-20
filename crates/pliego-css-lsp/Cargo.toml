@@ -16,6 +16,7 @@ name = "pliego-css-lsp"
 path = "src/main.rs"
 
 [dependencies]
+pliego-css-io.workspace = true
 pliego-css-parser.workspace = true
 pliego-css-source.workspace = true
 serde = { version = "1.0.228", features = ["derive"] }

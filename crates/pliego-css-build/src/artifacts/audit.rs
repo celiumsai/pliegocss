@@ -1,9 +1,13 @@
 use std::collections::BTreeMap;
 
 use lightningcss::media_query::{MediaFeatureName, QueryFeature};
+use lightningcss::properties::Property;
 use lightningcss::rules::container::ContainerCondition;
 use lightningcss::rules::{CssRule, CssRuleList, Location};
-use lightningcss::stylesheet::{ParserFlags, ParserOptions, StyleSheet};
+use lightningcss::selector::{Component, PseudoClass};
+use lightningcss::stylesheet::{ParserFlags, ParserOptions, PrinterOptions, StyleSheet};
+
+use lightningcss::values::color::{CssColor, LABColor};
 
 use super::{
     CompatibilityProfile, Finding, FindingCause, FindingDocument, FindingEvidence,
@@ -25,6 +29,7 @@ const BACKEND_NAME: &str = "lightningcss";
 const BACKEND_VERSION: &str = "1.0.0-alpha.71";
 const CLASSIFIER_VERSION: &str = "css-rule-features-1";
 const MAX_DUPLICATE_FINGERPRINT_EVIDENCE: usize = 256;
+const MAX_DECLARATION_IDENTITY_EVIDENCE: usize = 4096;
 
 /// Result of standards-first CSS ingestion and its canonical findings.
 #[derive(Debug, Eq, PartialEq)]
@@ -62,6 +67,14 @@ struct Metrics {
     style_declarations: usize,
     important_declarations: usize,
     max_specificity: u32,
+    typed_declarations: usize,
+    unparsed_declarations: usize,
+    custom_declarations: usize,
+    selector_components: usize,
+    selector_combinators: usize,
+    selector_attributes: usize,
+    selector_pseudo_classes: usize,
+    selector_pseudo_elements: usize,
 }
 
 #[derive(Clone, Debug)]
@@ -228,10 +241,58 @@ pub fn audit_standard_css_with_budgets(
                     "lightningcss-ast",
                 ),
                 (
+                    "selector-components",
+                    metrics.selector_components.to_string(),
+                    Some("components"),
+                    "lightningcss-selector-ast",
+                ),
+                (
+                    "selector-combinators",
+                    metrics.selector_combinators.to_string(),
+                    Some("combinators"),
+                    "lightningcss-selector-ast",
+                ),
+                (
+                    "selector-attributes",
+                    metrics.selector_attributes.to_string(),
+                    Some("attributes"),
+                    "lightningcss-selector-ast",
+                ),
+                (
+                    "selector-pseudo-classes",
+                    metrics.selector_pseudo_classes.to_string(),
+                    Some("pseudo-classes"),
+                    "lightningcss-selector-ast",
+                ),
+                (
+                    "selector-pseudo-elements",
+                    metrics.selector_pseudo_elements.to_string(),
+                    Some("pseudo-elements"),
+                    "lightningcss-selector-ast",
+                ),
+                (
                     "style-declarations",
                     metrics.style_declarations.to_string(),
                     Some("declarations"),
                     "lightningcss-ast",
+                ),
+                (
+                    "typed-declarations",
+                    metrics.typed_declarations.to_string(),
+                    Some("declarations"),
+                    "lightningcss-typed-properties",
+                ),
+                (
+                    "unparsed-declarations",
+                    metrics.unparsed_declarations.to_string(),
+                    Some("declarations"),
+                    "lightningcss-unparsed-properties",
+                ),
+                (
+                    "custom-declarations",
+                    metrics.custom_declarations.to_string(),
+                    Some("declarations"),
+                    "lightningcss-custom-properties",
                 ),
                 (
                     "important-declarations",
@@ -281,6 +342,7 @@ pub fn audit_standard_css_with_budgets(
                     .map_err(|error| error.to_string())?;
             }
             finding = add_duplicate_fingerprint_evidence(finding, budget_metrics)?;
+            finding = add_declaration_identity_evidence(finding, budget_metrics)?;
             let (mut compatibility, rejected) = compatibility_findings(
                 logical_path,
                 css,
@@ -384,6 +446,52 @@ fn add_duplicate_fingerprint_evidence(
             FindingEvidence::new(
                 "metric",
                 "semantic-fingerprint-evidence-truncated",
+                if truncated { "true" } else { "false" },
+                "pliegocss-budget-engine",
+            )
+            .map_err(|error| error.to_string())?,
+        )
+        .map_err(|error| error.to_string())
+}
+
+fn add_declaration_identity_evidence(
+    mut finding: Finding,
+    metrics: &CssBudgetMetrics,
+) -> Result<Finding, String> {
+    let identities = metrics.declaration_identities().collect::<Vec<_>>();
+    let truncated = identities.len() > MAX_DECLARATION_IDENTITY_EVIDENCE;
+    for (index, (identity, occurrences)) in identities
+        .into_iter()
+        .take(MAX_DECLARATION_IDENTITY_EVIDENCE)
+        .enumerate()
+    {
+        finding = finding
+            .with_evidence(
+                FindingEvidence::new(
+                    "identity",
+                    format!("generic-css-declaration-{:04}", index + 1),
+                    format!("{identity};occurrences={occurrences}"),
+                    "pliegocss-generic-css-declaration-v1",
+                )
+                .map_err(|error| error.to_string())?,
+            )
+            .map_err(|error| error.to_string())?;
+    }
+    finding
+        .with_evidence(
+            FindingEvidence::new(
+                "metric",
+                "generic-css-declaration-identities",
+                metrics.declaration_identities().count().to_string(),
+                "pliegocss-budget-engine",
+            )
+            .map_err(|error| error.to_string())?,
+        )
+        .map_err(|error| error.to_string())?
+        .with_evidence(
+            FindingEvidence::new(
+                "metric",
+                "generic-css-declaration-identity-evidence-truncated",
                 if truncated { "true" } else { "false" },
                 "pliegocss-budget-engine",
             )
@@ -776,7 +884,7 @@ fn partial_coverage_finding(
         FindingCause::new(
             "compatibility.classifier",
             "partial-coverage",
-            "declaration values and the complete selector feature surface are not classified yet",
+            "five representative declaration/value features and five selector features are classified; the complete surfaces remain unclassified",
         )
         .map_err(|error| error.to_string())?,
     )
@@ -854,6 +962,8 @@ fn feature_finding(
     .with_context("compat-key", feature.compat_key)
     .map_err(|error| error.to_string())?
     .with_context("feature-id", feature.id)
+    .map_err(|error| error.to_string())?
+    .with_context("classifier-version", CLASSIFIER_VERSION)
     .map_err(|error| error.to_string())?
     .with_context("target-profile", profile.as_str())
     .map_err(|error| error.to_string())?
@@ -1211,13 +1321,169 @@ fn inventory_style(
     metrics.style_declarations +=
         rule.declarations.declarations.len() + rule.declarations.important_declarations.len();
     metrics.important_declarations += rule.declarations.important_declarations.len();
+    inventory_declaration_shapes(
+        rule.declarations
+            .declarations
+            .iter()
+            .chain(&rule.declarations.important_declarations),
+        metrics,
+    );
+    for declaration in rule
+        .declarations
+        .declarations
+        .iter()
+        .chain(&rule.declarations.important_declarations)
+    {
+        let serialized = declaration
+            .to_css_string(false, PrinterOptions::default())
+            .unwrap_or_default();
+        if serialized.contains("color-mix(") {
+            let id = if color_mix_has_three_or_more_colors(&serialized) {
+                "color-mix-variadic"
+            } else {
+                "color-mix"
+            };
+            observe_feature(
+                features,
+                id,
+                rule.loc,
+                SourceMarker::Token("color-mix(".into()),
+            );
+            continue;
+        }
+        match declaration {
+            Property::UserSelect(..) => observe_feature(
+                features,
+                "user-select",
+                rule.loc,
+                SourceMarker::Token("user-select".into()),
+            ),
+            Property::AspectRatio(..) => observe_feature(
+                features,
+                "aspect-ratio",
+                rule.loc,
+                SourceMarker::Token("aspect-ratio".into()),
+            ),
+            Property::Color(color) => observe_color_features(features, color, rule.loc),
+            _ => {}
+        }
+    }
     for selector in &rule.selectors.0 {
         metrics.max_specificity = metrics.max_specificity.max(selector.specificity());
+        inventory_selector_shapes(selector.iter_raw_match_order(), metrics);
+        for component in selector.iter_raw_match_order() {
+            match component {
+                Component::NonTSPseudoClass(PseudoClass::FocusVisible) => {
+                    observe_feature(features, "focus-visible", rule.loc, SourceMarker::Selector);
+                }
+                Component::Has(_) => {
+                    observe_feature(features, "has", rule.loc, SourceMarker::Selector);
+                }
+                Component::Is(_) => {
+                    observe_feature(features, "is", rule.loc, SourceMarker::Selector);
+                }
+                Component::Where(_) => {
+                    observe_feature(features, "where", rule.loc, SourceMarker::Selector);
+                }
+                Component::Negation(selectors) if selectors.len() > 1 => {
+                    observe_feature(features, "not", rule.loc, SourceMarker::Selector);
+                }
+                _ => {}
+            }
+        }
     }
     if !rule.rules.0.is_empty() {
         observe_feature(features, "nesting", rule.loc, SourceMarker::Selector);
     }
     inventory_rules(&rule.rules, metrics, features, unclassified);
+}
+
+fn color_mix_has_three_or_more_colors(serialized: &str) -> bool {
+    let Some(start) = serialized.find("color-mix(") else {
+        return false;
+    };
+    let mut depth = 0_u32;
+    let mut commas = 0_u8;
+    for character in serialized[start + "color-mix(".len()..].chars() {
+        match character {
+            '(' => depth += 1,
+            ')' if depth == 0 => break,
+            ')' => depth -= 1,
+            ',' if depth == 0 => commas = commas.saturating_add(1),
+            _ => {}
+        }
+    }
+    commas >= 3
+}
+
+fn observe_color_features(features: &mut Vec<FeatureObservation>, color: &CssColor, loc: Location) {
+    match color {
+        CssColor::Predefined(_) => observe_feature(
+            features,
+            "color-function",
+            loc,
+            SourceMarker::Token("color(".into()),
+        ),
+        CssColor::LAB(color)
+            if matches!(color.as_ref(), LABColor::OKLAB(_) | LABColor::OKLCH(_)) =>
+        {
+            observe_feature(
+                features,
+                "oklab",
+                loc,
+                SourceMarker::Token(if matches!(color.as_ref(), LABColor::OKLCH(_)) {
+                    "oklch(".into()
+                } else {
+                    "oklab(".into()
+                }),
+            );
+        }
+        _ => {}
+    }
+}
+
+fn inventory_selector_shapes<'i: 'a, 'a>(
+    components: impl Iterator<Item = &'a Component<'i>>,
+    metrics: &mut Metrics,
+) {
+    for component in components {
+        metrics.selector_components += 1;
+        match component {
+            Component::Combinator(_) => metrics.selector_combinators += 1,
+            Component::AttributeInNoNamespaceExists { .. }
+            | Component::AttributeInNoNamespace { .. }
+            | Component::AttributeOther(_) => metrics.selector_attributes += 1,
+            Component::PseudoElement(_) | Component::Slotted(_) | Component::Part(_) => {
+                metrics.selector_pseudo_elements += 1;
+            }
+            Component::Negation(_)
+            | Component::Root
+            | Component::Empty
+            | Component::Scope
+            | Component::Nth(_)
+            | Component::NthOf(_)
+            | Component::NonTSPseudoClass(_)
+            | Component::Host(_)
+            | Component::Where(_)
+            | Component::Is(_)
+            | Component::Any(_, _)
+            | Component::Has(_) => metrics.selector_pseudo_classes += 1,
+            _ => {}
+        }
+    }
+}
+
+fn inventory_declaration_shapes<'i: 'a, 'a>(
+    declarations: impl Iterator<Item = &'a Property<'i>>,
+    metrics: &mut Metrics,
+) {
+    for declaration in declarations {
+        match declaration {
+            Property::Unparsed(_) => metrics.unparsed_declarations += 1,
+            Property::Custom(_) => metrics.custom_declarations += 1,
+            _ => metrics.typed_declarations += 1,
+        }
+    }
 }
 
 fn observe_container_condition(

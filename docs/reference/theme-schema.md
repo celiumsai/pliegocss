@@ -122,6 +122,13 @@ lowercase `ThemeId`, so a format migration cannot alias an older artifact. The b
 magic header, format version, size limits, UTF-8 validation, registry validation, and a stored-ID
 check when decoded.
 
+ThemeId format 2 hashes an explicitly domain-separated and length-framed canonical stream with
+SHA-256. The first 16 digest bytes, interpreted big-endian, form the `ThemeId` (with all-zero remapped
+to one). Token and breakpoint records include explicit section/record tags, counts, fixed-width IDs,
+and UTF-8 byte lengths. Input definitions are sorted before encoding, so order does not affect the
+stream; any canonical value change does. Because the stored identity semantics changed, the current
+theme binary is format 2. Format-1 binaries are rejected explicitly and must be regenerated.
+
 The decoder rejects artifacts larger than 16 MiB, more than 65,536 entries in either the token or
 breakpoint list, and names or values larger than 1 MiB each. It also rejects truncation, unknown
 token-kind tags, trailing data, unsupported format versions, and records whose order or encoding is

@@ -1,6 +1,15 @@
 //! Internal CLI behavior tests.
+use super::atomic_write::{commit_prepared, commit_prepared_with};
+use super::catalog::check_catalog;
+use super::explain::build_explanation;
+use super::formatter::{
+    format_line_document, format_utility_source, publish_utility_rewrites, run_rust_utility_format,
+};
+use super::source_candidates::candidates_from_rust;
 use super::*;
-use pliego_css_build::artifacts::optimize_css;
+use pliego_css_agent::{RepairCliFormat, RepairFixMode};
+use pliego_css_build::artifacts::{CatalogOutputFormat, optimize_css, render_catalog};
+use pliego_css_compiler::utility_catalog;
 use pliego_css_control::projection::build_flat_token_measurements;
 use pliego_css_ir::TokenKind;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -1908,12 +1917,21 @@ fn format_defaults_to_minified_and_is_accepted_by_every_command() {
             | Command::Check(arguments)
             | Command::Inspect(arguments) => arguments.format,
             Command::Audit(_)
+            | Command::TransformCss(_)
             | Command::Watch(_)
             | Command::Bundle(_)
             | Command::Catalog(_)
             | Command::Compatibility(_)
+            | Command::GenericCssUsage { .. }
             | Command::Inventory(_, _)
             | Command::InventoryProject(_)
+            | Command::MigrationProjectPlan(_)
+            | Command::MigrationSidecarApply { .. }
+            | Command::MigrationSidecarRollback { .. }
+            | Command::MigrationReplaceApply { .. }
+            | Command::MigrationReplaceRollback { .. }
+            | Command::MigrationGroupApply { .. }
+            | Command::MigrationGroupRollback { .. }
             | Command::Explain(_)
             | Command::ExplainCascade(_)
             | Command::Plan(_)
@@ -1940,6 +1958,34 @@ fn format_defaults_to_minified_and_is_accepted_by_every_command() {
         panic!("watch command")
     };
     assert_eq!(watch.format, CssFormat::Pretty);
+}
+
+#[test]
+fn parses_closed_standard_css_transform_command() {
+    assert_eq!(
+        parse_arguments(os(&[
+            "transform-css",
+            "--input",
+            "src/app.css",
+            "--output",
+            "dist/app.css",
+            "--targets",
+            "modern",
+            "--format",
+            "pretty",
+            "--control-dir",
+            "dist/control",
+        ])),
+        Ok(Command::TransformCss(StandardCssTransformArgs {
+            input: PathBuf::from("src/app.css"),
+            output: PathBuf::from("dist/app.css"),
+            targets: TargetContract::Modern,
+            format: CssFormat::Pretty,
+            check: false,
+            control_dir: Some(PathBuf::from("dist/control")),
+        }))
+    );
+    assert!(parse_arguments(os(&["transform-css", "--input", "app.css"])).is_err());
 }
 
 #[test]

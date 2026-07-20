@@ -7,19 +7,23 @@ const ROOT = resolve(import.meta.dirname, "..");
 const EXTENSION = resolve(ROOT, "editors", "vscode");
 const VSIX = resolve(ROOT, "target", "pliegocss-vscode-0.0.0.vsix");
 const pnpmScript = process.env.npm_execpath;
+const fallbackPnpm = [
+  "C:/Program Files/nodejs/node_modules/npm/bin/npm-cli.js",
+  "exec", "--yes", "--package=pnpm@10.14.0", "--", "pnpm",
+];
 
 function fail(message) {
   throw new Error(message);
 }
 
 function run(args, cwd = ROOT) {
-  const command = pnpmScript ? process.execPath : "pnpm";
-  const commandArgs = pnpmScript ? [pnpmScript, ...args] : args;
+  const command = pnpmScript ? process.execPath : process.execPath;
+  const commandArgs = pnpmScript ? [pnpmScript, ...args] : [...fallbackPnpm, ...args];
   const result = spawnSync(command, commandArgs, {
     cwd,
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
-    shell: !pnpmScript && process.platform === "win32",
+    shell: false,
   });
   if (result.error) fail(`cannot run pnpm: ${result.error.message}`);
   if (result.status !== 0) fail(`${result.stdout}${result.stderr}`.trim());

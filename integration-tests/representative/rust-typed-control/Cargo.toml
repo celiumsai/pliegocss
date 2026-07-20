@@ -1,0 +1,11 @@
+[package]
+name = "pliegocss-representative-rust-control"
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.85"
+publish = false
+
+[dependencies]
+pliego-css = { path = "../../../crates/pliego-css" }
+
+[workspace]

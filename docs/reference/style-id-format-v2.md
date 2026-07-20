@@ -45,7 +45,7 @@ their raw bytes, and removes exact duplicate records. The resulting order and co
 Authoring order, assignment-table order, and duplicate provenance therefore do not affect identity.
 
 The explicit theme-format field prevents the same 128 theme bits from being interpreted under an
-unreported ThemeId contract. StyleId format 2 does not change `THEME_ID_FORMAT_VERSION = 1` or the
+unreported ThemeId contract. The current stream embeds `THEME_ID_FORMAT_VERSION = 2` and the
 theme binary format.
 
 ## Assignment record
@@ -208,9 +208,9 @@ Current frozen examples are:
 
 | Theme/style | StyleId | Class |
 |---|---|---|
-| Seed theme, `flex gap-4` | `321e429fcbcbbfd069227acdeda4bb0a` | `pc_2ytdwih5nln6228oqp6k413be` |
-| Minimal compatibility theme, `flex gap-gutter tablet:grid` | `c6f70f4026b80188f017e1653097eaab` | `pc_bs1v0evmt6fek89jw23w99xgr` |
-| Seed theme, `container-inline cq-sm:grid` | `f976f6d0e7835e3e5e32fa888d761f24` | `pc_eroigm87atuqahmzr9eeddu78` |
+| Seed theme, `flex gap-4` | `70cb04ef9bf9621f5826351f1778f68e` | `pc_6oe73ec16rbb7ublcoa3bpzf2` |
+| Minimal compatibility theme, `flex gap-gutter tablet:grid` | `e0b572e3fdfbf091d9a2ddb126278634` | `pc_dax2y1pql4op1rjk97yv9e88k` |
+| Seed theme, `container-inline cq-sm:grid` | `11893074aaaf88f7b356ad6d53a913e2` | `pc_11dgqogrs5aq1d9ocwyulg6w2` |
 
 ## Document versions
 
@@ -220,7 +220,7 @@ Artifacts that expose identity now report all three related versions at the top 
 {
   "styleIdFormatVersion": 2,
   "classNameFormatVersion": 1,
-  "themeIdFormatVersion": 1
+  "themeIdFormatVersion": 2
 }
 ```
 

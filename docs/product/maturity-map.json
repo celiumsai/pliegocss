@@ -1,0 +1,243 @@
+{
+  "schemaVersion": 1,
+  "statusDate": "2026-07-19",
+  "releaseTarget": "0.1.0",
+  "levels": {
+    "stable": "Selected for the supported 0.1.x contract and protected by local deterministic gates; this classification activates as a SemVer promise only at RC.",
+    "beta": "Implemented and useful, but missing one or more release-grade host, corpus, portability, or completeness gates.",
+    "experimental": "Intentional research or bounded preview surface; semantics, completeness, or host support may change before promotion."
+  },
+  "capabilities": [
+    {
+      "id": "typed-rust-authoring",
+      "title": "Typed Rust authoring with pc!, pcx!, Style, and StyleId",
+      "maturity": "stable",
+      "scope": "Visible literals, statically enumerable conditional branches, sealed Style construction, Cargo dependency renames, and class interoperability.",
+      "owners": ["crates/pliego-css", "crates/pliego-css-macros", "crates/pliego-css-parser", "crates/pliego-css-compiler"],
+      "schemas": ["StyleId format 2", "class-name format 1"],
+      "gates": ["check:api", "check:properties", "check:determinism"],
+      "graduationCriteria": ["Keep the selected public API compiling on Rust 1.85.", "Preserve frozen identity/class vectors for identical semantic inputs."],
+      "limitations": ["The full public Rust workspace surface and crate boundaries are not stable application API."]
+    },
+    {
+      "id": "deterministic-utility-compilation",
+      "title": "Deterministic typed-utility CSS compilation",
+      "maturity": "stable",
+      "scope": "Semantic lowering, conflict detection, target transformation, pretty/minified output, and deterministic manifests for typed inputs.",
+      "owners": ["crates/pliego-css-compiler", "crates/pliego-css-build", "crates/pliego-cssc"],
+      "schemas": ["semantic IR format 2", "manifest schema 3"],
+      "gates": ["check:determinism", "check:properties", "check:packages"],
+      "graduationCriteria": ["Retain byte identity and MSRV package replay.", "Keep backend target configuration versioned."],
+      "limitations": ["This does not claim a complete arbitrary standard-CSS compile/minify product path."]
+    },
+    {
+      "id": "theme-toml-bridge",
+      "title": "Typed TOML themes and Cargo theme bridge",
+      "maturity": "stable",
+      "scope": "Schema-1 TOML themes, theme! build integration, bounded input, and versioned theme identity/artifacts.",
+      "owners": ["crates/pliego-css-theme", "crates/pliego-css-config", "crates/pliego-css-build"],
+      "schemas": ["theme configuration schema 1", "ThemeId format 2", "theme binary format 2"],
+      "gates": ["check:api", "check:packages", "check:portability"],
+      "graduationCriteria": ["Preserve format rejection and exact-version bridge behavior."],
+      "limitations": ["Build helper implementation types remain internal."]
+    },
+    {
+      "id": "cli-one-shot-contracts",
+      "title": "One-shot compiler, inspection, catalog, explain, and format CLI",
+      "maturity": "stable",
+      "scope": "Documented finite commands, structured failures, atomic outputs, and read-only check modes.",
+      "owners": ["crates/pliego-cssc"],
+      "schemas": ["diagnostic schema 1", "inspect schema 2", "catalog schema 3", "explain schema 2"],
+      "gates": ["verify:fast", "check:getting-started", "check:packages"],
+      "graduationCriteria": ["Keep documented flags and successful output bytes compatible through 0.1.x."],
+      "limitations": ["Watch is classified separately because it is a long-lived producer."]
+    },
+    {
+      "id": "audit-report-projections",
+      "title": "Standard-CSS audit and equivalent human/JSON/SARIF reports",
+      "maturity": "stable",
+      "scope": "Bounded standard-CSS ingestion and equivalent canonical finding projections with exact spans.",
+      "owners": ["crates/pliego-css-build", "crates/pliego-css-control", "crates/pliego-cssc"],
+      "schemas": ["finding schema 1.0.0", "SARIF 2.1.0 projection"],
+      "gates": ["verify:fast", "check:attribution"],
+      "graduationCriteria": ["Maintain finding/severity/span parity across all three projections."],
+      "limitations": ["Complete declaration and selector policy coverage is not implied."]
+    },
+    {
+      "id": "safe-filesystem-publication",
+      "title": "Bounded filesystem input and rollback-capable publication",
+      "maturity": "stable",
+      "scope": "No-follow bounded reads, link/reparse rejection, coordinated locks, collision-safe reservations, rollback, and optional durability.",
+      "owners": ["crates/pliego-css-io", "crates/pliego-css-publication"],
+      "schemas": [],
+      "gates": ["verify:fast", "check:packages", "check:portability"],
+      "graduationCriteria": ["Retain Windows and Unix contract tests and dependency-light leaf crates."],
+      "limitations": ["Grouped publication is rollback-capable, not cross-file crash-atomic."]
+    },
+    {
+      "id": "compatibility-policy",
+      "title": "Versioned Baseline compatibility policy",
+      "maturity": "beta",
+      "scope": "Official-data-bound profiles and fail-closed decisions for the currently classified feature set.",
+      "owners": ["crates/pliego-css-build", "crates/pliego-cssc"],
+      "schemas": ["compatibility policy schema 2 / policy 7"],
+      "gates": ["check:compatibility", "check:attribution"],
+      "graduationCriteria": ["Classify the supported declaration and selector corpus completely.", "Add reviewed fallback and browser evidence for transformed/degraded decisions."],
+      "limitations": ["The rule-feature set is bounded and not complete CSS classification."]
+    },
+    {
+      "id": "dtcg-token-graph",
+      "title": "DTCG resolver bridge and canonical token graph",
+      "maturity": "beta",
+      "scope": "DTCG 2025.10 adapter, bounded resolver, aliases, derived values, themes, deprecations, selections, cycles, and coverage.",
+      "owners": ["crates/pliego-css-config", "crates/pliego-css-theme", "crates/pliego-css-build"],
+      "schemas": ["pliegocss-token-graph/1", "DTCG 2025.10 adapter"],
+      "gates": ["check:api", "check:packages", "check:manifest"],
+      "graduationCriteria": ["Obtain hosted portability evidence for CLI, bundle, and Cargo bridges.", "Freeze adapter compatibility policy for 0.1.x."],
+      "limitations": ["DTCG is an exchange adapter, not the internal semantic model."]
+    },
+    {
+      "id": "semantic-physical-provenance",
+      "title": "Semantic and physical provenance graphs",
+      "maturity": "beta",
+      "scope": "Reachability-bound semantic ownership and exact final-CSS rule/declaration tracing.",
+      "owners": ["crates/pliego-css-build", "crates/pliego-cssc"],
+      "schemas": ["manifest schema 4", "manifest schema 5", "graph schemas 1 and 2", "reachability schema 1"],
+      "gates": ["check:manifest", "check:trace", "check:portability"],
+      "graduationCriteria": ["Prove hosted cross-OS bytes for representative adapters.", "Demonstrate complete supported-host source collection without inferred ownership."],
+      "limitations": ["Framework collection completeness is adapter-attested and build-graph bounded."]
+    },
+    {
+      "id": "bundles-assets-index",
+      "title": "Declarative bundles, Asset Plans, and Project Index",
+      "maturity": "beta",
+      "scope": "Explicit bundle partitions, load selection, source backlinks, and final CSS references.",
+      "owners": ["crates/pliego-css-build", "crates/pliego-css-ownership", "crates/pliego-cssc"],
+      "schemas": ["bundle plan schemas 1 and 2", "Asset Plan schemas 1 and 2", "Project Index schemas 1 and 2"],
+      "gates": ["check:manifest", "check:trace", "integration:pliegors"],
+      "graduationCriteria": ["Pass representative non-PliegoRS and PliegoRS applications.", "Freeze supported adapter producer APIs at RC."],
+      "limitations": ["Automatic partitioning belongs to adapters, not the generic compiler."]
+    },
+    {
+      "id": "budgets-ownership-usage",
+      "title": "Budgets, ownership, usage evidence, retention, and pruning",
+      "maturity": "beta",
+      "scope": "File/layer/package/route budgets, exact ownership, observed/unobserved/dead/unknown states, retention, and whole-StyleId pruning.",
+      "owners": ["crates/pliego-css-control", "crates/pliego-css-ownership", "crates/pliego-css-usage", "crates/pliego-cssc"],
+      "schemas": ["budget schema 1", "ownership schema 1", "usage analysis schemas 1 and 2", "retention schema 1"],
+      "gates": ["check:pruning", "check:manifest", "integration:pliegors"],
+      "graduationCriteria": ["Add generic-CSS declaration/token usage identities.", "Close hosted route/package regression evidence."],
+      "limitations": ["Sampled absence never proves deadness; pruning removes whole generated StyleId rule sets only."]
+    },
+    {
+      "id": "accessibility-policy",
+      "title": "Static accessibility policy",
+      "maturity": "beta",
+      "scope": "Declared contrast, motion, focus visibility, forced colors, and input-modality checks with explicit uncertainty and exceptions.",
+      "owners": ["crates/pliego-css-control", "crates/pliego-cssc"],
+      "schemas": ["accessibility policy schema 1"],
+      "gates": ["verify:fast", "check:repair-corpus"],
+      "graduationCriteria": ["Measure precision/recall on a reviewed corpus.", "Add browser/manual validation evidence and hosted macOS/ARM64 coverage."],
+      "limitations": ["This is static policy evidence and never WCAG certification."]
+    },
+    {
+      "id": "agent-repair-verification",
+      "title": "Bounded agent repair, apply, and verification receipts",
+      "maturity": "beta",
+      "scope": "Low-risk exact edits, budgets, authorization, rollback, built-in checks, fixed test/browser evidence, and canonical receipts.",
+      "owners": ["crates/pliego-css-agent", "crates/pliego-cssc"],
+      "schemas": ["repair proposal/plan/change schemas 1.0.0", "check policy and Verification Receipt 1.4.0", "test/browser evidence 1.0.0"],
+      "gates": ["check:agent", "check:repair-corpus", "integration:pliegors-browser"],
+      "graduationCriteria": ["Add reviewed real-incident authority and efficacy evidence.", "Define hosted signer/approval protocol and required browser matrix."],
+      "limitations": ["Synthetic authority evidence is not agent efficacy; browser evidence currently has one pinned Chromium profile."]
+    },
+    {
+      "id": "lsp-editor-hosts",
+      "title": "LSP, VS Code, and Neovim clients",
+      "maturity": "beta",
+      "scope": "Completion, hover, diagnostics, formatting, cancellation, and Project Index navigation over bounded full-sync documents.",
+      "owners": ["crates/pliego-css-lsp", "editors/vscode", "editors/neovim"],
+      "schemas": ["LSP diagnostic corpus schema 2", "LSP 3.18 transport subset"],
+      "gates": ["integration:lsp", "integration:vscode", "integration:vscode-host", "integration:neovim"],
+      "graduationCriteria": ["Obtain hosted extension-host evidence on supported OSes.", "Publish and version client/server installation compatibility."],
+      "limitations": ["Editor packages are unreleased and host gates require explicit environment configuration."]
+    },
+    {
+      "id": "migration-inventory",
+      "title": "Read-only migration inventory bridges",
+      "maturity": "beta",
+      "scope": "Bounded Sass, Tailwind v4, CSS Modules, consumer, and auxiliary inventory without executing source toolchains.",
+      "owners": ["crates/pliego-css-source", "crates/pliego-cssc"],
+      "schemas": ["migration inventory schema 1", "migration project inventory schema 1"],
+      "gates": ["check:migration-corpus", "check:migration-real-corpus"],
+      "graduationCriteria": ["Add representative scale and broader configured importer/load-path evidence.", "Deliver reversible codemods with visual verification for promoted migrations."],
+      "limitations": ["Role precision is not semantic migration accuracy; no perfect-migration claim is made."]
+    },
+    {
+      "id": "watch-loop",
+      "title": "Exact-snapshot watch producer",
+      "maturity": "beta",
+      "scope": "Event-assisted snapshot fallback, source/theme caches, last-valid output retention, and grouped publication.",
+      "owners": ["crates/pliego-css-watch", "crates/pliego-cssc"],
+      "schemas": ["compile control manifest/receipt 1.0.0"],
+      "gates": ["verify:integration", "integration:pliegors-dev", "check:portability"],
+      "graduationCriteria": ["Pass hosted long-running watch/recovery tests on supported OSes.", "Publish supported latency and resource envelopes."],
+      "limitations": ["It regenerates artifacts; it is not CSS-only browser HMR."]
+    },
+    {
+      "id": "pliegors-integration",
+      "title": "PliegoRS SSR/SSG, reachability, and resumability integration",
+      "maturity": "beta",
+      "scope": "Registry-driven collection, route/island bundles, SSG verification, preload, and one resumable Chromium fixture.",
+      "owners": ["crates/pliego-css-source", "crates/pliego-css-build", "integration-tests/pliegors-smoke"],
+      "schemas": ["PliegoRS source-surface schema 2", "reachability schema 1"],
+      "gates": ["integration:pliegors", "integration:pliegors-browser", "integration:pliegors-dev"],
+      "graduationCriteria": ["Pass multiple representative PliegoRS applications and hosted browser/OS matrices.", "Activate the selected adapter API contract in a release."],
+      "limitations": ["Current evidence is a pinned bounded fixture and built target graph, not all feature/target permutations."]
+    },
+    {
+      "id": "cascade-explain",
+      "title": "Static cascade explanation",
+      "maturity": "experimental",
+      "scope": "One author stylesheet, simple declared element, top-level layers, importance, specificity, source order, and a closed longhand set.",
+      "owners": ["crates/pliego-css-cascade", "crates/pliego-cssc"],
+      "schemas": ["cascade explanation schema 1"],
+      "gates": ["check:cascade"],
+      "graduationCriteria": ["Cover multiple sheets/origins, inline styles, inheritance, custom properties, logical properties, and supported selectors.", "Add browser continuation for cases reported as browser-required."],
+      "limitations": ["It intentionally returns browser-required rather than emulating full computed style."]
+    },
+    {
+      "id": "standard-css-compile",
+      "title": "General standard-CSS transform and bundle path",
+      "maturity": "experimental",
+      "scope": "Planned normal-CSS parse, normalize, target-transform, bundle, and minify product path.",
+      "owners": ["crates/pliego-css-build", "crates/pliego-cssc"],
+      "schemas": [],
+      "gates": ["verify:release"],
+      "graduationCriteria": ["Implement deterministic generic CSS transform/minify output.", "Close complete supported classification and package replay on representative applications."],
+      "limitations": ["Current normal-CSS support is audit-first; typed utilities own the implemented compile path."]
+    },
+    {
+      "id": "responsive-browser-diagnosis",
+      "title": "Responsive and layout browser diagnosis",
+      "maturity": "experimental",
+      "scope": "Planned viewport matrices, perturbations, causal ranking, visual/focus/interaction evidence, and explicit confidence.",
+      "owners": ["docs/product/strategic-product-contract-2026.md"],
+      "schemas": [],
+      "gates": ["integration:pliegors-browser"],
+      "graduationCriteria": ["Implement a bounded browser evidence schema and reviewed diagnostic corpus.", "Reach category-specific precision without alert fatigue."],
+      "limitations": ["Current Chromium smokes validate known fixtures and are not responsive failure localization."]
+    },
+    {
+      "id": "registry-distribution",
+      "title": "Registry packages and supported installation",
+      "maturity": "experimental",
+      "scope": "Future publication of the exact-version 19-crate graph and installable CLI/editor artifacts.",
+      "owners": ["scripts/check-packages.mjs", "docs/contributing/release-process.md"],
+      "schemas": [],
+      "gates": ["check:packages", "verify:release"],
+      "graduationCriteria": ["Resolve repository and registry ownership approvals.", "Replay published artifacts with Rust 1.85 and supported hosts.", "Cut an RC that activates the documented SemVer subset."],
+      "limitations": ["Nothing is currently uploaded; checkout revision plus Cargo.lock remains the distribution identity."]
+    }
+  ]
+}

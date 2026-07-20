@@ -1,6 +1,6 @@
 //! DTCG 2025.10 exchange bridge.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::fmt;
 use std::fs::{self, OpenOptions};
 use std::io::{self, Read};
@@ -34,6 +34,8 @@ const PROFILE_VERSION: u64 = 1;
 pub(crate) const MAX_DOCUMENT_BYTES: usize = 16 * 1024 * 1024;
 const MAX_DEPTH: usize = 64;
 const MAX_TOKEN_COUNT: usize = 65_536;
+const MAX_ALIAS_DEPTH: usize = 256;
+const MAX_RESOLUTION_WORK: usize = 100_000;
 #[cfg(windows)]
 const FILE_ATTRIBUTE_REPARSE_POINT: u32 = 0x400;
 
@@ -422,6 +424,24 @@ struct ResolvedValue {
     token_type: Option<String>,
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum ResolveState {
+    Unvisited,
+    Visiting,
+    Resolved,
+}
+
+struct Resolver<'a> {
+    records: &'a [TokenRecord],
+    document: &'a Value,
+    paths: HashMap<Vec<String>, usize>,
+    pointers: HashMap<String, usize>,
+    states: Vec<ResolveState>,
+    cache: Vec<Option<ResolvedToken>>,
+    active: Vec<usize>,
+    work: usize,
+}
+
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 enum ProjectionKind {
     Token(TokenKind),
@@ -441,11 +461,11 @@ fn build_theme(document: Value) -> Result<DtcgTheme, DtcgError> {
         ));
     }
 
-    let mut resolved = vec![None; records.len()];
-    let mut active = Vec::new();
+    let mut resolver = Resolver::new(&records, &document);
     for index in 0..records.len() {
-        resolve_record(index, &records, &document, &mut resolved, &mut active)?;
+        resolver.resolve_record(index)?;
     }
+    let resolved_tokens = resolver.cache;
 
     let seed = ThemeRegistry::seed();
     let mut tokens = seed.tokens().to_vec();
@@ -454,7 +474,7 @@ fn build_theme(document: Value) -> Result<DtcgTheme, DtcgError> {
     let mut input_names = BTreeSet::new();
     let (mut graph_sources, dtcg_inventory) = project_records(
         &records,
-        &resolved,
+        &resolved_tokens,
         profile,
         &mut tokens,
         &mut breakpoints,
@@ -743,134 +763,293 @@ fn collect_token(
     Ok(())
 }
 
-fn resolve_record(
-    index: usize,
-    records: &[TokenRecord],
-    document: &Value,
-    cache: &mut [Option<ResolvedToken>],
-    active: &mut Vec<usize>,
-) -> Result<ResolvedToken, DtcgError> {
-    if let Some(resolved) = &cache[index] {
-        return Ok(resolved.clone());
-    }
-    if active.contains(&index) {
-        let mut chain = active
+impl<'a> Resolver<'a> {
+    fn new(records: &'a [TokenRecord], document: &'a Value) -> Self {
+        let paths = records
             .iter()
-            .map(|item| display_path(&records[*item].path))
-            .collect::<Vec<_>>();
-        chain.push(display_path(&records[index].path));
-        return Err(invalid(
-            display_path(&records[index].path),
-            format!("circular reference: {}", chain.join(" -> ")),
-        ));
+            .enumerate()
+            .map(|(index, record)| (record.path.clone(), index))
+            .collect();
+        let mut pointers = HashMap::with_capacity(records.len() * 2);
+        for (index, record) in records.iter().enumerate() {
+            pointers.insert(record.pointer.clone(), index);
+            pointers.insert(format!("{}/$value", record.pointer), index);
+        }
+        Self {
+            records,
+            document,
+            paths,
+            pointers,
+            states: vec![ResolveState::Unvisited; records.len()],
+            cache: vec![None; records.len()],
+            active: Vec::new(),
+            work: 0,
+        }
     }
-    active.push(index);
-    let record = &records[index];
-    let source = record
-        .object
-        .get("$value")
-        .cloned()
-        .or_else(|| {
-            record
+
+    fn charge(&mut self) -> Result<(), DtcgError> {
+        self.work += 1;
+        if self.work > MAX_RESOLUTION_WORK {
+            return Err(DtcgError::Limit(
+                "alias resolution exceeds 100,000 work units",
+            ));
+        }
+        Ok(())
+    }
+
+    fn resolve_record(&mut self, root: usize) -> Result<ResolvedToken, DtcgError> {
+        let mut stack = vec![(root, false)];
+        while let Some((index, expanded)) = stack.pop() {
+            if self.states[index] == ResolveState::Resolved {
+                continue;
+            }
+            if expanded {
+                let record = &self.records[index];
+                let source = record
+                    .object
+                    .get("$value")
+                    .cloned()
+                    .or_else(|| {
+                        record
+                            .object
+                            .get("$ref")
+                            .cloned()
+                            .map(|value| json!({"$ref": value}))
+                    })
+                    .ok_or_else(|| invalid(display_path(&record.path), "token has no value"))?;
+                let resolved = self.resolve_value(source)?;
+                let type_name = match (&record.inherited_type, resolved.token_type) {
+                    (Some(declared), Some(target)) if declared != &target => {
+                        return Err(invalid(
+                            display_path(&record.path),
+                            format!(
+                                "declared type `{declared}` does not match referenced type `{target}`"
+                            ),
+                        ));
+                    }
+                    (Some(declared), _) => declared.clone(),
+                    (None, Some(target)) => target,
+                    (None, None) => {
+                        return Err(invalid(
+                            display_path(&record.path),
+                            "token type is missing and cannot be inherited from its reference",
+                        ));
+                    }
+                };
+                self.cache[index] = Some(ResolvedToken {
+                    value: resolved.value,
+                    type_name,
+                });
+                self.states[index] = ResolveState::Resolved;
+                let popped = self.active.pop();
+                debug_assert_eq!(popped, Some(index));
+                continue;
+            }
+
+            if self.states[index] == ResolveState::Visiting {
+                return Err(self.circular_reference(index));
+            }
+            if self.active.len() >= MAX_ALIAS_DEPTH {
+                return Err(DtcgError::Limit("alias reference depth exceeds 256 tokens"));
+            }
+            self.states[index] = ResolveState::Visiting;
+            self.active.push(index);
+            stack.push((index, true));
+
+            let source = self.records[index]
                 .object
-                .get("$ref")
+                .get("$value")
                 .cloned()
-                .map(|value| json!({"$ref": value}))
-        })
-        .ok_or_else(|| invalid(display_path(&record.path), "token has no value"))?;
-    let resolved = resolve_value(source, records, document, cache, active)?;
-    let type_name = match (&record.inherited_type, resolved.token_type) {
-        (Some(declared), Some(target)) if declared != &target => {
-            return Err(invalid(
-                display_path(&record.path),
-                format!("declared type `{declared}` does not match referenced type `{target}`"),
-            ));
+                .or_else(|| {
+                    self.records[index]
+                        .object
+                        .get("$ref")
+                        .cloned()
+                        .map(|value| json!({"$ref": value}))
+                })
+                .ok_or_else(|| {
+                    invalid(
+                        display_path(&self.records[index].path),
+                        "token has no value",
+                    )
+                })?;
+            let dependencies = self.dependencies(&source)?;
+            for dependency in dependencies.into_iter().rev() {
+                match self.states[dependency] {
+                    ResolveState::Unvisited => stack.push((dependency, false)),
+                    ResolveState::Visiting => return Err(self.circular_reference(dependency)),
+                    ResolveState::Resolved => {}
+                }
+            }
         }
-        (Some(declared), _) => declared.clone(),
-        (None, Some(target)) => target,
-        (None, None) => {
-            return Err(invalid(
-                display_path(&record.path),
-                "token type is missing and cannot be inherited from its reference",
-            ));
-        }
-    };
-    let result = ResolvedToken {
-        value: resolved.value,
-        type_name,
-    };
-    active.pop();
-    cache[index] = Some(result.clone());
-    Ok(result)
-}
+        Ok(self.cache[root]
+            .as_ref()
+            .expect("root record resolved")
+            .clone())
+    }
 
-fn resolve_value(
-    value: Value,
-    records: &[TokenRecord],
-    document: &Value,
-    cache: &mut [Option<ResolvedToken>],
-    active: &mut Vec<usize>,
-) -> Result<ResolvedValue, DtcgError> {
-    match value {
-        Value::String(text) if curly_reference(&text).is_some() => {
-            let path = curly_reference(&text).expect("checked reference");
-            let index = records
-                .iter()
-                .position(|record| record.path == path)
-                .ok_or_else(|| invalid(&text, "curly reference does not target a token"))?;
-            let target = resolve_record(index, records, document, cache, active)?;
-            Ok(ResolvedValue {
-                value: target.value,
-                token_type: Some(target.type_name),
-            })
-        }
-        Value::Object(mut object) if object.contains_key("$ref") => {
-            if object.len() != 1 {
-                return Err(invalid("$ref", "reference object must contain only `$ref`"));
+    fn circular_reference(&self, index: usize) -> DtcgError {
+        let mut chain = self
+            .active
+            .iter()
+            .map(|item| display_path(&self.records[*item].path))
+            .collect::<Vec<_>>();
+        chain.push(display_path(&self.records[index].path));
+        invalid(
+            display_path(&self.records[index].path),
+            format!("circular reference: {}", chain.join(" -> ")),
+        )
+    }
+
+    fn dependencies(&mut self, source: &Value) -> Result<Vec<usize>, DtcgError> {
+        let mut dependencies = Vec::new();
+        let mut values = vec![source];
+        while let Some(value) = values.pop() {
+            match value {
+                Value::String(text) => {
+                    if let Some(path) = curly_reference(text) {
+                        self.charge()?;
+                        dependencies.push(*self.paths.get(&path).ok_or_else(|| {
+                            invalid(text, "curly reference does not target a token")
+                        })?);
+                    }
+                }
+                Value::Array(array) => values.extend(array.iter().rev()),
+                Value::Object(object) if object.contains_key("$ref") => {
+                    self.charge()?;
+                    if object.len() != 1 {
+                        return Err(invalid("$ref", "reference object must contain only `$ref`"));
+                    }
+                    let reference = object
+                        .get("$ref")
+                        .and_then(Value::as_str)
+                        .ok_or_else(|| invalid("$ref", "reference must be a string"))?;
+                    if let Some(index) = self.pointer_record(reference)? {
+                        dependencies.push(index);
+                    } else {
+                        let fragment = pointer_fragment(reference)?;
+                        let target = self.document.pointer(fragment).ok_or_else(|| {
+                            invalid(reference, "JSON Pointer target does not exist")
+                        })?;
+                        values.push(target);
+                    }
+                }
+                Value::Object(object) => values.extend(object.values().rev()),
+                _ => {}
             }
-            let reference = object
-                .remove("$ref")
-                .and_then(|value| value.as_str().map(str::to_owned))
-                .ok_or_else(|| invalid("$ref", "reference must be a string"))?;
-            resolve_pointer(&reference, records, document, cache, active)
         }
-        Value::Array(values) => {
-            let mut output = Vec::with_capacity(values.len());
-            for value in values {
-                output.push(resolve_value(value, records, document, cache, active)?.value);
+        Ok(dependencies)
+    }
+
+    fn pointer_record(&self, reference: &str) -> Result<Option<usize>, DtcgError> {
+        let fragment = pointer_fragment(reference)?;
+        if let Some(index) = self.pointers.get(fragment) {
+            return Ok(Some(*index));
+        }
+        let mut prefix = fragment;
+        while let Some((parent, _)) = prefix.rsplit_once('/') {
+            if let Some(index) = self.pointers.get(parent) {
+                return Ok(Some(*index));
             }
-            Ok(ResolvedValue {
-                value: Value::Array(output),
+            prefix = parent;
+        }
+        Ok(None)
+    }
+
+    fn resolve_value(&mut self, value: Value) -> Result<ResolvedValue, DtcgError> {
+        match value {
+            Value::String(text) if curly_reference(&text).is_some() => {
+                self.charge()?;
+                let path = curly_reference(&text).expect("checked reference");
+                let index = *self
+                    .paths
+                    .get(&path)
+                    .ok_or_else(|| invalid(&text, "curly reference does not target a token"))?;
+                let target = self.cache[index]
+                    .as_ref()
+                    .expect("dependencies resolved before values");
+                Ok(ResolvedValue {
+                    value: target.value.clone(),
+                    token_type: Some(target.type_name.clone()),
+                })
+            }
+            Value::Object(mut object) if object.contains_key("$ref") => {
+                if object.len() != 1 {
+                    return Err(invalid("$ref", "reference object must contain only `$ref`"));
+                }
+                let reference = object
+                    .remove("$ref")
+                    .and_then(|value| value.as_str().map(str::to_owned))
+                    .ok_or_else(|| invalid("$ref", "reference must be a string"))?;
+                self.resolve_pointer(&reference)
+            }
+            Value::Array(values) => {
+                let mut output = Vec::with_capacity(values.len());
+                for value in values {
+                    output.push(self.resolve_value(value)?.value);
+                }
+                Ok(ResolvedValue {
+                    value: Value::Array(output),
+                    token_type: None,
+                })
+            }
+            Value::Object(object) => {
+                let mut output = Map::new();
+                for (key, value) in object {
+                    output.insert(key, self.resolve_value(value)?.value);
+                }
+                Ok(ResolvedValue {
+                    value: Value::Object(output),
+                    token_type: None,
+                })
+            }
+            value => Ok(ResolvedValue {
+                value,
                 token_type: None,
-            })
+            }),
         }
-        Value::Object(object) => {
-            let mut output = Map::new();
-            for (key, value) in object {
-                output.insert(
-                    key,
-                    resolve_value(value, records, document, cache, active)?.value,
-                );
+    }
+
+    fn resolve_pointer(&mut self, reference: &str) -> Result<ResolvedValue, DtcgError> {
+        let fragment = pointer_fragment(reference)?;
+        if let Some(index) = self.pointers.get(fragment).copied() {
+            let target = self.cache[index]
+                .as_ref()
+                .expect("pointer dependency resolved before value");
+            return Ok(ResolvedValue {
+                value: target.value.clone(),
+                token_type: Some(target.type_name.clone()),
+            });
+        }
+        let mut prefix = fragment;
+        while let Some((parent, _)) = prefix.rsplit_once('/') {
+            if let Some(index) = self.pointers.get(parent).copied() {
+                let target = self.cache[index]
+                    .as_ref()
+                    .expect("pointer dependency resolved before value");
+                let remainder = fragment
+                    .strip_prefix(parent)
+                    .and_then(|value| value.strip_prefix('/'))
+                    .expect("parent is a pointer prefix");
+                let nested = target
+                    .value
+                    .pointer(&format!("/{remainder}"))
+                    .cloned()
+                    .ok_or_else(|| invalid(reference, "JSON Pointer target does not exist"))?;
+                return self.resolve_value(nested);
             }
-            Ok(ResolvedValue {
-                value: Value::Object(output),
-                token_type: None,
-            })
+            prefix = parent;
         }
-        value => Ok(ResolvedValue {
-            value,
-            token_type: None,
-        }),
+        let target = self
+            .document
+            .pointer(fragment)
+            .cloned()
+            .ok_or_else(|| invalid(reference, "JSON Pointer target does not exist"))?;
+        self.resolve_value(target)
     }
 }
 
-fn resolve_pointer(
-    reference: &str,
-    records: &[TokenRecord],
-    document: &Value,
-    cache: &mut [Option<ResolvedToken>],
-    active: &mut Vec<usize>,
-) -> Result<ResolvedValue, DtcgError> {
+fn pointer_fragment(reference: &str) -> Result<&str, DtcgError> {
     let fragment = reference.strip_prefix('#').ok_or_else(|| {
         invalid(
             reference,
@@ -883,30 +1062,7 @@ fn resolve_pointer(
             "JSON Pointer fragment must begin with `#/`",
         ));
     }
-    for (index, record) in records.iter().enumerate() {
-        let value_pointer = format!("{}/$value", record.pointer);
-        if fragment == record.pointer || fragment == value_pointer {
-            let target = resolve_record(index, records, document, cache, active)?;
-            return Ok(ResolvedValue {
-                value: target.value,
-                token_type: Some(target.type_name),
-            });
-        }
-        if let Some(remainder) = fragment.strip_prefix(&(value_pointer + "/")) {
-            let target = resolve_record(index, records, document, cache, active)?;
-            let nested = target
-                .value
-                .pointer(&format!("/{remainder}"))
-                .cloned()
-                .ok_or_else(|| invalid(reference, "JSON Pointer target does not exist"))?;
-            return resolve_value(nested, records, document, cache, active);
-        }
-    }
-    let target = document
-        .pointer(fragment)
-        .cloned()
-        .ok_or_else(|| invalid(reference, "JSON Pointer target does not exist"))?;
-    resolve_value(target, records, document, cache, active)
+    Ok(fragment)
 }
 
 fn projection_kind(record: &TokenRecord) -> Result<Option<ProjectionKind>, DtcgError> {

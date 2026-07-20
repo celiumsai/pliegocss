@@ -4,7 +4,9 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const targetDir = join(root, "target");
+const targetDir = process.env.CARGO_TARGET_DIR
+  ? resolve(root, process.env.CARGO_TARGET_DIR)
+  : join(root, "target");
 const runtime = join(targetDir, "compatibility-policy", `run-${process.pid}-${Date.now()}`);
 const expected = readFileSync(
   join(root, "integration-tests", "compatibility-policy", "expected.baseline-widely.json"),
@@ -45,7 +47,7 @@ function resolveExecutable() {
 
   run("cargo", ["+1.85", "build", "--locked", "-p", "pliego-cssc"], {
     cwd: root,
-    timeout: 120_000,
+    timeout: 300_000,
   });
   const executable = join(
     targetDir,

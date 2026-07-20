@@ -1,0 +1,303 @@
+{
+  "schemaVersion": 1,
+  "statusDate": "2026-07-19",
+  "baseline": {
+    "product": "Tailwind CSS",
+    "version": "4.3.2",
+    "license": "MIT",
+    "packageManifest": "node_modules/tailwindcss/package.json",
+    "packageManifestSha256": "92a1151a2e1adb85c736228008ae2d3fa293dc1c51c058f5317a238194298a97",
+    "fixture": "benchmarks/tailwind-v4/fixtures.html",
+    "fixtureSha256": "338eb480327e54fe7e56e81b42c67324464afaa8c65d606e5d57c1c45690e86c",
+    "fixtureClassAttributes": 44,
+    "fixtureUtilityOccurrences": 302,
+    "fixtureUniqueUtilities": 90
+  },
+  "statuses": {
+    "matched": "Representative behavior exists on both sides under the stated evidence boundary.",
+    "pliego-differentiator": "PliegoCSS supplies a verified product capability outside Tailwind's utility-generation contract.",
+    "tailwind-advantage": "Tailwind has materially broader or easier production behavior today.",
+    "different-by-design": "The products intentionally solve the concern through different contracts; direct parity is not the goal.",
+    "open-gap": "Required PliegoCSS 0.1.0 evidence or implementation is incomplete."
+  },
+  "sources": [
+    {
+      "id": "tailwind-installation",
+      "kind": "upstream-doc",
+      "url": "https://tailwindcss.com/docs/installation/using-vite",
+      "versionObserved": "v4.3"
+    },
+    {
+      "id": "tailwind-compatibility",
+      "kind": "upstream-doc",
+      "url": "https://tailwindcss.com/docs/compatibility",
+      "versionObserved": "v4.3"
+    },
+    {
+      "id": "tailwind-source-detection",
+      "kind": "upstream-doc",
+      "url": "https://tailwindcss.com/docs/detecting-classes-in-source-files",
+      "versionObserved": "v4.3"
+    },
+    {
+      "id": "tailwind-theme",
+      "kind": "upstream-doc",
+      "url": "https://tailwindcss.com/docs/theme",
+      "versionObserved": "v4.3"
+    },
+    {
+      "id": "tailwind-states",
+      "kind": "upstream-doc",
+      "url": "https://tailwindcss.com/docs/hover-focus-and-other-states",
+      "versionObserved": "v4.3"
+    },
+    {
+      "id": "tailwind-custom-styles",
+      "kind": "upstream-doc",
+      "url": "https://tailwindcss.com/docs/adding-custom-styles",
+      "versionObserved": "v4.3"
+    },
+    {
+      "id": "pliego-gate-b",
+      "kind": "local-evidence",
+      "path": "docs/benchmarks/pliego-gate-b.md"
+    },
+    {
+      "id": "pliego-utilities",
+      "kind": "local-contract",
+      "path": "docs/reference/utilities.md"
+    },
+    {
+      "id": "pliego-strategy",
+      "kind": "local-contract",
+      "path": "docs/product/strategic-product-contract-2026.md"
+    },
+    {
+      "id": "pliego-maturity",
+      "kind": "local-contract",
+      "path": "docs/product/maturity-map.json"
+    }
+  ],
+  "dimensions": [
+    {
+      "id": "representative-fixture",
+      "area": "utility authoring",
+      "status": "matched",
+      "tailwind": "The pinned CLI generates the complete five-view fixture from visible class tokens.",
+      "pliego": "Gate B compiles all 44 class attributes, 302 occurrences, 90 unique concrete tokens, and all eight tracked variants.",
+      "evidence": ["pliego-gate-b", "pliego-utilities"],
+      "releaseImpact": "keep-green",
+      "nextAction": "Preserve the fixture as a regression vector; do not infer full catalog parity."
+    },
+    {
+      "id": "catalog-breadth",
+      "area": "utility authoring",
+      "status": "tailwind-advantage",
+      "tailwind": "Tailwind documents a broad production catalog across layout, typography, effects, filters, tables, transforms, interactivity, SVG, and accessibility.",
+      "pliego": "The generated catalog is intentionally compact and covers the selected typed families plus arbitrary declarations.",
+      "evidence": ["tailwind-installation", "pliego-utilities"],
+      "releaseImpact": "non-blocking",
+      "nextAction": "Add families only when representative applications or audit evidence require them; do not chase raw catalog parity."
+    },
+    {
+      "id": "variants-responsive",
+      "area": "utility authoring",
+      "status": "matched",
+      "tailwind": "Responsive and state variants are first-class authoring concepts.",
+      "pliego": "The matched fixture proves sm/md/lg, hover, focus, focus-visible, placeholder, and disabled; additional typed dimensions include theme, motion, contrast, ARIA/data, direction, containers, and layers.",
+      "evidence": ["tailwind-states", "pliego-gate-b", "pliego-utilities"],
+      "releaseImpact": "keep-green",
+      "nextAction": "Retain typed normalization and conflict contracts while expanding only evidence-backed variants."
+    },
+    {
+      "id": "arbitrary-values-selectors",
+      "area": "escape hatches",
+      "status": "matched",
+      "tailwind": "Arbitrary values, properties, and variants provide escape hatches within utility markup.",
+      "pliego": "Parsed arbitrary values, one arbitrary declaration, custom properties, and bounded &[...] selector transforms preserve access to real CSS while rejecting unsafe/ambiguous shapes.",
+      "evidence": ["tailwind-custom-styles", "pliego-utilities"],
+      "releaseImpact": "keep-green",
+      "nextAction": "Keep the bounded grammar and improve only gaps demonstrated by real applications."
+    },
+    {
+      "id": "theme-configuration",
+      "area": "tokens and themes",
+      "status": "different-by-design",
+      "tailwind": "CSS-first @theme variables define utility namespaces and can be shared as CSS.",
+      "pliego": "Typed TOML and DTCG Resolver inputs produce versioned theme identity, a canonical token graph, and a Cargo build bridge.",
+      "evidence": ["tailwind-theme", "pliego-maturity"],
+      "releaseImpact": "keep-green",
+      "nextAction": "Preserve CSS interoperability while stabilizing the DTCG adapter with hosted portability evidence."
+    },
+    {
+      "id": "source-detection",
+      "area": "content discovery",
+      "status": "different-by-design",
+      "tailwind": "Scans source files as plain text for complete class tokens and supports explicit source registration.",
+      "pliego": "Validates visible Rust macro literals or consumes explicit typed adapter manifests; it refuses to infer framework ownership from filenames/text alone.",
+      "evidence": ["tailwind-source-detection", "pliego-strategy"],
+      "releaseImpact": "keep-green",
+      "nextAction": "Add typed adapters for representative non-Rust hosts instead of a certainty-claiming generic dynamic scanner."
+    },
+    {
+      "id": "preflight-reset",
+      "area": "base styles",
+      "status": "tailwind-advantage",
+      "tailwind": "Ships Preflight as part of its normal full import.",
+      "pliego": "Emits no reset; current benchmark comparisons correctly use Tailwind no-preflight as the primary baseline.",
+      "evidence": ["pliego-gate-b", "tailwind-installation"],
+      "releaseImpact": "non-blocking",
+      "nextAction": "Keep the external-reset policy explicit or add a separately versioned/measured optional reset; never fold it silently into output."
+    },
+    {
+      "id": "build-latency-fixture",
+      "area": "performance",
+      "status": "matched",
+      "tailwind": "Pinned no-preflight complete fixture median is 204.826 ms across 30 fresh processes on the frozen host.",
+      "pliego": "Matched complete fixture median is 37.894 ms on the same frozen methodology, with one visible process outlier.",
+      "evidence": ["pliego-gate-b"],
+      "releaseImpact": "keep-green",
+      "nextAction": "Treat this as fixture evidence, not a universal speed claim; add representative-app cold/incremental/no-op and memory measurements."
+    },
+    {
+      "id": "payload-fixture",
+      "area": "performance",
+      "status": "matched",
+      "tailwind": "No-preflight fixture emits 8,618 raw / 2,327 gzip CSS bytes and 3,833 gzip transfer bytes with source utility classes.",
+      "pliego": "Matched fixture emits 10,463 raw / 2,049 gzip CSS bytes and 3,550 gzip transfer bytes after manifest class rewriting.",
+      "evidence": ["pliego-gate-b"],
+      "releaseImpact": "keep-green",
+      "nextAction": "Report raw and compressed metrics together; preserve the caveat that Pliego raw CSS is larger."
+    },
+    {
+      "id": "rust-compile-overhead",
+      "area": "performance",
+      "status": "tailwind-advantage",
+      "tailwind": "Does not impose Rust procedural-macro compilation on non-Rust applications.",
+      "pliego": "Typed Rust authoring adds a large cold Cargo cost in the frozen Gate A measurement, while incremental medians are much smaller.",
+      "evidence": ["pliego-gate-b", "pliego-strategy"],
+      "releaseImpact": "non-blocking",
+      "nextAction": "Keep standard-CSS audit useful without Rust adoption and measure/optimize cold dependency cost separately."
+    },
+    {
+      "id": "static-semantic-errors",
+      "area": "developer safety",
+      "status": "pliego-differentiator",
+      "tailwind": "Complete-token extraction is productive but does not provide Pliego's typed property-slot conflict and theme-domain contract.",
+      "pliego": "Rejects unknown utilities/tokens, invalid domains, conflicts, impossible conditions, malformed arbitrary values, and cross-branch conflicts with stable diagnostics.",
+      "evidence": ["tailwind-source-detection", "pliego-utilities", "pliego-gate-b"],
+      "releaseImpact": "keep-green",
+      "nextAction": "Add comparative diagnostic-quality evidence rather than relying on examples alone."
+    },
+    {
+      "id": "standard-css-audit",
+      "area": "governance",
+      "status": "pliego-differentiator",
+      "tailwind": "The compared core contract is utility generation, not a general integrity-bound CSS policy receipt.",
+      "pliego": "Accepts normal CSS for bounded compatibility, budget, accessibility, finding, and receipt workflows without requiring utility migration.",
+      "evidence": ["pliego-strategy", "pliego-maturity"],
+      "releaseImpact": "blocking",
+      "nextAction": "Close R0 standard-CSS classification and generic transform/minify output gaps before 0.1.0."
+    },
+    {
+      "id": "provenance-receipts",
+      "area": "governance",
+      "status": "pliego-differentiator",
+      "tailwind": "The compared CLI emits CSS but does not expose Pliego's source/config/output decision graph and canonical build/verification receipts.",
+      "pliego": "Versioned manifests, source maps, semantic/physical graphs, finding documents, and receipts integrity-bind controlled workflows.",
+      "evidence": ["pliego-strategy", "pliego-maturity"],
+      "releaseImpact": "blocking",
+      "nextAction": "Converge the R0 unified artifact and obtain hosted cross-OS evidence without relabeling existing schemas."
+    },
+    {
+      "id": "budgets-ownership-dead-css",
+      "area": "governance",
+      "status": "pliego-differentiator",
+      "tailwind": "Automatic utility generation removes absent tokens, but the compared contract does not classify observed/unobserved/dead/unknown with ownership-backed route/package receipts.",
+      "pliego": "Budgets, typed ownership, exact reachability/observation evidence, retention, and conservative whole-StyleId pruning are implemented.",
+      "evidence": ["pliego-strategy", "pliego-maturity"],
+      "releaseImpact": "blocking",
+      "nextAction": "Close generic-CSS identities, hosted evidence, and final release replay."
+    },
+    {
+      "id": "accessibility-policy",
+      "area": "governance",
+      "status": "pliego-differentiator",
+      "tailwind": "Provides utilities and variants useful for accessible designs but does not certify their system-level correctness.",
+      "pliego": "Static policy distinguishes verified, unverified, manual-required, violation, and exception states for five bounded guard categories.",
+      "evidence": ["tailwind-states", "pliego-strategy", "pliego-maturity"],
+      "releaseImpact": "blocking",
+      "nextAction": "Add reviewed precision/recall plus browser/manual evidence; retain the explicit no-WCAG-certification limit."
+    },
+    {
+      "id": "agent-repair",
+      "area": "agent safety",
+      "status": "pliego-differentiator",
+      "tailwind": "The compared CLI has no equivalent closed proposal/authorization/change/verification receipt protocol.",
+      "pliego": "Exact low-risk edits, budgets, external authorization, idempotence, rollback, fixed runners, and canonical verification receipts are bounded by schemas.",
+      "evidence": ["pliego-strategy", "pliego-maturity"],
+      "releaseImpact": "non-blocking",
+      "nextAction": "Add real-incident efficacy and hosted signer/browser evidence before stable promotion."
+    },
+    {
+      "id": "migration-bridge",
+      "area": "adoption",
+      "status": "open-gap",
+      "tailwind": "Has a mature installed ecosystem and direct v4 authoring path.",
+      "pliego": "Can inventory bounded Tailwind/Sass/CSS Modules projects read-only, but reversible codemods and semantic migration outcomes are not implemented.",
+      "evidence": ["tailwind-installation", "pliego-strategy", "pliego-maturity"],
+      "releaseImpact": "should",
+      "nextAction": "Deliver conservative reversible migration slices selected from representative applications, with visual and receipt evidence."
+    },
+    {
+      "id": "ecosystem-frameworks",
+      "area": "adoption",
+      "status": "tailwind-advantage",
+      "tailwind": "Has broad framework integrations, established documentation, and a production user ecosystem.",
+      "pliego": "Has a strong pinned PliegoRS path, plain HTML evidence, and unreleased editor clients, but limited host breadth and no published ecosystem.",
+      "evidence": ["tailwind-installation", "pliego-maturity"],
+      "releaseImpact": "non-blocking",
+      "nextAction": "Prove Vite/plain HTML plus one additional typed adapter and publish installation compatibility rather than claiming ecosystem parity."
+    },
+    {
+      "id": "distribution",
+      "area": "adoption",
+      "status": "tailwind-advantage",
+      "tailwind": "Published npm packages and documented install paths are available today.",
+      "pliego": "Registry-shaped packaging passes locally, but crates, CLI, and editor artifacts are not published; checkout revision plus Cargo.lock is the identity.",
+      "evidence": ["tailwind-installation", "pliego-maturity"],
+      "releaseImpact": "blocking",
+      "nextAction": "Resolve owner-only registry/repository approvals, replay actual published RC artifacts, and activate the SemVer subset."
+    },
+    {
+      "id": "browser-compatibility",
+      "area": "platform support",
+      "status": "open-gap",
+      "tailwind": "Upstream documents a modern-browser compatibility floor and v4.3 behavior.",
+      "pliego": "Uses versioned targets and official-data policy, but complete CSS classification and hosted Chromium/Firefox/WebKit evidence remain incomplete.",
+      "evidence": ["tailwind-compatibility", "pliego-strategy", "pliego-maturity"],
+      "releaseImpact": "blocking",
+      "nextAction": "Close the supported CSS corpus and hosted browser matrix while preserving explicit blocked/degraded decisions."
+    },
+    {
+      "id": "responsive-diagnosis",
+      "area": "platform support",
+      "status": "open-gap",
+      "tailwind": "Provides responsive authoring but not Pliego's proposed causal browser diagnosis product.",
+      "pliego": "Current Chromium fixture checks validate known outputs; viewport-matrix failure localization is not implemented.",
+      "evidence": ["tailwind-states", "pliego-strategy", "pliego-maturity"],
+      "releaseImpact": "post-0.1",
+      "nextAction": "Keep experimental until a bounded evidence schema and reviewed precision corpus exist."
+    },
+    {
+      "id": "plugin-extensibility",
+      "area": "ecosystem",
+      "status": "different-by-design",
+      "tailwind": "Supports custom styles, directives, and an ecosystem-oriented extension model.",
+      "pliego": "Defers unrestricted plugins to protect deterministic policy, schemas, and receipts; extensions must eventually be restricted and sandboxed.",
+      "evidence": ["tailwind-custom-styles", "pliego-strategy"],
+      "releaseImpact": "post-0.1",
+      "nextAction": "Do not add unrestricted execution; design a versioned policy-pack/plugin boundary only after core release gates close."
+    }
+  ]
+}

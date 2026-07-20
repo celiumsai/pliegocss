@@ -2,9 +2,9 @@
 
 # PliegoCSS utility catalog
 
-Theme ID: <code>c46b8b7ec8c3aa6daadf15cc9196ba3e</code>
+Theme ID: <code>b3d5ad77175995c2b8f51ef7c0d41991</code>
 
-Identity formats: StyleId <code>2</code>, class name <code>1</code>, ThemeId <code>1</code>
+Identity formats: StyleId <code>2</code>, class name <code>1</code>, ThemeId <code>2</code>
 
 ## Utilities
 

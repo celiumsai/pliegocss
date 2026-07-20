@@ -9,6 +9,11 @@ use std::os::unix::fs::OpenOptionsExt as _;
 use std::os::windows::fs::{MetadataExt as _, OpenOptionsExt as _};
 use std::path::{Component, Path, PathBuf};
 
+fn write_synced_file(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
+    pliego_css_io::write_new_synced_regular_file(path, bytes, "migration temporary")
+        .map_err(std::io::Error::other)
+}
+
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
@@ -200,6 +205,7 @@ pub struct MigrationInventory {
     file: String,
     source_bytes: usize,
     source_sha256: String,
+    source: Vec<u8>,
     preflight_reliance: MigrationPreflightReliance,
     summary: MigrationSummary,
     constructs: Vec<MigrationConstruct>,
@@ -974,6 +980,981 @@ pub struct MigrationProjectInventory {
     bytes: Vec<u8>,
 }
 
+/// Canonical inventory-bound plan that deliberately performs no automatic edits.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ReversibleMigrationPlan {
+    bytes: Vec<u8>,
+}
+
+/// Identity required to roll back one additive migration edit.
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct ReversibleAdditionReceipt {
+    after_sha256: String,
+}
+
+/// Exact before/after identities and bytes required to reverse one replacement.
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct ReversibleReplacementReceipt {
+    before: Vec<u8>,
+    before_sha256: String,
+    after_sha256: String,
+}
+
+/// Canonical receipt for one ordered replacement group.
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct ReversibleReplacementGroupReceipt {
+    entries: Vec<(PathBuf, ReversibleReplacementReceipt)>,
+}
+
+impl ReversibleReplacementGroupReceipt {
+    /// Creates a nonempty receipt with unique paths.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error for an empty group or duplicate paths.
+    pub fn new(
+        entries: Vec<(PathBuf, ReversibleReplacementReceipt)>,
+    ) -> Result<Self, MigrationInventoryError> {
+        if entries.is_empty() {
+            return Err(MigrationInventoryError::new(
+                "replacement receipt group cannot be empty",
+            ));
+        }
+        let mut paths = entries.iter().map(|(path, _)| path).collect::<Vec<_>>();
+        paths.sort();
+        if paths.windows(2).any(|pair| pair[0] == pair[1]) {
+            return Err(MigrationInventoryError::new(
+                "replacement receipt group has duplicate paths",
+            ));
+        }
+        Ok(Self { entries })
+    }
+    /// Returns ordered entries.
+    #[must_use]
+    pub fn entries(&self) -> &[(PathBuf, ReversibleReplacementReceipt)] {
+        &self.entries
+    }
+    /// Serializes pretty JSON with one LF.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when serialization fails.
+    pub fn to_json(&self) -> Result<Vec<u8>, MigrationInventoryError> {
+        let mut bytes = serde_json::to_vec_pretty(self).map_err(|error| {
+            MigrationInventoryError::new(format!("cannot serialize replacement group: {error}"))
+        })?;
+        bytes.push(b'\n');
+        Ok(bytes)
+    }
+    /// Parses and validates a group receipt.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error for invalid JSON or invalid group structure.
+    pub fn from_json(bytes: &[u8]) -> Result<Self, MigrationInventoryError> {
+        let receipt: Self = serde_json::from_slice(bytes).map_err(|error| {
+            MigrationInventoryError::new(format!("cannot parse replacement group: {error}"))
+        })?;
+        Self::new(receipt.entries)
+    }
+}
+
+impl ReversibleReplacementReceipt {
+    /// Returns canonical receipt JSON with one trailing line feed.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when serialization fails.
+    pub fn to_json(&self) -> Result<Vec<u8>, MigrationInventoryError> {
+        let mut bytes = serde_json::to_vec_pretty(self).map_err(|error| {
+            MigrationInventoryError::new(format!("cannot serialize replacement receipt: {error}"))
+        })?;
+        bytes.push(b'\n');
+        Ok(bytes)
+    }
+
+    /// Parses and validates one replacement receipt.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error for invalid JSON, oversized before bytes, or corrupt identities.
+    pub fn from_json(bytes: &[u8]) -> Result<Self, MigrationInventoryError> {
+        let receipt: Self = serde_json::from_slice(bytes).map_err(|error| {
+            MigrationInventoryError::new(format!("cannot parse replacement receipt: {error}"))
+        })?;
+        if receipt.before.len() > MAX_SOURCE_BYTES
+            || migration_bytes_sha256(&receipt.before) != receipt.before_sha256
+            || !is_canonical_sha256(&receipt.after_sha256)
+        {
+            return Err(MigrationInventoryError::new(
+                "replacement receipt identity is invalid",
+            ));
+        }
+        Ok(receipt)
+    }
+}
+
+fn is_canonical_sha256(value: &str) -> bool {
+    value.len() == 64
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+}
+
+/// Replaces one regular file only when its bytes exactly match the declared before state.
+///
+/// # Errors
+///
+/// Returns an error for unsafe files, stale before bytes, or failed atomic publication.
+pub fn apply_reversible_replacement(
+    destination: &Path,
+    before: &[u8],
+    after: &[u8],
+) -> Result<ReversibleReplacementReceipt, MigrationInventoryError> {
+    let (_, current) =
+        read_regular_project_file(destination, MAX_SOURCE_BYTES, "migration replacement")?;
+    if current != before {
+        return Err(MigrationInventoryError::new(
+            "reversible replacement before bytes are stale",
+        ));
+    }
+    let temporary = destination.with_extension("pliego-replace-tmp");
+    if temporary.exists() {
+        return Err(MigrationInventoryError::new(
+            "reversible replacement temporary path already exists",
+        ));
+    }
+    fs::write(&temporary, after).map_err(|error| {
+        MigrationInventoryError::new(format!("cannot prepare reversible replacement: {error}"))
+    })?;
+    if let Err(error) = fs::rename(&temporary, destination) {
+        let _ = fs::remove_file(&temporary);
+        return Err(MigrationInventoryError::new(format!(
+            "cannot publish reversible replacement: {error}"
+        )));
+    }
+    Ok(ReversibleReplacementReceipt {
+        before: before.to_vec(),
+        before_sha256: migration_bytes_sha256(before),
+        after_sha256: migration_bytes_sha256(after),
+    })
+}
+
+/// Restores exact before bytes only while the published after bytes remain unchanged.
+///
+/// # Errors
+///
+/// Returns an error for drift, invalid receipt identity, or failed atomic publication.
+pub fn rollback_reversible_replacement(
+    destination: &Path,
+    receipt: &ReversibleReplacementReceipt,
+) -> Result<(), MigrationInventoryError> {
+    if migration_bytes_sha256(&receipt.before) != receipt.before_sha256 {
+        return Err(MigrationInventoryError::new(
+            "reversible replacement receipt before bytes are corrupt",
+        ));
+    }
+    let (_, current) =
+        read_regular_project_file(destination, MAX_SOURCE_BYTES, "migration replacement")?;
+    if migration_bytes_sha256(&current) != receipt.after_sha256 {
+        return Err(MigrationInventoryError::new(
+            "reversible replacement output changed after publication",
+        ));
+    }
+    let temporary = destination.with_extension("pliego-rollback-tmp");
+    fs::write(&temporary, &receipt.before).map_err(|error| {
+        MigrationInventoryError::new(format!("cannot prepare replacement rollback: {error}"))
+    })?;
+    if let Err(error) = fs::rename(&temporary, destination) {
+        let _ = fs::remove_file(&temporary);
+        return Err(MigrationInventoryError::new(format!(
+            "cannot publish replacement rollback: {error}"
+        )));
+    }
+    Ok(())
+}
+
+/// Applies an ordered replacement group and compensates all earlier files if any member fails.
+///
+/// # Errors
+///
+/// Returns the member error, augmented when compensating rollback also fails.
+pub fn apply_reversible_replacement_group(
+    replacements: &[(&Path, &[u8], &[u8])],
+) -> Result<Vec<(PathBuf, ReversibleReplacementReceipt)>, MigrationInventoryError> {
+    apply_reversible_replacement_group_with(replacements, |_| Ok(()))
+}
+
+fn apply_reversible_replacement_group_with(
+    replacements: &[(&Path, &[u8], &[u8])],
+    mut before_publish: impl FnMut(usize) -> Result<(), MigrationInventoryError>,
+) -> Result<Vec<(PathBuf, ReversibleReplacementReceipt)>, MigrationInventoryError> {
+    if replacements.is_empty() {
+        return Err(MigrationInventoryError::new(
+            "replacement group cannot be empty",
+        ));
+    }
+    let mut paths = replacements
+        .iter()
+        .map(|(path, _, _)| *path)
+        .collect::<Vec<_>>();
+    paths.sort_unstable();
+    if paths.windows(2).any(|pair| pair[0] == pair[1]) {
+        return Err(MigrationInventoryError::new(
+            "replacement group contains duplicate destinations",
+        ));
+    }
+    let mut staged = Vec::with_capacity(replacements.len());
+    for &(destination, before, after) in replacements {
+        let (_, current) = read_regular_project_file(
+            destination,
+            MAX_SOURCE_BYTES,
+            "migration replacement group preflight",
+        )?;
+        if current != before {
+            for (_, _, _, temporary) in &staged {
+                let _ = fs::remove_file(temporary);
+            }
+            return Err(MigrationInventoryError::new(
+                "replacement group before bytes are stale",
+            ));
+        }
+        let temporary = destination.with_extension("pliego-group-forward-tmp");
+        if temporary.exists() {
+            for (_, _, _, prepared) in &staged {
+                let _ = fs::remove_file(prepared);
+            }
+            return Err(MigrationInventoryError::new(
+                "replacement group temporary path already exists",
+            ));
+        }
+        if let Err(error) = write_synced_file(&temporary, after) {
+            for (_, _, _, prepared) in &staged {
+                let _ = fs::remove_file(prepared);
+            }
+            return Err(MigrationInventoryError::new(format!(
+                "cannot prepare replacement group publication: {error}"
+            )));
+        }
+        staged.push((
+            destination.to_path_buf(),
+            before.to_vec(),
+            after.to_vec(),
+            temporary,
+        ));
+    }
+    let mut receipts: Vec<(PathBuf, ReversibleReplacementReceipt)> =
+        Vec::with_capacity(staged.len());
+    for (index, (destination, before, after, temporary)) in staged.iter().enumerate() {
+        let failure = before_publish(index).err().or_else(|| {
+            pliego_css_io::rename_prepared_synced(temporary, destination, "replacement group")
+                .err()
+                .map(MigrationInventoryError::new)
+        });
+        if let Some(error) = failure {
+            for (_, _, _, prepared) in &staged {
+                let _ = fs::remove_file(prepared);
+            }
+            for (path, receipt) in receipts.iter().rev() {
+                rollback_reversible_replacement(path, receipt)?;
+            }
+            return Err(error);
+        }
+        receipts.push((
+            destination.clone(),
+            ReversibleReplacementReceipt {
+                before: before.clone(),
+                before_sha256: migration_bytes_sha256(before),
+                after_sha256: migration_bytes_sha256(after),
+            },
+        ));
+    }
+    for (_, _, _, temporary) in staged {
+        let _ = fs::remove_file(temporary);
+    }
+    Ok(receipts)
+}
+
+/// Rolls back a complete replacement group in reverse application order.
+///
+/// # Errors
+///
+/// Returns before changing files if any member has drifted, or when publication fails.
+pub fn rollback_reversible_replacement_group(
+    receipts: &[(PathBuf, ReversibleReplacementReceipt)],
+) -> Result<(), MigrationInventoryError> {
+    rollback_reversible_replacement_group_with(receipts, |_| Ok(()))
+}
+
+fn rollback_reversible_replacement_group_with(
+    receipts: &[(PathBuf, ReversibleReplacementReceipt)],
+    mut before_restore: impl FnMut(usize) -> Result<(), MigrationInventoryError>,
+) -> Result<(), MigrationInventoryError> {
+    if receipts.is_empty() {
+        return Err(MigrationInventoryError::new(
+            "replacement receipt group cannot be empty",
+        ));
+    }
+    let mut staged = Vec::with_capacity(receipts.len());
+    for (path, receipt) in receipts {
+        let (_, after) =
+            read_regular_project_file(path, MAX_SOURCE_BYTES, "migration replacement group")?;
+        if migration_bytes_sha256(&after) != receipt.after_sha256 {
+            return Err(MigrationInventoryError::new(
+                "replacement group output changed after publication",
+            ));
+        }
+        let temporary = path.with_extension("pliego-group-rollback-tmp");
+        if temporary.exists() {
+            for (_, _, _, prepared) in &staged {
+                let _ = fs::remove_file(prepared);
+            }
+            return Err(MigrationInventoryError::new(
+                "replacement group rollback temporary path already exists",
+            ));
+        }
+        if let Err(error) = write_synced_file(&temporary, &receipt.before) {
+            for (_, _, _, prepared) in &staged {
+                let _ = fs::remove_file(prepared);
+            }
+            return Err(MigrationInventoryError::new(format!(
+                "cannot prepare replacement group rollback: {error}"
+            )));
+        }
+        staged.push((path.clone(), receipt.clone(), after, temporary));
+    }
+    let mut restored: Vec<(PathBuf, ReversibleReplacementReceipt, Vec<u8>)> =
+        Vec::with_capacity(staged.len());
+    for (index, (path, receipt, after, temporary)) in staged.iter().rev().enumerate() {
+        let failure = before_restore(index).err().or_else(|| {
+            pliego_css_io::rename_prepared_synced(temporary, path, "replacement group rollback")
+                .err()
+                .map(MigrationInventoryError::new)
+        });
+        if let Some(error) = failure {
+            for (_, _, _, prepared) in &staged {
+                let _ = fs::remove_file(prepared);
+            }
+            for (restored_path, restored_receipt, restored_after) in restored.iter().rev() {
+                apply_reversible_replacement(
+                    restored_path,
+                    &restored_receipt.before,
+                    restored_after,
+                )?;
+            }
+            return Err(error);
+        }
+        restored.push((path.clone(), receipt.clone(), after.clone()));
+    }
+    for (_, _, _, temporary) in staged {
+        let _ = fs::remove_file(temporary);
+    }
+    Ok(())
+}
+
+impl ReversibleAdditionReceipt {
+    /// Returns canonical receipt JSON with one trailing line feed.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when serialization fails.
+    pub fn to_json(&self) -> Result<Vec<u8>, MigrationInventoryError> {
+        let mut bytes = serde_json::to_vec_pretty(self).map_err(|error| {
+            MigrationInventoryError::new(format!("cannot serialize addition receipt: {error}"))
+        })?;
+        bytes.push(b'\n');
+        Ok(bytes)
+    }
+
+    /// Parses and validates one exact additive receipt.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error for invalid JSON or a noncanonical SHA-256 identity.
+    pub fn from_json(bytes: &[u8]) -> Result<Self, MigrationInventoryError> {
+        let receipt: Self = serde_json::from_slice(bytes).map_err(|error| {
+            MigrationInventoryError::new(format!("cannot parse addition receipt: {error}"))
+        })?;
+        if receipt.after_sha256.len() != 64
+            || !receipt
+                .after_sha256
+                .bytes()
+                .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+        {
+            return Err(MigrationInventoryError::new(
+                "addition receipt SHA-256 must be 64 lowercase hex characters",
+            ));
+        }
+        Ok(receipt)
+    }
+}
+
+/// Atomically creates a new migration sidecar and returns its exact rollback identity.
+///
+/// # Errors
+///
+/// Returns an error when the destination exists, its parent is invalid, or publication fails.
+pub fn apply_reversible_addition(
+    destination: &Path,
+    after: &[u8],
+) -> Result<ReversibleAdditionReceipt, MigrationInventoryError> {
+    if destination.exists() {
+        return Err(MigrationInventoryError::new(
+            "reversible additive destination already exists",
+        ));
+    }
+    let parent = destination
+        .parent()
+        .filter(|parent| !parent.as_os_str().is_empty())
+        .unwrap_or_else(|| Path::new("."));
+    if !parent.is_dir() {
+        return Err(MigrationInventoryError::new(
+            "reversible additive destination parent is not a directory",
+        ));
+    }
+    let temporary = destination.with_extension("pliego-tmp");
+    if temporary.exists() {
+        return Err(MigrationInventoryError::new(
+            "reversible additive temporary path already exists",
+        ));
+    }
+    fs::write(&temporary, after).map_err(|error| {
+        MigrationInventoryError::new(format!("cannot prepare reversible addition: {error}"))
+    })?;
+    if let Err(error) = fs::rename(&temporary, destination) {
+        let _ = fs::remove_file(&temporary);
+        return Err(MigrationInventoryError::new(format!(
+            "cannot publish reversible addition: {error}"
+        )));
+    }
+    Ok(ReversibleAdditionReceipt {
+        after_sha256: migration_bytes_sha256(after),
+    })
+}
+
+/// Removes an additive migration sidecar only while its exact bytes remain unchanged.
+///
+/// # Errors
+///
+/// Returns an error when the output is absent, changed, unsafe, or cannot be removed.
+pub fn rollback_reversible_addition(
+    destination: &Path,
+    receipt: &ReversibleAdditionReceipt,
+) -> Result<(), MigrationInventoryError> {
+    let (_, current) =
+        read_regular_project_file(destination, MAX_SOURCE_BYTES, "migration sidecar")?;
+    if migration_bytes_sha256(&current) != receipt.after_sha256 {
+        return Err(MigrationInventoryError::new(
+            "reversible additive output changed after publication",
+        ));
+    }
+    fs::remove_file(destination).map_err(|error| {
+        MigrationInventoryError::new(format!("cannot roll back reversible addition: {error}"))
+    })
+}
+
+fn migration_bytes_sha256(bytes: &[u8]) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(bytes);
+    format!("{:x}", hasher.finalize())
+}
+
+#[cfg(test)]
+mod replacement_group_fault_tests {
+    use super::*;
+
+    #[test]
+    fn compensates_a_published_member_when_injected_failure_follows_preflight() {
+        let root =
+            Path::new("target/tests").join(format!("pliegocss-group-fault-{}", std::process::id()));
+        fs::create_dir_all(&root).unwrap();
+        let first = root.join("first.txt");
+        let second = root.join("second.txt");
+        fs::write(&first, b"first-before\n").unwrap();
+        fs::write(&second, b"second-before\n").unwrap();
+        let result = apply_reversible_replacement_group_with(
+            &[
+                (&first, b"first-before\n", b"first-after\n"),
+                (&second, b"second-before\n", b"second-after\n"),
+            ],
+            |index| {
+                if index == 1 {
+                    Err(MigrationInventoryError::new("injected publication failure"))
+                } else {
+                    Ok(())
+                }
+            },
+        );
+        assert!(result.is_err());
+        assert_eq!(fs::read(&first).unwrap(), b"first-before\n");
+        assert_eq!(fs::read(&second).unwrap(), b"second-before\n");
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn rollback_compensates_to_after_when_a_later_restore_fails() {
+        let root = Path::new("target/tests").join(format!(
+            "pliegocss-group-rollback-fault-{}",
+            std::process::id()
+        ));
+        fs::create_dir_all(&root).unwrap();
+        let first = root.join("first.txt");
+        let second = root.join("second.txt");
+        fs::write(&first, b"first-before\n").unwrap();
+        fs::write(&second, b"second-before\n").unwrap();
+        let receipts = apply_reversible_replacement_group(&[
+            (&first, b"first-before\n", b"first-after\n"),
+            (&second, b"second-before\n", b"second-after\n"),
+        ])
+        .unwrap();
+        let result = rollback_reversible_replacement_group_with(&receipts, |index| {
+            if index == 1 {
+                Err(MigrationInventoryError::new("injected rollback failure"))
+            } else {
+                Ok(())
+            }
+        });
+        assert!(result.is_err());
+        assert_eq!(fs::read(&first).unwrap(), b"first-after\n");
+        assert_eq!(fs::read(&second).unwrap(), b"second-after\n");
+        rollback_reversible_replacement_group(&receipts).unwrap();
+        fs::remove_dir_all(root).unwrap();
+    }
+}
+
+/// Prepares the first bounded Tailwind migration replacement without removing existing semantics.
+///
+/// # Errors
+///
+/// Returns an error for oversized/non-UTF-8 input, missing Tailwind evidence, or an existing marker.
+pub fn prepare_tailwind_marker_replacement(
+    before: &[u8],
+) -> Result<Vec<u8>, MigrationInventoryError> {
+    if before.len() > MAX_SOURCE_BYTES {
+        return Err(MigrationInventoryError::new(
+            "Tailwind marker replacement input exceeds 16 MiB",
+        ));
+    }
+    let source = std::str::from_utf8(before).map_err(|error| {
+        MigrationInventoryError::new(format!("Tailwind marker input is not UTF-8: {error}"))
+    })?;
+    let marker = "/* PliegoCSS migration prepared */";
+    if source.contains(marker) {
+        return Err(MigrationInventoryError::new(
+            "Tailwind migration marker already exists",
+        ));
+    }
+    let inventory =
+        inventory_migration_source(MigrationSourceKind::Tailwind, "src/app.css", source)?;
+    if inventory.constructs().is_empty() {
+        return Err(MigrationInventoryError::new(
+            "Tailwind marker replacement requires observed Tailwind constructs",
+        ));
+    }
+    let mut after = before.to_vec();
+    if !after.ends_with(b"\n") {
+        after.push(b'\n');
+    }
+    after.extend_from_slice(marker.as_bytes());
+    after.push(b'\n');
+    Ok(after)
+}
+
+/// Appends a standard `:root` projection for one closed, static Tailwind `@theme` block.
+///
+/// # Errors
+///
+/// Returns an error for non-UTF-8 input, modifiers, multiple/dynamic blocks, malformed braces,
+/// declarations other than custom properties, or an existing generated projection.
+pub fn prepare_tailwind_theme_root_projection(
+    before: &[u8],
+) -> Result<Vec<u8>, MigrationInventoryError> {
+    if before.len() > MAX_SOURCE_BYTES {
+        return Err(MigrationInventoryError::new(
+            "Tailwind theme projection input exceeds 16 MiB",
+        ));
+    }
+    let source = std::str::from_utf8(before).map_err(|error| {
+        MigrationInventoryError::new(format!("Tailwind theme input is not UTF-8: {error}"))
+    })?;
+    let marker = "/* PliegoCSS projected Tailwind theme */";
+    if source.contains(marker) {
+        return Err(MigrationInventoryError::new(
+            "Tailwind theme projection already exists",
+        ));
+    }
+    let starts = source.match_indices("@theme").collect::<Vec<_>>();
+    if starts.len() != 1 {
+        return Err(MigrationInventoryError::new(
+            "Tailwind theme projection requires exactly one @theme block",
+        ));
+    }
+    let start = starts[0].0;
+    let tail = &source[start + "@theme".len()..];
+    let open = tail.find('{').ok_or_else(|| {
+        MigrationInventoryError::new("Tailwind @theme block has no opening brace")
+    })?;
+    if !tail[..open].trim().is_empty() {
+        return Err(MigrationInventoryError::new(
+            "Tailwind @theme modifiers are not supported by this projection",
+        ));
+    }
+    let body_start = start + "@theme".len() + open + 1;
+    let close = source[body_start..].find('}').ok_or_else(|| {
+        MigrationInventoryError::new("Tailwind @theme block has no closing brace")
+    })? + body_start;
+    let body = &source[body_start..close];
+    if body.contains('{') || body.contains('}') {
+        return Err(MigrationInventoryError::new(
+            "nested Tailwind @theme content is not supported",
+        ));
+    }
+    for declaration in body
+        .split(';')
+        .map(str::trim)
+        .filter(|item| !item.is_empty())
+    {
+        if !declaration.starts_with("--") || !declaration.contains(':') {
+            return Err(MigrationInventoryError::new(
+                "Tailwind theme projection accepts custom-property declarations only",
+            ));
+        }
+    }
+    let mut after = before.to_vec();
+    if !after.ends_with(b"\n") {
+        after.push(b'\n');
+    }
+    after.extend_from_slice(marker.as_bytes());
+    after.extend_from_slice(b"\n:root {");
+    after.extend_from_slice(body.as_bytes());
+    after.extend_from_slice(b"}\n");
+    Ok(after)
+}
+
+/// Appends a standard class projection for one closed, static Tailwind `@utility` block.
+///
+/// # Errors
+///
+/// Returns an error for non-UTF-8 input, wildcard/dynamic names, multiple or malformed blocks,
+/// nested content, non-declaration bodies, or an existing projection.
+pub fn prepare_tailwind_utility_projection(
+    before: &[u8],
+) -> Result<Vec<u8>, MigrationInventoryError> {
+    if before.len() > MAX_SOURCE_BYTES {
+        return Err(MigrationInventoryError::new(
+            "Tailwind utility projection input exceeds 16 MiB",
+        ));
+    }
+    let source = std::str::from_utf8(before).map_err(|error| {
+        MigrationInventoryError::new(format!("Tailwind utility input is not UTF-8: {error}"))
+    })?;
+    let marker = "/* PliegoCSS projected Tailwind utility */";
+    if source.contains(marker) {
+        return Err(MigrationInventoryError::new(
+            "Tailwind utility projection already exists",
+        ));
+    }
+    let starts = source
+        .match_indices("@utility")
+        .map(|(offset, _)| offset)
+        .collect::<Vec<_>>();
+    if starts.is_empty() {
+        return Err(MigrationInventoryError::new(
+            "Tailwind utility projection requires at least one @utility block",
+        ));
+    }
+    let mut projections = Vec::with_capacity(starts.len());
+    for start in starts {
+        let tail = &source[start + "@utility".len()..];
+        let open = tail.find('{').ok_or_else(|| {
+            MigrationInventoryError::new("Tailwind @utility block has no opening brace")
+        })?;
+        let name = tail[..open].trim();
+        if name.is_empty()
+            || name.contains('*')
+            || !name
+                .bytes()
+                .all(|byte| byte.is_ascii_alphanumeric() || byte == b'-' || byte == b'_')
+        {
+            return Err(MigrationInventoryError::new(
+                "Tailwind utility projection requires static class-safe names",
+            ));
+        }
+        let body_start = start + "@utility".len() + open + 1;
+        let close = source[body_start..].find('}').ok_or_else(|| {
+            MigrationInventoryError::new("Tailwind @utility block has no closing brace")
+        })? + body_start;
+        let body = &source[body_start..close];
+        if body.contains('{') || body.contains('}') || body.contains("--value(") {
+            return Err(MigrationInventoryError::new(
+                "dynamic or nested Tailwind utility content is not supported",
+            ));
+        }
+        for declaration in body
+            .split(';')
+            .map(str::trim)
+            .filter(|item| !item.is_empty())
+        {
+            let Some((property, value)) = declaration.split_once(':') else {
+                return Err(MigrationInventoryError::new(
+                    "Tailwind utility projection requires declarations only",
+                ));
+            };
+            if property.trim().is_empty() || value.trim().is_empty() {
+                return Err(MigrationInventoryError::new(
+                    "Tailwind utility projection has an empty declaration",
+                ));
+            }
+        }
+        projections.push((name, body));
+    }
+    let mut after = before.to_vec();
+    if !after.ends_with(b"\n") {
+        after.push(b'\n');
+    }
+    after.extend_from_slice(marker.as_bytes());
+    after.push(b'\n');
+    for (name, body) in projections {
+        after.extend_from_slice(format!(".{name} {{").as_bytes());
+        after.extend_from_slice(body.as_bytes());
+        after.extend_from_slice(b"}\n");
+    }
+    Ok(after)
+}
+
+/// Adds one static alias beside an exact class token in a closed quoted HTML class attribute.
+///
+/// # Errors
+///
+/// Returns an error for non-UTF-8/dynamic templates, invalid class names, absent/ambiguous source
+/// tokens, or an alias that already exists.
+pub fn prepare_static_template_class_alias(
+    before: &[u8],
+    source_class: &str,
+    alias_class: &str,
+) -> Result<Vec<u8>, MigrationInventoryError> {
+    if before.len() > MAX_SOURCE_BYTES {
+        return Err(MigrationInventoryError::new(
+            "template alias input exceeds 16 MiB",
+        ));
+    }
+    if [source_class, alias_class].iter().any(|name| {
+        name.is_empty()
+            || !name.bytes().all(|byte| {
+                byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b':' | b'/')
+            })
+    }) {
+        return Err(MigrationInventoryError::new(
+            "template alias classes are invalid",
+        ));
+    }
+    let source = std::str::from_utf8(before).map_err(|error| {
+        MigrationInventoryError::new(format!("template alias input is not UTF-8: {error}"))
+    })?;
+    if source.contains('`') || source.contains("${") || source.contains("className={") {
+        return Err(MigrationInventoryError::new(
+            "dynamic template classes are not supported",
+        ));
+    }
+    let mut match_range = None;
+    for prefix in ["class=\"", "className=\""] {
+        let mut offset = 0;
+        while let Some(found) = source[offset..].find(prefix) {
+            let value_start = offset + found + prefix.len();
+            let end = source[value_start..].find('"').ok_or_else(|| {
+                MigrationInventoryError::new("template class attribute is unterminated")
+            })? + value_start;
+            let items = source[value_start..end]
+                .split_ascii_whitespace()
+                .collect::<Vec<_>>();
+            if items.contains(&alias_class) {
+                return Err(MigrationInventoryError::new(
+                    "template class alias already exists",
+                ));
+            }
+            if items.contains(&source_class) {
+                if match_range.is_some() {
+                    return Err(MigrationInventoryError::new(
+                        "template class alias requires exactly one source occurrence",
+                    ));
+                }
+                match_range = Some((value_start, end, items));
+            }
+            offset = end + 1;
+        }
+    }
+    let Some((start, end, items)) = match_range else {
+        return Err(MigrationInventoryError::new(
+            "template source class was not found",
+        ));
+    };
+    let mut replacement = String::new();
+    for item in items {
+        if !replacement.is_empty() {
+            replacement.push(' ');
+        }
+        replacement.push_str(item);
+        if item == source_class {
+            replacement.push(' ');
+            replacement.push_str(alias_class);
+        }
+    }
+    let mut after = source.to_owned();
+    after.replace_range(start..end, &replacement);
+    Ok(after.into_bytes())
+}
+
+impl ReversibleMigrationPlan {
+    /// Returns canonical two-space JSON with one trailing line feed.
+    #[must_use]
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.bytes
+    }
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ReversibleMigrationPlanDocument<'a> {
+    schema_version: u8,
+    mode: &'static str,
+    reversible: bool,
+    inventory_sha256: String,
+    rollback: ReversibleMigrationRollback,
+    proposals: Vec<ReversibleMigrationProposal>,
+    sources: Vec<ReversibleMigrationSource<'a>>,
+    edits: Vec<serde_json::Value>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ReversibleMigrationProposal {
+    kind: &'static str,
+    file: String,
+    before_sha256: Option<String>,
+    after_sha256: String,
+    automatic: bool,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ReversibleMigrationRollback {
+    strategy: &'static str,
+    preconditions: [&'static str; 2],
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ReversibleMigrationSource<'a> {
+    file: &'a str,
+    source_kind: MigrationSourceKind,
+    source_sha256: &'a str,
+    source_bytes: usize,
+}
+
+/// Builds a deterministic inventory-only migration checkpoint with zero implicit edits.
+///
+/// # Errors
+///
+/// Returns an error when inventories do not exactly cover the project's declared sources or JSON
+/// serialization fails.
+pub fn build_reversible_migration_plan(
+    project: &MigrationProject,
+    inventories: &[MigrationInventory],
+) -> Result<ReversibleMigrationPlan, MigrationInventoryError> {
+    let mut sources = inventories.iter().collect::<Vec<_>>();
+    sources.sort_by(|left, right| left.file().cmp(right.file()));
+    let mut declared = project.sources.iter().collect::<Vec<_>>();
+    declared.sort_by(|left, right| left.file.cmp(&right.file));
+    if declared.len() != sources.len()
+        || declared.iter().zip(&sources).any(|(declared, inventory)| {
+            declared.file != inventory.file() || declared.source_kind != inventory.source_kind()
+        })
+    {
+        return Err(MigrationInventoryError::new(
+            "reversible migration plan inventories must exactly cover declared sources",
+        ));
+    }
+    let document = ReversibleMigrationPlanDocument {
+        schema_version: 1,
+        mode: "inventory-only",
+        reversible: true,
+        inventory_sha256: migration_inventory_set_sha256(&sources),
+        rollback: ReversibleMigrationRollback {
+            strategy: "restore-exact-source-bytes",
+            preconditions: ["source-hashes-match", "all-edits-have-before-bytes"],
+        },
+        proposals: vec![
+            ReversibleMigrationProposal {
+                kind: "add",
+                file: "pliego.migration.css".into(),
+                before_sha256: None,
+                after_sha256: migration_bytes_sha256(
+                    b"/* Generated PliegoCSS migration sidecar. Safe to remove after rollback. */\n",
+                ),
+                automatic: false,
+            },
+            ReversibleMigrationProposal {
+                kind: "replace",
+                file: sources[0].file().to_owned(),
+                before_sha256: Some(sources[0].source_sha256().to_owned()),
+                after_sha256: migration_bytes_sha256(
+                    &prepare_tailwind_marker_replacement(&sources[0].source)?,
+                ),
+                automatic: false,
+            },
+            ReversibleMigrationProposal {
+                kind: "theme-root-projection",
+                file: sources[0].file().to_owned(),
+                before_sha256: Some(sources[0].source_sha256().to_owned()),
+                after_sha256: migration_bytes_sha256(
+                    &prepare_tailwind_theme_root_projection(&sources[0].source)?,
+                ),
+                automatic: false,
+            },
+            ReversibleMigrationProposal {
+                kind: "utility-projection",
+                file: sources[0].file().to_owned(),
+                before_sha256: Some(sources[0].source_sha256().to_owned()),
+                after_sha256: migration_bytes_sha256(
+                    &prepare_tailwind_utility_projection(&sources[0].source)?,
+                ),
+                automatic: false,
+            },
+        ],
+        sources: sources
+            .into_iter()
+            .map(|inventory| ReversibleMigrationSource {
+                file: inventory.file(),
+                source_kind: inventory.source_kind(),
+                source_sha256: inventory.source_sha256(),
+                source_bytes: inventory.source_bytes(),
+            })
+            .collect(),
+        edits: Vec::new(),
+    };
+    let mut bytes = serde_json::to_vec_pretty(&document).map_err(|error| {
+        MigrationInventoryError::new(format!(
+            "cannot serialize reversible migration plan: {error}"
+        ))
+    })?;
+    bytes.push(b'\n');
+    Ok(ReversibleMigrationPlan { bytes })
+}
+
+fn migration_inventory_set_sha256(inventories: &[&MigrationInventory]) -> String {
+    let mut hasher = Sha256::new();
+    for inventory in inventories {
+        hasher.update(inventory.file().as_bytes());
+        hasher.update([0]);
+        hasher.update(inventory.source_sha256().as_bytes());
+        hasher.update([b'\n']);
+    }
+    format!("{:x}", hasher.finalize())
+}
+
 impl MigrationProjectInventory {
     fn from_parts(
         sources: Vec<MigrationInventory>,
@@ -1729,6 +2710,7 @@ pub fn inventory_migration_source(
         file: file.into(),
         source_bytes: source.len(),
         source_sha256,
+        source: source.as_bytes().to_vec(),
         preflight_reliance,
         summary,
         constructs,

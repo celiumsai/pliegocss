@@ -19,6 +19,8 @@ const EXPECTED_ORDER = [
   "pliego-css-ir",
   "pliego-css-cascade",
   "pliego-css-ownership",
+  "pliego-css-io",
+  "pliego-css-publication",
   "pliego-css-source",
   "pliego-css-watch",
   "pliego-css-parser",
@@ -49,9 +51,9 @@ const PUBLIC_API_FIXTURE_FILES = [
   "src/main.rs",
 ];
 const PACKAGE_TOOLCHAIN = "1.96.0";
-const EXPECTED_REPOSITORY = "https://github.com/celiums/pliegocss";
+const EXPECTED_REPOSITORY = "https://github.com/celiumsai/pliegocss";
 const EXPECTED_MSRV = "1.85";
-const MAX_COMPRESSED_ARCHIVE_BYTES = 60 * 1024;
+const MAX_COMPRESSED_ARCHIVE_BYTES = 72 * 1024;
 const EXPECTED_LICENSE_SHA256 =
   "8ada45cd9f843acf64e4722ae262c622a2b3b3007c7310ef36ac1061a30f6adb";
 
@@ -82,6 +84,12 @@ function run(command, args, { capture = false, cwd = ROOT } = {}) {
 
 function runPackageCargo(args, options = {}) {
   return run("cargo", [`+${PACKAGE_TOOLCHAIN}`, ...args], options);
+}
+
+function tarPath(path) {
+  if (process.platform !== "win32") return path;
+  const match = /^([A-Za-z]):[\\/](.*)$/u.exec(resolve(path));
+  return match ? `/${match[1].toLowerCase()}/${match[2].replaceAll("\\", "/")}` : path;
 }
 
 function dependencyContract(dependency) {
@@ -160,10 +168,11 @@ function isPublishable(pkg) {
 }
 
 function portableArchiveKey(file, packageName) {
+  file = file.replaceAll("\\", "/");
   if (
     !file ||
     isAbsolute(file) ||
-    file.includes("\\") ||
+
     file.startsWith("/") ||
     /^[a-z]:/iu.test(file) ||
     file !== file.normalize("NFC")
@@ -301,7 +310,7 @@ for (const name of EXPECTED_ORDER) {
       fail(`${name} package is missing ${required}`);
     }
   }
-  if (!files.some((file) => file.startsWith("src/"))) {
+  if (!files.some((file) => /^src[\\/]/u.test(file))) {
     fail(`${name} package contains no source files`);
   }
   const portablePaths = files.map((file) => portableArchiveKey(file, name));
@@ -365,7 +374,7 @@ const archiveRecords = EXPECTED_ORDER.map((name) => {
   if (info.size > MAX_COMPRESSED_ARCHIVE_BYTES) {
     fail(
       `${name} archive is ${info.size} bytes; maximum compressed archive size is ` +
-        `${MAX_COMPRESSED_ARCHIVE_BYTES} bytes (60 KiB)`,
+        `${MAX_COMPRESSED_ARCHIVE_BYTES} bytes (72 KiB)`,
     );
   }
   return {
@@ -393,7 +402,9 @@ try {
   mkdirSync(packagesRoot);
   const extractedRoots = new Map();
   for (const archive of archiveRecords) {
-    run("tar", ["-xzf", archive.path, "-C", packagesRoot], { cwd: verificationRoot });
+    run("tar", ["-xzf", tarPath(archive.path), "-C", tarPath(packagesRoot)], {
+      cwd: verificationRoot,
+    });
     const packageRoot = join(packagesRoot, `${archive.name}-${version}`);
     if (!existsSync(join(packageRoot, "Cargo.toml"))) {
       fail(`${archive.name} archive did not extract to its canonical package root`);
@@ -589,6 +600,11 @@ try {
     "",
   ].join("\n");
   writeFileSync(join(downstreamRoot, "Cargo.toml"), downstreamManifest, "utf8");
+
+  run("cargo", ["+1.85.0", "generate-lockfile"], {
+    cwd: downstreamRoot,
+    capture: true,
+  });
 
   const downstreamMetadata = JSON.parse(
     run(

@@ -631,6 +631,7 @@ pub struct CssBudgetMetrics {
     declarations: usize,
     max_specificity: u32,
     declaration_fingerprints: BTreeMap<String, usize>,
+    declaration_identities: BTreeMap<String, usize>,
 }
 
 #[cfg(feature = "css-analysis")]
@@ -691,6 +692,16 @@ impl CssBudgetMetrics {
             .map(|(fingerprint, occurrences)| (fingerprint.as_str(), *occurrences))
     }
 
+    /// Iterate over generic-CSS declaration identities and occurrence counts in hash order.
+    ///
+    /// Each identity binds conditional/layer context, selector list, importance, and canonical
+    /// declaration bytes. It identifies authored declarations without implying runtime usage.
+    pub fn declaration_identities(&self) -> impl Iterator<Item = (&str, usize)> {
+        self.declaration_identities
+            .iter()
+            .map(|(identity, occurrences)| (identity.as_str(), *occurrences))
+    }
+
     /// Convert the AST metrics into the backend-independent policy vector.
     #[must_use]
     pub fn measurements(&self) -> BudgetMeasurements {
@@ -730,6 +741,14 @@ impl CssBudgetMetrics {
                 .entry(fingerprint.clone())
                 .or_default();
             *current = checked_metric_add(*current, *occurrences, "fingerprint occurrences")?;
+        }
+        for (identity, occurrences) in &other.declaration_identities {
+            let current = merged
+                .declaration_identities
+                .entry(identity.clone())
+                .or_default();
+            *current =
+                checked_metric_add(*current, *occurrences, "declaration identity occurrences")?;
         }
         *self = merged;
         Ok(())
@@ -924,6 +943,24 @@ fn collect_style_budget_metrics(
     for selector in &rule.selectors.0 {
         metrics.max_specificity = metrics.max_specificity.max(selector.specificity());
     }
+    let selectors = canonical_css(&rule.selectors, "selector list")?;
+    for (important, declarations) in [
+        (false, &rule.declarations.declarations),
+        (true, &rule.declarations.important_declarations),
+    ] {
+        for declaration in declarations {
+            let canonical = declaration
+                .to_css_string(important, minified_printer())
+                .map_err(|error| {
+                    BudgetError::new(format!("cannot normalize declaration identity: {error}"))
+                })?;
+            let input = format!(
+                "pliegocss-generic-css-declaration-v1\0{context}\0{selectors}\0{canonical}"
+            );
+            let identity = format!("sha256:{}", sha256_hex(input.as_bytes()));
+            *metrics.declaration_identities.entry(identity).or_default() += 1;
+        }
+    }
     if !rule.declarations.declarations.is_empty()
         || !rule.declarations.important_declarations.is_empty()
     {
@@ -940,7 +977,6 @@ fn collect_style_budget_metrics(
             .entry(fingerprint)
             .or_default() += 1;
     }
-    let selectors = canonical_css(&rule.selectors, "selector list")?;
     let nested = extend_budget_context(context, "selector-parent", &selectors);
     collect_budget_rule_counts(&rule.rules, metrics, &nested)
 }
@@ -1371,6 +1407,31 @@ mod analysis_tests {
     use lightningcss::stylesheet::{ParserOptions, StyleSheet};
 
     use super::*;
+
+    #[test]
+    fn generic_declaration_identities_bind_selector_context_importance_and_bytes() {
+        let stylesheet = StyleSheet::parse(
+            ".a { color: red; color: red !important; } .b { color: red; }",
+            ParserOptions::default(),
+        )
+        .expect("stylesheet");
+        let metrics = measure_css_budgets(&stylesheet).expect("metrics").file;
+        let identities = metrics.declaration_identities().collect::<Vec<_>>();
+        assert_eq!(identities.len(), 3);
+        assert!(identities.iter().all(|(identity, count)| {
+            identity.starts_with("sha256:") && identity.len() == 71 && *count == 1
+        }));
+
+        let repeated =
+            StyleSheet::parse(".a { color: red; color: red; }", ParserOptions::default())
+                .expect("repeated");
+        let repeated = measure_css_budgets(&repeated).expect("metrics").file;
+        assert_eq!(
+            repeated.declaration_identities().collect::<Vec<_>>().len(),
+            1
+        );
+        assert_eq!(repeated.declaration_identities().next().unwrap().1, 2);
+    }
 
     #[test]
     fn bundle_aggregation_detects_cross_artifact_duplicates_and_is_atomic_on_overflow() {

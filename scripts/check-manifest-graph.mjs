@@ -22,6 +22,7 @@ const targetDir = join(root, "target");
 const expectedCss = readFileSync(join(fixture, "expected.css"));
 const expectedManifest = readFileSync(join(fixture, "expected.manifest.json"));
 const reachabilityName = "pliego.reachability.json";
+const updateGoldens = process.env.PLIEGOCSS_UPDATE_GOLDENS === "1";
 
 function fail(message) {
   throw new Error(message);
@@ -348,7 +349,7 @@ function assertManifestIntegrity(manifest, css, schemaVersion) {
   assert(manifest.schemaVersion === schemaVersion, `expected manifest schema ${schemaVersion}`);
   assert(manifest.styleIdFormatVersion === 2, "StyleId format version drifted");
   assert(manifest.classNameFormatVersion === 1, "class-name format version drifted");
-  assert(manifest.themeIdFormatVersion === 1, "theme ID format version drifted");
+  assert(manifest.themeIdFormatVersion === 2, "theme ID format version drifted");
   assert(manifest.targets === "modern", "target contract drifted");
   assert(manifest.format === "minified", "format contract drifted");
   assert(manifest.cssBytes === css.byteLength, "manifest CSS byte length is stale");
@@ -550,6 +551,13 @@ const schemaThreeManifest = JSON.parse(
 );
 const schemaFourManifestBytes = readFileSync(join(project, "out", "schema-4.manifest.json"));
 const schemaFourManifest = JSON.parse(schemaFourManifestBytes);
+
+if (updateGoldens) {
+  writeFileSync(join(fixture, "expected.css"), schemaFourCss);
+  writeFileSync(join(fixture, "expected.manifest.json"), schemaFourManifestBytes);
+  process.stdout.write("manifest graph goldens updated\n");
+  process.exit(0);
+}
 
 assertEqual(schemaThreeCss, schemaFourCss, "manifest version changed emitted CSS");
 assertEqual(schemaFourCss, expectedCss, "frozen CSS golden drifted");
@@ -780,7 +788,7 @@ writeFileSync(oversized, Buffer.alloc(16 * 1024 * 1024 + 1, 0x20));
 expectFailureWithoutMutation(
   executable,
   guardedCompile("oversized.reachability.json"),
-  /regular file of at most 16777216 bytes|exceeds 16777216 bytes/,
+  /regular file of at most 16777216 bytes|exceeds 16777216 bytes|not a bounded regular file/,
   join(project, "guard"),
 );
 

@@ -20,7 +20,11 @@ assert!(css.contains(".pc_"));
 
 Registry-aware variants accept one shared `pliego-css-theme::ThemeRegistry`. The crate also owns the
 utility catalog, conditional composition analysis, typed container and fixed-order cascade-layer
-conditions, StyleId format 2 encoding, theme CSS emission, and semantic IR binary format 2. The IR
+conditions, StyleId format 2 encoding, theme CSS emission, and semantic IR binary format 2. Callers
+composing mutable or untrusted semantic IR must use `try_compose_style_override` or
+`try_compose_style_override_with_theme`; these validate both inputs before indexing intern tables and
+return structural invariant errors. The infallible composition wrappers are for compiler-produced,
+prevalidated IR. The IR
 artifact is a canonical, theme-aware persistence envelope
 with resolved assignment records and portable spans; it is separate from the one-way identity stream
 and adds no Serde dependency.

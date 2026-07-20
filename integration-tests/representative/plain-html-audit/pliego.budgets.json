@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "policyVersion": 1,
+  "budgets": [
+    {
+      "id": "representative-css",
+      "subject": {
+        "kind": "file",
+        "id": "app.css"
+      },
+      "limits": {
+        "bytes": {
+          "maximum": 1400,
+          "baseline": 1200,
+          "maxIncrease": 200
+        },
+        "rules": {
+          "maximum": 12,
+          "baseline": 9,
+          "maxIncrease": 3
+        },
+        "selectors": {
+          "maximum": 14,
+          "baseline": 10,
+          "maxIncrease": 4
+        },
+        "specificity": {
+          "maximum": "0,2,0",
+          "baseline": "0,2,0",
+          "maxIncrease": "0,0,0"
+        },
+        "semanticDuplicates": {
+          "maximum": 0,
+          "baseline": 0,
+          "maxIncrease": 0
+        }
+      }
+    },
+    {
+      "id": "components-layer",
+      "subject": {
+        "kind": "layer",
+        "id": "components"
+      },
+      "limits": {
+        "rules": {
+          "maximum": 10,
+          "baseline": 7,
+          "maxIncrease": 3
+        }
+      }
+    }
+  ],
+  "exceptions": []
+}

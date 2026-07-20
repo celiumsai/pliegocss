@@ -59,7 +59,7 @@ const OWNERSHIP_ASSET_PLAN: &[u8] = br#"{
   "applicationCoverage": "adapter-attested-complete",
   "styleIdFormatVersion": 2,
   "classNameFormatVersion": 1,
-  "themeIdFormatVersion": 1,
+  "themeIdFormatVersion": 2,
   "themeId": "00000000000000000000000000000000",
   "targets": "none",
   "format": "minified",

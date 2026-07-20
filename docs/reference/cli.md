@@ -24,9 +24,11 @@ pliego-cssc watch [--input styles.txt] [--source file-or-directory ...] --output
 pliego-cssc [--diagnostic-format human|json] catalog [--config theme.toml|--seed] [--format markdown|json] [--output catalog.md|--check catalog.md]
 pliego-cssc [--diagnostic-format human|json] audit --input FILE.css --targets baseline-widely|modern|none [--budget-policy FILE.json [--budget-subject package=NAME|route=/PATH ...]] [--accessibility-policy FILE.json [--token-graph FILE.json]] [--control-dir DIR [--check]] [--format human|json|sarif]
 pliego-cssc [--diagnostic-format human|json] audit --asset-plan FILE.json [--ownership FILE.json] --targets baseline-widely|modern|none [--budget-policy FILE.json] [--accessibility-policy FILE.json [--token-graph FILE.json]] [--control-dir DIR [--check]] [--format human|json|sarif]
+pliego-cssc [--diagnostic-format human|json] transform-css --input FILE.css --output FILE.css [--targets baseline-widely|modern|none] [--format minified|pretty] [--control-dir DIR] [--check]
 pliego-cssc [--diagnostic-format human|json] compatibility --targets baseline-widely|modern|none
 pliego-cssc [--diagnostic-format human|json] migration-inventory sass|tailwind|css-modules FILE
 pliego-cssc [--diagnostic-format human|json] migration-project-inventory DECLARATION.json|DIRECTORY
+pliego-cssc [--diagnostic-format human|json] migration-project-plan DECLARATION.json|DIRECTORY
 pliego-cssc [--diagnostic-format human|json] explain --style "utilities" [--config theme.toml|--seed] [--targets baseline-widely|modern|none] [--format text|json]
 pliego-cssc [--diagnostic-format human|json] explain-cascade --input FILE.css --element 'button#save.action' --property LONGHAND [--format text|json]
 pliego-cssc [--diagnostic-format human|json] plan --findings FILE.json --proposal FILE.json --source-root DIR [--format text|json]
@@ -540,6 +542,18 @@ ambiguity fails closed, while configured load paths and importers are not execut
 The inventory also records a closed set of config keys and plugin registration API calls as
 unsupported lexical seams; this does not claim that their bodies can be migrated. See the
 [migration project inventory schema 1](./migration-project-inventory-schema-1.md).
+
+### Reversible migration groups
+
+```console
+pliego-cssc migration-group-apply --manifest group.json --receipt group.receipt.json
+pliego-cssc migration-group-rollback --receipt group.receipt.json
+```
+
+The apply command consumes a closed schema-1 manifest with ordered `{file, after}` entries, captures
+exact before bytes, compensates prior files if a later member fails, and publishes one receipt. The
+rollback command preflights every after hash before restoring all files in reverse order, then
+removes the receipt. Both commands remain explicit; planning never executes them automatically.
 
 ### `compile` and `build`
 
@@ -1070,16 +1084,16 @@ pliego.manifest.json` writes pretty JSON with one trailing newline:
   "schemaVersion": 3,
   "styleIdFormatVersion": 2,
   "classNameFormatVersion": 1,
-  "themeIdFormatVersion": 1,
-  "themeId": "c46b8b7ec8c3aa6daadf15cc9196ba3e",
+  "themeIdFormatVersion": 2,
+  "themeId": "b3d5ad77175995c2b8f51ef7c0d41991",
   "targets": "modern",
   "format": "minified",
   "cssSha256": "d208d2960bd28fb29354b1a89c74c106686c8a8a2d71a9cc7cc9971eb2e97070",
   "cssBytes": 424,
   "styles": [
     {
-      "styleId": "321e429fcbcbbfd069227acdeda4bb0a",
-      "className": "pc_2ytdwih5nln6228oqp6k413be",
+      "styleId": "70cb04ef9bf9621f5826351f1778f68e",
+      "className": "pc_6oe73ec16rbb7ublcoa3bpzf2",
       "origins": [
         {
           "source": "flex gap-4",

@@ -11,6 +11,7 @@ use std::collections::BTreeMap;
 use pliego_css_ir::{
     BreakpointId, CASCADE_LAYER_VARIANTS, CLASSIFIED_SELECTOR_VARIANTS, TokenId, TokenKind,
 };
+use sha2::{Digest, Sha256};
 
 mod binary;
 
@@ -20,10 +21,13 @@ pub use binary::{
 };
 
 /// Version of the canonical byte stream used to derive [`ThemeId`].
-pub const THEME_ID_FORMAT_VERSION: u16 = 1;
+pub const THEME_ID_FORMAT_VERSION: u16 = 2;
 
-const FNV_128_OFFSET: u128 = 0x6c62_272e_07bb_0142_62b8_2175_6295_c58d;
-const FNV_128_PRIME: u128 = 0x0000_0000_0100_0000_0000_0000_0000_013b;
+const THEME_ID_STREAM_DOMAIN: &[u8; 16] = b"pliego-theme-id\0";
+const THEME_ID_TOKENS: u8 = 0x01;
+const THEME_ID_TOKEN: u8 = 0x02;
+const THEME_ID_BREAKPOINTS: u8 = 0x03;
+const THEME_ID_BREAKPOINT: u8 = 0x04;
 
 /// Stable identity of a canonical theme registry.
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
@@ -692,28 +696,49 @@ fn valid_css_function(value: &str, names: &[&str]) -> bool {
 }
 
 fn derive_theme_id(tokens: &[TokenDefinition], breakpoints: &[BreakpointDefinition]) -> ThemeId {
-    let mut hash = FNV_128_OFFSET;
-    hash_bytes(&mut hash, b"pliego-css-theme");
-    hash_byte(&mut hash, 0);
-    hash_bytes(&mut hash, &THEME_ID_FORMAT_VERSION.to_be_bytes());
+    let digest = Sha256::digest(encode_theme_identity(tokens, breakpoints));
+    let mut truncated = [0_u8; 16];
+    truncated.copy_from_slice(&digest[..16]);
+    let value = u128::from_be_bytes(truncated);
+    ThemeId::new(if value == 0 { 1 } else { value })
+}
+
+fn encode_theme_identity(
+    tokens: &[TokenDefinition],
+    breakpoints: &[BreakpointDefinition],
+) -> Vec<u8> {
+    let mut stream = Vec::new();
+    stream.extend_from_slice(THEME_ID_STREAM_DOMAIN);
+    stream.extend_from_slice(&THEME_ID_FORMAT_VERSION.to_be_bytes());
+    stream.push(THEME_ID_TOKENS);
+    push_identity_count(&mut stream, tokens.len());
     for token in tokens {
-        hash_byte(&mut hash, 1);
-        hash_byte(&mut hash, token_kind_tag(token.kind));
-        hash_bytes(&mut hash, &token.id.get().to_be_bytes());
-        hash_bytes(&mut hash, token.name.as_bytes());
-        hash_byte(&mut hash, 0);
-        hash_bytes(&mut hash, token.value.as_bytes());
-        hash_byte(&mut hash, 0);
+        stream.push(THEME_ID_TOKEN);
+        stream.push(token_kind_tag(token.kind));
+        stream.extend_from_slice(&token.id.get().to_be_bytes());
+        push_identity_text(&mut stream, &token.name);
+        push_identity_text(&mut stream, &token.value);
     }
+    stream.push(THEME_ID_BREAKPOINTS);
+    push_identity_count(&mut stream, breakpoints.len());
     for breakpoint in breakpoints {
-        hash_byte(&mut hash, 2);
-        hash_bytes(&mut hash, &breakpoint.id.get().to_be_bytes());
-        hash_bytes(&mut hash, breakpoint.name.as_bytes());
-        hash_byte(&mut hash, 0);
-        hash_bytes(&mut hash, breakpoint.min_width.as_bytes());
-        hash_byte(&mut hash, 0);
+        stream.push(THEME_ID_BREAKPOINT);
+        stream.extend_from_slice(&breakpoint.id.get().to_be_bytes());
+        push_identity_text(&mut stream, &breakpoint.name);
+        push_identity_text(&mut stream, &breakpoint.min_width);
     }
-    ThemeId::new(if hash == 0 { 1 } else { hash })
+    stream
+}
+
+fn push_identity_count(stream: &mut Vec<u8>, count: usize) {
+    let count = u32::try_from(count).expect("validated theme definition count must fit in u32");
+    stream.extend_from_slice(&count.to_be_bytes());
+}
+
+fn push_identity_text(stream: &mut Vec<u8>, text: &str) {
+    let length = u32::try_from(text.len()).expect("validated theme text length must fit in u32");
+    stream.extend_from_slice(&length.to_be_bytes());
+    stream.extend_from_slice(text.as_bytes());
 }
 
 pub(crate) const fn token_kind_tag(kind: TokenKind) -> u8 {
@@ -729,17 +754,6 @@ pub(crate) const fn token_kind_tag(kind: TokenKind) -> u8 {
         TokenKind::Shadow => 8,
         TokenKind::ZIndex => 9,
     }
-}
-
-fn hash_bytes(hash: &mut u128, bytes: &[u8]) {
-    for byte in bytes {
-        hash_byte(hash, *byte);
-    }
-}
-
-fn hash_byte(hash: &mut u128, byte: u8) {
-    *hash ^= u128::from(byte);
-    *hash = hash.wrapping_mul(FNV_128_PRIME);
 }
 
 // Keeping the seed values together makes drift against the compiler catalog visible.
@@ -1115,7 +1129,7 @@ mod tests {
     }
 
     #[test]
-    fn v1_theme_identity_and_binary_format_are_frozen() {
+    fn v2_theme_identity_stream_digest_and_id_are_frozen() {
         let registry = ThemeRegistry::from_definitions(
             [
                 TokenDefinition::new(TokenKind::Color, "brand", "#36f"),
@@ -1128,18 +1142,30 @@ mod tests {
             )],
         )
         .expect("build compatibility registry");
+        let stream = encode_theme_identity(registry.tokens(), registry.breakpoints());
+        let digest = Sha256::digest(&stream);
         let bytes = registry.to_bytes().expect("encode compatibility registry");
 
-        assert_eq!(THEME_ID_FORMAT_VERSION, 1);
-        assert_eq!(THEME_BINARY_FORMAT_VERSION, 1);
+        assert_eq!(THEME_ID_FORMAT_VERSION, 2);
+        assert_eq!(THEME_BINARY_FORMAT_VERSION, 2);
         assert_eq!(THEME_BINARY_MAGIC, *b"PLGCTHM\0");
         assert_eq!(
+            stream,
+            decode_hex(
+                "706c6965676f2d7468656d652d69640000020100000002020022aecc820000000667757474657200000006312e3572656d02019b21fbf6000000056272616e6400000004233336660300000001040007000000067461626c657400000005353272656d"
+            )
+        );
+        assert_eq!(
+            format!("{digest:x}"),
+            "cf5c4c0674fd1c7e5121da0d27222ae07de616ffdc3ef8f9a388bdd100946824"
+        );
+        assert_eq!(
             format!("{:032x}", registry.id().get()),
-            "bdcf7d279f16eef34e3be1db98ab3894"
+            "cf5c4c0674fd1c7e5121da0d27222ae0"
         );
         assert_eq!(
             registry.id().to_string(),
-            "bdcf7d279f16eef34e3be1db98ab3894"
+            "cf5c4c0674fd1c7e5121da0d27222ae0"
         );
         assert_eq!(
             bytes.len(),
@@ -1148,16 +1174,25 @@ mod tests {
         );
         assert_eq!(
             format!("{:x}", Sha256::digest(&bytes)),
-            "752152810d22f8257d1770ebd2e3aae57ff806ab53564fba16cea2bf3e1a5413",
+            "19ee963bb9476a70732eaf338497e977eaa6abcffaddcd35c9ebbbeeac615bc3",
             "theme binary hash must be updated intentionally"
         );
-        let fixture = decode_hex(V1_THEME_FIXTURE_HEX);
-        assert_eq!(bytes, fixture);
-
-        let decoded = ThemeRegistry::from_bytes(&fixture).expect("decode frozen v1 fixture");
+        let decoded = ThemeRegistry::from_bytes(&bytes).expect("decode frozen v2 fixture");
         assert_eq!(decoded.id(), registry.id());
         assert_eq!(decoded.tokens(), registry.tokens());
         assert_eq!(decoded.breakpoints(), registry.breakpoints());
+    }
+
+    #[test]
+    fn v1_theme_binary_is_rejected_explicitly_after_identity_migration() {
+        let fixture = decode_hex(V1_THEME_FIXTURE_HEX);
+        assert!(matches!(
+            ThemeRegistry::from_bytes(&fixture),
+            Err(ThemeBinaryError::UnsupportedVersion {
+                found: 1,
+                expected: 2,
+            })
+        ));
     }
 
     #[test]

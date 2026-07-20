@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "classifierVersion": "css-rule-features-1",
+  "coverage": "rule-level-bounded",
+  "declarationInventory": {
+    "version": "declaration-shapes-1",
+    "classes": ["typed", "unparsed", "custom"]
+  },
+  "declarationFeatures": [
+    {
+      "id": "user-select",
+      "compatKey": "css.properties.user-select",
+      "css": ".card { user-select: none; }",
+      "baseline": false,
+      "modernDecision": "rejected"
+    },
+    {
+      "id": "aspect-ratio",
+      "compatKey": "css.properties.aspect-ratio",
+      "css": ".media { aspect-ratio: 16 / 9; }",
+      "baseline": "widely",
+      "modernDecision": "preserved"
+    },
+    {
+      "id": "color-function",
+      "compatKey": "css.types.color.color",
+      "css": ".wide { color: color(display-p3 1 0 0); }",
+      "baseline": "widely",
+      "modernDecision": "preserved"
+    },
+    {
+      "id": "oklab",
+      "compatKey": "css.types.color.oklch",
+      "css": ".tone { color: oklch(60% 0.2 250); }",
+      "baseline": "widely",
+      "modernDecision": "preserved"
+    },
+    {
+      "id": "color-mix",
+      "compatKey": "css.types.color.color-mix",
+      "css": ".mix { color: color-mix(in srgb, red, blue); }",
+      "baseline": "widely",
+      "modernDecision": "preserved"
+    }
+  ],
+  "selectorInventory": {
+    "version": "selector-shapes-1",
+    "metrics": ["components", "combinators", "attributes", "pseudo-classes", "pseudo-elements"]
+  },
+  "selectorFeatures": [
+    {"id":"focus-visible","compatKey":"css.selectors.focus-visible","css":".button:focus-visible { outline: 2px solid; }","baseline":"widely"},
+    {"id":"has","compatKey":"css.selectors.has","css":".card:has(> img) { display: grid; }","baseline":"widely"},
+    {"id":"is","compatKey":"css.selectors.is","css":":is(main, article) .title { color: red; }","baseline":"widely"},
+    {"id":"where","compatKey":"css.selectors.where","css":":where(main, article) .title { color: red; }","baseline":"widely"},
+    {"id":"not","compatKey":"css.selectors.not.selector_list","css":"button:not(.primary, .secondary) { opacity: .8; }","baseline":"widely"}
+  ],
+  "features": [
+    {"id":"cascade-layers","css":"@layer app { .x { color: red; } }"},
+    {"id":"container-queries","css":"@container (width > 20rem) { .x { color: red; } }"},
+    {"id":"container-style-queries","css":"@container style(--theme: dark) { .x { color: red; } }"},
+    {"id":"container-scroll-state-queries","css":"@container scroll-state(stuck: top) { .x { color: red; } }"},
+    {"id":"nesting","css":".x { & .y { color: red; } }"},
+    {"id":"registered-custom-properties","css":"@property --tone { syntax: \"<color>\"; inherits: false; initial-value: red; }"},
+    {"id":"scope","css":"@scope (.shell) { .x { color: red; } }"},
+    {"id":"starting-style","css":"@starting-style { .x { opacity: 0; } }"}
+  ],
+  "knownUnclassified": [
+    {"id":"unknown-at-rule","css":"@vendor-magic enabled;"},
+    {"id":"unknown-container-condition","css":"@container (mystery) { .x { color: red; } }"}
+  ],
+  "limitations": [
+    "Declaration shapes are inventoried and five representative declaration/value features are classified, but the complete declaration value surface is not classified.",
+    "Selector shapes are inventoried and five representative selector features are classified, but the complete selector feature surface is not classified.",
+    "The partial-coverage finding remains mandatory."
+  ]
+}

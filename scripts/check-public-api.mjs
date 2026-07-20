@@ -53,9 +53,9 @@ function assertIdentityVersions(document, schema, role) {
     document.schemaVersion !== schema ||
     document.styleIdFormatVersion !== 2 ||
     document.classNameFormatVersion !== 1 ||
-    document.themeIdFormatVersion !== 1
+    document.themeIdFormatVersion !== 2
   ) {
-    fail(`${role} does not expose schema ${schema} with identity formats 2/1/1`);
+    fail(`${role} does not expose schema ${schema} with identity formats 2/1/2`);
   }
 }
 
@@ -243,7 +243,7 @@ try {
         inspectionSchema: inspection.schemaVersion,
         catalogSchema: catalog.schemaVersion,
         explainSchema: explanation.schemaVersion,
-        identityFormats: [2, 1, 1],
+        identityFormats: [2, 1, 2],
         renamedFacadeDependency: true,
         dtcgBuildMacro: true,
         tomlRegistryConvergence: true,

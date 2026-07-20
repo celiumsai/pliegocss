@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "statusDate": "2026-07-20",
+  "selectedNext": "accessibility-diagnostic-quality-corpus",
+  "candidates": [
+    {
+      "rank": 1,
+      "id": "accessibility-diagnostic-quality-corpus",
+      "releaseImpact": "blocking",
+      "localActionable": true,
+      "evidence": [
+        "docs/product/strategic-product-contract-2026.md#r0--010-release-contract",
+        "docs/reference/accessibility-policy.md"
+      ],
+      "reason": "R0.6 and R0.9 explicitly lack precision/recall evidence. Existing implementation tests prove behavior but do not freeze expected TP/FP/FN labels or compute diagnostic-quality metrics."
+    },
+    {
+      "rank": 2,
+      "id": "generic-css-usage-identities",
+      "releaseImpact": "blocking",
+      "localActionable": true,
+      "evidence": ["docs/product/strategic-product-contract-2026.md#prioritized-pain-point-contract"],
+      "reason": "R0.4 still lacks generic-CSS declaration/token usage identity, but this is a broader schema capability than one bounded quality corpus."
+    },
+    {
+      "rank": 3,
+      "id": "hosted-browser-os-evidence",
+      "releaseImpact": "blocking",
+      "localActionable": false,
+      "evidence": ["docs/benchmarks/hosted-browser-matrix.json"],
+      "reason": "Firefox/WebKit/macOS evidence remains required but cannot be manufactured from this Windows/WSL host."
+    },
+    {
+      "rank": 4,
+      "id": "published-rc-replay",
+      "releaseImpact": "blocking",
+      "localActionable": false,
+      "evidence": ["docs/benchmarks/tailwind-v4-competitive-matrix.md"],
+      "reason": "Requires owner-approved publication and actual RC artifacts."
+    }
+  ],
+  "selectionBoundary": {
+    "initialCorpus": "contrast-literal-srgb",
+    "labels": ["positive", "negative"],
+    "metrics": ["tp", "tn", "fp", "fn", "precisionMilli", "recallMilli"],
+    "claimLimit": "Synthetic closed contrast corpus only; not WCAG certification or broad accessibility accuracy."
+  }
+}

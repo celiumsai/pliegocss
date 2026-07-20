@@ -81,10 +81,10 @@ if (
   manifest.schemaVersion !== 3 ||
   manifest.styleIdFormatVersion !== 2 ||
   manifest.classNameFormatVersion !== 1 ||
-  manifest.themeIdFormatVersion !== 1
+  manifest.themeIdFormatVersion !== 2
 ) {
   throw new Error(
-    `expected manifest schema/identity formats 3/2/1/1, received ${manifest.schemaVersion}/${manifest.styleIdFormatVersion}/${manifest.classNameFormatVersion}/${manifest.themeIdFormatVersion}`,
+    `expected manifest schema/identity formats 3/2/1/2, received ${manifest.schemaVersion}/${manifest.styleIdFormatVersion}/${manifest.classNameFormatVersion}/${manifest.themeIdFormatVersion}`,
   );
 }
 const identity = manifest.styles[0].styleId;

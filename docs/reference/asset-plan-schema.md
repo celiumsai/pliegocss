@@ -60,8 +60,8 @@ files.
   "applicationCoverage": "adapter-attested-complete",
   "styleIdFormatVersion": 2,
   "classNameFormatVersion": 1,
-  "themeIdFormatVersion": 1,
-  "themeId": "c46b8b7ec8c3aa6daadf15cc9196ba3e",
+  "themeIdFormatVersion": 2,
+  "themeId": "b3d5ad77175995c2b8f51ef7c0d41991",
   "targets": "modern",
   "format": "minified",
   "bundles": [

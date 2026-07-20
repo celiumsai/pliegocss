@@ -21,7 +21,6 @@ test = false
 package-verify = []
 
 [dependencies]
-fs2 = "0.4.3"
 pliego-css-agent.workspace = true
 pliego-css-build = { workspace = true, features = ["artifacts", "catalog"] }
 pliego-css-cascade.workspace = true
@@ -29,7 +28,9 @@ pliego-css-compiler.workspace = true
 pliego-css-config.workspace = true
 pliego-css-control = { workspace = true, features = ["projection"] }
 pliego-css-ir.workspace = true
+pliego-css-io.workspace = true
 pliego-css-ownership.workspace = true
+pliego-css-publication.workspace = true
 pliego-css-parser.workspace = true
 pliego-css-source.workspace = true
 pliego-css-theme.workspace = true

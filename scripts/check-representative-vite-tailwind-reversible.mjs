@@ -1,0 +1,30 @@
+import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
+import { existsSync, readFileSync, rmSync } from "node:fs";
+import { join, resolve } from "node:path";
+
+const root = resolve(import.meta.dirname, "..");
+const fixture = resolve(root, "integration-tests/representative/vite-tailwind-inventory");
+const binary = resolve(root, process.platform === "win32" ? "target/debug/pliego-cssc.exe" : "target/debug/pliego-cssc");
+const sidecar = join(fixture, "pliego.migration.css");
+const receipt = join(fixture, "pliego.migration.receipt.json");
+const files = ["package.json", "index.html", "src/app.css", "src/main.ts"];
+const snapshot = () => Object.fromEntries(files.map((file) => [file, createHash("sha256").update(readFileSync(join(fixture, file))).digest("hex")]));
+const run = (args) => {
+  const result = spawnSync(binary, args, {cwd: fixture, encoding: "utf8"});
+  if (result.status !== 0) throw new Error(`${args.join(" ")} failed:\n${result.stderr}`);
+  return result.stdout;
+};
+rmSync(sidecar, {force:true}); rmSync(receipt, {force:true});
+const before = snapshot();
+const plan = JSON.parse(run(["migration-project-plan", "."]));
+if (plan.proposals?.length !== 1 || plan.proposals[0].automatic !== false || plan.edits?.length !== 0) throw new Error("plan proposal boundary drifted");
+run(["migration-sidecar-apply", "--output", "pliego.migration.css", "--receipt", "pliego.migration.receipt.json"]);
+if (!existsSync(sidecar) || !existsSync(receipt)) throw new Error("sidecar group absent after apply");
+const appliedHash = createHash("sha256").update(readFileSync(sidecar)).digest("hex");
+if (appliedHash !== plan.proposals[0].afterSha256) throw new Error("applied sidecar disagrees with plan");
+if (JSON.stringify(snapshot()) !== JSON.stringify(before)) throw new Error("authored project changed during apply");
+run(["migration-sidecar-rollback", "--output", "pliego.migration.css", "--receipt", "pliego.migration.receipt.json"]);
+if (existsSync(sidecar) || existsSync(receipt)) throw new Error("sidecar group remains after rollback");
+if (JSON.stringify(snapshot()) !== JSON.stringify(before)) throw new Error("authored project changed during rollback");
+process.stdout.write(`${JSON.stringify({schemaVersion:1,fixture:"vite-tailwind-inventory",proposal:plan.proposals[0],authoredFilesPreserved:files.length,apply:"passed",rollback:"passed"},null,2)}\n`);
