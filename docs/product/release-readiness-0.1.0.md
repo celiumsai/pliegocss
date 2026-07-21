@@ -47,12 +47,12 @@ success condition.
   mobile layout, and horizontal-overflow checks in Chrome 150 on the current
   working source.
 - The Cloudflare Workers Static Assets profile passes a Wrangler 4.110.0 dry
-  run and local edge-response replay. It enforces the public custom-domain-only
-  route, trailing-slash/404 behavior, CSP, HSTS, framing, MIME-sniffing,
-  referrer, feature, cross-origin, security.txt, and immutable-asset contracts.
-  The Cloudflare account currently has the active `pliegocss.dev` zone but no
-  `pliegocss-site` Worker and no apex or `www` DNS record; deployment and DNS
-  creation remain unperformed owner-authorized operations.
+  run, local edge-response replay, and production replay. Worker
+  `pliegocss-site` version `2a406393-bcfc-4c73-87ca-761e047fa390` is deployed
+  at `https://pliegocss.dev` through an enabled custom domain, Worker-managed
+  apex DNS, and active Google Trust Services certificates. English, Spanish,
+  documentation, legal, playground, security.txt, 404, CSP/security-header,
+  and immutable-asset cache contracts all pass against the production edge.
 - All nineteen crate archives package below the 72 KiB compressed limit and
   replay through a Rust 1.85 downstream fixture under WSL. This measurement
   allowed the reviewed dirty worktree and therefore must be repeated on the
@@ -62,18 +62,12 @@ success condition.
 
 ## Remaining promotion work
 
-1. repeat the successful nineteen-crate package replay without `--allow-dirty`
-   on the final clean source;
-2. push the measured source and evidence commits and obtain fresh hosted
-   cross-OS results;
-3. use the fresh hosted Windows run as the Windows authority because local
-   Application Control blocks newly linked test binaries;
-4. after explicit owner approval, deploy the reviewed site to Cloudflare and
-   bind `pliegocss.dev`, then verify production response headers, navigation,
-   English/Spanish/legal parity, browser interaction, and Core Web Vitals; and
-5. publish the authorized `0.1.0-rc.2` compatibility unit, replay installation
-   from crates.io, and keep final `0.1.0` promotion blocked until it receives
-   separate explicit approval.
+1. retain GitHub Actions run `29850566211` as the hosted Windows, Ubuntu, and
+   macOS authority and CodeQL run `29850565624` attempt 2 as the hosted static
+   analysis authority; and
+2. finish publishing the authorized `0.1.0-rc.2` compatibility unit, replay
+   installation from crates.io, and keep final `0.1.0` promotion blocked until
+   it receives separate explicit approval.
 
 A local green gate never substitutes for hosted evidence, registry replay, or
 release authorization.

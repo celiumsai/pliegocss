@@ -75,14 +75,14 @@
       "status": "passed",
       "evidenceClass": "measured",
       "requiredForPromotion": true,
-      "summary": "Wrangler 4.110.0 accepts the Cloudflare Workers Static Assets profile, serves the generated site locally with the CSP/security/cache header contract, trailing-slash routing, security.txt MIME type, immutable asset policy, and custom-domain-only configuration. No deployment was performed; the active pliegocss.dev zone has no apex or www DNS records and no pliegocss-site Worker exists yet."
+      "summary": "Cloudflare Worker pliegocss-site version 2a406393-bcfc-4c73-87ca-761e047fa390 serves the generated site at https://pliegocss.dev through an enabled custom domain, Worker-managed apex DNS, and active Google Trust Services certificates. Production replay passes English, Spanish, documentation, legal, playground, security.txt, 404, CSP/security headers, and immutable-asset cache contracts."
     },
     {
       "id": "hosted-cross-os-current-source",
-      "status": "pending",
-      "evidenceClass": "inherited",
+      "status": "passed",
+      "evidenceClass": "measured",
       "requiredForPromotion": true,
-      "summary": "Run 29767855672 passed Windows, Ubuntu, and macOS at aabf2b4, but it predates the current fixes and skipped media/evidence."
+      "summary": "GitHub Actions run 29850566211 passes all twelve CI jobs at 1f2feacd0bf85d0daa6ae7f5156f4383df36c638 across Ubuntu, Windows, and macOS with Rust 1.85 and 1.96; CodeQL run 29850565624 attempt 2 passes JavaScript/TypeScript, Rust, and Actions analysis."
     },
     {
       "id": "registry-replay",
