@@ -6365,7 +6365,11 @@ fn watch(arguments: &WatchArgs) -> Result<(), String> {
     loop {
         let snapshot = capture_watch_snapshot(arguments);
         if !watch_snapshot_confirmed(previous.as_ref(), &mut pending, &snapshot) {
-            wake.wait(POLL_INTERVAL);
+            // Native backends can queue both truncate and write notifications for one logical
+            // save. Waiting on that queue again may return immediately and incorrectly confirm
+            // the transient empty file as stable. Always give a changed snapshot one complete
+            // debounce interval before recapturing it.
+            std::thread::sleep(POLL_INTERVAL);
             continue;
         }
         let iteration =
