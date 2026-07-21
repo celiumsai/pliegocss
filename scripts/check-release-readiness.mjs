@@ -35,7 +35,7 @@ const allowedEvidence = new Set(["measured", "inherited", "pending", "uncertain"
 if (
   value.schemaVersion !== 2 ||
   value.targetVersion !== "0.1.0" ||
-  value.candidateVersion !== "0.1.0-rc.1"
+  value.candidateVersion !== "0.1.0-rc.2"
 ) {
   fail("header drifted");
 }

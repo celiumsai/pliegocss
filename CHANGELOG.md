@@ -8,6 +8,37 @@ pre-1.0 compatibility policy.
 
 ## [Unreleased]
 
+## [0.1.0-rc.2] - 2026-07-21
+
+This candidate supersedes `0.1.0-rc.1` without moving its immutable tag. It is
+the first release prepared as the complete nineteen-crate crates.io
+compatibility unit.
+
+### Added
+
+- A complete bilingual public-preview website authored with PliegoRS and
+  styled by PliegoCSS, including interactive compiler examples, categorized
+  documentation, command search, legal and accessibility pages, GSAP/Lenis
+  motion, and progressive Three.js enhancement.
+- A versioned PliegoCSS brandbook, DTCG tokens and CSS projections, SVG
+  symbols and lockups, raster icon/social exports, licensed local fonts, and
+  reviewed GPT Image 2 editorial assets with prompt provenance.
+- crates.io and docs.rs metadata for every publishable crate, exact-version
+  installation guidance, and repository badges backed by the public package
+  surfaces.
+
+### Fixed
+
+- Effective `!important` propagation for composed ring and shadow declarations
+  and their physical lineage.
+- Concurrent-edit revalidation and destination locking for migration apply and
+  rollback operations.
+- Deadlines, bounded output, cancellation, and process-tree cleanup for LSP
+  compiler children and repair-agent verification commands.
+- Complete CLI and per-command help, deterministic media evidence, package
+  path handling, package-size contract drift, PliegoRS fixture replay, and
+  supply-chain policy coverage.
+
 ## [0.1.0-rc.1] - 2026-07-20
 
 The first release candidate establishes the version-locked nineteen-crate publication boundary and

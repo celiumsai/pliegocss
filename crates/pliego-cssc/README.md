@@ -7,12 +7,10 @@ CSS, compiles typed utility literals, transforms CSS, explains cascade and
 physical lineage, inventories migration candidates, and verifies
 deterministic artifacts.
 
-The crate remains an unpublished `0.1.0-rc.1` candidate. Install from the
-repository tag:
+Install the `0.1.0-rc.2` public-preview candidate from crates.io:
 
 ```console
-cargo install --git https://github.com/celiumsai/pliegocss \
-  --tag v0.1.0-rc.1 pliego-cssc
+cargo install pliego-cssc --version '=0.1.0-rc.2' --locked
 ```
 
 ## Discover commands

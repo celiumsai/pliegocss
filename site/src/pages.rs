@@ -196,7 +196,7 @@ const DOCS: &[DocPage] = &[
                 title: "Install the release candidate",
                 body: "The GitHub tag is available in the private canonical repository. Crates.io publication is intentionally pending.",
                 code: Some(
-                    "cargo install --git https://github.com/celiumsai/pliegocss \\\n  --tag v0.1.0-rc.1 pliego-cssc",
+                    "cargo install pliego-cssc --version '=0.1.0-rc.2' --locked",
                 ),
             },
             DocSection {
@@ -372,7 +372,7 @@ const DOCS: &[DocPage] = &[
                 title: "CLI-only adoption",
                 body: "The command-line compiler can audit, transform, explain, bundle, and migrate standard CSS without adding a runtime dependency to the application.",
                 code: Some(
-                    "cargo install --git https://github.com/celiumsai/pliegocss \\\n  --tag v0.1.0-rc.1 pliego-cssc\npliego-cssc --version",
+                    "cargo install pliego-cssc --version '=0.1.0-rc.2' --locked\npliego-cssc --version",
                 ),
             },
             DocSection {
@@ -380,7 +380,7 @@ const DOCS: &[DocPage] = &[
                 title: "Typed Rust authoring",
                 body: "Add pliego-css and its macro crate to applications that want compile-time style identities. The emitted result remains ordinary CSS.",
                 code: Some(
-                    "[dependencies]\npliego-css = { git = \"https://github.com/celiumsai/pliegocss\", tag = \"v0.1.0-rc.1\" }",
+                    "[dependencies]\npliego-css = \"=0.1.0-rc.2\"",
                 ),
             },
             DocSection {
@@ -1909,7 +1909,7 @@ fn playground_page() -> View {
                     el("div")
                         .class("lab-hero-facts")
                         .child(metric("Recipes", "144 exact combinations"))
-                        .child(metric("Compiler", "pliego-cssc 0.1.0-rc.1"))
+                        .child(metric("Compiler", "pliego-cssc 0.1.0-rc.2"))
                         .child(metric("Boundary", "build-time corpus")),
                 ),
         )
@@ -2814,20 +2814,20 @@ fn brand() -> View {
 fn changelog() -> View {
     el("div")
         .class("changelog-page page-shell")
-        .child(page_intro("CHANGELOG", "Release truth, not launch theater.", "The current candidate is available as a GitHub prerelease. Crates and the final 0.1.0 release remain unpublished."))
+        .child(page_intro("CHANGELOG", "Release truth, not launch theater.", "The 0.1.0-rc.2 compatibility unit is authorized for crates.io after hosted CI is green. Final 0.1.0 remains separately blocked by the readiness record."))
         .child(
             el("article")
                 .class("release-entry")
-                .child(el("div").class("release-date").child("2026 / 07 / 20"))
+                .child(el("div").class("release-date").child("2026 / 07 / 21"))
                 .child(
                     el("div")
-                        .child(kicker("V0.1.0-RC.1"))
-                        .child(el("h2").child("First public-preview release candidate"))
+                        .child(kicker("V0.1.0-RC.2"))
+                        .child(el("h2").child("Public-preview compatibility unit"))
                         .child(el("p").child("Standards-first audit and transform, typed Rust styles, themes and DTCG tokens, deterministic artifacts, reversible migration, editor clients, and a native PliegoRS boundary."))
                         .child(
                             el("a")
                                 .class("text-link")
-                                .attr("href", "https://github.com/celiumsai/pliegocss/releases/tag/v0.1.0-rc.1")
+                                .attr("href", "https://github.com/celiumsai/pliegocss/releases/tag/v0.1.0-rc.2")
                                 .child("Read the GitHub release ↗"),
                         ),
                 ),
@@ -2941,7 +2941,7 @@ fn legal_document(slug: &str) -> View {
                 (
                     "01",
                     "Current status",
-                    "PliegoCSS 0.1.0-rc.1 is public-preview software. Crates are not yet published to crates.io, APIs may change before 1.0, and the release-readiness record remains the authority for promotion.",
+                    "PliegoCSS 0.1.0-rc.2 is public-preview software authorized for coordinated publication to crates.io after hosted CI is green. APIs may change before 1.0, and the release-readiness record remains the authority for promotion.",
                 ),
                 (
                     "02",

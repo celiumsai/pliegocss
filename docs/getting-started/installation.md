@@ -1,7 +1,8 @@
 # Installation
 
-PliegoCSS is currently an experimental workspace at version `0.0.0`; the crates are not yet
-published. Consume them through local paths while developing PliegoRS or a Rust application.
+PliegoCSS `0.1.0-rc.2` is a public-preview, exact-version compatibility unit.
+The nineteen crates are published together and must not be mixed across
+PliegoCSS versions.
 
 ## Requirements
 
@@ -16,25 +17,21 @@ Node.js 22.13 or newer and pnpm are needed only for this repository's verificati
 benchmark, and integration harnesses. They are not application dependencies and are not required by
 the Rust crates.
 
-After `0.1.0` is actually published, registry consumers will use exact versions for the compatibility
-unit:
+Registry consumers should use exact versions for the compatibility unit:
 
 ```toml
 [dependencies]
-pliego-css = "=0.1.0"
+pliego-css = "=0.1.0-rc.2"
 
 [build-dependencies]
-pliego-css-build = "=0.1.0"
+pliego-css-build = "=0.1.0-rc.2"
 ```
 
-The published CLI installation will be:
+Install the CLI with the same exact candidate:
 
 ```console
-cargo install pliego-cssc --version '=0.1.0' --locked
+cargo install pliego-cssc --version '=0.1.0-rc.2' --locked
 ```
-
-These registry commands are intentionally not the primary installation path while the workspace
-remains unpublished at `0.0.0`.
 
 ## Install the command-line compiler
 
@@ -51,9 +48,10 @@ The installed command can validate an application without writing artifacts:
 pliego-cssc check --source src
 ```
 
-For a custom registry, add `--config pliego.theme.toml`; use `--seed` when the built-in registry is
-intentional. The crates are not published yet, so distribution is pinned by checkout revision and
-`Cargo.lock`, not by the current experimental `0.0.0` package version.
+For a custom registry, add `--config pliego.theme.toml`; use `--seed` when the
+built-in registry is intentional. A source checkout is identified by its
+revision and `Cargo.lock`; a registry installation is identified by the exact
+prerelease version.
 
 Current PliegoRS can delegate the same read-only validation without linking the compiler:
 
@@ -70,7 +68,7 @@ Add the public facade to the application:
 
 ```toml
 [dependencies]
-pliego-css = { path = "../PliegoCSS/crates/pliego-css" }
+pliego-css = "=0.1.0-rc.2"
 ```
 
 Use a visible string literal so the macro can validate it during compilation:

@@ -13,7 +13,8 @@ and the default branch.
 
 | Version | Supported |
 | --- | --- |
-| `0.1.0-rc.1` | Yes |
+| `0.1.0-rc.2` | Yes |
+| `0.1.0-rc.1` | No |
 | Earlier snapshots | No |
 
 ## Report a vulnerability

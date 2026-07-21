@@ -1,6 +1,6 @@
 # Editor setup
 
-Status: local unreleased clients; no Marketplace or plugin-registry publication
+Status: native crates published; editor adapters remain local candidates
 
 PliegoCSS uses one native language server for both supported editor clients. The editor adapter is
 small and never downloads a server: install `pliego-css-lsp` and `pliego-cssc` from the same exact
@@ -8,18 +8,17 @@ checkout, then configure both executable paths explicitly.
 
 ## Install matching native tools
 
-From the pinned PliegoCSS checkout:
+Install matching native tools from crates.io:
 
 ```console
-cargo install --path crates/pliego-cssc --locked
-cargo install --path crates/pliego-css-lsp --locked
+cargo install pliego-cssc --version '=0.1.0-rc.2' --locked
+cargo install pliego-css-lsp --version '=0.1.0-rc.2' --locked
 pliego-cssc --version
 pliego-css-lsp --version
 ```
 
-Both commands must report the same version. While the workspace remains unpublished at `0.0.0`,
-the checkout revision plus `Cargo.lock` is the distribution identity. Do not mix binaries from
-different revisions merely because their experimental version strings match.
+Both commands must report the same exact version. Do not mix binaries from
+different PliegoCSS compatibility units.
 
 Choose one theme mode:
 

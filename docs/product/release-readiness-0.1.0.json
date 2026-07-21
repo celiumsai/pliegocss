@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "targetVersion": "0.1.0",
-  "candidateVersion": "0.1.0-rc.1",
+  "candidateVersion": "0.1.0-rc.2",
   "repository": "https://github.com/celiumsai/pliegocss",
   "repositoryVisibility": "private",
   "productStage": "public-preview",
@@ -47,7 +47,7 @@
       "status": "passed",
       "evidenceClass": "measured",
       "requiredForPromotion": true,
-      "summary": "All nineteen 0.1.0-rc.1 crate archives package below the 72 KiB compressed limit and replay in dependency order, including the Rust 1.85 downstream public-API fixture. The run used --allow-dirty because the reviewed corrections are not yet committed; it must be repeated without that override on the final commit."
+      "summary": "All nineteen 0.1.0-rc.2 crate archives package below the 72 KiB compressed limit and replay in dependency order, including the Rust 1.85 downstream public-API fixture. A final clean-commit replay is required before publication."
     },
     {
       "id": "benchmark-evidence-current-source",
@@ -86,10 +86,10 @@
     },
     {
       "id": "registry-replay",
-      "status": "not-authorized",
+      "status": "pending",
       "evidenceClass": "pending",
       "requiredForPromotion": true,
-      "summary": "No PliegoCSS crate is authorized or published; registry installation replay remains a release-time action."
+      "summary": "The owner explicitly authorized publishing the 0.1.0-rc.2 crates after all applicable CI is green. Registry installation replay remains a release-time action."
     },
     {
       "id": "final-promotion-authorization",

@@ -14,7 +14,9 @@ success condition.
 - The canonical GitHub repository exists and remains private while its product
   posture is prepared as a public preview. This does not authorize changing
   repository visibility, publishing crates, or promoting final `0.1.0`.
-- The `v0.1.0-rc.1` tag and GitHub prerelease exist.
+- The historical `v0.1.0-rc.1` tag and GitHub prerelease exist. That immutable
+  tag points to an earlier commit, so this corrected source advances to
+  `0.1.0-rc.2` rather than moving it.
 - Hosted run
   [29767855672](https://github.com/celiumsai/pliegocss/actions/runs/29767855672)
   passed the Rust matrix on Windows, Ubuntu, and macOS at `aabf2b4`.
@@ -52,7 +54,8 @@ success condition.
   replay through a Rust 1.85 downstream fixture under WSL. This measurement
   allowed the reviewed dirty worktree and therefore must be repeated on the
   final clean commit before promotion.
-- No PliegoCSS crate or final release has been authorized for publication.
+- The owner authorized publishing the nineteen `0.1.0-rc.2` crates after all
+  applicable CI passes. Final `0.1.0` promotion remains separately blocked.
 
 ## Remaining promotion work
 
@@ -66,8 +69,9 @@ success condition.
 5. after explicit owner approval, deploy the reviewed site to Cloudflare and
    bind `pliegocss.dev`, then verify production response headers, navigation,
    English/Spanish/legal parity, browser interaction, and Core Web Vitals; and
-6. obtain explicit owner approval before publishing crates or promoting
-   `0.1.0`.
+6. publish the authorized `0.1.0-rc.2` compatibility unit, replay installation
+   from crates.io, and keep final `0.1.0` promotion blocked until it receives
+   separate explicit approval.
 
 A local green gate never substitutes for hosted evidence, registry replay, or
 release authorization.

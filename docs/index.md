@@ -109,7 +109,7 @@ owned route bundles. `pliego-cssc watch` only regenerates artifacts; composed wi
 
 ## Status and evidence
 
-- [0.1.0-rc.1 hardening report](./product/hardening-report-0.1.0-rc.1.md)
+- [0.1.0-rc.2 hardening report](./product/hardening-report-0.1.0-rc.2.md)
 - [0.1.0 release readiness](./product/release-readiness-0.1.0.md)
 - [F0 verification](./status/f0-verification.md)
 - [F1 parser and IR](./status/f1.md)

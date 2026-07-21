@@ -366,7 +366,7 @@ function generateLaboratory() {
     `${JSON.stringify(
       {
         schemaVersion: 1,
-        generatedBy: "pliego-cssc 0.1.0-rc.1",
+        generatedBy: "pliego-cssc 0.1.0-rc.2",
         corpusBoundary:
           "Bounded build-time corpus; the browser does not reimplement the compiler.",
         dimensions,

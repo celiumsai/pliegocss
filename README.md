@@ -36,10 +36,11 @@
 </p>
 
 > [!IMPORTANT]
-> `0.1.0-rc.1` is public-preview software distributed from the private
+> `0.1.0-rc.2` is public-preview software distributed from the private
 > canonical repository.
-> The nineteen PliegoCSS crates are prepared for publication to crates.io from
-> one exact release commit. CodeQL runs for `main`, pull requests, and its
+> The nineteen PliegoCSS crates form one exact-version compatibility unit and
+> are authorized for coordinated crates.io publication after hosted CI is
+> green. CodeQL runs for `main`, pull requests, and its
 > weekly schedule even while the repository remains private. `0.1.0` is blocked by the
 > [machine readiness record](./docs/product/release-readiness-0.1.0.md).
 > Core formats and selected APIs are frozen candidates; beta and experimental
@@ -86,10 +87,10 @@ the [Tailwind CSS v4.3.2 matrix](./docs/benchmarks/tailwind-v4-competitive-matri
 - Git
 - Node.js and pnpm are required only for repository development and full verification
 
-Until the RC crates are available from crates.io, install the CLI from the release tag:
+Install the public-preview CLI from crates.io:
 
 ```console
-cargo install --git https://github.com/celiumsai/pliegocss --tag v0.1.0-rc.1 pliego-cssc
+cargo install pliego-cssc --version '=0.1.0-rc.2' --locked
 ```
 
 Or clone the repository and build locally:

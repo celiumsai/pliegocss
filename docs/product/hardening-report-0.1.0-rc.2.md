@@ -1,10 +1,11 @@
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 
-# PliegoCSS 0.1.0-rc.1 hardening report
+# PliegoCSS 0.1.0-rc.2 hardening report
 
 **Status:** corrections implemented; final promotion remains blocked by
 clean-commit and owner-controlled release gates  
-**Source basis:** working tree based on `aabf2b48ae53ee988d6f0ceff8276988668bbd31`  
+**Source basis:** corrected public-preview source prepared after
+`aabf2b48ae53ee988d6f0ceff8276988668bbd31`
 **Authority:** the machine-readable
 [`release-readiness-0.1.0.json`](./release-readiness-0.1.0.json) controls the
 promotion state
@@ -38,8 +39,7 @@ after a reviewed commit.
   social card, licensed local fonts, image art-direction prompts, and an
   executable brand contract.
 - The README has the logo, project links, CI, CodeQL, release, license, MSRV,
-  public-preview, private-repository, and unpublished-crate badges without
-  pretending crates.io or docs.rs publication exists.
+  public-preview, private-repository, crates.io, and docs.rs badges.
 - The site is authored and rendered by PliegoRS `0.0.2`; styles and the
   bounded laboratory corpus are compiled by the current PliegoCSS binary.
 - The generator emits 90 routes and 134 content files; the release artifact
@@ -95,7 +95,8 @@ after a reviewed commit.
    browser, package, and watch results.
 5. With explicit authorization, deploy the site to Cloudflare, bind
    `pliegocss.dev`, and verify the production edge/browser contract.
-6. Publish crates and promote `0.1.0` only after explicit owner authorization.
+6. Publish the authorized `0.1.0-rc.2` crate unit only after hosted CI is
+   green; promote final `0.1.0` only after separate owner authorization.
 
 No step above is implied by the existence of an RC tag, the repository's
 private visibility, the public-preview product stage, or this local hardening

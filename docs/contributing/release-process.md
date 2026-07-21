@@ -1,7 +1,7 @@
 # Release process
 
-Status: **`0.1.0-rc.1` is published as a private-repository prerelease;
-`0.1.0` promotion remains blocked by the machine readiness record**
+Status: **`0.1.0-rc.2` is the active public-preview candidate;
+final `0.1.0` promotion remains blocked by the machine readiness record**
 
 This process covers the nineteen publishable crates in one version-locked
 compatibility unit. It does not authorize an upload. Publishing to crates.io,
@@ -40,7 +40,7 @@ not a crate or application dependency.
 
 Before changing a version:
 
-- decide whether the result is another candidate, such as `0.1.0-rc.1`, or the final `0.1.0`;
+- decide whether the result is another candidate, such as `0.1.0-rc.2`, or the final `0.1.0`;
 - close or explicitly defer every item in the release-blocker section below;
 - move the release's user-visible changes and migrations from **Unreleased** into a dated, exact
   version section in `CHANGELOG.md`, leaving a new empty **Unreleased** section above it;
