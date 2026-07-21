@@ -75,7 +75,7 @@ after a reviewed commit.
 | PliegoRS integration | Public `0.0.2` contract | Measured | PASS |
 | Website build | Two byte-identical PliegoRS builds | Measured | PASS |
 | Website browser contract | Chrome 150, desktop + 390 px phone + reduced motion + EN/ES/legal/accessibility routes | Measured | PASS |
-| Cloudflare deployment contract | Wrangler 4.110.0 dry run + local replay + Worker `2a406393-bcfc-4c73-87ca-761e047fa390` at `pliegocss.dev` | Measured | PASS |
+| Cloudflare deployment contract | Wrangler 4.110.0 dry run + local replay + Worker `718df1ee-7afb-48af-9496-a034f0b9bcc2` at `pliegocss.dev` + Browser Rendering | Measured | PASS |
 | Site corpus | 144 recipes, three explanations, three conflicts | Measured | PASS |
 | Package replay | Nineteen archives, Rust 1.85 downstream fixture | Measured with dirty-source caveat | PASS |
 | Dependency advisories | 105 dependencies | Measured | 0 advisories |

@@ -220,9 +220,11 @@ Those remain explicit release operations requiring authorization.
 
 The public-preview production deployment was authorized and completed on
 2026-07-21. Cloudflare Worker `pliegocss-site` version
-`2a406393-bcfc-4c73-87ca-761e047fa390` is attached to the
+`718df1ee-7afb-48af-9496-a034f0b9bcc2` is attached to the
 `https://pliegocss.dev` custom domain with Worker-managed apex DNS and active
 edge certificates. Production response replay covers English, Spanish,
 documentation, legal, playground, security.txt, 404, CSP/security headers, and
-immutable-asset caching; local dry-run evidence remains distinct from this
+immutable-asset caching. Cloudflare Browser Rendering additionally confirms
+the WebGL canvas, accessibility tree, interactive proof label, and RC.2
+public-preview masthead; local dry-run evidence remains distinct from this
 production evidence.

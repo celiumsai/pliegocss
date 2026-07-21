@@ -49,11 +49,13 @@ success condition.
   working source.
 - The Cloudflare Workers Static Assets profile passes a Wrangler 4.110.0 dry
   run, local edge-response replay, and production replay. Worker
-  `pliegocss-site` version `2a406393-bcfc-4c73-87ca-761e047fa390` is deployed
+  `pliegocss-site` version `718df1ee-7afb-48af-9496-a034f0b9bcc2` is deployed
   at `https://pliegocss.dev` through an enabled custom domain, Worker-managed
   apex DNS, and active Google Trust Services certificates. English, Spanish,
   documentation, legal, playground, security.txt, 404, CSP/security-header,
-  and immutable-asset cache contracts all pass against the production edge.
+  immutable-asset cache, WebGL canvas, accessibility-tree, and RC.2 masthead
+  contracts all pass against the production edge and Cloudflare Browser
+  Rendering.
 - All nineteen crate archives package below the 72 KiB compressed limit and
   replay through a Rust 1.85 downstream fixture under WSL. This measurement
   allowed the reviewed dirty worktree and therefore must be repeated on the
