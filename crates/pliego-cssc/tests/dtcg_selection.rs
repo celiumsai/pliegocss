@@ -215,11 +215,15 @@ fn watch_republishes_dtcg_defaults_and_keeps_the_last_valid_group() {
     });
     let initial_snapshot = snapshot(&output);
     let initial_css = fs::read(output.join("app.css")).expect("initial watch CSS");
-    wait_for("native filesystem-event startup", || {
+    wait_for("platform watch-scheduler startup", || {
         fs::read_to_string(&stderr_log).ok().and_then(|stderr| {
-            stderr
-                .contains("filesystem events; snapshot fallback")
-                .then_some(())
+            #[cfg(any(target_os = "linux", windows))]
+            let started = stderr.contains("filesystem events; snapshot fallback");
+            #[cfg(not(any(target_os = "linux", windows)))]
+            let started = stderr.contains(
+                "polling every 100 ms; native filesystem events are not yet certified on this platform",
+            );
+            started.then_some(())
         })
     });
 
@@ -256,7 +260,7 @@ fn watch_republishes_dtcg_defaults_and_keeps_the_last_valid_group() {
     let dark_css = fs::read(output.join("app.css")).expect("dark watch CSS");
     assert!(
         event_started.elapsed() < Duration::from_millis(1_500),
-        "native event wake must beat the 2 s fallback snapshot"
+        "the active scheduler must beat the 2 s authoritative fallback snapshot"
     );
     assert_ne!(
         dark_css, initial_css,

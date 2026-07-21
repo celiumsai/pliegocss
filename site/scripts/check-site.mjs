@@ -19,14 +19,24 @@ import { gzipSync } from "node:zlib";
 const siteRoot = resolve(import.meta.dirname, "..");
 const root = resolve(siteRoot, "..");
 const output = join(siteRoot, "target", "site");
-const browser =
-  process.env.PLIEGOCSS_CHROME_PATH ??
-  (process.platform === "win32"
-    ? "C:/Program Files/Google/Chrome/Application/chrome.exe"
-    : ["google-chrome", "chromium", "chromium-browser"].find((name) => {
-        const result = spawnSync("which", [name], { stdio: "ignore" });
-        return result.status === 0;
-      }));
+function findBrowser() {
+  if (process.env.PLIEGOCSS_CHROME_PATH) {
+    return process.env.PLIEGOCSS_CHROME_PATH;
+  }
+  if (process.platform === "win32") {
+    return "C:/Program Files/Google/Chrome/Application/chrome.exe";
+  }
+  for (const name of ["google-chrome", "chromium", "chromium-browser"]) {
+    const result = spawnSync("which", [name], {
+      encoding: "utf8",
+      windowsHide: true,
+    });
+    if (result.status === 0) return result.stdout.trim();
+  }
+  return undefined;
+}
+
+const browser = findBrowser();
 
 function fail(message) {
   throw new Error(`site contract: ${message}`);

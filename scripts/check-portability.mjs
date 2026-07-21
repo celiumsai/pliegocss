@@ -44,11 +44,11 @@ const expectedManifestSha256 =
   "8c1dc690c2cbb8102b6935a970e60938bbda7e50a0c0bf766c5c800305cce598";
 const expectedControlHashes = {
   "pliego.css.findings.json":
-    "6f91886e092b5ceb347e85530093b2f3d5542a62da62e212a4908f8dcdd53a1e",
+    "a353b52f386f0b896db3c354f45bc0b304dffab1477904a5ee37cd8768be468a",
   "pliego.css.manifest.json":
-    "89025dc34035d177097acdeaba353132261be317660ae01babda435ce8207c36",
+    "b8513ecd80e9fe566778aa0bfb0b142ecfb06a014bb34a1caa02c1ad28567fd3",
   "pliego.css.receipt.json":
-    "44c42200500dace75491ad01fe3885717d945dc1cdf8f3111ccaedbb4158973d",
+    "81777f9533bb6cd203f68e0f052e5974d09a2d773d7adf8f062f9361100a1c28",
 };
 const expectedBundleControlHashes = {
   "app.css": "acdb0bfee613ddb3fdae0feb9a8e5118dc5f74d385ed53eb610ff4eefd05d454",
@@ -59,11 +59,11 @@ const expectedBundleControlHashes = {
   "pliego.assets.json":
     "f24ee1ccb288a3e9243d686caa4f0cc1e83f6d12021a7715cee9cd5eff0dce66",
   "pliego.css.findings.json":
-    "669ded93c85628a858e89ca14667139066935b98cb4e62e598a88c484319fd23",
+    "2fcc03aff9f36f09095ef046019b8fbfdd2d9af658adf259132a2c761c557cc5",
   "pliego.css.manifest.json":
-    "7e5edb256f8d60974bbf9a648efd54b9dc23b1030aad55c7f1be9424ab085020",
+    "4ac39f4ec4035e4cdf337f900f23eea44b8a52abf951750b3d02e4bd4bd1d76a",
   "pliego.css.receipt.json":
-    "fee7faf4db03c6df5b5504cce01bf1e6f97273d07bd5092d63a6e6f8e918e40d",
+    "5776c810e022e391505b3efd441b9f3b0219dab32af6d4bc6f5dc4222c8a3ac0",
   "pliego.index.json":
     "4338ee784241b023b9bbb2b4959187d6f9dddaa75c7c6cdf021ec60346bc1393",
   "pliego.tokens.json":
@@ -71,11 +71,11 @@ const expectedBundleControlHashes = {
 };
 const expectedAssetPlanControlHashes = {
   "pliego.css.findings.json":
-    "d4682d6812246384cb381235a75a101709a120aa21fdd49d25707d9f515fa7bc",
+    "3faa43be937eb688dddeb8c72be3a7e3257fc34a0643c4a5b6de51844e03b0ef",
   "pliego.css.manifest.json":
-    "8942c5cf96c9dc0674fb35d635471c64f4a34cf3f95dd8c9bc39e2163cbcb118",
+    "cf15c3f7fc738c1058eaa2471cfb942e62969b7aed9e5cdad599ab7522394488",
   "pliego.css.receipt.json":
-    "f321246028ea1eabd554aa9e44bd7e790bc2523d28c7c57deeaeffef57f3db75",
+    "d76be0703b140e636ebcc2dacec079e8c5cf893139a317e7429bdce4d3b92cea",
 };
 const expectedCompileControlHashes = {
   "app.css": "acdb0bfee613ddb3fdae0feb9a8e5118dc5f74d385ed53eb610ff4eefd05d454",
@@ -84,11 +84,11 @@ const expectedCompileControlHashes = {
   "app.manifest.json":
     "8c1dc690c2cbb8102b6935a970e60938bbda7e50a0c0bf766c5c800305cce598",
   "pliego.css.findings.json":
-    "653a2108645b8396a4878c9d6e139b78005a4470550e7f740293b3e891eafe2e",
+    "6e75872fa833f550501f433a7be89bf1b90cf97bf52dc130169851a0c9ea2c52",
   "pliego.css.manifest.json":
-    "e2f08275c5ba3eec5f984d637585fe2eff99e3086b3e61e8c2c67b614c1b043f",
+    "9a98a8a78cb9f2597bfa2970a646c0ba4af99838a08e9063e3da85f4176a7cd2",
   "pliego.css.receipt.json":
-    "7a8f55ff85f0726c01fe43d5958429deb77268387be718ca99df539c41e0d14f",
+    "a4d9f387b460b650d7c9b904b0f54721f9915c1ccea5753a41b646c503923aa7",
   "pliego.tokens.json":
     "0a45f1d6e48280ee7b357e2e4d58d82bfc27be715c9fd3f3385098608edd4e42",
 };
@@ -99,11 +99,11 @@ const expectedWatchControlHashes = {
   "app.manifest.json":
     "8c1dc690c2cbb8102b6935a970e60938bbda7e50a0c0bf766c5c800305cce598",
   "pliego.css.findings.json":
-    "f994e2d80c19ae3f39d8c9b1e8682b640877a558ae1795b1d1e000f690d2d311",
+    "3affbc8e71ebb3096ce896e8dbfdff84073dfcc8b6eb8509431d768442545dad",
   "pliego.css.manifest.json":
-    "2206b51abe36634e00d351f178f9be19320b63e00e40e00d3b2ee43278f82f21",
+    "15831a792506ecf7b97e01907b7fdf1d1e4e2ccf7d90a1c2af105668adab3ed1",
   "pliego.css.receipt.json":
-    "80ecaf9f8ebb74d0d82b94510842447adc4e14b392b20b3b14a568effbd8fe8c",
+    "dc2532037337cfe285ff26162a7b0d404307d2d3c3a159ac95cf4862b9586b29",
   "pliego.tokens.json":
     "0a45f1d6e48280ee7b357e2e4d58d82bfc27be715c9fd3f3385098608edd4e42",
 };
@@ -114,11 +114,11 @@ const expectedDtcgControlHashes = {
   "app.manifest.json":
     "b402c1804da5ac08d31000b8ecec1924b6c4955e6535d538c50fc4bd030ff8f2",
   "pliego.css.findings.json":
-    "115182f78adbecdddc5400bb2ab9bb9fa32e7c2b4399cea3e09c6cefda2da09d",
+    "914d8463aa4e7abe3e7257879e0ecdb5df9605361cc803fa3a5e113ea2b6d00f",
   "pliego.css.manifest.json":
-    "1a4d5f1f4e603080e1800856038dc7f34c38e2dccedcdb5e260b3ddc9335014e",
+    "991801df2b11ad17e2adc5003e4e49d13d1c8050f829ab32c99b71965b79b924",
   "pliego.css.receipt.json":
-    "3e0668c3e57c0a506887d2dc0617c076e0ed6dee20f275a1f1974307db5cff14",
+    "b40d88514e19892b08b6478b94bce582b08dea8fa1d5eed26cfa47f40871af9a",
   "pliego.tokens.json":
     "59422650b57f45d5601a0dadce3ab1e9fc9bbf7e3c35d089f203516cf1c9a553",
 };
