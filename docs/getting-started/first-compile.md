@@ -1,12 +1,12 @@
 # First compile
 
-Status: implemented core; release hardening remains open
+Status: available in the `0.1.0-rc.2` public preview
 
-Add the local crate while the project is unreleased:
+Add the exact public-preview compatibility unit:
 
 ```toml
 [dependencies]
-pliego-css = { path = "<path-to-PliegoCSS>/crates/pliego-css" }
+pliego-css = "=0.1.0-rc.2"
 ```
 
 Then validate a utility list during Rust compilation:
@@ -33,7 +33,7 @@ fn main() {
 `pc!` validates grammar, catalog names, token domains, variants, negative forms, and semantic
 conflicts while Rust compiles. It returns the same class identity for equivalent normalized styles.
 
-Install the CLI from the same exact checkout as described in [Installation](./installation.md), then
+Install the matching CLI as described in [Installation](./installation.md), then
 run the corresponding extraction from the application directory:
 
 ```console

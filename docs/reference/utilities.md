@@ -263,8 +263,8 @@ StyleId format 2 hashes an explicit tagged, length-framed, big-endian byte strea
 uses the first 128 digest bits in big-endian order. UTF-8 content, not intern-table positions or Rust
 `Debug` output, enters the stream. The class encoder remains format 1, but candidate format-1 class
 strings changed because their StyleId input changed. See the exact
-[StyleId format-2 contract](./style-id-format-v2.md). These vectors are machine-enforced at workspace
-version `0.0.0`; the public SemVer freeze remains open. `Style::EMPTY.class_name()` returns an empty
+[StyleId format-2 contract](./style-id-format-v2.md). These vectors are machine-enforced in
+public preview `0.1.0-rc.2`; final `0.1.0` promotion remains open. `Style::EMPTY.class_name()` returns an empty
 string and does not represent an emitted rule.
 
 Run the checked Rust example and compile its CSS from the workspace root:

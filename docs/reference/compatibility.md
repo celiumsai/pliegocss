@@ -1,6 +1,6 @@
 # Compatibility candidate contract
 
-Status: **machine-enforced candidate vectors at workspace version 0.0.0; public SemVer freeze remains open**
+Status: **machine-enforced prerelease vectors at `0.1.0-rc.2`; final `0.1.0` promotion remains open**
 
 PliegoCSS already persists identities and artifacts across the macro, build-script bridge, CLI, SSR,
 and CSS boundary. Those bytes cannot be allowed to drift accidentally while the broader 0.1 API is
@@ -14,9 +14,9 @@ revision. In particular, `pliego-css-macros`, `pliego-css-compiler`, `pliego-css
 `pliego-css-build`, and `pliego-cssc` are one compatibility unit. Mixing revisions can produce a
 class identity, theme artifact, or manifest that another component does not understand.
 
-Cargo manifests use local paths plus exact internal version requirements for this reason. Packaging
-removes the paths and retains the exact requirements. The current workspace is still `0.0.0` and is
-distributed by checkout revision plus `Cargo.lock`, not by registry packages.
+Cargo manifests use local paths plus exact internal version requirements for this reason.
+Packaging removes the paths and retains the exact requirements. Public-preview consumers
+must pin every direct PliegoCSS dependency to exact version `0.1.0-rc.2`.
 
 ## Enforced vectors
 
@@ -173,9 +173,9 @@ For subsequent release candidates and the eventual `0.1.x` line:
 - Rust 1.85 remains the MSRV throughout `0.1.x`; raising it requires at least `0.2.0` and migration
   notes.
 
-This policy is a release-candidate target, not a statement that the current `0.0.0` packages already
-carry a SemVer freeze. The supported application/build subset has nevertheless been selected and is
-compile-checked before the first RC.
+This policy governs the published `0.1.0-rc.2` prerelease. It does not claim the
+separate final `0.1.0` promotion has occurred. The supported application/build
+subset is selected and compile-checked through a registry-only Rust 1.85 consumer.
 
 The intended RC surface includes `pc!`, `pcx!` (including Cargo facade dependency renames),
 `Style`/`StyleId` class interoperability, the

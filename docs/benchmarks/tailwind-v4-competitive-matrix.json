@@ -254,7 +254,7 @@
       "area": "adoption",
       "status": "tailwind-advantage",
       "tailwind": "Has broad framework integrations, established documentation, and a production user ecosystem.",
-      "pliego": "Has a strong pinned PliegoRS path, plain HTML evidence, and unreleased editor clients, but limited host breadth and no published ecosystem.",
+      "pliego": "Has a pinned PliegoRS path, plain HTML evidence, nineteen published Rust crates, and source-distributed editor clients, but a much smaller production ecosystem.",
       "evidence": ["tailwind-installation", "pliego-maturity"],
       "releaseImpact": "non-blocking",
       "nextAction": "Prove Vite/plain HTML plus one additional typed adapter and publish installation compatibility rather than claiming ecosystem parity."
@@ -264,10 +264,10 @@
       "area": "adoption",
       "status": "tailwind-advantage",
       "tailwind": "Published npm packages and documented install paths are available today.",
-      "pliego": "Registry-shaped packaging passes locally, but crates, CLI, and editor artifacts are not published; checkout revision plus Cargo.lock is the identity.",
+      "pliego": "The exact-version 0.1.0-rc.2 crate graph, CLI, and LSP are published on crates.io and replayed with Rust 1.85; editor clients remain source-distributed candidates.",
       "evidence": ["tailwind-installation", "pliego-maturity"],
-      "releaseImpact": "blocking",
-      "nextAction": "Resolve owner-only registry/repository approvals, replay actual published RC artifacts, and activate the SemVer subset."
+      "releaseImpact": "non-blocking",
+      "nextAction": "Retain registry replay on every candidate and publish versioned editor clients before claiming installation-surface parity."
     },
     {
       "id": "browser-compatibility",
