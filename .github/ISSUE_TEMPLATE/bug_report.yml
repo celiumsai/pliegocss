@@ -1,0 +1,73 @@
+name: Bug report
+description: Report a reproducible PliegoCSS defect.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve PliegoCSS. For security issues, use
+        [private vulnerability reporting](../../security/advisories/new) or
+        follow [SECURITY.md](../../SECURITY.md); do not file them here.
+  - type: input
+    id: version
+    attributes:
+      label: PliegoCSS version
+      description: Exact crate version, CLI version, or commit SHA.
+      placeholder: 0.1.0-rc.2
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Affected surface
+      options:
+        - Standard CSS audit or transform
+        - Typed Rust authoring
+        - Theme or DTCG tokens
+        - Migration or repair
+        - CLI
+        - LSP or editor integration
+        - Build integration
+        - Website or documentation
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Include the smallest input and exact commands required.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: observed
+    attributes:
+      label: Observed behavior
+      description: Include the complete diagnostic or artifact difference.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Rust version, Node.js version, browser, and relevant tool versions.
+    validations:
+      required: true
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues and did not find the same defect.
+          required: true
+        - label: This report does not contain credentials, private source, or sensitive data.
+          required: true

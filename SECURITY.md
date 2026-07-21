@@ -2,9 +2,9 @@
 
 # Security policy
 
-The canonical online trust center will be
-<https://pliegocss.dev/security/>. Until it is deployed, this file is the
-authority.
+The canonical online trust center is
+<https://pliegocss.dev/security/>. This file is the repository-local authority
+and is kept aligned with that public page.
 
 ## Supported versions
 
@@ -42,6 +42,6 @@ system you do not own or have permission to test.
 
 ## Dependency maintenance
 
-CI enforces `cargo audit`, `cargo deny`, pinned lockfiles, and CodeQL when the
-repository is public. A clean advisory report is evidence about known
+CI enforces `cargo audit`, `cargo deny`, pinned lockfiles, and CodeQL. A clean
+advisory report is evidence about known
 disclosures only; it is not proof that no vulnerability exists.

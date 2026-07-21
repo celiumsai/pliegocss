@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://pliegocss.dev/docs/
+    about: Read the concepts, guides, reference, and migration documentation.
+  - name: Security report
+    url: https://github.com/celiumsai/pliegocss/security/advisories/new
+    about: Report vulnerabilities privately. Do not open a public issue.
