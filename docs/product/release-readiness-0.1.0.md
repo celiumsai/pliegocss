@@ -49,28 +49,34 @@ success condition.
   working source.
 - The Cloudflare Workers Static Assets profile passes a Wrangler 4.110.0 dry
   run, local edge-response replay, and production replay. Worker
-  `pliegocss-site` version `718df1ee-7afb-48af-9496-a034f0b9bcc2` is deployed
+  `pliegocss-site` version `c3f34e3d-43be-4f87-b07a-3cc9f946df4f` is deployed
   at `https://pliegocss.dev` through an enabled custom domain, Worker-managed
   apex DNS, and active Google Trust Services certificates. English, Spanish,
   documentation, legal, playground, security.txt, 404, CSP/security-header,
   immutable-asset cache, WebGL canvas, accessibility-tree, and RC.2 masthead
   contracts all pass against the production edge and Cloudflare Browser
   Rendering.
-- All nineteen crate archives package below the 72 KiB compressed limit and
-  replay through a Rust 1.85 downstream fixture under WSL. This measurement
-  allowed the reviewed dirty worktree and therefore must be repeated on the
-  final clean commit before promotion.
-- The owner authorized publishing the nineteen `0.1.0-rc.2` crates after all
-  applicable CI passes. Final `0.1.0` promotion remains separately blocked.
+- All nineteen exact-version `0.1.0-rc.2` crates are visible on crates.io.
+  Rust 1.85 installs `pliego-cssc` and `pliego-css-lsp` with `--locked`, resolves
+  the downstream fixture exclusively from the crates.io registry, checks every
+  target and feature, and executes the public API surface without local path or
+  patch overrides.
+- GitHub Actions run
+  [29857699284](https://github.com/celiumsai/pliegocss/actions/runs/29857699284)
+  passes the twelve-job Ubuntu, Windows, and macOS matrix at `42e0c22`;
+  [CodeQL run 29857699053](https://github.com/celiumsai/pliegocss/actions/runs/29857699053)
+  passes JavaScript/TypeScript, Rust, and Actions analysis on the same source.
+- Final `0.1.0` promotion remains separately blocked and requires a new,
+  explicit owner authorization.
 
 ## Remaining promotion work
 
-1. retain GitHub Actions run `29850566211` as the hosted Windows, Ubuntu, and
-   macOS authority and CodeQL run `29850565624` attempt 2 as the hosted static
-   analysis authority; and
-2. finish publishing the authorized `0.1.0-rc.2` compatibility unit, replay
-   installation from crates.io, and keep final `0.1.0` promotion blocked until
-   it receives separate explicit approval.
+1. merge the reviewed RC.2 source only after the protected branch checks pass;
+2. retain a green CI and CodeQL matrix on the exact merged `main` commit;
+3. create the immutable `v0.1.0-rc.2` tag and GitHub prerelease from that
+   verified commit; and
+4. keep final `0.1.0` promotion blocked until it receives separate explicit
+   approval.
 
 A local green gate never substitutes for hosted evidence, registry replay, or
 release authorization.

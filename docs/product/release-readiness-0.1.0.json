@@ -47,7 +47,7 @@
       "status": "passed",
       "evidenceClass": "measured",
       "requiredForPromotion": true,
-      "summary": "All nineteen 0.1.0-rc.2 crate archives package below the 72 KiB compressed limit and replay in dependency order, including the Rust 1.85 downstream public-API fixture. A final clean-commit replay is required before publication."
+      "summary": "Hosted package archives pass for the public-preview source, all nineteen 0.1.0-rc.2 archives remain below the 72 KiB compressed limit, and the published compatibility unit replays through a registry-only Rust 1.85 downstream public-API fixture."
     },
     {
       "id": "benchmark-evidence-current-source",
@@ -75,21 +75,21 @@
       "status": "passed",
       "evidenceClass": "measured",
       "requiredForPromotion": true,
-      "summary": "Cloudflare Worker pliegocss-site version 718df1ee-7afb-48af-9496-a034f0b9bcc2 serves the generated site at https://pliegocss.dev through an enabled custom domain, Worker-managed apex DNS, and active Google Trust Services certificates. Production edge and Browser Rendering replay pass English, Spanish, documentation, legal, playground, security.txt, 404, CSP/security headers, immutable-asset caching, WebGL canvas, accessibility tree, and the RC.2 public-preview masthead."
+      "summary": "Cloudflare Worker pliegocss-site version c3f34e3d-43be-4f87-b07a-3cc9f946df4f serves the final registry-replay status at https://pliegocss.dev through an enabled custom domain, Worker-managed apex DNS, and active Google Trust Services certificates. Production edge and Browser Rendering replay pass English, Spanish, documentation, legal, playground, security.txt, 404, CSP/security headers, immutable-asset caching, WebGL canvas, accessibility tree, and the RC.2 public-preview masthead."
     },
     {
       "id": "hosted-cross-os-current-source",
       "status": "passed",
       "evidenceClass": "measured",
       "requiredForPromotion": true,
-      "summary": "GitHub Actions run 29850566211 passes all twelve CI jobs at 1f2feacd0bf85d0daa6ae7f5156f4383df36c638 across Ubuntu, Windows, and macOS with Rust 1.85 and 1.96; CodeQL run 29850565624 attempt 2 passes JavaScript/TypeScript, Rust, and Actions analysis."
+      "summary": "GitHub Actions run 29857699284 passes all twelve CI jobs at 42e0c2230967b322a989fd550ebd289f34380338 across Ubuntu, Windows, and macOS with Rust 1.85 and 1.96; CodeQL run 29857699053 passes JavaScript/TypeScript, Rust, and Actions analysis."
     },
     {
       "id": "registry-replay",
-      "status": "pending",
-      "evidenceClass": "pending",
+      "status": "passed",
+      "evidenceClass": "measured",
       "requiredForPromotion": true,
-      "summary": "The owner explicitly authorized publishing the 0.1.0-rc.2 crates after all applicable CI is green. Registry installation replay remains a release-time action."
+      "summary": "All nineteen exact-version 0.1.0-rc.2 crates are visible on crates.io. Rust 1.85 installs pliego-cssc and pliego-css-lsp with --locked, resolves the registry-only downstream graph without path or patch overrides, checks all targets and features, and runs the public API fixture."
     },
     {
       "id": "final-promotion-authorization",
