@@ -109,4 +109,4 @@ pnpm baseline:measure-pliego-b
 The local machine-readable result is written to `benchmarks/results/pliego-gate-b.local.json` and
 remains gitignored. Frozen Tailwind figures come from the 4.3.2 complete profiles documented in
 [`tailwind-v4-baseline.md`](./tailwind-v4-baseline.md). The immutable clean-commit result is
-[`pliego-gate-b-2026-07-13-c47239c.json`](../../benchmarks/evidence/pliego-gate-b-2026-07-13-c47239c.json).
+[`pliego-gate-b-2026-07-21-d16fe5d.json`](../../benchmarks/evidence/pliego-gate-b-2026-07-21-d16fe5d.json).

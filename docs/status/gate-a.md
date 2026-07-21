@@ -31,7 +31,7 @@ ni afirma que F2/F3 estén completos.
 - [ ] Medición pareada de una aplicación PliegoRS completa; el micro-fixture `pc!` ya pasa.
 - [ ] Contrato full con reset/preflight o reset externo documentado.
 - [x] Benchmark PliegoCSS repetido con las 30 muestras de la metodología.
-- [x] Snapshots locales reproducibles desde el commit limpio `c47239c`, con inputs ligados a blobs Git.
+- [x] Snapshots locales reproducibles desde el commit limpio `d16fe5d`, con inputs ligados a blobs Git.
 - [ ] Reproducibilidad hosted/paralela y multiplataforma.
 - [ ] Interoperabilidad general con CSS normal.
 

@@ -51,10 +51,10 @@
     },
     {
       "id": "benchmark-evidence-current-source",
-      "status": "blocked",
-      "evidenceClass": "pending",
+      "status": "passed",
+      "evidenceClass": "measured",
       "requiredForPromotion": true,
-      "summary": "The unrecoverable c47239c snapshot set must be superseded with immutable snapshots from the final clean source commit."
+      "summary": "Gate A, Gate B, and paired Rust MSRV snapshots were regenerated from reachable clean commit d16fe5da26d4943ebcfd70ce7c14e743d1e25e54, hash-allowlisted, and independently verified against the exact source blobs."
     },
     {
       "id": "supply-chain-policy",

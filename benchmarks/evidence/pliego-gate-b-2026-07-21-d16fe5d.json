@@ -2,17 +2,17 @@
   "schema_version": 3,
   "benchmark": "PliegoCSS Gate B complete-fixture fresh-process compile",
   "profile": "complete",
-  "generated_at": "2026-07-13T10:34:02.132Z",
+  "generated_at": "2026-07-21T13:48:58.543Z",
   "provenance": {
     "git": {
-      "commit": "c47239ce0bf1d046aa01710d436baea61f4e6528",
+      "commit": "d16fe5da26d4943ebcfd70ce7c14e743d1e25e54",
       "dirty": false,
       "status_entry_count": 0,
       "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "harness": {
       "path": "scripts/measure-pliego-gate-b.mjs",
-      "sha256": "47a4807f723fa96258ec18a68d80e2981fa24fb9e9881b590d40576d0644d242"
+      "sha256": "971605479e7b610e5f559e9dcd2116f9a0b9c4f3b7f0c0489965927b2f011ef4"
     },
     "tracked_inputs": [
       {
@@ -75,7 +75,7 @@
       "platform": "win32",
       "type": "Windows_NT",
       "release": "10.0.26200",
-      "version": "Windows 11 Home",
+      "version": "Windows 11 Pro",
       "architecture": "x64"
     },
     "cpu": {
@@ -104,13 +104,13 @@
       "sanitized_environment_keys": []
     },
     "power_plan": {
-      "status": "recorded",
-      "source": "powercfg /getactivescheme",
-      "value": "Power Scheme GUID: 381b4222-f694-41f0-9685-ff5bb260df2e  (Balanced)"
+      "status": "declared",
+      "source": "PLIEGO_BENCH_POWER_PLAN",
+      "value": "Windows host power plan inherited; WSL 2 benchmark guest"
     },
     "security_tooling": {
       "status": "active",
-      "tooling": "Microsoft Defender Antivirus; Windows Application Control",
+      "tooling": "Microsoft Defender Antivirus / Windows Application Control",
       "source": "environment"
     }
   },
@@ -123,71 +123,71 @@
   "timing": {
     "warmup_processes": 5,
     "runs": 30,
-    "min_ms": 35.811,
-    "median_ms": 37.894,
-    "mean_ms": 45.763,
-    "p95_ms": 41.29,
-    "max_ms": 271.727,
-    "median_absolute_deviation_ms": 0.588,
-    "standard_deviation_ms": 41.977,
+    "min_ms": 31.165,
+    "median_ms": 33.581,
+    "mean_ms": 35.171,
+    "p95_ms": 43.056,
+    "max_ms": 47.902,
+    "median_absolute_deviation_ms": 1.007,
+    "standard_deviation_ms": 4.024,
     "samples_ms": [
-      36.656,
-      38.53,
-      37.461,
-      38.173,
-      37.983,
-      37.354,
-      38.859,
-      38.349,
-      38.666,
-      37.903,
-      39.612,
-      271.727,
-      37.148,
-      37.36,
-      37.885,
-      37.545,
-      38.732,
-      38.409,
-      37.251,
-      37.703,
-      37.526,
-      39.116,
-      36.162,
-      37.438,
-      41.29,
-      40.665,
-      37.429,
-      36.236,
-      35.811,
-      37.914
+      43.056,
+      39.478,
+      42.962,
+      40.056,
+      40.913,
+      34.658,
+      38.632,
+      33.638,
+      33.532,
+      35.116,
+      33.377,
+      32.942,
+      32.46,
+      33.555,
+      33.695,
+      33.765,
+      33.607,
+      33.766,
+      33.381,
+      32.677,
+      47.902,
+      33.306,
+      32.644,
+      33.751,
+      32.407,
+      32.202,
+      32.022,
+      31.165,
+      31.773,
+      32.69
     ]
   },
   "determinism": {
     "verified_runs": 30,
     "deterministic": true,
-    "sha256": "11f632e3e4321ab93a2c8df77e7ad1ce6034f912cbec48e62b92654f01a700fe"
+    "sha256": "d873a432d1174af4715f7cb33359c6ad2781f611f9712e3a72b5630aa6f1bffc"
   },
   "output": {
-    "css_raw_bytes": 10463,
-    "css_gzip_bytes": 2049,
-    "css_sha256": "11f632e3e4321ab93a2c8df77e7ad1ce6034f912cbec48e62b92654f01a700fe",
-    "executable_sha256": "d3dce60245d4f9f508298ef8f5f245d3d0e3f7d60de3ae9366cdb6cf64b4551c",
-    "manifest_sha256": "9cea396224de6107d135833e9b6d7c6e68ead60e2e7b0cc2e6052c0d4c33c594",
-    "transfer_gzip_bytes": 3550,
+    "css_raw_bytes": 10468,
+    "css_gzip_bytes": 2047,
+    "css_sha256": "d873a432d1174af4715f7cb33359c6ad2781f611f9712e3a72b5630aa6f1bffc",
+    "executable_sha256": "df502856d1c3a6476012469c6b7d69f4bb8d7796e9db18c0162d64a8b56d045c",
+    "manifest_sha256": "e29f276aba5236075ba5f129c11ec07b4621f418fd13febdf1b2473718370a45",
+    "transfer_gzip_bytes": 3547,
     "html_unchanged_outside_class_values": true,
     "html": {
       "utility_strings": {
         "raw_bytes": 5868,
         "gzip_bytes": 1506,
-        "transfer_html_css_gzip_bytes": 3555,
+        "transfer_html_css_gzip_bytes": 3553,
         "sha256": "338eb480327e54fe7e56e81b42c67324464afaa8c65d606e5d57c1c45690e86c"
       },
       "generated_classes": {
-        "raw_bytes": 3917,
-        "gzip_bytes": 1501,
-        "transfer_html_css_gzip_bytes": 3550,
-        "sha256": "c75734b307458d4cf15f2fb3b08478757674704145b48b396e61680289ae8639"
+        "raw_bytes": 3919,
+        "gzip_bytes": 1500,
+        "transfer_html_css_gzip_bytes": 3547,
+        "sha256": "cfedc5c8dfd5a63d11fabbb30134d70b5ef1df9730e38ef3a9294038b01514a5"
       }
     }
   },
@@ -217,18 +217,18 @@
   },
   "comparisons": {
     "full-complete": {
-      "median_time_change_percent": -81.973,
-      "median_speed_ratio": 5.547,
-      "css_raw_change_percent": -15.464,
-      "css_gzip_change_percent": -38.524,
-      "transfer_gzip_change_percent": -26.638
+      "median_time_change_percent": -84.024,
+      "median_speed_ratio": 6.26,
+      "css_raw_change_percent": -15.424,
+      "css_gzip_change_percent": -38.584,
+      "transfer_gzip_change_percent": -26.7
     },
     "no-preflight-complete": {
-      "median_time_change_percent": -81.499,
-      "median_speed_ratio": 5.405,
-      "css_raw_change_percent": 21.409,
-      "css_gzip_change_percent": -11.947,
-      "transfer_gzip_change_percent": -7.383
+      "median_time_change_percent": -83.605,
+      "median_speed_ratio": 6.099,
+      "css_raw_change_percent": 21.467,
+      "css_gzip_change_percent": -12.033,
+      "transfer_gzip_change_percent": -7.462
     }
   },
   "caveats": [

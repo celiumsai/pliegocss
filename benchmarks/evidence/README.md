@@ -42,10 +42,13 @@ or otherwise rewrite that commit without superseding the snapshots in the same r
 
 ## Current clean-commit snapshots
 
-- [`pliego-gate-a-2026-07-13-c47239c.json`](./pliego-gate-a-2026-07-13-c47239c.json)
-- [`pliego-gate-b-2026-07-13-c47239c.json`](./pliego-gate-b-2026-07-13-c47239c.json)
-- [`rust-check-2026-07-13-c47239c.json`](./rust-check-2026-07-13-c47239c.json)
+- [`pliego-gate-a-2026-07-21-d16fe5d.json`](./pliego-gate-a-2026-07-21-d16fe5d.json)
+- [`pliego-gate-b-2026-07-21-d16fe5d.json`](./pliego-gate-b-2026-07-21-d16fe5d.json)
+- [`rust-check-2026-07-21-d16fe5d.json`](./rust-check-2026-07-21-d16fe5d.json)
 
-All three were produced from commit `c47239ce0bf1d046aa01710d436baea61f4e6528` on Windows 11,
-Intel Core Ultra 9 285H, Balanced power plan, with Microsoft Defender and Windows Application
-Control active. The JSON files retain the complete samples and exact environment metadata.
+All three were produced from reachable clean commit
+`d16fe5da26d4943ebcfd70ce7c14e743d1e25e54` on Windows 11 and an Intel
+Core Ultra 9 285H, with Microsoft Defender Antivirus and Windows Application
+Control active. The JSON files retain the complete samples and exact
+environment metadata. They supersede the unrecoverable `c47239c` snapshot set,
+whose original bytes remain in Git history.

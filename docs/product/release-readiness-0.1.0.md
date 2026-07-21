@@ -23,6 +23,9 @@ success condition.
 - That run is inherited evidence only: it predates the current corrections and
   skipped both media-query and historical-evidence checks.
 - Focused tests for the confirmed audit findings pass locally.
+- Gate A, Gate B, and paired Rust MSRV evidence were regenerated from reachable
+  clean commit `d16fe5d`, hash-allowlisted, and verified against the exact Git
+  harness and fixture blobs.
 - The automated brand contract passes for the brandbook, symbols, lockups,
   raster dimensions, font licenses, token projection, six reviewed GPT Image 2
   masters, their AVIF/WebP derivatives, canonical prompt specifications, and
@@ -61,15 +64,14 @@ success condition.
 
 1. repeat the successful nineteen-crate package replay without `--allow-dirty`
    on the final clean source;
-2. supersede the unrecoverable `c47239c` benchmark snapshots from a clean,
-   reviewed, reachable commit;
-3. push that exact source and obtain fresh hosted cross-OS results;
-4. use the fresh hosted Windows run as the Windows authority because local
+2. push the measured source and evidence commits and obtain fresh hosted
+   cross-OS results;
+3. use the fresh hosted Windows run as the Windows authority because local
    Application Control blocks newly linked test binaries;
-5. after explicit owner approval, deploy the reviewed site to Cloudflare and
+4. after explicit owner approval, deploy the reviewed site to Cloudflare and
    bind `pliegocss.dev`, then verify production response headers, navigation,
    English/Spanish/legal parity, browser interaction, and Core Web Vitals; and
-6. publish the authorized `0.1.0-rc.2` compatibility unit, replay installation
+5. publish the authorized `0.1.0-rc.2` compatibility unit, replay installation
    from crates.io, and keep final `0.1.0` promotion blocked until it receives
    separate explicit approval.
 

@@ -2,17 +2,17 @@
   "schema_version": 4,
   "benchmark": "PliegoCSS Gate A matched-core fresh-process compile",
   "profile": "matched-core",
-  "generated_at": "2026-07-13T10:33:13.339Z",
+  "generated_at": "2026-07-21T13:47:13.624Z",
   "provenance": {
     "git": {
-      "commit": "c47239ce0bf1d046aa01710d436baea61f4e6528",
+      "commit": "d16fe5da26d4943ebcfd70ce7c14e743d1e25e54",
       "dirty": false,
       "status_entry_count": 0,
       "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "harness": {
       "path": "scripts/measure-pliego-gate-a.mjs",
-      "sha256": "660756cc830a3b5f7b7a97bfd237b0978f98ac762743fa8b497aaa936dacc2a2"
+      "sha256": "61dbb30afe6c3ccd31c32495af687f46e6f05e4819aaad894786f4b7c86ca761"
     },
     "tracked_inputs": [
       {
@@ -44,7 +44,7 @@
       "platform": "win32",
       "type": "Windows_NT",
       "release": "10.0.26200",
-      "version": "Windows 11 Home",
+      "version": "Windows 11 Pro",
       "architecture": "x64"
     },
     "cpu": {
@@ -73,13 +73,13 @@
       "sanitized_environment_keys": []
     },
     "power_plan": {
-      "status": "recorded",
-      "source": "powercfg /getactivescheme",
-      "value": "Power Scheme GUID: 381b4222-f694-41f0-9685-ff5bb260df2e  (Balanced)"
+      "status": "declared",
+      "source": "PLIEGO_BENCH_POWER_PLAN",
+      "value": "Windows host power plan inherited; WSL 2 benchmark guest"
     },
     "security_tooling": {
       "status": "active",
-      "tooling": "Microsoft Defender Antivirus; Windows Application Control",
+      "tooling": "Microsoft Defender Antivirus / Windows Application Control",
       "source": "environment"
     }
   },
@@ -92,58 +92,58 @@
   "timing": {
     "warmup_processes": 5,
     "runs": 30,
-    "min_ms": 31.959,
-    "median_ms": 34.934,
-    "mean_ms": 49.903,
-    "p95_ms": 248.502,
-    "max_ms": 267.676,
-    "median_absolute_deviation_ms": 0.708,
-    "standard_deviation_ms": 55.713,
+    "min_ms": 26.94,
+    "median_ms": 28.195,
+    "mean_ms": 29.548,
+    "p95_ms": 43.664,
+    "max_ms": 45.131,
+    "median_absolute_deviation_ms": 0.541,
+    "standard_deviation_ms": 4.275,
     "samples_ms": [
-      37.158,
-      38.614,
-      38.231,
-      267.676,
-      35.684,
-      34.279,
-      35.02,
-      34.268,
-      34.474,
-      36.542,
-      34.946,
-      34.63,
-      35.022,
-      34.784,
-      34.736,
-      35.015,
-      34.922,
-      35.706,
-      34.66,
-      34.101,
-      34.777,
-      248.502,
-      33.145,
-      31.959,
-      33.056,
-      36.111,
-      36.953,
-      35.144,
-      32.644,
-      34.343
+      28.772,
+      29.002,
+      27.882,
+      29.122,
+      28.176,
+      27.853,
+      28.001,
+      27.696,
+      29.263,
+      36.253,
+      29.297,
+      28.391,
+      45.131,
+      28.7,
+      28.244,
+      27.777,
+      29.236,
+      28.213,
+      27.527,
+      27.315,
+      29.106,
+      27.858,
+      27.775,
+      27.464,
+      26.94,
+      27.137,
+      28.514,
+      28.114,
+      28.004,
+      43.664
     ]
   },
   "determinism": {
     "verified_runs": 30,
     "deterministic": true,
-    "sha256": "aebdbff60a76abc1347cc34818bd31d54502c63505fb4962b1b6b3af46f5bf8e"
+    "sha256": "12b6d497962ec8ae30d1c9343ca180f65a81f628161d038a653ac7be32fd6688"
   },
   "output": {
-    "css_raw_bytes": 6546,
+    "css_raw_bytes": 6548,
     "css_gzip_bytes": 1594,
-    "css_sha256": "aebdbff60a76abc1347cc34818bd31d54502c63505fb4962b1b6b3af46f5bf8e",
-    "executable_sha256": "4c8f1964fda895e7f29213af2456bd79905b7b2e79b6ecadcc81124c3e444a73",
-    "manifest_sha256": "4e545d0f71cc6a99ae26caafa13f7dc247a68fc20b13a57aa933debef15bdfe2",
-    "transfer_gzip_bytes": 3038,
+    "css_sha256": "12b6d497962ec8ae30d1c9343ca180f65a81f628161d038a653ac7be32fd6688",
+    "executable_sha256": "c1694a81e896bc7159fb40f2cf73b9afbe3268abfb8812da2eee2e5fe739b780",
+    "manifest_sha256": "3da54812dd78327336111362cea12805fe1e6947f1dd91c2957b70624306e8b1",
+    "transfer_gzip_bytes": 3037,
     "html_unchanged_outside_class_values": true,
     "html": {
       "utility_strings": {
@@ -153,10 +153,10 @@
         "sha256": "4e13f4ec19e7901353d6178da7ff1e5d163efad74bf9b6c210cd5f2b73bcf6a3"
       },
       "generated_classes": {
-        "raw_bytes": 3916,
-        "gzip_bytes": 1444,
-        "transfer_html_css_gzip_bytes": 3038,
-        "sha256": "0a956dc40924c4cc52f1b167fa77a28fd300dcc0c9dd4f45eab079ed87832b36"
+        "raw_bytes": 3919,
+        "gzip_bytes": 1443,
+        "transfer_html_css_gzip_bytes": 3037,
+        "sha256": "474234f5a96633b7fb0ed70559ad912ecf61a960cb4e07811bcc0d1bc91bc3de"
       }
     }
   }

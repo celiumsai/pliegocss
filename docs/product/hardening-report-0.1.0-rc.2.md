@@ -22,7 +22,7 @@ after a reviewed commit.
 | P1 | A generated `box-shadow` lost the effective `!important` contract of `shadow-*` and `ring-*` contributors. | The composed physical declaration now becomes important whenever an effective contributor is important; physical lineage records the same result. | Focused emitter, lineage, CLI, and Chrome cascade tests pass. |
 | P1 | Release readiness enforced a stale private/pre-push photograph instead of deriving current blockers. | Readiness schema 2 models measured, inherited, pending, and uncertain evidence and derives `ready` or `blocked` from required checks. | Contract tests and the readiness checker pass. |
 | P1 | The frozen media-query benchmark had drifted and CI disabled it. | Frozen hashes and sizes were refreshed from the corrected compiler; CI and the release profile run both media merging and reachability pruning. | Both benchmark checks pass on current source. |
-| P1 | Historical benchmark snapshots referenced unreachable commit `c47239c`, while CI normally skipped the verifier. | CI always runs the verifier. The invalid snapshot set is explicitly marked superseded and cannot be replaced until the final clean commit exists. | The old verifier fails closed as intended; replacement remains pending rather than falsely green. |
+| P1 | Historical benchmark snapshots referenced unreachable commit `c47239c`, while CI normally skipped the verifier. | CI always runs the verifier. The invalid snapshot set was superseded by three immutable snapshots from reachable clean commit `d16fe5d`. | The verifier validates the explicit filename/SHA-256 allowlist, exact Git blobs, environment declarations, statistics, and profile contracts. |
 | P1 | The PliegoRS fixture depended on an unpublished local revision and stale `0.0.0` locks. | Fixtures pin public PliegoRS `0.0.2`, use registry-replayable locks, declare `project.id`, and require Rust 1.86 where the public framework requires it. | WSL SSG, browser resumability, route CSS, and development-loop checks pass against remote-reachable `f3f4eb9`. |
 | P2 | Migration apply and rollback had a preflight-to-rename race that could overwrite concurrent edits. | Destination-scoped locks and adjacent revalidation were added before replace/remove; grouped operations compensate when any destination drifts. | Unit, CLI, corpus, and adversarial concurrent-edit tests pass. |
 | P2 | LSP compiler children had no deadline and read unbounded output. | Catalog, hover, and diagnostic children have deadlines, cancellation, process-tree termination, and bounded stream capture. | Timeout and over-output tests pass. |
@@ -80,7 +80,7 @@ after a reviewed commit.
 | Package replay | Nineteen archives, Rust 1.85 downstream fixture | Measured with dirty-source caveat | PASS |
 | Dependency advisories | 105 dependencies | Measured | 0 advisories |
 | Hosted OS matrix | Prior `aabf2b4` run | Inherited | PASS, not authoritative for current fixes |
-| Frozen benchmark evidence | Final clean commit | Pending | BLOCKED |
+| Frozen benchmark evidence | Reachable clean commit `d16fe5d` | Measured | PASS |
 | Registry replay | Published PliegoCSS crates | Pending authorization | BLOCKED |
 | Final `0.1.0` promotion | Owner approval | Pending authorization | BLOCKED |
 
@@ -88,14 +88,12 @@ after a reviewed commit.
 
 1. Review and commit the complete source, including the six approved GPT Image
    2 masters, prompt provenance, and responsive derivatives.
-2. Generate new immutable benchmark snapshots from that clean commit and
-   approve their exact SHA-256 allowlist.
-3. Repeat package replay without `--allow-dirty`.
-4. Push the exact commit and require fresh Ubuntu, Windows, macOS, supply-chain,
+2. Repeat package replay without `--allow-dirty`.
+3. Push the exact source plus its immutable evidence and require fresh Ubuntu, Windows, macOS, supply-chain,
    browser, package, and watch results.
-5. With explicit authorization, deploy the site to Cloudflare, bind
+4. With explicit authorization, deploy the site to Cloudflare, bind
    `pliegocss.dev`, and verify the production edge/browser contract.
-6. Publish the authorized `0.1.0-rc.2` crate unit only after hosted CI is
+5. Publish the authorized `0.1.0-rc.2` crate unit only after hosted CI is
    green; promote final `0.1.0` only after separate owner authorization.
 
 No step above is implied by the existence of an RC tag, the repository's

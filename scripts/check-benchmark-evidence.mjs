@@ -31,21 +31,21 @@ const evidenceProfileContracts = {
 };
 const approvedEvidenceSha256ByFile = new Map([
   [
-    "pliego-gate-a-2026-07-13-c47239c.json",
-    "af7767af790d50b03be5ab0be0ad60501685592116e75fb49303ce00998bc989",
+    "pliego-gate-a-2026-07-21-d16fe5d.json",
+    "b5eb11fb92d16ef0bc08e4d55d43d6e19824e4cb35789fe89e0affed05f795ef",
   ],
   [
-    "pliego-gate-b-2026-07-13-c47239c.json",
-    "77318e6cb648f7e4c7d1d8014ade37766dd88d36f46ef9cb84fd4e9f5bc76f50",
+    "pliego-gate-b-2026-07-21-d16fe5d.json",
+    "900debaadc76485906f7edd36fbb297b478faff0ddab0838c9a4a9e27e8011bf",
   ],
   [
-    "rust-check-2026-07-13-c47239c.json",
-    "a1f28f00a011120b37cd73e85256a4577ac4c873daeb10098b7e847757dac03d",
+    "rust-check-2026-07-21-d16fe5d.json",
+    "2a3e54bfc4172c9e3a77322af67d68ad8924ed7e41a8790ff317214140238fd5",
   ],
 ]);
 const frozenTailwindBaselineSha256ByHarness = new Map([
   [
-    "47a4807f723fa96258ec18a68d80e2981fa24fb9e9881b590d40576d0644d242",
+    "971605479e7b610e5f559e9dcd2116f9a0b9c4f3b7f0c0489965927b2f011ef4",
     "2263ae7857e59d72ca541d2deac34cb4bcf2dd75a7d691ed14a2c92c26bc4e6b",
   ],
 ]);

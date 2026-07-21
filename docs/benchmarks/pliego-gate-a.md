@@ -155,8 +155,8 @@ pnpm baseline:check-diagnostics
 ```
 
 El resultado máquina-local se escribe en `benchmarks/results/pliego-gate-a.local.json`. El snapshot
-inmutable del commit `c47239c` está en
-[`pliego-gate-a-2026-07-13-c47239c.json`](../../benchmarks/evidence/pliego-gate-a-2026-07-13-c47239c.json).
+inmutable del commit limpio `d16fe5d` está en
+[`pliego-gate-a-2026-07-21-d16fe5d.json`](../../benchmarks/evidence/pliego-gate-a-2026-07-21-d16fe5d.json).
 La metodología y comparaciones están en
 [`tailwind-v4-baseline.md`](./tailwind-v4-baseline.md) y
 [`rust-check-baseline.md`](./rust-check-baseline.md).

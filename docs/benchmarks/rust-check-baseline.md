@@ -11,7 +11,7 @@ The harness compares two standalone crates with equivalent source shape:
 
 The authoritative run uses adjacent pairs, balances `plain → styled` and `styled → plain`, and
 reports the median of the observed per-pair deltas (`styled - plain`). It was produced from clean
-commit `c47239ce0bf1d046aa01710d436baea61f4e6528`.
+commit limpio `d16fe5da26d4943ebcfd70ce7c14e743d1e25e54`.
 
 | Scenario | Pairs | Plain median | Styled median | Paired delta median | Paired delta % median | Delta MAD |
 |---|---:|---:|---:|---:|---:|---:|
@@ -58,7 +58,7 @@ changed) are superseded. They measured all plain samples before all styled sampl
 independent medians, so they are not used for the gate decision.
 
 The immutable report with all 66 pairs is
-[`rust-check-2026-07-13-c47239c.json`](../../benchmarks/evidence/rust-check-2026-07-13-c47239c.json).
+[`rust-check-2026-07-21-d16fe5d.json`](../../benchmarks/evidence/rust-check-2026-07-21-d16fe5d.json).
 
 Run locally with:
 
