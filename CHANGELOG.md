@@ -8,6 +8,12 @@ pre-1.0 compatibility policy.
 
 ## [Unreleased]
 
+### Changed
+
+- Re-pin the fail-closed PliegoRS integration contract to current `main` after
+  the G1 native runtime entered the workspace, and replay the complete SSG,
+  route/island bundle, manifest, and browser-payload gate against that revision.
+
 ## [0.1.0-rc.2] - 2026-07-21
 
 This candidate supersedes `0.1.0-rc.1` without moving its immutable tag. It is
