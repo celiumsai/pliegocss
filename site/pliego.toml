@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: Apache-2.0
+
+[project]
+id = "pliegocss-site"
+name = "PliegoCSS"
+site_package = "pliegocss-site"
+output = "target/site"

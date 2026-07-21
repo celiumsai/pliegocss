@@ -22,7 +22,16 @@ function markdownFiles(directory) {
 
 const files = [
   resolve(ROOT, "README.md"),
+  resolve(ROOT, "CHANGELOG.md"),
+  resolve(ROOT, "CONTRIBUTING.md"),
+  resolve(ROOT, "CODE_OF_CONDUCT.md"),
+  resolve(ROOT, "GOVERNANCE.md"),
+  resolve(ROOT, "SECURITY.md"),
+  resolve(ROOT, "SUPPORT.md"),
+  resolve(ROOT, "TRADEMARKS.md"),
+  ...markdownFiles(resolve(ROOT, "brand")),
   ...markdownFiles(resolve(ROOT, "docs")),
+  resolve(ROOT, "site", "README.md"),
   resolve(ROOT, "editors", "vscode", "README.md"),
   resolve(ROOT, "editors", "neovim", "README.md"),
 ];
@@ -68,6 +77,8 @@ for (const required of [
   "docs/getting-started/editor-setup.md",
   "docs/troubleshooting/lsp.md",
   "docs/reference/lsp-diagnostic-corpus.md",
+  "brand/BRANDBOOK.md",
+  "site/README.md",
   "editors/vscode/README.md",
   "editors/neovim/README.md",
 ]) {

@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "assets": [
+    {
+      "role": "cascade-chamber",
+      "master": "cascade-chamber.png",
+      "masterSha256": "cce0c99c32da9faed790504d0be16743a8ba4a90f1c83b3ed5e3f4d6db67d64a",
+      "model": "openai-gpt-image-2",
+      "quality": "high",
+      "width": 1536,
+      "height": 1024,
+      "promptFile": "../image-prompts/01-cascade-chamber.md",
+      "finalPrompt": "Use case: stylized-concept\nAsset type: PliegoCSS website cinematic editorial field\nPrimary request: an architectural chamber built from four enormous folded\nplanes that visibly transform from raw authored material into a precise\ncompiled structure, with a single continuous rail passing through every layer\nand leaving as an exact geometric path\nScene/backdrop: a deep carbon-black technical space with enormous scale and no\nrecognizable real-world location\nSubject: layered paper-metal planes, one semantic hinge, one source rail, one\ncompiled rail, sparse evidence markers without text\nStyle/medium: premium editorial 3D render, physically plausible materials,\narchitectural visualization, restrained and exact rather than science-fiction\nComposition/framing: 16:9 landscape, dramatic asymmetric wide frame, main fold\noccupies the right two-thirds, generous dark negative space on the left for\nresponsive headline copy, strong depth from foreground to background\nLighting/mood: controlled cobalt edge light and a thin cyan trace light,\nsoft paper-white bounce, deep blacks with retained material detail, composed\nand ambitious\nColor palette: #11151a carbon, #f4f7f8 paper, #2855ff cobalt, #65d9ff cyan\nMaterials/textures: matte black engineered paper, translucent drafting film,\nbrushed dark metal only at structural hinges, visible but subtle paper fiber\nConstraints: no text, no letters, no code, no screens, no interface, no people,\nno logo, no brand marks, no watermark; the image must crop safely from 16:9 to\n4:3 and mobile portrait; avoid detail in the left-side copy-safe zone\nAvoid: generic neon tunnel, cyberpunk city, floating glass blobs, circuit\nboards, server racks, excessive glow, rainbow gradients, stock developer art\nBrand fidelity: follow the PliegoCSS visual system exactly. Preserve square joins, engineered-paper tactility, restrained cobalt structure, and a single cyan lineage cue. The result must feel like an authored premium editorial artifact, never generic AI developer imagery.",
+      "generationId": "7e81dadd-9120-44ca-bd46-557404c9dc8e",
+      "seed": null,
+      "reviewedAgainstBrandbook": true
+    },
+    {
+      "role": "semantic-fold",
+      "master": "semantic-fold.png",
+      "masterSha256": "76a2ff97c92411a105eb2dd8b4dfc665928467465b2675a9b904028c5c399c57",
+      "model": "openai-gpt-image-2",
+      "quality": "high",
+      "width": 1536,
+      "height": 1024,
+      "promptFile": "../image-prompts/02-semantic-fold.md",
+      "finalPrompt": "Use case: stylized-concept\nAsset type: PliegoCSS compiler narrative image\nPrimary request: a macro study of one sheet of engineered paper entering a\nprecise square-jointed fold and emerging as several aligned physical layers,\nmaking transformation and causality immediately legible\nScene/backdrop: seamless paper-white field transitioning into carbon at the\nfold, with no horizon\nSubject: one incoming carbon rail, one cobalt outgoing rail, thin cyan lineage\nthreads that remain physically attached to the output layers\nStyle/medium: museum-grade product photography blended with exact 3D material\nstudy, tactile and minimal\nComposition/framing: 4:3, close asymmetric composition, the fold crosses the\nframe diagonally, enough perimeter space for responsive cropping\nLighting/mood: soft directional studio light, crisp square edges, quiet depth,\nhigh material fidelity\nColor palette: paper, carbon, cobalt, cyan only\nMaterials/textures: dense uncoated paper, matte anodized cobalt edge, very thin\ntranslucent cyan filament\nConstraints: no text, no labels, no numbers, no UI, no logo, no watermark; the\nincoming and outgoing path must be visually continuous\nAvoid: origami animal, decorative ribbon, impossible geometry, soft rounded\ncorners, glossy plastic, excessive reflections\nBrand fidelity: follow the PliegoCSS visual system exactly. Preserve square joins, engineered-paper tactility, restrained cobalt structure, and a single cyan lineage cue. The result must feel like an authored premium editorial artifact, never generic AI developer imagery.",
+      "generationId": "784351d1-594d-471b-bd5e-05f3b04e7144",
+      "seed": null,
+      "reviewedAgainstBrandbook": true
+    },
+    {
+      "role": "evidence-archive",
+      "master": "evidence-archive.png",
+      "masterSha256": "09b6402a9fd222fd792be98fbca36e4d755c34a4a9bb2c26ca394348d8e0d74b",
+      "model": "openai-gpt-image-2",
+      "quality": "high",
+      "width": 1536,
+      "height": 1024,
+      "promptFile": "../image-prompts/03-evidence-archive.md",
+      "finalPrompt": "Use case: stylized-concept\nAsset type: PliegoCSS provenance and evidence editorial image\nPrimary request: a precise physical archive of layered evidence envelopes\nwhose edges are connected by one continuous cyan lineage thread, each layer\nvisibly bound to a cobalt compiled artifact\nScene/backdrop: dark carbon work surface extending into negative space\nSubject: four large square archival folios, a cobalt artifact plate, embossed\nhash-like marks that are abstract and not readable text, one cyan trace\nStyle/medium: premium editorial still life, technical archival photography,\nminimal and highly tactile\nComposition/framing: 4:3 overhead-oblique view, strong grid alignment, subject\nweighted toward the lower right with clean negative space upper left\nLighting/mood: narrow paper-white key light, subtle cobalt edge response,\ncalm, trustworthy, exact\nColor palette: carbon, paper, cobalt, cyan\nMaterials/textures: uncoated archival paper, blind embossing, matte anodized\nmetal, thin filament\nConstraints: no readable text, no code, no screens, no logo, no watermark, no\npeople; every layer must appear intentionally connected rather than scattered\nAvoid: office folders, blockchain imagery, locks or shields, generic documents,\nfloating holograms, excessive blue glow\nBrand fidelity: follow the PliegoCSS visual system exactly. Preserve square joins, engineered-paper tactility, restrained cobalt structure, and a single cyan lineage cue. The result must feel like an authored premium editorial artifact, never generic AI developer imagery.",
+      "generationId": "710d3808-aae9-4131-be3e-a93d8081eafe",
+      "seed": null,
+      "reviewedAgainstBrandbook": true
+    },
+    {
+      "role": "material-study-carbon",
+      "master": "material-study-carbon.png",
+      "masterSha256": "76f8f11eaf8ef6fd6af1cecbcd68528f7ffc99345eab79417029c89b038661f2",
+      "model": "openai-gpt-image-2",
+      "quality": "high",
+      "width": 1024,
+      "height": 1024,
+      "promptFile": "../image-prompts/04-material-studies.md",
+      "finalPrompt": "Primary request: Carbon engineered paper with one exact square fold and a cobalt edge.\nTreat this as one independent image, not a contact sheet or a set. Render exactly one decisive material composition.\nUse case: stylized-concept\nAsset type: PliegoCSS brand material study\nStyle/medium: extreme macro editorial product photography with physically\nplausible 3D materials\nComposition/framing: 1:1 square, one decisive geometric subject, generous edge\nspace for social crops\nLighting/mood: controlled studio light, quiet depth, no theatrical bloom\nColor palette: #11151a, #f4f7f8, #2855ff, #65d9ff\nConstraints: no text, no code, no UI, no people, no logo, no watermark, square\njoins only, no decorative rounded shapes\nAvoid: generic abstract wallpaper, liquid waves, glass spheres, rainbow\ngradients, cyberpunk, circuit boards\nBrand fidelity: follow the PliegoCSS visual system exactly. Preserve square joins, engineered-paper tactility, restrained cobalt structure, and a single cyan lineage cue. The result must feel like an authored premium editorial artifact, never generic AI developer imagery.",
+      "generationId": "e69edcfc-3593-4eed-8e96-152bf0ddb5b4",
+      "seed": null,
+      "reviewedAgainstBrandbook": true
+    },
+    {
+      "role": "material-study-paper",
+      "master": "material-study-paper.png",
+      "masterSha256": "d930781943d7da70ad5aca4275526f65a75816b7fb1c6e7ab48676046e0aeff4",
+      "model": "openai-gpt-image-2",
+      "quality": "high",
+      "width": 1024,
+      "height": 1024,
+      "promptFile": "../image-prompts/04-material-studies.md",
+      "finalPrompt": "Primary request: Paper-white drafting film pierced by a single cyan lineage filament.\nTreat this as one independent image, not a contact sheet or a set. Render exactly one decisive material composition.\nUse case: stylized-concept\nAsset type: PliegoCSS brand material study\nStyle/medium: extreme macro editorial product photography with physically\nplausible 3D materials\nComposition/framing: 1:1 square, one decisive geometric subject, generous edge\nspace for social crops\nLighting/mood: controlled studio light, quiet depth, no theatrical bloom\nColor palette: #11151a, #f4f7f8, #2855ff, #65d9ff\nConstraints: no text, no code, no UI, no people, no logo, no watermark, square\njoins only, no decorative rounded shapes\nAvoid: generic abstract wallpaper, liquid waves, glass spheres, rainbow\ngradients, cyberpunk, circuit boards\nBrand fidelity: follow the PliegoCSS visual system exactly. Preserve square joins, engineered-paper tactility, restrained cobalt structure, and a single cyan lineage cue. The result must feel like an authored premium editorial artifact, never generic AI developer imagery.",
+      "generationId": "a290d552-96d8-4dbf-a703-93418e74984f",
+      "seed": null,
+      "reviewedAgainstBrandbook": true
+    },
+    {
+      "role": "material-study-cobalt",
+      "master": "material-study-cobalt.png",
+      "masterSha256": "6e211d1a1634fc402faf4154bd53555e21b99f6de7141b20228050dad4ef4d62",
+      "model": "openai-gpt-image-2",
+      "quality": "high",
+      "width": 1024,
+      "height": 1024,
+      "promptFile": "../image-prompts/04-material-studies.md",
+      "finalPrompt": "Primary request: A cobalt anodized plate aligned over a carbon semantic grid.\nTreat this as one independent image, not a contact sheet or a set. Render exactly one decisive material composition.\nUse case: stylized-concept\nAsset type: PliegoCSS brand material study\nStyle/medium: extreme macro editorial product photography with physically\nplausible 3D materials\nComposition/framing: 1:1 square, one decisive geometric subject, generous edge\nspace for social crops\nLighting/mood: controlled studio light, quiet depth, no theatrical bloom\nColor palette: #11151a, #f4f7f8, #2855ff, #65d9ff\nConstraints: no text, no code, no UI, no people, no logo, no watermark, square\njoins only, no decorative rounded shapes\nAvoid: generic abstract wallpaper, liquid waves, glass spheres, rainbow\ngradients, cyberpunk, circuit boards\nBrand fidelity: follow the PliegoCSS visual system exactly. Preserve square joins, engineered-paper tactility, restrained cobalt structure, and a single cyan lineage cue. The result must feel like an authored premium editorial artifact, never generic AI developer imagery.",
+      "generationId": "4a6bded0-9d6d-4e57-a444-d16b7e4b335a",
+      "seed": null,
+      "reviewedAgainstBrandbook": true
+    }
+  ]
+}

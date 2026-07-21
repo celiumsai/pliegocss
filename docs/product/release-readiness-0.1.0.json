@@ -1,44 +1,103 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "targetVersion": "0.1.0",
   "candidateVersion": "0.1.0-rc.1",
   "repository": "https://github.com/celiumsai/pliegocss",
+  "repositoryVisibility": "private",
+  "productStage": "public-preview",
   "result": "blocked",
-  "localGates": [
-    {"id":"fast-profile","status":"passed"},
-    {"id":"integration-segments","status":"passed","limit":"Windows and WSL segments; one continuous invocation exceeded the tool timeout"},
-    {"id":"public-api-msrv","status":"passed","rust":"1.85"},
-    {"id":"properties","status":"passed"},
-    {"id":"determinism","status":"passed"},
-    {"id":"portability-windows","status":"passed"},
-    {"id":"package-replay","status":"passed","packages":19,"published":false},
-    {"id":"chrome-edge-local","status":"passed","claim":"local-computed-style-smoke"}
-  ],
-  "externalBlockers": [
+  "checks": [
     {
-      "id":"canonical-repository-private",
-      "status":"pending-push",
-      "requiredAction":"Push the consolidated RC commit and run hosted CI while preserving private visibility.",
-      "evidence":"GitHub repository exists as PRIVATE"
+      "id": "targeted-corrections",
+      "status": "passed",
+      "evidenceClass": "measured",
+      "requiredForPromotion": true,
+      "summary": "Focused Rust tests pass for physical !important propagation, migration revalidation, LSP bounds, repair-agent bounds, package paths, media merging, and CLI help."
     },
     {
-      "id":"hosted-cross-os-browser-evidence",
-      "status":"not-configured",
-      "requiredAction":"Run committed CI on Windows, Ubuntu, and macOS with Firefox/WebKit/Safari evidence where supported.",
-      "missing":["windows-firefox","linux-chromium","macos-safari-webkit"]
+      "id": "brand-system",
+      "status": "passed",
+      "evidenceClass": "measured",
+      "requiredForPromotion": false,
+      "summary": "The automated brand contract passes for the versioned brandbook, seven vector variants, two exact-dimension raster exports, font licenses, fourteen DTCG-to-CSS token projections, six reviewed GPT Image 2 masters, their AVIF/WebP derivatives, prompt specifications, and generation manifest."
     },
     {
-      "id":"historical-benchmark-provenance",
-      "status":"blocked",
-      "requiredAction":"Restore commit c47239c or supersede its snapshots from a clean reviewed commit.",
-      "evidence":"git cat-file cannot resolve c47239c"
+      "id": "fast-profile-current-source",
+      "status": "passed",
+      "evidenceClass": "measured",
+      "requiredForPromotion": true,
+      "summary": "Every fast-profile constituent is measured on the current working source: Windows passes formatting, cargo check, and JavaScript documentation/product gates; WSL passes the complete locked workspace tests, doctests, and Clippy with warnings denied. Windows Application Control error 4551 still prevents a single-environment local replay, so hosted Windows remains a separate required check."
     },
     {
-      "id":"published-rc-replay",
-      "status":"not-authorized",
-      "requiredAction":"Commit, publish RC crates in dependency order, and replay installation from registry artifacts.",
-      "constraint":"No commit, push, or publication has been authorized."
+      "id": "pliegors-current-contract",
+      "status": "passed",
+      "evidenceClass": "measured",
+      "requiredForPromotion": true,
+      "summary": "The WSL integration passed against remote-reachable PliegoRS revision f3f4eb9 with registry-replayable 0.0.2 fixture locks."
+    },
+    {
+      "id": "browser-current-source",
+      "status": "passed",
+      "evidenceClass": "measured",
+      "requiredForPromotion": true,
+      "summary": "Chrome 150 passes computed layout, WebGL/Three.js readiness, real compiler playground interaction, desktop/mobile overflow, and representative site routes on the current working source."
+    },
+    {
+      "id": "package-replay-current-source",
+      "status": "passed",
+      "evidenceClass": "measured",
+      "requiredForPromotion": true,
+      "summary": "All nineteen 0.1.0-rc.1 crate archives package below the 72 KiB compressed limit and replay in dependency order, including the Rust 1.85 downstream public-API fixture. The run used --allow-dirty because the reviewed corrections are not yet committed; it must be repeated without that override on the final commit."
+    },
+    {
+      "id": "benchmark-evidence-current-source",
+      "status": "blocked",
+      "evidenceClass": "pending",
+      "requiredForPromotion": true,
+      "summary": "The unrecoverable c47239c snapshot set must be superseded with immutable snapshots from the final clean source commit."
+    },
+    {
+      "id": "supply-chain-policy",
+      "status": "passed",
+      "evidenceClass": "measured",
+      "requiredForPromotion": true,
+      "summary": "cargo-audit reports zero advisories and cargo-deny passes licenses, bans, and sources under WSL. CI deliberately runs those non-overlapping checks instead of making cargo-deny fetch a second advisory database after cargo-audit."
+    },
+    {
+      "id": "website-current-source",
+      "status": "passed",
+      "evidenceClass": "measured",
+      "requiredForPromotion": true,
+      "summary": "The 90-route bilingual PliegoRS site passes deterministic byte-for-byte rebuild, ledger and corpus integrity, gzip budgets, English/Spanish route and legal parity, generated image delivery, desktop/mobile interaction, command search, reduced motion, WebGL, and horizontal-overflow contracts in Chrome 150 on the current working source."
+    },
+    {
+      "id": "cloudflare-deployment-contract",
+      "status": "passed",
+      "evidenceClass": "measured",
+      "requiredForPromotion": true,
+      "summary": "Wrangler 4.110.0 accepts the Cloudflare Workers Static Assets profile, serves the generated site locally with the CSP/security/cache header contract, trailing-slash routing, security.txt MIME type, immutable asset policy, and custom-domain-only configuration. No deployment was performed; the active pliegocss.dev zone has no apex or www DNS records and no pliegocss-site Worker exists yet."
+    },
+    {
+      "id": "hosted-cross-os-current-source",
+      "status": "pending",
+      "evidenceClass": "inherited",
+      "requiredForPromotion": true,
+      "summary": "Run 29767855672 passed Windows, Ubuntu, and macOS at aabf2b4, but it predates the current fixes and skipped media/evidence."
+    },
+    {
+      "id": "registry-replay",
+      "status": "not-authorized",
+      "evidenceClass": "pending",
+      "requiredForPromotion": true,
+      "summary": "No PliegoCSS crate is authorized or published; registry installation replay remains a release-time action."
+    },
+    {
+      "id": "final-promotion-authorization",
+      "status": "not-authorized",
+      "evidenceClass": "pending",
+      "requiredForPromotion": true,
+      "summary": "Creating or publishing 0.1.0 requires explicit owner approval after all technical checks pass."
     }
   ],
-  "promotionRule":"0.1.0 may replace 0.1.0-rc.1 only after every external blocker is passed or moved by a reviewed release ADR."
+  "promotionRule": "0.1.0 may be created only when every requiredForPromotion check is passed on the exact source commit and the owner explicitly authorizes publication."
 }

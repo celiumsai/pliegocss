@@ -52,6 +52,8 @@ const PUBLIC_API_FIXTURE_FILES = [
 ];
 const PACKAGE_TOOLCHAIN = "1.96.0";
 const EXPECTED_REPOSITORY = "https://github.com/celiumsai/pliegocss";
+const EXPECTED_HOMEPAGE = "https://pliegocss.dev";
+const EXPECTED_REGISTRY = "crates-io";
 const EXPECTED_MSRV = "1.85";
 const MAX_COMPRESSED_ARCHIVE_BYTES = 72 * 1024;
 const EXPECTED_LICENSE_SHA256 =
@@ -84,12 +86,6 @@ function run(command, args, { capture = false, cwd = ROOT } = {}) {
 
 function runPackageCargo(args, options = {}) {
   return run("cargo", [`+${PACKAGE_TOOLCHAIN}`, ...args], options);
-}
-
-function tarPath(path) {
-  if (process.platform !== "win32") return path;
-  const match = /^([A-Za-z]):[\\/](.*)$/u.exec(resolve(path));
-  return match ? `/${match[1].toLowerCase()}/${match[2].replaceAll("\\", "/")}` : path;
 }
 
 function dependencyContract(dependency) {
@@ -263,8 +259,6 @@ if (versions.size !== 1) {
 }
 const [version] = versions;
 const orderIndex = new Map(EXPECTED_ORDER.map((name, index) => [name, index]));
-const rootLicense = canonical(join(ROOT, "LICENSE"));
-
 for (const name of EXPECTED_ORDER) {
   const pkg = workspacePackages.get(name);
   if (!pkg) {
@@ -276,17 +270,27 @@ for (const name of EXPECTED_ORDER) {
   if (pkg.repository !== EXPECTED_REPOSITORY) {
     fail(`${name} repository must be ${EXPECTED_REPOSITORY}`);
   }
+  if (pkg.homepage !== EXPECTED_HOMEPAGE) {
+    fail(`${name} homepage must be ${EXPECTED_HOMEPAGE}`);
+  }
+  if (pkg.documentation !== `https://docs.rs/${name}`) {
+    fail(`${name} documentation must be https://docs.rs/${name}`);
+  }
+  if (
+    !Array.isArray(pkg.publish) ||
+    pkg.publish.length !== 1 ||
+    pkg.publish[0] !== EXPECTED_REGISTRY
+  ) {
+    fail(`${name} must publish exclusively to ${EXPECTED_REGISTRY}`);
+  }
   if (pkg.rust_version !== EXPECTED_MSRV) {
     fail(`${name} rust-version must be ${EXPECTED_MSRV}`);
   }
-  if (pkg.license !== null) {
-    fail(`${name} must use the packaged Apache license file instead of duplicate license metadata`);
+  if (pkg.license !== "Apache-2.0") {
+    fail(`${name} must inherit the SPDX Apache-2.0 license expression`);
   }
-  if (
-    !pkg.license_file ||
-    canonical(resolveMetadataPath(pkg.manifest_path, pkg.license_file)) !== rootLicense
-  ) {
-    fail(`${name} must inherit the workspace LICENSE file`);
+  if (pkg.license_file !== null) {
+    fail(`${name} must not combine license with the deprecated license-file metadata`);
   }
   if (!pkg.readme || !existsSync(resolveMetadataPath(pkg.manifest_path, pkg.readme))) {
     fail(`${name} must reference an existing README`);
@@ -309,6 +313,14 @@ for (const name of EXPECTED_ORDER) {
     if (!files.includes(required)) {
       fail(`${name} package is missing ${required}`);
     }
+  }
+  const packageLicense = join(dirname(pkg.manifest_path), "LICENSE");
+  if (
+    !existsSync(packageLicense) ||
+    createHash("sha256").update(readFileSync(packageLicense)).digest("hex") !==
+      EXPECTED_LICENSE_SHA256
+  ) {
+    fail(`${name} must package the frozen Apache-2.0 LICENSE text`);
   }
   if (!files.some((file) => /^src[\\/]/u.test(file))) {
     fail(`${name} package contains no source files`);
@@ -402,7 +414,7 @@ try {
   mkdirSync(packagesRoot);
   const extractedRoots = new Map();
   for (const archive of archiveRecords) {
-    run("tar", ["-xzf", tarPath(archive.path), "-C", tarPath(packagesRoot)], {
+    run("tar", ["-xzf", archive.path, "-C", packagesRoot], {
       cwd: verificationRoot,
     });
     const packageRoot = join(packagesRoot, `${archive.name}-${version}`);

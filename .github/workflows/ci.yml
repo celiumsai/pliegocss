@@ -8,6 +8,21 @@ permissions:
   contents: read
 
 jobs:
+  supply-chain:
+    name: Supply-chain policy
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Install pinned audit tools
+        run: |
+          cargo install cargo-audit --version 0.22.1 --locked
+          cargo install cargo-deny --version 0.20.2 --locked
+      - name: Check advisories, licenses, bans, and sources
+        run: |
+          cargo audit --deny warnings
+          cargo deny check licenses bans sources
+
   provenance:
     name: Standards provenance
     runs-on: ubuntu-latest
@@ -35,7 +50,7 @@ jobs:
         run: rustup toolchain install ${{ matrix.toolchain }} --profile minimal --component clippy
       - name: Test workspace
         run: |
-          cargo +${{ matrix.toolchain }} test --workspace --all-targets --locked -- --skip watch_republishes_dtcg_defaults_and_keeps_the_last_valid_group
+          cargo +${{ matrix.toolchain }} test --workspace --all-targets --locked
           cargo +${{ matrix.toolchain }} test --workspace --doc --locked
       - name: Clippy
         run: |
@@ -55,7 +70,6 @@ jobs:
           PLIEGO_SKIP_GZIP_HASH: "1"
         run: node scripts/measure-reachability-pruning.mjs --check
       - name: Check benchmarked media-query merge
-        if: false
         env:
           PLIEGO_CSSC: target/debug/pliego-cssc${{ runner.os == 'Windows' && '.exe' || '' }}
           PLIEGO_SKIP_GZIP_HASH: "1"
@@ -110,6 +124,8 @@ jobs:
         run: node scripts/check-release.test.mjs
       - name: Check documentation graph
         run: node scripts/check-docs.mjs
+      - name: Check brand system and asset provenance
+        run: node scripts/check-brand.mjs
       - name: Check compatibility policy
         run: node scripts/check-compatibility-policy.mjs
       - name: Install rustfmt
@@ -124,7 +140,6 @@ jobs:
           RUSTDOCFLAGS: -D warnings
         run: cargo +1.96.0 doc --workspace --no-deps --locked
       - name: Check frozen benchmark evidence
-        if: ${{ hashFiles(format('benchmarks/evidence/*-{0}.json', github.sha)) != '' }}
         run: node scripts/check-benchmark-evidence.mjs
       - name: Check repair authority corpus
         env:
@@ -232,6 +247,10 @@ jobs:
           rustup target add wasm32-unknown-unknown --toolchain 1.96.0
       - name: Install benchmark dependencies
         run: pnpm install --frozen-lockfile
+      - name: Build and validate the PliegoRS-authored website
+        run: pnpm check:site
+      - name: Validate the Cloudflare public deployment profile
+        run: pnpm check:site-deployment
       - name: Check compile-time diagnostics
         run: pnpm baseline:check-diagnostics
       - name: Check downstream public API and identity

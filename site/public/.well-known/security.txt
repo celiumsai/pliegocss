@@ -1,0 +1,4 @@
+Contact: mailto:hello@pliegocss.dev
+Canonical: https://pliegocss.dev/.well-known/security.txt
+Policy: https://pliegocss.dev/security/
+Preferred-Languages: en, es

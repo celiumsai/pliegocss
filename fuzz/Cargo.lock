@@ -119,7 +119,7 @@ dependencies = [
 
 [[package]]
 name = "pliego-css-compiler"
-version = "0.0.0"
+version = "0.1.0-rc.1"
 dependencies = [
  "pliego-css-ir",
  "pliego-css-parser",
@@ -139,20 +139,21 @@ dependencies = [
 
 [[package]]
 name = "pliego-css-ir"
-version = "0.0.0"
+version = "0.1.0-rc.1"
 
 [[package]]
 name = "pliego-css-parser"
-version = "0.0.0"
+version = "0.1.0-rc.1"
 dependencies = [
  "pliego-css-ir",
 ]
 
 [[package]]
 name = "pliego-css-theme"
-version = "0.0.0"
+version = "0.1.0-rc.1"
 dependencies = [
  "pliego-css-ir",
+ "sha2",
 ]
 
 [[package]]

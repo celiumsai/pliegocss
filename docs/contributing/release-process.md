@@ -1,11 +1,14 @@
 # Release process
 
-Status: **local package and public-API candidate verification implemented; PliegoCSS is not
-release-candidate ready**
+Status: **`0.1.0-rc.1` is published as a private-repository prerelease;
+`0.1.0` promotion remains blocked by the machine readiness record**
 
-This process covers the nineteen publishable crates in one version-locked compatibility unit. It does not
-authorize an upload. Publishing to crates.io, creating a public repository, pushing a tag, or changing
-production infrastructure requires explicit owner approval at the moment of the action.
+This process covers the nineteen publishable crates in one version-locked
+compatibility unit. It does not authorize an upload. Publishing to crates.io,
+promoting a final release, changing repository visibility, or changing
+production infrastructure requires explicit owner approval at the moment of
+the action. Current status is maintained in the
+[machine readiness record](../product/release-readiness-0.1.0.md).
 
 ## Publishable boundary
 
@@ -238,7 +241,7 @@ The gate fails on a dirty worktree and verifies all of the following without pub
 - tracked and packaged paths are relative, Unicode-normalized, collision-free, and safe on
   case-insensitive Windows/macOS filesystems; each package includes source files;
 - Cargo 1.96 packages all nineteen archives without native registry verification, validates their
-  normalized dependency contracts, exact resolved graph, and 62 KiB (63,488-byte) maximum
+  normalized dependency contracts, exact resolved graph, and 72 KiB (73,728-byte) maximum
   compressed size per archive, then compiles only their extracted contents in the isolated patched
   workspace using the release profile;
 - Rust 1.85 resolves, compiles, and runs the public facade, custom-theme bridge, ownership contract,

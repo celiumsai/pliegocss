@@ -28,10 +28,12 @@ members = [
 version = "0.1.0-rc.1"
 edition = "2024"
 rust-version = "1.85"
-license-file = "LICENSE"
+license = "Apache-2.0"
 repository = "https://github.com/celiumsai/pliegocss"
 authors = ["Celiums Solutions LLC"]
 readme = "README.md"
+homepage = "https://pliegocss.dev"
+publish = ["crates-io"]
 keywords = ["css", "rust", "static-analysis", "pliegors", "web"]
 categories = ["compilers", "development-tools", "web-programming"]
 

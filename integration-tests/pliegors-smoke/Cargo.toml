@@ -2,12 +2,13 @@
 name = "pliegocss-pliegors-smoke"
 version = "0.0.0"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.86"
 publish = false
 default-run = "pliegocss-pliegors-ssg"
 
-# This fixture is intentionally detached: it depends on the sibling PliegoRS
-# checkout and is run only by the cross-repository integration gate.
+# This fixture is intentionally detached. Published PliegoRS packages make the
+# lockfile replayable from a clean checkout; the cross-repository gate supplies
+# an exact revision as a Cargo source override when PLIEGORS_ROOT is configured.
 [workspace]
 members = ["client"]
 resolver = "2"
@@ -27,10 +28,10 @@ path = "src/bin/collector.rs"
 [dependencies]
 pliego-css = { path = "../../crates/pliego-css" }
 pliego-css-source = { path = "../../crates/pliego-css-source" }
-pliego-dom = { path = "../../../pliegors/crates/pliego-dom" }
-pliego-macros = { path = "../../../pliegors/crates/pliego-macros" }
-pliego-resume = { path = "../../../pliegors/crates/pliego-resume" }
-pliego-ssg = { path = "../../../pliegors/crates/pliego-ssg" }
+pliego-dom = "=0.0.2"
+pliego-macros = "=0.0.2"
+pliego-resume = "=0.0.2"
+pliego-ssg = "=0.0.2"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
 sha2 = "0.10"

@@ -503,6 +503,7 @@ fn declarations<const TRACE: bool>(
     let mut declarations = String::new();
     let mut lineage = Vec::new();
     let mut effects = false;
+    let mut effects_important = false;
     let mut effect_ordinals = Vec::new();
     for &(ordinal, assignment) in assignments {
         let value = value(theme, style, assignment)?;
@@ -691,6 +692,7 @@ fn declarations<const TRACE: bool>(
             Utility::BoxShadow => {
                 push("--pc-shadow", &value);
                 effects = true;
+                effects_important |= assignment.important;
                 if TRACE {
                     effect_ordinals.push(ordinal);
                 }
@@ -698,6 +700,7 @@ fn declarations<const TRACE: bool>(
             Utility::RingWidth => {
                 push("--pc-ring-width", &value);
                 effects = true;
+                effects_important |= assignment.important;
                 if TRACE {
                     effect_ordinals.push(ordinal);
                 }
@@ -705,6 +708,7 @@ fn declarations<const TRACE: bool>(
             Utility::RingColor => {
                 push("--pc-ring-color", &value);
                 effects = true;
+                effects_important |= assignment.important;
                 if TRACE {
                     effect_ordinals.push(ordinal);
                 }
@@ -741,13 +745,15 @@ fn declarations<const TRACE: bool>(
         }
     }
     if effects {
-        declarations.push_str(
-            "box-shadow:0 0 0 var(--pc-ring-width,0) var(--pc-ring-color,currentColor),var(--pc-shadow,0 0 #0000);",
-        );
+        declarations.push_str("box-shadow:0 0 0 var(--pc-ring-width,0) var(--pc-ring-color,currentColor),var(--pc-shadow,0 0 #0000)");
+        if effects_important {
+            declarations.push_str("!important");
+        }
+        declarations.push(';');
         if TRACE {
             lineage.push(DeclarationLineage {
                 semantic_ordinals: effect_ordinals,
-                important: false,
+                important: effects_important,
                 generated: true,
             });
         }

@@ -109,6 +109,7 @@ owned route bundles. `pliego-cssc watch` only regenerates artifacts; composed wi
 
 ## Status and evidence
 
+- [0.1.0-rc.1 hardening report](./product/hardening-report-0.1.0-rc.1.md)
 - [0.1.0 release readiness](./product/release-readiness-0.1.0.md)
 - [F0 verification](./status/f0-verification.md)
 - [F1 parser and IR](./status/f1.md)
@@ -144,6 +145,13 @@ owned route bundles. `pliego-cssc watch` only regenerates artifacts; composed wi
 
 ## Contributing and releases
 
+- [Brand system](../brand/BRANDBOOK.md)
+- [Contributing](../CONTRIBUTING.md)
+- [Governance](../GOVERNANCE.md)
+- [Security](../SECURITY.md)
+- [Support](../SUPPORT.md)
+- [Community code of conduct](../CODE_OF_CONDUCT.md)
+- [Trademark policy](../TRADEMARKS.md)
 - [Property, parallel, and fuzz testing](./contributing/fuzzing.md)
 - [Release process and checklist](./contributing/release-process.md)
 - [Changelog](../CHANGELOG.md)

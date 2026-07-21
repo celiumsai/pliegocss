@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">PliegoCSS</title>
+  <desc id="desc">Compile confidence into CSS.</desc>
+  <rect width="1200" height="630" fill="#11151a"/>
+  <path d="M0 506H1200" stroke="#283039"/>
+  <path d="M920 -110L1310 280M846 -36L1236 354M772 38L1162 428" stroke="#2855ff" stroke-width="2" opacity=".55"/>
+  <g transform="translate(74 70) scale(1.25)">
+    <path d="M8 8H56V24H32V40H8" fill="none" stroke="#f4f7f8" stroke-width="8" stroke-linecap="square" stroke-linejoin="miter"/>
+    <path d="M8 24H32V40H56V56H8" fill="none" stroke="#6f8cff" stroke-width="8" stroke-linecap="square" stroke-linejoin="miter"/>
+  </g>
+  <text x="74" y="248" fill="#f4f7f8" font-family="Instrument Sans, Arial, sans-serif" font-size="100" font-weight="730" letter-spacing="-5">PliegoCSS</text>
+  <text x="80" y="330" fill="#aeb8c1" font-family="Fragment Mono, Consolas, monospace" font-size="25" letter-spacing=".5">COMPILE CONFIDENCE INTO CSS.</text>
+  <g transform="translate(80 410)">
+    <rect width="207" height="48" fill="#2855ff"/>
+    <text x="18" y="31" fill="#ffffff" font-family="Fragment Mono, Consolas, monospace" font-size="16">STANDARDS FIRST</text>
+    <rect x="223" width="190" height="48" fill="#f4f7f8"/>
+    <text x="241" y="31" fill="#11151a" font-family="Fragment Mono, Consolas, monospace" font-size="16">RUST NATIVE</text>
+    <rect x="429" width="225" height="48" fill="none" stroke="#59636d"/>
+    <text x="447" y="31" fill="#f4f7f8" font-family="Fragment Mono, Consolas, monospace" font-size="16">DETERMINISTIC</text>
+  </g>
+  <text x="80" y="562" fill="#6f8cff" font-family="Fragment Mono, Consolas, monospace" font-size="18">pliegocss.dev</text>
+</svg>

@@ -1,20 +1,73 @@
 # PliegoCSS 0.1.0 release readiness
 
-Status: **`0.1.0-rc.1` locally verified; final promotion blocked by external release evidence**
+Status: **hardening in progress; final `0.1.0` promotion blocked**
 
-The machine authority is [`release-readiness-0.1.0.json`](./release-readiness-0.1.0.json).
+The machine authority is
+[`release-readiness-0.1.0.json`](./release-readiness-0.1.0.json). Its second
+schema records each claim as **measured**, **inherited**, **pending**, or
+**uncertain** and derives the overall result from checks required for
+promotion. It no longer treats one obsolete release snapshot as a permanent
+success condition.
 
-Local fast, integration segments, public API/MSRV, determinism, portability, package replay, and
-Chrome/Edge computed-style gates pass. Nineteen RC-shaped crates package and compile together without
-publication.
+## Current facts
 
-Final `0.1.0` promotion is intentionally blocked until:
+- The canonical GitHub repository exists and remains private while its product
+  posture is prepared as a public preview. This does not authorize changing
+  repository visibility, publishing crates, or promoting final `0.1.0`.
+- The `v0.1.0-rc.1` tag and GitHub prerelease exist.
+- Hosted run
+  [29767855672](https://github.com/celiumsai/pliegocss/actions/runs/29767855672)
+  passed the Rust matrix on Windows, Ubuntu, and macOS at `aabf2b4`.
+- That run is inherited evidence only: it predates the current corrections and
+  skipped both media-query and historical-evidence checks.
+- Focused tests for the confirmed audit findings pass locally.
+- The automated brand contract passes for the brandbook, symbols, lockups,
+  raster dimensions, font licenses, token projection, six reviewed GPT Image 2
+  masters, their AVIF/WebP derivatives, canonical prompt specifications, and
+  generation manifest.
+- Every fast-profile constituent passes on the current working source. Windows
+  runs formatting, `cargo check`, and the JavaScript documentation/product
+  gates; WSL runs the complete locked workspace tests, doctests, and Clippy
+  with warnings denied. Local Windows Application Control error `4551` still
+  prevents one-machine replay of newly linked test binaries, so fresh hosted
+  Windows evidence remains independently required.
+- The current PliegoRS integration passes in WSL against a remote-reachable
+  revision and registry-replayable fixture locks.
+- The expanded PliegoRS-authored public-preview website now has 90
+  English/Spanish routes, legal and accessibility pages, reviewed brand
+  imagery, and the ordered masthead/footer contract. It passes deterministic
+  byte-for-byte rebuild, ledger and compiler-corpus integrity, gzip budgets,
+  language and legal parity, generated-image delivery, computed styles,
+  WebGL, playground, keyboard tabs, reduced motion, operations, command search,
+  mobile layout, and horizontal-overflow checks in Chrome 150 on the current
+  working source.
+- The Cloudflare Workers Static Assets profile passes a Wrangler 4.110.0 dry
+  run and local edge-response replay. It enforces the public custom-domain-only
+  route, trailing-slash/404 behavior, CSP, HSTS, framing, MIME-sniffing,
+  referrer, feature, cross-origin, security.txt, and immutable-asset contracts.
+  The Cloudflare account currently has the active `pliegocss.dev` zone but no
+  `pliegocss-site` Worker and no apex or `www` DNS record; deployment and DNS
+  creation remain unperformed owner-authorized operations.
+- All nineteen crate archives package below the 72 KiB compressed limit and
+  replay through a Rust 1.85 downstream fixture under WSL. This measurement
+  allowed the reviewed dirty worktree and therefore must be repeated on the
+  final clean commit before promotion.
+- No PliegoCSS crate or final release has been authorized for publication.
 
-1. the consolidated RC commit is pushed to the private `https://github.com/celiumsai/pliegocss` repository;
-2. committed hosted Windows/Linux/macOS CI produces the required browser/OS evidence;
-3. historical benchmark commit `c47239c` is restored or its snapshots are explicitly superseded from
-   a clean reviewed commit; and
-4. commit/push/RC publication is authorized, followed by registry installation replay.
+## Remaining promotion work
 
-None of these states is represented as passing. The workspace remains `0.1.0-rc.1` until the machine
-readiness document is green or a reviewed release ADR explicitly changes a requirement.
+1. repeat the successful nineteen-crate package replay without `--allow-dirty`
+   on the final clean source;
+2. supersede the unrecoverable `c47239c` benchmark snapshots from a clean,
+   reviewed, reachable commit;
+3. push that exact source and obtain fresh hosted cross-OS results;
+4. use the fresh hosted Windows run as the Windows authority because local
+   Application Control blocks newly linked test binaries;
+5. after explicit owner approval, deploy the reviewed site to Cloudflare and
+   bind `pliegocss.dev`, then verify production response headers, navigation,
+   English/Spanish/legal parity, browser interaction, and Core Web Vitals; and
+6. obtain explicit owner approval before publishing crates or promoting
+   `0.1.0`.
+
+A local green gate never substitutes for hosted evidence, registry replay, or
+release authorization.

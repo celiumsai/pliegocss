@@ -4,7 +4,7 @@ description = "Compile-time custom theme example for PliegoCSS"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-license-file.workspace = true
+license.workspace = true
 repository.workspace = true
 publish = false
 

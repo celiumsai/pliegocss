@@ -82,10 +82,13 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::env;
 use std::fmt;
 use std::fs;
+use std::io::{self, Read};
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, Output, Stdio};
 #[cfg(test)]
 use std::sync::atomic::Ordering;
+use std::thread;
+use std::time::{Duration, Instant};
 
 use pliego_css_build::artifacts::{parse_finding_document, sha256_hex};
 use serde::{Deserialize, Serialize};
@@ -118,6 +121,10 @@ const TEST_EVIDENCE_REPAIR_VERIFICATION_RECEIPT_SCHEMA_VERSION: &str = "1.3.0";
 
 const MAX_DOCUMENT_BYTES: usize = 16 * 1024 * 1024;
 const MAX_SOURCE_BYTES: usize = 16 * 1024 * 1024;
+const PROCESS_POLL_INTERVAL: Duration = Duration::from_millis(20);
+const REPAIR_BROWSER_TIMEOUT: Duration = Duration::from_secs(15 * 60);
+const REPAIR_RUST_TEST_TIMEOUT: Duration = Duration::from_secs(15 * 60);
+const TOOL_IDENTITY_TIMEOUT: Duration = Duration::from_secs(10);
 const MAX_REPLACEMENT_BYTES: usize = 1024 * 1024;
 const MAX_EDITS: usize = 65_535;
 const MAX_FILES: usize = 65_535;
@@ -368,7 +375,8 @@ pub fn run_repair_rust_tests_checked(
     let lockfile_bytes = read_repair_document(&lockfile_path, "test workspace lockfile")?;
     let toolchain = read_repair_test_toolchain(&root)?;
 
-    let status = Command::new("cargo")
+    let mut command = Command::new("cargo");
+    command
         .current_dir(&root)
         .args([
             "test",
@@ -383,12 +391,14 @@ pub fn run_repair_rust_tests_checked(
         .env(
             "CARGO_TARGET_DIR",
             root.join("target/pliego-css-agent-tests"),
-        )
-        .status()
-        .map_err(|error| {
-            RepairContractError::new(format!("cannot launch fixed Cargo test profile: {error}"))
-        })?;
-    let exit_code = status.code().ok_or_else(|| {
+        );
+    let test_output = run_bounded_command(
+        &mut command,
+        "fixed Cargo test profile",
+        REPAIR_RUST_TEST_TIMEOUT,
+        MAX_DOCUMENT_BYTES,
+    )?;
+    let exit_code = test_output.status.code().ok_or_else(|| {
         RepairContractError::new("fixed Cargo test profile terminated without a numeric exit code")
     })?;
     let exit_code = u8::try_from(exit_code).map_err(|_| {
@@ -590,26 +600,20 @@ pub fn run_repair_pliegors_browser_checked(
             "fixed browser profile script is missing",
         ));
     }
-    let output_result = Command::new("node")
+    let mut command = Command::new("node");
+    command
         .current_dir(&root)
         .arg("scripts/check-pliegors-browser.mjs")
         .env("PLIEGOCSS_AGENT_REPORT", "1")
         .env("PLIEGOCSS_SKIP_PLIEGORS_BUILD", "0")
         .env("PLIEGOCSS_KEEP_PLIEGORS_SITE", "0")
-        .env("NO_COLOR", "1")
-        .output()
-        .map_err(|error| {
-            RepairContractError::new(format!(
-                "cannot launch fixed PliegoRS Chromium profile: {error}"
-            ))
-        })?;
-    if output_result.stdout.len() > MAX_DOCUMENT_BYTES
-        || output_result.stderr.len() > MAX_DOCUMENT_BYTES
-    {
-        return Err(RepairContractError::new(
-            "fixed browser profile output exceeds 16 MiB",
-        ));
-    }
+        .env("NO_COLOR", "1");
+    let output_result = run_bounded_command(
+        &mut command,
+        "fixed PliegoRS Chromium profile",
+        REPAIR_BROWSER_TIMEOUT,
+        MAX_DOCUMENT_BYTES,
+    )?;
     let exit_code = output_result.status.code().ok_or_else(|| {
         RepairContractError::new(
             "fixed PliegoRS Chromium profile terminated without a numeric exit code",
@@ -757,23 +761,17 @@ fn read_repair_test_tool_output(
     program: &str,
     arguments: &[&str],
 ) -> Result<String, RepairContractError> {
-    let output = Command::new(program)
-        .current_dir(root)
-        .args(arguments)
-        .output()
-        .map_err(|error| {
-            RepairContractError::new(format!(
-                "cannot inspect fixed test tool `{program}`: {error}"
-            ))
-        })?;
+    let mut command = Command::new(program);
+    command.current_dir(root).args(arguments);
+    let output = run_bounded_command(
+        &mut command,
+        &format!("fixed test tool `{program}` identity command"),
+        TOOL_IDENTITY_TIMEOUT,
+        4_096,
+    )?;
     if !output.status.success() {
         return Err(RepairContractError::new(format!(
             "fixed test tool `{program}` identity command failed"
-        )));
-    }
-    if output.stdout.len() > 4_096 || output.stderr.len() > 4_096 {
-        return Err(RepairContractError::new(format!(
-            "fixed test tool `{program}` identity output exceeds 4 KiB"
         )));
     }
     if !output.stderr.is_empty() {
@@ -787,6 +785,82 @@ fn read_repair_test_tool_output(
         ))
     })?;
     Ok(text.trim_end_matches(['\r', '\n']).to_owned())
+}
+
+fn run_bounded_command(
+    command: &mut Command,
+    operation: &str,
+    timeout: Duration,
+    maximum_stream_bytes: usize,
+) -> Result<Output, RepairContractError> {
+    command.stdout(Stdio::piped()).stderr(Stdio::piped());
+    let mut child = command
+        .spawn()
+        .map_err(|error| RepairContractError::new(format!("cannot launch {operation}: {error}")))?;
+    let mut stdout = child
+        .stdout
+        .take()
+        .ok_or_else(|| RepairContractError::new(format!("{operation} stdout is unavailable")))?;
+    let mut stderr = child
+        .stderr
+        .take()
+        .ok_or_else(|| RepairContractError::new(format!("{operation} stderr is unavailable")))?;
+    let stdout_reader =
+        thread::spawn(move || read_bounded_process_stream(&mut stdout, maximum_stream_bytes));
+    let stderr_reader =
+        thread::spawn(move || read_bounded_process_stream(&mut stderr, maximum_stream_bytes));
+    let deadline = Instant::now() + timeout;
+
+    loop {
+        if let Some(status) = child.try_wait().map_err(|error| {
+            RepairContractError::new(format!("cannot poll {operation}: {error}"))
+        })? {
+            return Ok(Output {
+                status,
+                stdout: join_process_stream(stdout_reader, operation, "stdout")?,
+                stderr: join_process_stream(stderr_reader, operation, "stderr")?,
+            });
+        }
+        if Instant::now() >= deadline {
+            child.kill().map_err(|error| {
+                RepairContractError::new(format!("cannot stop timed-out {operation}: {error}"))
+            })?;
+            child.wait().map_err(|error| {
+                RepairContractError::new(format!("cannot reap timed-out {operation}: {error}"))
+            })?;
+            let _ = join_process_stream(stdout_reader, operation, "stdout");
+            let _ = join_process_stream(stderr_reader, operation, "stderr");
+            return Err(RepairContractError::new(format!(
+                "{operation} exceeded its {} second deadline",
+                timeout.as_secs()
+            )));
+        }
+        thread::sleep(PROCESS_POLL_INTERVAL);
+    }
+}
+
+fn read_bounded_process_stream(reader: &mut impl Read, maximum: usize) -> io::Result<Vec<u8>> {
+    let mut bytes = Vec::new();
+    reader.take((maximum + 1) as u64).read_to_end(&mut bytes)?;
+    if bytes.len() > maximum {
+        return Err(io::Error::other(format!(
+            "process stream exceeds {maximum} bytes"
+        )));
+    }
+    Ok(bytes)
+}
+
+fn join_process_stream(
+    reader: thread::JoinHandle<io::Result<Vec<u8>>>,
+    operation: &str,
+    stream: &str,
+) -> Result<Vec<u8>, RepairContractError> {
+    reader
+        .join()
+        .map_err(|_| RepairContractError::new(format!("{operation} {stream} reader panicked")))?
+        .map_err(|error| {
+            RepairContractError::new(format!("cannot read {operation} {stream}: {error}"))
+        })
 }
 
 /// Loads exact repair artifacts, executes built-in checks under the repair lock, and atomically
@@ -1665,6 +1739,23 @@ fn validate_checks(checks: &[String]) -> Result<(), RepairContractError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn repair_process_streams_are_bounded() {
+        let mut within = io::Cursor::new(vec![b'x'; 8]);
+        assert_eq!(
+            read_bounded_process_stream(&mut within, 8).unwrap().len(),
+            8
+        );
+
+        let mut excessive = io::Cursor::new(vec![b'x'; 9]);
+        assert!(
+            read_bounded_process_stream(&mut excessive, 8)
+                .unwrap_err()
+                .to_string()
+                .contains("exceeds 8 bytes")
+        );
+    }
     use pliego_css_build::artifacts::{
         CompatibilityProfile, Finding, FindingCause, FindingDocument, FindingException,
         FindingRisk, FindingSeverity, FindingSource, FindingSuggestion, FindingTool,

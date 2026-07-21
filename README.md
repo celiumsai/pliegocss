@@ -1,24 +1,49 @@
-<div align="center">
+<!-- SPDX-License-Identifier: Apache-2.0 -->
 
-# PliegoCSS
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="brand/pliegocss-symbol-reversed.svg">
+    <img src="brand/pliegocss-symbol.svg" alt="PliegoCSS logo" width="112" height="112">
+  </picture>
+</p>
 
-**Deterministic CSS tooling for standards-first teams, Rust applications, and automation.**
+<h1 align="center">PliegoCSS</h1>
 
-Audit ordinary CSS, compile typed Rust styles, enforce compatibility and accessibility policies,
-and publish reproducible artifacts with provenance and receipts.
+<p align="center"><strong>Compile confidence into CSS.</strong></p>
 
-[![CI](https://github.com/celiumsai/pliegocss/actions/workflows/ci.yml/badge.svg)](https://github.com/celiumsai/pliegocss/actions/workflows/ci.yml)
-![Rust 1.85+](https://img.shields.io/badge/Rust-1.85%2B-000000?logo=rust)
-![Version](https://img.shields.io/badge/version-0.1.0--rc.1-blue)
-![License](https://img.shields.io/badge/license-Apache--2.0-blue)
+<p align="center">
+  Standards-first CSS analysis, typed Rust authoring, deterministic artifacts,
+  and controlled migration without a styling runtime.
+</p>
 
-[Quick start](#quick-start) · [What it does](#what-pliegocss-does) · [CLI](#cli-workflows) · [Architecture](#architecture) · [Documentation](#documentation)
+<p align="center">
+  <a href="https://pliegocss.dev/">Website</a> &middot;
+  <a href="https://pliegocss.dev/docs/">Documentation</a> &middot;
+  <a href="https://pliegocss.dev/changelog/">Changelog</a> &middot;
+  <a href="https://pliegocss.dev/security/">Security</a>
+</p>
 
-</div>
+<p align="center">
+  <a href="https://github.com/celiumsai/pliegocss/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/celiumsai/pliegocss/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://github.com/celiumsai/pliegocss/actions/workflows/codeql.yml"><img alt="CodeQL" src="https://github.com/celiumsai/pliegocss/actions/workflows/codeql.yml/badge.svg"></a>
+  <a href="https://crates.io/crates/pliego-cssc"><img alt="crates.io" src="https://img.shields.io/crates/v/pliego-cssc.svg"></a>
+  <a href="https://docs.rs/pliego-css"><img alt="docs.rs" src="https://img.shields.io/docsrs/pliego-css"></a>
+  <a href="https://github.com/celiumsai/pliegocss/releases"><img alt="GitHub prerelease" src="https://img.shields.io/github/v/release/celiumsai/pliegocss?include_prereleases"></a>
+  <a href="LICENSE"><img alt="Apache-2.0" src="https://img.shields.io/crates/l/pliego-cssc.svg"></a>
+  <a href="https://doc.rust-lang.org/stable/releases.html"><img alt="rustc 1.85+" src="https://img.shields.io/badge/rustc-1.85%2B-b7410e.svg"></a>
+  <img alt="Public preview" src="https://img.shields.io/badge/status-public_preview-315bff.svg">
+  <img alt="Private repository" src="https://img.shields.io/badge/repository-private-0a1120.svg">
+</p>
 
 > [!IMPORTANT]
-> `0.1.0-rc.1` is the first release candidate. Core formats and selected APIs are frozen candidates,
-> but beta and experimental capabilities may still change before `0.1.0`.
+> `0.1.0-rc.1` is public-preview software distributed from the private
+> canonical repository.
+> The nineteen PliegoCSS crates are prepared for publication to crates.io from
+> one exact release commit. CodeQL runs for `main`, pull requests, and its
+> weekly schedule even while the repository remains private. `0.1.0` is blocked by the
+> [machine readiness record](./docs/product/release-readiness-0.1.0.md).
+> Core formats and selected APIs are frozen candidates; beta and experimental
+> capabilities may still change.
 
 ## Why PliegoCSS?
 

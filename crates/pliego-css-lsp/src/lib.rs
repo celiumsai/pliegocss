@@ -29,8 +29,10 @@ const MAX_SEMANTIC_CACHE_ITEMS: usize = 4_096;
 const MAX_SEMANTIC_CHECKS_PER_DOCUMENT: usize = 256;
 const MAX_CONFIG_FINGERPRINT_BYTES: u64 = 1024 * 1024;
 const MAX_HEADER_BYTES: usize = 64 * 1024;
+const MAX_TOOL_OUTPUT_BYTES: usize = 4 * 1024 * 1024;
 const SEMANTIC_DEBOUNCE: Duration = Duration::from_millis(150);
 const SEMANTIC_PROCESS_POLL: Duration = Duration::from_millis(10);
+const TOOL_PROCESS_TIMEOUT: Duration = Duration::from_secs(30);
 static TEMP_SOURCE_COUNTER: AtomicU64 = AtomicU64::new(0);
 
 /// Exact process and theme selection used by delegated tooling requests.
@@ -141,9 +143,11 @@ impl Server {
             process.arg("--config").arg(config);
         }
         process.arg("--format").arg("json");
-        let output = process
-            .output()
-            .map_err(|error| format!("cannot run pliego-cssc: {error}"))?;
+        let output = bounded_process_output(
+            &mut process,
+            "pliego-cssc delegated tool",
+            TOOL_PROCESS_TIMEOUT,
+        )?;
         if !output.status.success() {
             return Err(String::from_utf8_lossy(&output.stderr).trim().to_owned());
         }
@@ -316,14 +320,11 @@ fn cancellable_output(
         .stderr
         .take()
         .ok_or("pliego-cssc stderr is unavailable")?;
-    let stdout_reader = thread::spawn(move || {
-        let mut bytes = Vec::new();
-        stdout.read_to_end(&mut bytes).map(|_| bytes)
-    });
-    let stderr_reader = thread::spawn(move || {
-        let mut bytes = Vec::new();
-        stderr.read_to_end(&mut bytes).map(|_| bytes)
-    });
+    let stdout_reader =
+        thread::spawn(move || read_bounded(&mut stdout, MAX_TOOL_OUTPUT_BYTES, "stdout"));
+    let stderr_reader =
+        thread::spawn(move || read_bounded(&mut stderr, MAX_TOOL_OUTPUT_BYTES, "stderr"));
+    let deadline = Instant::now() + TOOL_PROCESS_TIMEOUT;
     loop {
         if !semantic_job_is_current(cancellation, job) {
             if child
@@ -338,9 +339,26 @@ fn cancellable_output(
             child
                 .wait()
                 .map_err(|error| format!("cannot reap stale pliego-cssc check: {error}"))?;
-            join_process_reader(stdout_reader, "stdout")?;
-            join_process_reader(stderr_reader, "stderr")?;
+            let _ = join_process_reader(stdout_reader, "stdout");
+            let _ = join_process_reader(stderr_reader, "stderr");
             return Ok(None);
+        }
+        if Instant::now() >= deadline {
+            if child
+                .try_wait()
+                .map_err(|error| format!("cannot poll timed-out pliego-cssc check: {error}"))?
+                .is_none()
+            {
+                child
+                    .kill()
+                    .map_err(|error| format!("cannot stop timed-out pliego-cssc check: {error}"))?;
+            }
+            child
+                .wait()
+                .map_err(|error| format!("cannot reap timed-out pliego-cssc check: {error}"))?;
+            let _ = join_process_reader(stdout_reader, "stdout");
+            let _ = join_process_reader(stderr_reader, "stderr");
+            return Err("pliego-cssc check exceeded the 30 second deadline".into());
         }
         if let Some(status) = child
             .try_wait()
@@ -356,6 +374,65 @@ fn cancellable_output(
         }
         thread::sleep(SEMANTIC_PROCESS_POLL);
     }
+}
+
+fn bounded_process_output(
+    process: &mut Command,
+    operation: &str,
+    timeout: Duration,
+) -> Result<Output, String> {
+    process.stdout(Stdio::piped()).stderr(Stdio::piped());
+    let mut child = process
+        .spawn()
+        .map_err(|error| format!("cannot run {operation}: {error}"))?;
+    let mut stdout = child
+        .stdout
+        .take()
+        .ok_or_else(|| format!("{operation} stdout is unavailable"))?;
+    let mut stderr = child
+        .stderr
+        .take()
+        .ok_or_else(|| format!("{operation} stderr is unavailable"))?;
+    let stdout_reader =
+        thread::spawn(move || read_bounded(&mut stdout, MAX_TOOL_OUTPUT_BYTES, "stdout"));
+    let stderr_reader =
+        thread::spawn(move || read_bounded(&mut stderr, MAX_TOOL_OUTPUT_BYTES, "stderr"));
+    let deadline = Instant::now() + timeout;
+    loop {
+        if let Some(status) = child
+            .try_wait()
+            .map_err(|error| format!("cannot poll {operation}: {error}"))?
+        {
+            return Ok(Output {
+                status,
+                stdout: join_process_reader(stdout_reader, "stdout")?,
+                stderr: join_process_reader(stderr_reader, "stderr")?,
+            });
+        }
+        if Instant::now() >= deadline {
+            child
+                .kill()
+                .map_err(|error| format!("cannot stop timed-out {operation}: {error}"))?;
+            child
+                .wait()
+                .map_err(|error| format!("cannot reap timed-out {operation}: {error}"))?;
+            let _ = join_process_reader(stdout_reader, "stdout");
+            let _ = join_process_reader(stderr_reader, "stderr");
+            return Err(format!("{operation} exceeded the 30 second deadline"));
+        }
+        thread::sleep(SEMANTIC_PROCESS_POLL);
+    }
+}
+
+fn read_bounded(reader: &mut impl Read, maximum: usize, stream: &str) -> io::Result<Vec<u8>> {
+    let mut bytes = Vec::new();
+    reader.take((maximum + 1) as u64).read_to_end(&mut bytes)?;
+    if bytes.len() > maximum {
+        return Err(io::Error::other(format!(
+            "pliego-cssc {stream} exceeds {maximum} bytes"
+        )));
+    }
+    Ok(bytes)
 }
 
 fn join_process_reader(
@@ -1653,6 +1730,20 @@ fn write_message(output: &mut impl Write, value: &Value) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn delegated_process_output_is_bounded() {
+        let mut within = io::Cursor::new(vec![b'x'; 8]);
+        assert_eq!(read_bounded(&mut within, 8, "stdout").unwrap().len(), 8);
+
+        let mut excessive = io::Cursor::new(vec![b'x'; 9]);
+        assert!(
+            read_bounded(&mut excessive, 8, "stdout")
+                .unwrap_err()
+                .to_string()
+                .contains("exceeds 8 bytes")
+        );
+    }
 
     #[test]
     fn utf16_positions_round_trip_astral_scalars() {

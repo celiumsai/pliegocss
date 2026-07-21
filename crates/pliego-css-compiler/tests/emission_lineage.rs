@@ -111,6 +111,20 @@ fn composed_effects_record_all_contributors_as_generated() {
 }
 
 #[test]
+fn important_effect_marks_the_composed_physical_declaration() {
+    let style = compile("shadow-md ring-2!");
+    let (css, lineage) =
+        emit_css_with_theme_traced(&ThemeRegistry::seed(), &style).expect("traced CSS emission");
+    let declarations = &lineage.rules[0].declarations;
+    let composed_shadow = declarations.last().expect("composed box-shadow lineage");
+
+    assert!(css.contains("box-shadow:0 0 0 var(--pc-ring-width,0) var(--pc-ring-color,currentColor),var(--pc-shadow,0 0 #0000)!important;"));
+    assert!(composed_shadow.generated);
+    assert!(composed_shadow.important);
+    assert_eq!(composed_shadow.semantic_ordinals.len(), 2);
+}
+
+#[test]
 fn important_is_repeated_across_every_direct_output() {
     let style = compile("transition-colors!");
     let (css, lineage) =

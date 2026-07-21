@@ -115,7 +115,127 @@ const INSPECTION_SCHEMA_VERSION: u8 = 2;
 const EXPLAIN_SCHEMA_VERSION: u8 = 2;
 #[cfg(windows)]
 const FILE_ATTRIBUTE_REPARSE_POINT: u32 = 0x400;
-const USAGE: &str = include_str!("../README.md");
+const USAGE: &str = r"PliegoCSS command-line compiler and control tool
+
+Usage:
+  pliego-cssc [--diagnostic-format human|json] <command> [options]
+  pliego-cssc help
+  pliego-cssc --version
+
+Core:
+  audit                       Audit ordinary CSS and emit human, JSON, or SARIF findings
+  transform-css               Transform or minify ordinary CSS
+  compile | build             Compile utility styles or Rust source to static CSS
+  check                       Validate styles without writing output
+  inspect                     Inspect resolved styles and identities as JSON
+  watch                       Recompile source changes and keep the last valid output
+  bundle                      Compile an explicit multi-bundle plan
+  catalog                     Emit the generated utility catalog
+  compatibility               Print the selected browser compatibility policy
+  explain                     Explain utility lowering and physical declarations
+  explain-cascade             Explain a winning CSS declaration for one element/property
+
+Adoption and control:
+  migration-inventory         Inventory one Sass, Tailwind, or CSS Modules source
+  migration-project-inventory Inventory migration surfaces in a project
+  migration-project-plan      Emit a read-only inventory-bound migration checkpoint
+  migration-sidecar-apply     Apply an approved sidecar migration
+  migration-sidecar-rollback  Roll back an applied sidecar migration
+  migration-replace-apply     Apply one exact before/after replacement
+  migration-replace-rollback  Roll back one exact replacement
+  migration-group-apply       Atomically apply an approved replacement group
+  migration-group-rollback    Roll back an applied replacement group
+  generic-css-usage           Combine audit findings with positive usage observations
+  plan                        Build a bounded repair plan
+  fix                         Apply an explicitly authorized repair plan
+  fmt                         Format utility literals
+
+Global options:
+  --diagnostic-format <mode>   human (default) or json
+  -h, --help                  Show this help; COMMAND --help shows the command synopsis
+  -V, --version               Show the installed version
+
+Run `pliego-cssc <command> --help` for a command synopsis.
+Full reference: https://github.com/celiumsai/pliegocss/blob/main/docs/reference/cli.md
+";
+
+fn command_help(command: Option<&str>) -> &'static str {
+    match command {
+        Some("audit") => {
+            "Audit ordinary CSS\n\nUsage:\n  pliego-cssc audit --input <CSS|ASSET_PLAN> [--format human|json|sarif] [--targets modern|baseline-widely|none] [--check]\n"
+        }
+        Some("transform-css") => {
+            "Transform ordinary CSS\n\nUsage:\n  pliego-cssc transform-css --input <CSS> --output <CSS> [--targets modern|baseline-widely|none] [--format minified|pretty] [--check]\n"
+        }
+        Some("compile" | "build") => {
+            "Compile typed styles to static CSS\n\nUsage:\n  pliego-cssc compile (--style <UTILITY_LIST> | --source <PATH> | --input <FILE>)... [--seed | --config <TOML> | --tokens <JSON>] [--theme] [--output <CSS>] [--manifest <JSON>]\n\nRepeatable: --style, --source, --compose, --token-input\n"
+        }
+        Some("check") => {
+            "Validate typed styles without writing output\n\nUsage:\n  pliego-cssc check (--style <UTILITY_LIST> | --source <PATH> | --input <FILE>)... [--seed | --config <TOML> | --tokens <JSON>]\n"
+        }
+        Some("inspect") => {
+            "Inspect typed styles as canonical JSON\n\nUsage:\n  pliego-cssc inspect (--style <UTILITY_LIST> | --source <PATH> | --input <FILE>)... [--seed | --config <TOML> | --tokens <JSON>]\n"
+        }
+        Some("watch") => {
+            "Watch source inputs and republish the last valid artifact group\n\nUsage:\n  pliego-cssc watch (--source <PATH> | --input <FILE>)... --output <CSS> [--manifest <JSON>] [--seed | --config <TOML> | --tokens <JSON>]\n"
+        }
+        Some("bundle") => {
+            "Compile an explicit bundle plan\n\nUsage:\n  pliego-cssc bundle --plan <PLIEGO.BUNDLES.TOML> --output-dir <DIR> [--manifest-version 3|4|5] [--reachability <JSON>] [--check] [--control]\n"
+        }
+        Some("catalog") => {
+            "Emit the generated utility catalog\n\nUsage:\n  pliego-cssc catalog [--seed | --config <TOML>] [--format markdown|json] [--output <PATH>] [--check <PATH>]\n"
+        }
+        Some("compatibility") => {
+            "Print a compatibility policy\n\nUsage:\n  pliego-cssc compatibility [--targets modern|baseline-widely|none]\n"
+        }
+        Some("explain") => {
+            "Explain utility lowering\n\nUsage:\n  pliego-cssc explain --style <UTILITY_LIST> [--seed | --config <TOML>] [--targets modern|baseline-widely|none] [--format text|json]\n"
+        }
+        Some("explain-cascade") => {
+            "Explain one CSS cascade result\n\nUsage:\n  pliego-cssc explain-cascade --input <CSS> --element <SELECTOR> --property <NAME> [--format text|json]\n"
+        }
+        Some("generic-css-usage") => {
+            "Build generic CSS usage evidence\n\nUsage:\n  pliego-cssc generic-css-usage --findings <JSON> --observed <JSON> --scope <ID> --output <JSON> [--control-dir <DIR>]\n"
+        }
+        Some("migration-inventory") => {
+            "Inventory one migration source\n\nUsage:\n  pliego-cssc migration-inventory <sass|tailwind|css-modules> <PATH>\n"
+        }
+        Some("migration-project-inventory") => {
+            "Inventory migration surfaces in a project\n\nUsage:\n  pliego-cssc migration-project-inventory <PROJECT_PATH>\n"
+        }
+        Some("migration-project-plan") => {
+            "Emit a read-only migration checkpoint\n\nUsage:\n  pliego-cssc migration-project-plan <DECLARATION_JSON|DIRECTORY>\n"
+        }
+        Some("migration-sidecar-apply") => {
+            "Apply an approved sidecar migration\n\nUsage:\n  pliego-cssc migration-sidecar-apply --output <PATH> --receipt <JSON>\n"
+        }
+        Some("migration-sidecar-rollback") => {
+            "Roll back an applied sidecar migration\n\nUsage:\n  pliego-cssc migration-sidecar-rollback --output <PATH> --receipt <JSON>\n"
+        }
+        Some("migration-replace-apply") => {
+            "Apply one exact replacement\n\nUsage:\n  pliego-cssc migration-replace-apply --file <PATH> --before <PATH> --after <PATH> --receipt <JSON>\n"
+        }
+        Some("migration-replace-rollback") => {
+            "Roll back one exact replacement\n\nUsage:\n  pliego-cssc migration-replace-rollback --file <PATH> --receipt <JSON>\n"
+        }
+        Some("migration-group-apply") => {
+            "Apply an approved replacement group\n\nUsage:\n  pliego-cssc migration-group-apply --manifest <JSON> --receipt <JSON>\n"
+        }
+        Some("migration-group-rollback") => {
+            "Roll back an applied replacement group\n\nUsage:\n  pliego-cssc migration-group-rollback --receipt <JSON>\n"
+        }
+        Some("plan") => {
+            "Build a bounded repair plan\n\nUsage:\n  pliego-cssc plan --findings <JSON> --proposal <JSON> --source-root <DIR> [--format human|json]\n"
+        }
+        Some("fix") => {
+            "Apply an explicitly authorized repair plan\n\nUsage:\n  pliego-cssc fix --plan <JSON> --findings <JSON> --source-root <DIR> --authorize <SHA256> --receipt <JSON> [--format human|json]\n"
+        }
+        Some("fmt") => {
+            "Format utility literals\n\nUsage:\n  pliego-cssc fmt (--style <UTILITY_LIST> | --input <PATH> | --source <PATH>)... [--output <PATH>] [--check]\n"
+        }
+        None | Some(_) => USAGE,
+    }
+}
 
 type TargetContract = CompatibilityProfile;
 type CssCaches = (CssFragmentCache, FixedCssOutputCache);
@@ -549,7 +669,7 @@ enum Command {
     Plan(RepairPlanCliArgs),
     Fix(RepairFixCliArgs),
     Format(UtilityFormatArgs),
-    Help,
+    Help(Option<String>),
     Version,
 }
 
@@ -1162,8 +1282,8 @@ fn run(
         ));
     }
     let result = match command {
-        Command::Help => {
-            println!("{USAGE}");
+        Command::Help(command) => {
+            println!("{}", command_help(command.as_deref()));
             Ok(())
         }
         Command::Version => {
@@ -1299,7 +1419,7 @@ fn parse_arguments(arguments: impl IntoIterator<Item = OsString>) -> Result<Comm
         return Err("missing command".into());
     };
     if matches!(command.as_str(), "help" | "-h" | "--help") {
-        return Ok(Command::Help);
+        return Ok(Command::Help(None));
     }
     if matches!(command.as_str(), "version" | "-V" | "--version") {
         if arguments.len() != 1 {
@@ -1311,7 +1431,7 @@ fn parse_arguments(arguments: impl IntoIterator<Item = OsString>) -> Result<Comm
         .get(1)
         .is_some_and(|argument| matches!(argument.as_str(), "-h" | "--help"))
     {
-        return Ok(Command::Help);
+        return Ok(Command::Help(Some(command.clone())));
     }
     if command == "watch" {
         return parse_watch_arguments(&arguments[1..]);

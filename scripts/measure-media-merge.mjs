@@ -25,28 +25,28 @@ const expected = {
   profiles: {
     utilitiesOnly: {
       control: {
-        sha256: "5077b41ce534025dcee4515355f14a90e19f17d366af184316d4b93031be003d",
-        rawBytes: 1_449,
-        gzipBytes: 652,
+        sha256: "acfe0a07ca05336b89504bc4c919d09afaf26f3a07c2cabb53fd7be3af2f7f7c",
+        rawBytes: 1_447,
+        gzipBytes: 648,
         mediaWrappers: 20,
       },
       candidate: {
-        sha256: "3716feda1b75471b9dd99ae4b304915ca73bbaed22bcfe911029b4577e30f6b5",
-        rawBytes: 1_012,
-        gzipBytes: 639,
+        sha256: "3eb3494eb3b128ab1ce84b1546cc08d17c179b2710175016e25e331d10070287",
+        rawBytes: 1_010,
+        gzipBytes: 638,
         mediaWrappers: 1,
       },
     },
     themeAndUtilities: {
       control: {
-        sha256: "9f8fea859cac544cafb87c98b71d8eeeb4e23ae8a09dc008a246b1b9375a3672",
-        rawBytes: 1_820,
+        sha256: "4e241be64c52679bfbe5b2966fccf8b00307fdd0bd06c3af8675c95b8a0d0eb3",
+        rawBytes: 1_818,
         gzipBytes: 822,
         mediaWrappers: 20,
       },
       candidate: {
-        sha256: "4254de5dfbf72fa382522a6910516a332ec39150d25d4fcddffae14cf296adc2",
-        rawBytes: 1_383,
+        sha256: "5697d5c24f2a2441519754cb6e3bae0ae8e46e34636964a0c3118be97cbd625b",
+        rawBytes: 1_381,
         gzipBytes: 809,
         mediaWrappers: 1,
       },
@@ -54,15 +54,15 @@ const expected = {
   },
   neutralFixtures: {
     gateA: {
-      sha256: "aebdbff60a76abc1347cc34818bd31d54502c63505fb4962b1b6b3af46f5bf8e",
-      rawBytes: 6_546,
+      sha256: "12b6d497962ec8ae30d1c9343ca180f65a81f628161d038a653ac7be32fd6688",
+      rawBytes: 6_548,
       gzipBytes: 1_594,
       mediaWrappers: 0,
     },
     gateB: {
-      sha256: "11f632e3e4321ab93a2c8df77e7ad1ce6034f912cbec48e62b92654f01a700fe",
-      rawBytes: 10_463,
-      gzipBytes: 2_049,
+      sha256: "d873a432d1174af4715f7cb33359c6ad2781f611f9712e3a72b5630aa6f1bffc",
+      rawBytes: 10_468,
+      gzipBytes: 2_047,
       mediaWrappers: 12,
     },
   },

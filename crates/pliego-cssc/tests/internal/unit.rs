@@ -1824,7 +1824,7 @@ fn parses_check_inspect_and_target_contracts() {
     assert!(parse_arguments(os(&["check", "--style", "flex", "--output", "x.css"])).is_err());
     assert_eq!(
         parse_arguments(os(&["compile", "--help"])),
-        Ok(Command::Help)
+        Ok(Command::Help(Some("compile".into())))
     );
     for command in ["version", "-V", "--version"] {
         assert_eq!(parse_arguments(os(&[command])), Ok(Command::Version));
@@ -1940,7 +1940,7 @@ fn format_defaults_to_minified_and_is_accepted_by_every_command() {
             | Command::Plan(_)
             | Command::Fix(_)
             | Command::Format(_)
-            | Command::Help
+            | Command::Help(_)
             | Command::Version => {
                 panic!("style command expected")
             }

@@ -31,7 +31,7 @@ const expectedSources = JSON.parse(`[
   {"id":"dtcg-resolver-2025.10","name":"Design Tokens Resolver Module 2025.10","kind":"specification","version":"2025.10","status":"final-community-group-report","license":"W3C-Community-Final-Specification-Agreement","url":"https://www.w3.org/community/reports/design-tokens/CG-FINAL-resolver-20251028/","relationship":"exchange-specification","usage":"implemented-contract","evidence":["crates/pliego-css-config/src/dtcg_resolver.rs","docs/reference/dtcg-bridge.md"],"integrity":[]},
   {"id":"lightningcss","name":"Lightning CSS","kind":"software","version":"1.0.0-alpha.71","status":"versioned-crate","license":"MPL-2.0","url":"https://github.com/parcel-bundler/lightningcss","relationship":"css-backend","usage":"build-time","evidence":["Cargo.lock"],"integrity":[{"subject":"lightningcss@1.0.0-alpha.71","value":"cargo-checksum:cb6314c2f0590ac93c86099b98bb7ba8abcf759bfd89604ffca906472bb54937"}]},
   {"id":"mediaqueries-5","name":"Media Queries Level 5","kind":"specification","version":"5","status":"w3c-working-draft","license":"W3C-Software-and-Document-License-2023","url":"https://www.w3.org/TR/2026/WD-mediaqueries-5-20260219/","relationship":"css-specification","usage":"audit-reference","evidence":["docs/reference/accessibility-policy.md"],"integrity":[]},
-  {"id":"tailwindcss","name":"Tailwind CSS and CLI","kind":"software","version":"4.3.2","status":"versioned-package","license":"MIT","url":"https://github.com/tailwindlabs/tailwindcss","relationship":"benchmark-baseline","usage":"benchmark-only","evidence":["benchmarks/tailwind-v4/input.css","package.json","pnpm-lock.yaml"],"integrity":[{"subject":"@tailwindcss/cli@4.3.2","value":"sha512-Fzt+HrIZHDlkRYKdLMBeufaroaPvwCBG70sMLdmurdeadNMO/LxbmT8Sbb+P83ep0iAlAImettb7Y+rO+37rXw=="},{"subject":"pnpm-lock.yaml","value":"sha256:cac9737002a9ce759757ac63e20b3615f230f9fbc41c8240f65dcde41decb34e"},{"subject":"tailwindcss@4.3.2","value":"sha512-WtctNNSH8A9jlMIqxzuYumOHU5uGZyRv0Q5svQl+oEPy5w84YpBxdb7MdqyiSPQge5jTJ6zFQLq0PFygdccSBA=="}]},
+  {"id":"tailwindcss","name":"Tailwind CSS and CLI","kind":"software","version":"4.3.2","status":"versioned-package","license":"MIT","url":"https://github.com/tailwindlabs/tailwindcss","relationship":"benchmark-baseline","usage":"benchmark-only","evidence":["benchmarks/tailwind-v4/input.css","package.json","pnpm-lock.yaml"],"integrity":[{"subject":"@tailwindcss/cli@4.3.2","value":"sha512-Fzt+HrIZHDlkRYKdLMBeufaroaPvwCBG70sMLdmurdeadNMO/LxbmT8Sbb+P83ep0iAlAImettb7Y+rO+37rXw=="},{"subject":"pnpm-lock.yaml","value":"sha256:333f16de16053c85708ea74473a3008f314e1c3ee45490106e1462df06de93f9"},{"subject":"tailwindcss@4.3.2","value":"sha512-WtctNNSH8A9jlMIqxzuYumOHU5uGZyRv0Q5svQl+oEPy5w84YpBxdb7MdqyiSPQge5jTJ6zFQLq0PFygdccSBA=="}]},
   {"id":"wcag-2.2","name":"Web Content Accessibility Guidelines (WCAG) 2.2","kind":"specification","version":"2.2","status":"w3c-recommendation","license":"W3C-Document-License-2023","url":"https://www.w3.org/TR/2024/REC-WCAG22-20241212/","relationship":"accessibility-reference","usage":"audit-reference","evidence":["docs/reference/accessibility-policy.md"],"integrity":[]},
   {"id":"web-features","name":"web-features","kind":"dataset","version":"3.32.0","status":"versioned-package","license":"Apache-2.0","url":"https://github.com/web-platform-dx/web-features","relationship":"compatibility-dataset","usage":"frozen-data","evidence":["integration-tests/compatibility-policy/expected.baseline-widely.json"],"integrity":[{"subject":"web-features@3.32.0","value":"sha512-PQBbTofqV8FtMP65oT9tLPjbN4FSB2dRdNxLM0A9j4bNifVpFhEP/ATXSMMJAqPPWb/pgUOh6B+98yzfNEVbNw=="},{"subject":"web-features@3.32.0/data.json","value":"sha256:58bc2056041c93e313c3a58658a8120f857cf4888d0592e6e4a9b0484748441e"}]}
 ]`);
@@ -166,7 +166,8 @@ function tailwindLockContract(source) {
   return {
     cli,
     core,
-    importer: `  .:\n    devDependencies:\n      '@tailwindcss/cli':\n        specifier: ${version}\n        version: ${version}\n      tailwindcss:\n        specifier: ${version}\n        version: ${version}`,
+    cliImporter: `      '@tailwindcss/cli':\n        specifier: ${version}\n        version: ${version}`,
+    coreImporter: `      tailwindcss:\n        specifier: ${version}\n        version: ${version}`,
     cliPackage: `  '${cli}':\n    resolution: {integrity: ${integrityValue(source, cli)}}\n    hasBin: true`,
     corePackage: `  ${core}:\n    resolution: {integrity: ${integrityValue(source, core)}}`,
     cliSnapshot: `  '${cli}':\n    dependencies:\n      '@parcel/watcher': 2.5.1\n      '@tailwindcss/node': ${version}\n      '@tailwindcss/oxide': ${version}\n      enhanced-resolve: 5.21.6\n      mri: 1.2.0\n      picocolors: 1.1.1\n      tailwindcss: ${version}`,
@@ -330,8 +331,13 @@ function verifyTailwindLock(lock, source) {
   const packages = sectionEntries(lockSection(lock, "packages"));
   const snapshots = sectionEntries(lockSection(lock, "snapshots"));
   const importerEntries = sectionEntries(importers);
+  const rootImporter = oneEntry(importerEntries, ".", "importers");
 
-  assert(oneEntry(importerEntries, ".", "importers") === contract.importer, "Tailwind root importer drifted");
+  assert(
+    exactCount(rootImporter, contract.cliImporter) === 1 &&
+      exactCount(rootImporter, contract.coreImporter) === 1,
+    "Tailwind root importer drifted",
+  );
   assert((importers.match(/^\s+'?@tailwindcss\/cli'?:$/gm) ?? []).length === 1, "Tailwind CLI must have exactly one importer edge");
   assert((importers.match(/^\s+tailwindcss:$/gm) ?? []).length === 1, "tailwindcss must have exactly one importer edge");
 

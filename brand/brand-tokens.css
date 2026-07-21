@@ -1,0 +1,19 @@
+:root {
+  --pliego-carbon-950: #11151a;
+  --pliego-carbon-800: #283039;
+  --pliego-carbon-600: #59636d;
+  --pliego-paper-50: #f4f7f8;
+  --pliego-paper-0: #ffffff;
+  --pliego-cobalt-600: #2855ff;
+  --pliego-cobalt-400: #6f8cff;
+  --pliego-cyan-400: #65d9ff;
+  --pliego-coral-500: #ff5a47;
+  --pliego-amber-500: #d99a20;
+  --pliego-font-display: "Instrument Sans", "Arial Narrow", Arial, sans-serif;
+  --pliego-font-body: "Instrument Sans", Arial, sans-serif;
+  --pliego-font-code: "Fragment Mono", Consolas, monospace;
+  --pliego-grid-unit: 8px;
+  --pliego-radius-control: 4px;
+  --pliego-radius-panel: 12px;
+  --pliego-ease-fold: cubic-bezier(0.22, 1, 0.36, 1);
+}

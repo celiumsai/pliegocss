@@ -1,0 +1,16 @@
+{
+  "name": "PliegoCSS",
+  "short_name": "PliegoCSS",
+  "description": "Compile confidence into CSS.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#070b14",
+  "theme_color": "#070b14",
+  "icons": [
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

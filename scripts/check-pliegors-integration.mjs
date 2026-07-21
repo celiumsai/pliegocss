@@ -156,7 +156,7 @@ for (const name of Object.keys(environment)) {
 }
 
 function cargo(args, cwd = root) {
-  const result = spawnSync("cargo", ["+1.85", ...cargoPathOverrides, ...args], {
+  const result = spawnSync("cargo", ["+1.86.0", ...cargoPathOverrides, ...args], {
     cwd,
     env: environment,
     encoding: "utf8",
@@ -170,7 +170,7 @@ function cargo(args, cwd = root) {
 }
 
 function cargoWithEnvironment(args, additions, cwd = root) {
-  const result = spawnSync("cargo", ["+1.85", ...args], {
+  const result = spawnSync("cargo", ["+1.86.0", ...args], {
     cwd,
     env: { ...environment, ...additions },
     encoding: "utf8",
@@ -184,7 +184,7 @@ function cargoWithEnvironment(args, additions, cwd = root) {
 }
 
 function expectCargoFailure(args, expected, cwd = root) {
-  const result = spawnSync("cargo", ["+1.85", ...cargoPathOverrides, ...args], {
+  const result = spawnSync("cargo", ["+1.86.0", ...cargoPathOverrides, ...args], {
     cwd,
     env: environment,
     encoding: "utf8",
@@ -466,6 +466,7 @@ if (!className) {
   throw new Error(`SSR output did not contain a PliegoCSS class: ${html}`);
 }
 
+cargo(["build", "--quiet", "--locked", "-p", "pliego-cssc"]);
 const pliegoCsscExecutable = join(
   environment.CARGO_TARGET_DIR,
   "debug",
@@ -488,7 +489,7 @@ const delegatedCheck = cargoWithEnvironment([
 ], {
   CARGO_TARGET_DIR: join(fixtureRoot, "target"),
   PLIEGO_CSSC: pliegoCsscExecutable,
-  RUSTUP_TOOLCHAIN: "1.85.0",
+  RUSTUP_TOOLCHAIN: "1.86.0",
 }, fixtureRoot);
 if (
   !delegatedCheck.includes("semantic style(s)") ||
@@ -884,7 +885,7 @@ function buildSite() {
     "build",
   ], {
     CARGO_TARGET_DIR: join(fixtureRoot, "target"),
-    RUSTUP_TOOLCHAIN: "1.85.0",
+    RUSTUP_TOOLCHAIN: "1.86.0",
   }, fixtureRoot);
 }
 
@@ -899,6 +900,12 @@ function directoryDigest(directory) {
   return hash.digest("hex");
 }
 
+// The compile/collector phase above exercises the exact checked-out PliegoRS
+// revision through Cargo path overrides. The PliegoRS build command also
+// validates that this project's committed lock can be replayed from published
+// package provenance, so remove the temporary workspace override before that
+// second, deliberately registry-backed phase.
+cleanupCargoOverride();
 buildSite();
 const firstSiteDigest = directoryDigest(sitePath);
 buildSite();
@@ -1091,7 +1098,7 @@ console.log(
   JSON.stringify(
     {
       status: "ok",
-      rust: "1.85",
+      rust: "1.86",
       pliegorsRevision: revision,
       pliegorsSourceSha256: sourceSha256,
       className,

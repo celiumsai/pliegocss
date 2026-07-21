@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pliegocss.dev/schemas/brand-image-manifest.schema.json",
+  "title": "PliegoCSS generated-image manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "assets"],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "assets": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "role",
+          "master",
+          "masterSha256",
+          "model",
+          "quality",
+          "width",
+          "height",
+          "promptFile",
+          "finalPrompt",
+          "reviewedAgainstBrandbook"
+        ],
+        "properties": {
+          "role": {
+            "enum": [
+              "cascade-chamber",
+              "semantic-fold",
+              "evidence-archive",
+              "material-study-carbon",
+              "material-study-paper",
+              "material-study-cobalt"
+            ]
+          },
+          "master": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*\\.png$"
+          },
+          "masterSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "model": {
+            "const": "openai-gpt-image-2"
+          },
+          "quality": {
+            "const": "high"
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 1024
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 1024
+          },
+          "promptFile": {
+            "type": "string",
+            "pattern": "^\\.\\./image-prompts/[0-9]{2}-[a-z0-9-]+\\.md$"
+          },
+          "finalPrompt": {
+            "type": "string",
+            "minLength": 500
+          },
+          "generationId": {
+            "type": "string"
+          },
+          "seed": {
+            "type": ["integer", "null"]
+          },
+          "reviewedAgainstBrandbook": {
+            "const": true
+          }
+        }
+      }
+    }
+  }
+}

@@ -30,6 +30,7 @@
     "check:compatibility": "node ./scripts/check-compatibility-policy.mjs",
     "check:attribution": "node ./scripts/check-standards-provenance.mjs",
     "check:docs": "node ./scripts/check-docs.mjs",
+    "check:brand": "node ./scripts/check-brand.mjs",
     "check:maturity": "node ./scripts/check-maturity-map.mjs",
     "check:tailwind-matrix": "node ./scripts/check-tailwind-matrix.mjs",
     "check:representative-gaps": "node ./scripts/check-representative-gap-map.mjs",
@@ -56,6 +57,11 @@
     "check:accessibility-quality": "cargo test -p pliego-css-control --features projection --test accessibility_quality --locked",
     "check:pliegors-guide": "node ./scripts/check-pliegors-guide.mjs",
     "check:packages": "node ./scripts/check-packages.mjs",
+    "check:supply-chain": "cargo audit --deny warnings && cargo deny check licenses bans sources",
+    "check:site": "node ./site/scripts/check-site.mjs",
+    "check:site-deployment": "pnpm --dir ./site run check:deployment",
+    "site:build": "node ./site/scripts/build.mjs",
+    "site:preview": "node ./site/scripts/preview.mjs",
     "integration:plain-html": "node ./scripts/check-plain-html-integration.mjs",
     "integration:representative:plain-html-audit": "node ./scripts/check-representative-plain-html-audit.mjs",
     "integration:representative:vite-tailwind": "node ./scripts/check-representative-vite-tailwind.mjs",
@@ -77,6 +83,10 @@
   },
   "devDependencies": {
     "@tailwindcss/cli": "4.3.2",
+    "esbuild": "0.28.1",
+    "gsap": "3.15.0",
+    "lenis": "1.3.25",
+    "three": "0.185.1",
     "tailwindcss": "4.3.2"
   }
 }

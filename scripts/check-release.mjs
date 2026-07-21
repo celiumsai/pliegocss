@@ -6,6 +6,12 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
 const gates = Object.freeze([
   {
+    id: "brand-system",
+    tier: "fast",
+    command: "pnpm",
+    args: ["check:brand"],
+  },
+  {
     id: "rust-format",
     tier: "fast",
     command: "cargo",
@@ -254,6 +260,18 @@ const gates = Object.freeze([
     args: ["check:evidence"],
   },
   {
+    id: "media-query-merge",
+    tier: "release",
+    command: "pnpm",
+    args: ["check:media"],
+  },
+  {
+    id: "reachability-pruning",
+    tier: "release",
+    command: "pnpm",
+    args: ["check:pruning"],
+  },
+  {
     id: "portability",
     tier: "release",
     command: "pnpm",
@@ -264,6 +282,25 @@ const gates = Object.freeze([
     tier: "release",
     command: "pnpm",
     args: ["check:packages"],
+  },
+  {
+    id: "supply-chain",
+    tier: "release",
+    command: "pnpm",
+    args: ["check:supply-chain"],
+    requires: ["PLIEGOCSS_RUN_SUPPLY_CHAIN"],
+  },
+  {
+    id: "site",
+    tier: "release",
+    command: "pnpm",
+    args: ["check:site"],
+  },
+  {
+    id: "site-deployment",
+    tier: "release",
+    command: "pnpm",
+    args: ["check:site-deployment"],
   },
   {
     id: "migration-real-corpus",
@@ -303,6 +340,29 @@ function listedGate(gate) {
   };
 }
 
+function spawnGate(gate) {
+  if (process.platform === "win32" && gate.command === "pnpm") {
+    return spawnSync(
+      process.env.ComSpec ?? "cmd.exe",
+      ["/d", "/s", "/c", gate.command, ...gate.args],
+      {
+        cwd: root,
+        env: process.env,
+        encoding: "utf8",
+        stdio: "inherit",
+        windowsHide: true,
+      },
+    );
+  }
+  return spawnSync(gate.command, gate.args, {
+    cwd: root,
+    env: process.env,
+    encoding: "utf8",
+    stdio: "inherit",
+    windowsHide: true,
+  });
+}
+
 function run(profile) {
   const selected = selectedGates(profile);
   if (!selected) {
@@ -321,13 +381,7 @@ function run(profile) {
       continue;
     }
     process.stdout.write(`[running] ${gate.id}\n`);
-    const result = spawnSync(gate.command, gate.args, {
-      cwd: root,
-      env: process.env,
-      encoding: "utf8",
-      stdio: "inherit",
-      windowsHide: true,
-    });
+    const result = spawnGate(gate);
     if (result.error) {
       results.push({
         id: gate.id,

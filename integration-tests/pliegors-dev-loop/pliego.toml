@@ -1,4 +1,5 @@
 [project]
+id = "pliegocss-pliegors-dev-loop"
 name = "PliegoCSS PliegoRS development loop"
 site_package = "pliegocss-pliegors-dev-loop"
 output = "target/site"

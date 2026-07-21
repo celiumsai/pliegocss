@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">PliegoCSS application icon</title>
+  <rect width="512" height="512" rx="88" fill="#11151a"/>
+  <path d="M96 96H416V202.667H256V309.333H96" fill="none" stroke="#f4f7f8" stroke-width="53.333" stroke-linecap="square" stroke-linejoin="miter"/>
+  <path d="M96 202.667H256V309.333H416V416H96" fill="none" stroke="#6f8cff" stroke-width="53.333" stroke-linecap="square" stroke-linejoin="miter"/>
+</svg>

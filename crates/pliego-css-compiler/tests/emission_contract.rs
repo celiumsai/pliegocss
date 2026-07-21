@@ -101,6 +101,25 @@ fn ring_and_shadow_compose_into_one_box_shadow() {
 }
 
 #[test]
+fn important_effect_protects_the_composed_physical_box_shadow() {
+    for source in [
+        "shadow-md!",
+        "ring-2!",
+        "hover:shadow-md!",
+        "shadow-md! ring-2",
+        "shadow-md ring-2!",
+    ] {
+        let emitted = css(source);
+        assert!(
+            emitted.contains(
+                "box-shadow:0 0 0 var(--pc-ring-width,0) var(--pc-ring-color,currentColor),var(--pc-shadow,0 0 #0000)!important;"
+            ),
+            "missing physical importance for `{source}` in {emitted}"
+        );
+    }
+}
+
+#[test]
 fn style_ids_encode_as_css_safe_classes() {
     for id in [
         StyleId::new(1),

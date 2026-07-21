@@ -2,7 +2,7 @@
 
 use std::fmt;
 use std::fs::{self, OpenOptions};
-use std::io::Read;
+use std::io::{Read, Write};
 #[cfg(unix)]
 use std::os::unix::fs::OpenOptionsExt as _;
 #[cfg(windows)]
@@ -1104,12 +1104,97 @@ fn is_canonical_sha256(value: &str) -> bool {
             .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
 }
 
+struct MigrationOperationLock {
+    path: PathBuf,
+}
+
+impl Drop for MigrationOperationLock {
+    fn drop(&mut self) {
+        let _ = fs::remove_file(&self.path);
+    }
+}
+
+fn migration_lock_path(destination: &Path) -> Result<PathBuf, MigrationInventoryError> {
+    let name = destination
+        .file_name()
+        .and_then(|name| name.to_str())
+        .ok_or_else(|| {
+            MigrationInventoryError::new(
+                "migration destination requires a portable UTF-8 file name",
+            )
+        })?;
+    Ok(destination.with_file_name(format!("{name}.pliego-migration-lock")))
+}
+
+fn acquire_migration_locks(
+    destinations: impl IntoIterator<Item = PathBuf>,
+) -> Result<Vec<MigrationOperationLock>, MigrationInventoryError> {
+    let mut paths = destinations
+        .into_iter()
+        .map(|destination| migration_lock_path(&destination))
+        .collect::<Result<Vec<_>, _>>()?;
+    paths.sort_unstable();
+    paths.dedup();
+    let mut locks = Vec::with_capacity(paths.len());
+    for path in paths {
+        let mut options = OpenOptions::new();
+        options.write(true).create_new(true);
+        #[cfg(unix)]
+        options.mode(0o600).custom_flags(libc::O_NOFOLLOW);
+        #[cfg(windows)]
+        options.custom_flags(0x0020_0000);
+        let mut file = options.open(&path).map_err(|error| {
+            MigrationInventoryError::new(format!(
+                "cannot acquire migration lock `{}`: {error}",
+                path.display()
+            ))
+        })?;
+        writeln!(file, "pid={}", std::process::id()).map_err(|error| {
+            MigrationInventoryError::new(format!(
+                "cannot initialize migration lock `{}`: {error}",
+                path.display()
+            ))
+        })?;
+        file.sync_all().map_err(|error| {
+            MigrationInventoryError::new(format!(
+                "cannot sync migration lock `{}`: {error}",
+                path.display()
+            ))
+        })?;
+        locks.push(MigrationOperationLock { path });
+    }
+    Ok(locks)
+}
+
+fn require_migration_bytes_unchanged(
+    destination: &Path,
+    expected: &[u8],
+    role: &str,
+) -> Result<(), MigrationInventoryError> {
+    let (_, current) = read_regular_project_file(destination, MAX_SOURCE_BYTES, role)?;
+    if current != expected {
+        return Err(MigrationInventoryError::new(format!(
+            "{role} changed after migration preflight"
+        )));
+    }
+    Ok(())
+}
+
 /// Replaces one regular file only when its bytes exactly match the declared before state.
 ///
 /// # Errors
 ///
 /// Returns an error for unsafe files, stale before bytes, or failed atomic publication.
 pub fn apply_reversible_replacement(
+    destination: &Path,
+    before: &[u8],
+    after: &[u8],
+) -> Result<ReversibleReplacementReceipt, MigrationInventoryError> {
+    let _locks = acquire_migration_locks([destination.to_path_buf()])?;
+    apply_reversible_replacement_unlocked(destination, before, after)
+}
+
+fn apply_reversible_replacement_unlocked(
     destination: &Path,
     before: &[u8],
     after: &[u8],
@@ -1130,6 +1215,12 @@ pub fn apply_reversible_replacement(
     fs::write(&temporary, after).map_err(|error| {
         MigrationInventoryError::new(format!("cannot prepare reversible replacement: {error}"))
     })?;
+    if let Err(error) =
+        require_migration_bytes_unchanged(destination, before, "migration replacement")
+    {
+        let _ = fs::remove_file(&temporary);
+        return Err(error);
+    }
     if let Err(error) = fs::rename(&temporary, destination) {
         let _ = fs::remove_file(&temporary);
         return Err(MigrationInventoryError::new(format!(
@@ -1152,6 +1243,14 @@ pub fn rollback_reversible_replacement(
     destination: &Path,
     receipt: &ReversibleReplacementReceipt,
 ) -> Result<(), MigrationInventoryError> {
+    let _locks = acquire_migration_locks([destination.to_path_buf()])?;
+    rollback_reversible_replacement_unlocked(destination, receipt)
+}
+
+fn rollback_reversible_replacement_unlocked(
+    destination: &Path,
+    receipt: &ReversibleReplacementReceipt,
+) -> Result<(), MigrationInventoryError> {
     if migration_bytes_sha256(&receipt.before) != receipt.before_sha256 {
         return Err(MigrationInventoryError::new(
             "reversible replacement receipt before bytes are corrupt",
@@ -1168,6 +1267,12 @@ pub fn rollback_reversible_replacement(
     fs::write(&temporary, &receipt.before).map_err(|error| {
         MigrationInventoryError::new(format!("cannot prepare replacement rollback: {error}"))
     })?;
+    if let Err(error) =
+        require_migration_bytes_unchanged(destination, &current, "migration replacement rollback")
+    {
+        let _ = fs::remove_file(&temporary);
+        return Err(error);
+    }
     if let Err(error) = fs::rename(&temporary, destination) {
         let _ = fs::remove_file(&temporary);
         return Err(MigrationInventoryError::new(format!(
@@ -1207,6 +1312,7 @@ fn apply_reversible_replacement_group_with(
             "replacement group contains duplicate destinations",
         ));
     }
+    let _locks = acquire_migration_locks(paths.iter().map(|path| (*path).to_path_buf()))?;
     let mut staged = Vec::with_capacity(replacements.len());
     for &(destination, before, after) in replacements {
         let (_, current) = read_regular_project_file(
@@ -1249,17 +1355,25 @@ fn apply_reversible_replacement_group_with(
     let mut receipts: Vec<(PathBuf, ReversibleReplacementReceipt)> =
         Vec::with_capacity(staged.len());
     for (index, (destination, before, after, temporary)) in staged.iter().enumerate() {
-        let failure = before_publish(index).err().or_else(|| {
-            pliego_css_io::rename_prepared_synced(temporary, destination, "replacement group")
-                .err()
-                .map(MigrationInventoryError::new)
-        });
+        let failure = before_publish(index)
+            .and_then(|()| {
+                require_migration_bytes_unchanged(
+                    destination,
+                    before,
+                    "migration replacement group",
+                )
+            })
+            .and_then(|()| {
+                pliego_css_io::rename_prepared_synced(temporary, destination, "replacement group")
+                    .map_err(MigrationInventoryError::new)
+            })
+            .err();
         if let Some(error) = failure {
             for (_, _, _, prepared) in &staged {
                 let _ = fs::remove_file(prepared);
             }
             for (path, receipt) in receipts.iter().rev() {
-                rollback_reversible_replacement(path, receipt)?;
+                rollback_reversible_replacement_unlocked(path, receipt)?;
             }
             return Err(error);
         }
@@ -1298,6 +1412,7 @@ fn rollback_reversible_replacement_group_with(
             "replacement receipt group cannot be empty",
         ));
     }
+    let _locks = acquire_migration_locks(receipts.iter().map(|(path, _)| path.clone()))?;
     let mut staged = Vec::with_capacity(receipts.len());
     for (path, receipt) in receipts {
         let (_, after) =
@@ -1329,17 +1444,25 @@ fn rollback_reversible_replacement_group_with(
     let mut restored: Vec<(PathBuf, ReversibleReplacementReceipt, Vec<u8>)> =
         Vec::with_capacity(staged.len());
     for (index, (path, receipt, after, temporary)) in staged.iter().rev().enumerate() {
-        let failure = before_restore(index).err().or_else(|| {
-            pliego_css_io::rename_prepared_synced(temporary, path, "replacement group rollback")
-                .err()
-                .map(MigrationInventoryError::new)
-        });
+        let failure = before_restore(index)
+            .and_then(|()| {
+                require_migration_bytes_unchanged(
+                    path,
+                    after,
+                    "migration replacement group rollback",
+                )
+            })
+            .and_then(|()| {
+                pliego_css_io::rename_prepared_synced(temporary, path, "replacement group rollback")
+                    .map_err(MigrationInventoryError::new)
+            })
+            .err();
         if let Some(error) = failure {
             for (_, _, _, prepared) in &staged {
                 let _ = fs::remove_file(prepared);
             }
             for (restored_path, restored_receipt, restored_after) in restored.iter().rev() {
-                apply_reversible_replacement(
+                apply_reversible_replacement_unlocked(
                     restored_path,
                     &restored_receipt.before,
                     restored_after,
@@ -1401,6 +1524,7 @@ pub fn apply_reversible_addition(
     destination: &Path,
     after: &[u8],
 ) -> Result<ReversibleAdditionReceipt, MigrationInventoryError> {
+    let _locks = acquire_migration_locks([destination.to_path_buf()])?;
     if destination.exists() {
         return Err(MigrationInventoryError::new(
             "reversible additive destination already exists",
@@ -1424,6 +1548,12 @@ pub fn apply_reversible_addition(
     fs::write(&temporary, after).map_err(|error| {
         MigrationInventoryError::new(format!("cannot prepare reversible addition: {error}"))
     })?;
+    if destination.exists() {
+        let _ = fs::remove_file(&temporary);
+        return Err(MigrationInventoryError::new(
+            "reversible additive destination appeared after migration preflight",
+        ));
+    }
     if let Err(error) = fs::rename(&temporary, destination) {
         let _ = fs::remove_file(&temporary);
         return Err(MigrationInventoryError::new(format!(
@@ -1444,6 +1574,7 @@ pub fn rollback_reversible_addition(
     destination: &Path,
     receipt: &ReversibleAdditionReceipt,
 ) -> Result<(), MigrationInventoryError> {
+    let _locks = acquire_migration_locks([destination.to_path_buf()])?;
     let (_, current) =
         read_regular_project_file(destination, MAX_SOURCE_BYTES, "migration sidecar")?;
     if migration_bytes_sha256(&current) != receipt.after_sha256 {
@@ -1451,6 +1582,7 @@ pub fn rollback_reversible_addition(
             "reversible additive output changed after publication",
         ));
     }
+    require_migration_bytes_unchanged(destination, &current, "migration sidecar rollback")?;
     fs::remove_file(destination).map_err(|error| {
         MigrationInventoryError::new(format!("cannot roll back reversible addition: {error}"))
     })
@@ -1465,6 +1597,45 @@ fn migration_bytes_sha256(bytes: &[u8]) -> String {
 #[cfg(test)]
 mod replacement_group_fault_tests {
     use super::*;
+
+    #[test]
+    fn refuses_a_concurrent_edit_after_group_preflight() {
+        let root =
+            Path::new("target/tests").join(format!("pliegocss-group-drift-{}", std::process::id()));
+        fs::create_dir_all(&root).unwrap();
+        let destination = root.join("source.txt");
+        fs::write(&destination, b"before\n").unwrap();
+        let result = apply_reversible_replacement_group_with(
+            &[(&destination, b"before\n", b"after\n")],
+            |_| {
+                fs::write(&destination, b"concurrent edit\n").unwrap();
+                Ok(())
+            },
+        );
+        assert!(result.unwrap_err().to_string().contains("changed after"));
+        assert_eq!(fs::read(&destination).unwrap(), b"concurrent edit\n");
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn refuses_a_concurrent_edit_after_rollback_preflight() {
+        let root = Path::new("target/tests").join(format!(
+            "pliegocss-group-rollback-drift-{}",
+            std::process::id()
+        ));
+        fs::create_dir_all(&root).unwrap();
+        let destination = root.join("source.txt");
+        fs::write(&destination, b"before\n").unwrap();
+        let receipts =
+            apply_reversible_replacement_group(&[(&destination, b"before\n", b"after\n")]).unwrap();
+        let result = rollback_reversible_replacement_group_with(&receipts, |_| {
+            fs::write(&destination, b"concurrent edit\n").unwrap();
+            Ok(())
+        });
+        assert!(result.unwrap_err().to_string().contains("changed after"));
+        assert_eq!(fs::read(&destination).unwrap(), b"concurrent edit\n");
+        fs::remove_dir_all(root).unwrap();
+    }
 
     #[test]
     fn compensates_a_published_member_when_injected_failure_follows_preflight() {
