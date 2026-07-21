@@ -1,10 +1,11 @@
 # PliegoRS + PliegoCSS from an empty project
 
-Status: implemented local-source workflow for the MVP integration fixture
+Status: implemented registry workflow for PliegoRS `0.0.2` and PliegoCSS
+`0.1.0-rc.2`
 
 This guide starts with `pliego new` and ends with deterministic SSR/SSG output that can contain
 PliegoCSS classes, route and island CSS partitions, resumable state, and ordinary external CSS.
-PliegoRS and PliegoCSS are not published yet, so the commands use local checkouts.
+Both exact public-preview package units are available from crates.io.
 
 ## What the integration does today
 
@@ -19,37 +20,30 @@ starter feature.
 
 ## 1. Scaffold the PliegoRS application
 
-Keep the PliegoRS and PliegoCSS checkouts beside the application while the crates are unreleased:
-
-```text
-workspace/
-├── PliegoCSS/
-├── pliegors/
-└── my-site/
-```
-
-Install the local CLI and create the project:
+Install the exact PliegoRS CLI and create the project from its registry-backed
+starter:
 
 ```console
-cargo +1.85.0 install --locked --path pliegors/crates/pliego-cli
-pliego new my-site --framework-path pliegors
+cargo +1.85.0 install pliego-cli --version '=0.0.2' --locked
+pliego new my-site
 cd my-site
 pliego check
 ```
 
 `pliego new` creates a standalone Rust 2024 project, standard asset directory, `pliego.toml`, and
-an initial deterministic SSG application. Rust 1.85 is the minimum supported compiler.
+an initial deterministic SSG application. The published `0.0.2` framework
+supports Rust 1.85; the current unreleased PliegoRS `main` branch has a separate
+Rust 1.86 requirement.
 
-## 2. Add the local PliegoCSS and resumability crates
+## 2. Add the PliegoCSS and resumability crates
 
-Add these entries to the generated `[dependencies]`. Adjust each path for the location of your
-application:
+Add these exact entries to the generated `[dependencies]`:
 
 ```toml
-pliego-css = { path = "../PliegoCSS/crates/pliego-css" }
-pliego-css-source = { path = "../PliegoCSS/crates/pliego-css-source" }
-pliego-macros = { path = "../pliegors/crates/pliego-macros" }
-pliego-resume = { path = "../pliegors/crates/pliego-resume" }
+pliego-css = "=0.1.0-rc.2"
+pliego-css-source = "=0.1.0-rc.2"
+pliego-macros = "=0.0.2"
+pliego-resume = "=0.0.2"
 ```
 
 Keep the generated `pliego-dom` and `pliego-ssg` dependencies. Then refresh and verify the lockfile:

@@ -1,6 +1,6 @@
 # Semantic IR binary format 1
 
-Status: **machine-enforced candidate at workspace version 0.0.0**
+Status: **historical, machine-enforced compatibility input at `0.1.0-rc.2`**
 
 Historical format. The current codec is
 [semantic IR binary format 2](./semantic-ir-binary-v2.md); it rejects format-1 bytes and requires

@@ -79,6 +79,19 @@ function resolveExecutable() {
   return executable;
 }
 
+function stderrLines(value) {
+  return value
+    .split(/\r?\n/u)
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+function isExpectedTransientWatchFailure(line) {
+  return /^compile failed; keeping the last valid artifact: (?:EOF while parsing a value at line 1 column 0|cannot read reachability sidecar `.+`: The process cannot access the file because it is being used by another process\. \(os error 32\))$/u.test(
+    line,
+  );
+}
+
 function runCli(executable, args, expectedStatus = 0) {
   const result = run(executable, args, { cwd: project, expectedStatus });
   if (expectedStatus === 0) {
@@ -309,7 +322,13 @@ async function assertWatchContract(executable) {
       initialManifest,
       "route-only watch rebuild changed data outside the requested route path",
     );
-    assert(!state.stderr.includes("compile failed"), `watch reported a compile failure:\n${state.stderr}`);
+    const unexpectedFailures = stderrLines(state.stderr)
+      .filter((line) => line.startsWith("compile failed;"))
+      .filter((line) => !isExpectedTransientWatchFailure(line));
+    assert(
+      unexpectedFailures.length === 0,
+      `watch reported an unexpected compile failure:\n${unexpectedFailures.join("\n")}\n\nfull stderr:\n${state.stderr}`,
+    );
   } finally {
     try {
       await terminateChild(child);

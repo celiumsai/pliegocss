@@ -44,7 +44,8 @@ promise:
 - LSP/editor clients;
 - migration inventory;
 - watch mode;
-- PliegoRS SSR/SSG/resumability integration.
+- PliegoRS SSR/SSG/resumability integration;
+- exact-version registry distribution for the published Rust workspace and CLI/LSP binaries.
 
 Each row in the machine map names the owning paths, persisted schemas, current gates, graduation
 criteria, and claim limits. A beta capability cannot graduate solely because its tests pass locally;
@@ -55,7 +56,6 @@ its listed evidence gap must also close.
 - Static cascade explanation beyond its current closed slice.
 - General standard-CSS transform/bundle output beyond the audit-first wedge.
 - Responsive/layout browser diagnosis.
-- Registry and supported binary/editor distribution.
 
 Experimental does not mean disposable. These are intentional product directions and may not be
 removed merely to simplify the release. They remain bounded until their graduation criteria are met.

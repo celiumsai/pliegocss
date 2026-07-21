@@ -44,18 +44,18 @@ Run it from the workspace through Cargo:
 cargo run -p pliego-cssc -- compile --source src/lib.rs --theme --output pliego.css
 ```
 
-Or install the binary from an exact local checkout and invoke it from an application workspace:
+Install the public-preview binary from crates.io and invoke it from an application workspace:
 
 ```console
-cargo install --path crates/pliego-cssc --locked --force
+cargo install pliego-cssc --version '=0.1.0-rc.2' --locked
 pliego-cssc --version
 pliego-cssc check --source src
 ```
 
 `build` is an exact alias of `compile`. `version`, `-V`, and `--version` print
-`pliego-cssc <package-version>` and reject extra arguments. Until the crates are published, the
-checkout revision plus `Cargo.lock` is the distributable identity; the current `0.0.0` does not claim
-SemVer stability.
+`pliego-cssc <package-version>` and reject extra arguments. Registry consumers must
+pin the complete exact prerelease because the nineteen crates form one compatibility
+unit.
 
 ## Inputs
 
@@ -1203,9 +1203,9 @@ multi-file transactional or crash-atomic replacement.
 - Theme CSS currently emits the registry token kinds supported by the emitter's custom-property
   contract; `--prune-unreachable` does not filter that block. Other tokens still affect lowering and
   identity.
-- Identity and class formats are explicitly versioned, but the current `0.0.0` vectors remain a
-  release candidate contract rather than a published SemVer promise. See the
+- Identity and class formats are explicitly versioned. The `0.1.0-rc.2` vectors are a
+  published prerelease contract rather than a final `0.1.0` stability promise. See the
   [StyleId format-2 reference](./style-id-format-v2.md).
-- Until registry publication, the CLI must be built or installed from an exact checkout revision.
-  Once installed, `pliego-cssc` is standalone and can run from an application directory; it does not
+- The CLI may be installed from exact crates.io version `0.1.0-rc.2` or from an
+  exact checkout revision. Once installed, `pliego-cssc` is standalone and can run from an application directory; it does not
   require that application to belong to the PliegoCSS Cargo workspace.

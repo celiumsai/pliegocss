@@ -231,13 +231,13 @@
     {
       "id": "registry-distribution",
       "title": "Registry packages and supported installation",
-      "maturity": "experimental",
-      "scope": "Future publication of the exact-version 19-crate graph and installable CLI/editor artifacts.",
+      "maturity": "beta",
+      "scope": "Published exact-version 19-crate graph plus installable CLI and LSP artifacts.",
       "owners": ["scripts/check-packages.mjs", "docs/contributing/release-process.md"],
       "schemas": [],
       "gates": ["check:packages", "verify:release"],
-      "graduationCriteria": ["Resolve repository and registry ownership approvals.", "Replay published artifacts with Rust 1.85 and supported hosts.", "Cut an RC that activates the documented SemVer subset."],
-      "limitations": ["Nothing is currently uploaded; checkout revision plus Cargo.lock remains the distribution identity."]
+      "graduationCriteria": ["Retain registry-only Rust 1.85 replay for every release.", "Publish and version editor client installation compatibility.", "Promote final 0.1.0 only through the separate readiness authorization."],
+      "limitations": ["The VS Code and Neovim clients remain source-distributed candidates; crates.io versions must be consumed as one exact compatibility unit."]
     }
   ]
 }

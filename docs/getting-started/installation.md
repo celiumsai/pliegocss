@@ -102,10 +102,10 @@ Add the build bridge when the package has a custom `pliego.theme.toml` or DTCG R
 
 ```toml
 [dependencies]
-pliego-css = { path = "../PliegoCSS/crates/pliego-css" }
+pliego-css = "=0.1.0-rc.2"
 
 [build-dependencies]
-pliego-css-build = { path = "../PliegoCSS/crates/pliego-css-build" }
+pliego-css-build = "=0.1.0-rc.2"
 ```
 
 Create `build.rs`:
@@ -147,7 +147,7 @@ Call `theme!` once per package.
 
 ## Generate a CSS artifact
 
-After installing the CLI from the exact checkout, run the explicit extraction from the application
+After installing the exact CLI candidate, run the explicit extraction from the application
 directory:
 
 ```console

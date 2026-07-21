@@ -1,0 +1,41 @@
+name: Feature request
+description: Propose a scoped PliegoCSS capability or compatibility improvement.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Describe the developer problem before proposing an API.
+    validations:
+      required: true
+  - type: textarea
+    id: current
+    attributes:
+      label: Current workaround
+      description: Show how the workflow is handled today.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed capability
+      description: Explain inputs, outputs, failure behavior, and compatibility boundaries.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence and examples
+      description: Link specifications or provide minimal examples and expected artifacts.
+  - type: checkboxes
+    id: contract
+    attributes:
+      label: Contract
+      options:
+        - label: I understand public APIs and serialized formats require explicit review.
+          required: true
+        - label: I searched existing issues and documentation first.
+          required: true

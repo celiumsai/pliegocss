@@ -39,8 +39,8 @@
 > `0.1.0-rc.2` is public-preview software distributed from the public
 > canonical repository.
 > The nineteen PliegoCSS crates form one exact-version compatibility unit and
-> are being published to crates.io in dependency order after the complete
-> hosted CI and CodeQL matrices passed. `0.1.0` remains blocked by the
+> are published on crates.io and replayed from the registry with Rust 1.85
+> after the complete hosted CI and CodeQL matrices passed. `0.1.0` remains blocked by the
 > [machine readiness record](./docs/product/release-readiness-0.1.0.md).
 > Core formats and selected APIs are frozen candidates; beta and experimental
 > capabilities may still change.

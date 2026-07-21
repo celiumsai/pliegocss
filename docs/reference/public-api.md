@@ -1,11 +1,11 @@
 # Public API candidate
 
-Status: **application, build-macro, and adapter surfaces selected at workspace version 0.0.0; the
+Status: **application, build-macro, and adapter surfaces published at `0.1.0-rc.2`; the
 Cargo DTCG, ownership, usage-sidecar, and application-topology collector bridges are covered by the
-Rust 1.85 downstream smoke; the SemVer promise begins only when a release candidate is cut**
+Rust 1.85 downstream smoke; this remains a prerelease contract**
 
 PliegoCSS must package several crates because Cargo builds the procedural macro, theme bridge,
-parser, compiler, and CLI as a version-locked graph. A future registry publication will not make
+parser, compiler, and CLI as a version-locked graph. Registry publication does not make
 every `pub` item in that graph an application API. All internal dependencies use exact versions and
 one source revision.
 
@@ -327,7 +327,7 @@ mutable IR structures from implementation crates into the application surface. S
 
 ## Implementation and advanced crates
 
-The following crates must be packaged in exact-version lockstep for a future release but remain
+The following crates are packaged in exact-version lockstep but remain
 implementation or advanced tooling surfaces for the candidate:
 
 - `pliego-css-cascade`

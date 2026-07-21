@@ -2,8 +2,8 @@
 
 # PliegoCSS 0.1.0-rc.2 hardening report
 
-**Status:** corrections implemented; final promotion remains blocked by
-clean-commit and owner-controlled release gates  
+**Status:** corrections implemented; RC.2 registry replay passed; final
+`0.1.0` promotion remains blocked by its owner-controlled release gate
 **Source basis:** corrected public-preview source prepared after
 `aabf2b48ae53ee988d6f0ceff8276988668bbd31`
 **Authority:** the machine-readable
@@ -29,7 +29,7 @@ after a reviewed commit.
 | P2 | Repair verification could hold its lock while unbounded child processes ran. | Cargo, browser, and toolchain probes now have deadlines, bounded capture, and process-tree termination while preserving authorization and rollback. | Repair-agent process-bound and verification tests pass. |
 | P2 | `pliego-cssc --help` was a five-line migration note, not usable CLI help. | The CLI has a real synopsis, command inventory, global options, examples, and command help routing. | Parser/help contract tests and executable smoke checks pass. |
 | P2 | Package documentation promised 62 KiB while code allowed 72 KiB; Windows converted paths into WSL form before invoking native `tar.exe`. | Documentation and the executable contract now agree on 72 KiB; native Windows paths stay native. | Nineteen archives are below budget and replay through the Rust 1.85 downstream fixture under WSL. |
-| P2 | The DTCG watch regression was skipped in hosted CI. | The skip was removed and the macOS fallback is bounded to 100 ms polling. | Fifty repeated WSL runs pass; hosted run `29850566211` passes Ubuntu, Windows, and macOS. |
+| P2 | The DTCG watch regression was skipped in hosted CI. | The skip was removed and the macOS fallback is bounded to 100 ms polling. | Fifty repeated WSL runs pass; hosted run `29857699284` passes Ubuntu, Windows, and macOS. |
 | P2 | `cargo-deny` had no policy and its license phase rejected every dependency. | A versioned `deny.toml` governs licenses, bans, and sources. `cargo-audit` owns advisories so CI does not fetch and interpret two separate advisory databases. | `cargo audit --deny warnings` reports zero advisories; `cargo deny check licenses bans sources` passes. |
 
 ## Product, brand, and website closure
@@ -69,27 +69,25 @@ after a reviewed commit.
 | Workspace tests and doctests | Current working source / WSL | Measured | PASS |
 | Clippy with `-D warnings` | Current working source / WSL | Measured | PASS |
 | Targeted audit regressions | Current working source / Windows and WSL | Measured | PASS |
-| Documentation graph | 163 Markdown files and 486 internal links | Measured | PASS |
+| Documentation graph | 164 Markdown files and 489 internal links | Measured | PASS |
 | Brand contract | 25 canonical files, seven vector variants, two raster exports, fourteen token projections | Measured | PASS |
 | Generated editorial images | Six reviewed GPT Image 2 masters plus AVIF/WebP derivatives and prompt provenance | Measured | PASS |
 | PliegoRS integration | Public `0.0.2` contract | Measured | PASS |
 | Website build | Two byte-identical PliegoRS builds | Measured | PASS |
 | Website browser contract | Chrome 150, desktop + 390 px phone + reduced motion + EN/ES/legal/accessibility routes | Measured | PASS |
-| Cloudflare deployment contract | Wrangler 4.110.0 dry run + local replay + Worker `718df1ee-7afb-48af-9496-a034f0b9bcc2` at `pliegocss.dev` + Browser Rendering | Measured | PASS |
+| Cloudflare deployment contract | Wrangler 4.110.0 dry run + local replay + Worker `c3f34e3d-43be-4f87-b07a-3cc9f946df4f` at `pliegocss.dev` + Browser Rendering | Measured | PASS |
 | Site corpus | 144 recipes, three explanations, three conflicts | Measured | PASS |
-| Package replay | Nineteen archives, Rust 1.85 downstream fixture | Measured with dirty-source caveat | PASS |
+| Package replay | Nineteen hosted archives plus registry-only Rust 1.85 downstream fixture | Measured | PASS |
 | Dependency advisories | 105 dependencies | Measured | 0 advisories |
-| Hosted OS matrix | Run `29850566211` at `1f2feac`; twelve jobs across Ubuntu, Windows, and macOS | Measured | PASS |
+| Hosted OS matrix | Run `29857699284` at `42e0c22`; twelve jobs across Ubuntu, Windows, and macOS | Measured | PASS |
 | Frozen benchmark evidence | Reachable clean commit `d16fe5d` | Measured | PASS |
-| Registry replay | Published PliegoCSS crates | Pending authorization | BLOCKED |
+| Registry replay | Nineteen crates plus CLI/LSP install and downstream execution from crates.io | Measured | PASS |
 | Final `0.1.0` promotion | Owner approval | Pending authorization | BLOCKED |
 
 ## Remaining release sequence
 
-1. Finish publishing the authorized `0.1.0-rc.2` crate unit in dependency
-   order and wait for each immutable version to become visible.
-2. Replay a clean Rust 1.85 installation and downstream application directly
-   from crates.io.
+1. Deploy the final public release status to `pliegocss.dev`.
+2. Merge the reviewed release branch after its protected checks pass.
 3. Create the immutable `v0.1.0-rc.2` tag and GitHub prerelease only after the
    final source commit has green hosted CI and CodeQL.
 4. Promote final `0.1.0` only after separate owner authorization.

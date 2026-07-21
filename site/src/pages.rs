@@ -194,7 +194,7 @@ const DOCS: &[DocPage] = &[
             DocSection {
                 id: "install",
                 title: "Install the release candidate",
-                body: "The public canonical repository is ready. Coordinated crates.io publication is proceeding in dependency order.",
+                body: "The complete 0.1.0-rc.2 compatibility unit is published on crates.io and replayed from the registry with Rust 1.85.",
                 code: Some(
                     "cargo install pliego-cssc --version '=0.1.0-rc.2' --locked",
                 ),
@@ -2814,7 +2814,7 @@ fn brand() -> View {
 fn changelog() -> View {
     el("div")
         .class("changelog-page page-shell")
-        .child(page_intro("CHANGELOG", "Release truth, not launch theater.", "The 0.1.0-rc.2 compatibility unit is authorized for crates.io after hosted CI is green. Final 0.1.0 remains separately blocked by the readiness record."))
+        .child(page_intro("CHANGELOG", "Release truth, not launch theater.", "The 0.1.0-rc.2 compatibility unit is published on crates.io and replayed with Rust 1.85. Final 0.1.0 remains separately blocked by the readiness record."))
         .child(
             el("article")
                 .class("release-entry")
@@ -2941,7 +2941,7 @@ fn legal_document(slug: &str) -> View {
                 (
                     "01",
                     "Current status",
-                    "PliegoCSS 0.1.0-rc.2 is public-preview software authorized for coordinated publication to crates.io after hosted CI is green. APIs may change before 1.0, and the release-readiness record remains the authority for promotion.",
+                    "PliegoCSS 0.1.0-rc.2 is public-preview software published as an exact-version crates.io compatibility unit and replayed with Rust 1.85. APIs may change before 1.0, and the release-readiness record remains the authority for promotion.",
                 ),
                 (
                     "02",
