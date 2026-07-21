@@ -11,9 +11,10 @@ success condition.
 
 ## Current facts
 
-- The canonical GitHub repository exists and remains private while its product
-  posture is prepared as a public preview. This does not authorize changing
-  repository visibility, publishing crates, or promoting final `0.1.0`.
+- The canonical GitHub repository is public and its About panel points to
+  `https://pliegocss.dev` with a searchable CSS, Rust, compiler, migration,
+  token, LSP, WebAssembly, and static-analysis topic set. Public visibility
+  does not by itself authorize promoting final `0.1.0`.
 - The historical `v0.1.0-rc.1` tag and GitHub prerelease exist. That immutable
   tag points to an earlier commit, so this corrected source advances to
   `0.1.0-rc.2` rather than moving it.

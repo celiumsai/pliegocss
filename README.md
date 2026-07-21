@@ -32,16 +32,15 @@
   <a href="LICENSE"><img alt="Apache-2.0" src="https://img.shields.io/crates/l/pliego-cssc.svg"></a>
   <a href="https://doc.rust-lang.org/stable/releases.html"><img alt="rustc 1.85+" src="https://img.shields.io/badge/rustc-1.85%2B-b7410e.svg"></a>
   <img alt="Public preview" src="https://img.shields.io/badge/status-public_preview-315bff.svg">
-  <img alt="Private repository" src="https://img.shields.io/badge/repository-private-0a1120.svg">
+  <img alt="Public repository" src="https://img.shields.io/badge/repository-public-0a1120.svg">
 </p>
 
 > [!IMPORTANT]
-> `0.1.0-rc.2` is public-preview software distributed from the private
+> `0.1.0-rc.2` is public-preview software distributed from the public
 > canonical repository.
 > The nineteen PliegoCSS crates form one exact-version compatibility unit and
-> are authorized for coordinated crates.io publication after hosted CI is
-> green. CodeQL runs for `main`, pull requests, and its
-> weekly schedule even while the repository remains private. `0.1.0` is blocked by the
+> are being published to crates.io in dependency order after the complete
+> hosted CI and CodeQL matrices passed. `0.1.0` remains blocked by the
 > [machine readiness record](./docs/product/release-readiness-0.1.0.md).
 > Core formats and selected APIs are frozen candidates; beta and experimental
 > capabilities may still change.

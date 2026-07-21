@@ -3,7 +3,7 @@
   "targetVersion": "0.1.0",
   "candidateVersion": "0.1.0-rc.2",
   "repository": "https://github.com/celiumsai/pliegocss",
-  "repositoryVisibility": "private",
+  "repositoryVisibility": "public",
   "productStage": "public-preview",
   "result": "blocked",
   "checks": [

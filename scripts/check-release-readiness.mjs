@@ -43,7 +43,7 @@ if (value.repository !== "https://github.com/celiumsai/pliegocss") {
   fail("repository drifted");
 }
 if (
-  value.repositoryVisibility !== "private" ||
+  value.repositoryVisibility !== "public" ||
   value.productStage !== "public-preview"
 ) {
   fail("repository visibility and public-preview product stage drifted");

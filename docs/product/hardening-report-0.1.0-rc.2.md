@@ -29,7 +29,7 @@ after a reviewed commit.
 | P2 | Repair verification could hold its lock while unbounded child processes ran. | Cargo, browser, and toolchain probes now have deadlines, bounded capture, and process-tree termination while preserving authorization and rollback. | Repair-agent process-bound and verification tests pass. |
 | P2 | `pliego-cssc --help` was a five-line migration note, not usable CLI help. | The CLI has a real synopsis, command inventory, global options, examples, and command help routing. | Parser/help contract tests and executable smoke checks pass. |
 | P2 | Package documentation promised 62 KiB while code allowed 72 KiB; Windows converted paths into WSL form before invoking native `tar.exe`. | Documentation and the executable contract now agree on 72 KiB; native Windows paths stay native. | Nineteen archives are below budget and replay through the Rust 1.85 downstream fixture under WSL. |
-| P2 | The DTCG watch regression was skipped in hosted CI. | The skip was removed. | Fifty repeated WSL runs pass; fresh hosted execution is pending. |
+| P2 | The DTCG watch regression was skipped in hosted CI. | The skip was removed and the macOS fallback is bounded to 100 ms polling. | Fifty repeated WSL runs pass; hosted run `29850566211` passes Ubuntu, Windows, and macOS. |
 | P2 | `cargo-deny` had no policy and its license phase rejected every dependency. | A versioned `deny.toml` governs licenses, bans, and sources. `cargo-audit` owns advisories so CI does not fetch and interpret two separate advisory databases. | `cargo audit --deny warnings` reports zero advisories; `cargo deny check licenses bans sources` passes. |
 
 ## Product, brand, and website closure
@@ -39,7 +39,7 @@ after a reviewed commit.
   social card, licensed local fonts, image art-direction prompts, and an
   executable brand contract.
 - The README has the logo, project links, CI, CodeQL, release, license, MSRV,
-  public-preview, private-repository, crates.io, and docs.rs badges.
+  public-preview, public-repository, crates.io, and docs.rs badges.
 - The site is authored and rendered by PliegoRS `0.0.2`; styles and the
   bounded laboratory corpus are compiled by the current PliegoCSS binary.
 - The generator emits 90 routes and 134 content files; the release artifact
@@ -75,27 +75,25 @@ after a reviewed commit.
 | PliegoRS integration | Public `0.0.2` contract | Measured | PASS |
 | Website build | Two byte-identical PliegoRS builds | Measured | PASS |
 | Website browser contract | Chrome 150, desktop + 390 px phone + reduced motion + EN/ES/legal/accessibility routes | Measured | PASS |
-| Cloudflare deployment contract | Wrangler 4.110.0 dry run + local edge response replay; production not deployed | Measured | PASS |
+| Cloudflare deployment contract | Wrangler 4.110.0 dry run + local replay + Worker `2a406393-bcfc-4c73-87ca-761e047fa390` at `pliegocss.dev` | Measured | PASS |
 | Site corpus | 144 recipes, three explanations, three conflicts | Measured | PASS |
 | Package replay | Nineteen archives, Rust 1.85 downstream fixture | Measured with dirty-source caveat | PASS |
 | Dependency advisories | 105 dependencies | Measured | 0 advisories |
-| Hosted OS matrix | Prior `aabf2b4` run | Inherited | PASS, not authoritative for current fixes |
+| Hosted OS matrix | Run `29850566211` at `1f2feac`; twelve jobs across Ubuntu, Windows, and macOS | Measured | PASS |
 | Frozen benchmark evidence | Reachable clean commit `d16fe5d` | Measured | PASS |
 | Registry replay | Published PliegoCSS crates | Pending authorization | BLOCKED |
 | Final `0.1.0` promotion | Owner approval | Pending authorization | BLOCKED |
 
 ## Remaining release sequence
 
-1. Review and commit the complete source, including the six approved GPT Image
-   2 masters, prompt provenance, and responsive derivatives.
-2. Repeat package replay without `--allow-dirty`.
-3. Push the exact source plus its immutable evidence and require fresh Ubuntu, Windows, macOS, supply-chain,
-   browser, package, and watch results.
-4. With explicit authorization, deploy the site to Cloudflare, bind
-   `pliegocss.dev`, and verify the production edge/browser contract.
-5. Publish the authorized `0.1.0-rc.2` crate unit only after hosted CI is
-   green; promote final `0.1.0` only after separate owner authorization.
+1. Finish publishing the authorized `0.1.0-rc.2` crate unit in dependency
+   order and wait for each immutable version to become visible.
+2. Replay a clean Rust 1.85 installation and downstream application directly
+   from crates.io.
+3. Create the immutable `v0.1.0-rc.2` tag and GitHub prerelease only after the
+   final source commit has green hosted CI and CodeQL.
+4. Promote final `0.1.0` only after separate owner authorization.
 
 No step above is implied by the existence of an RC tag, the repository's
-private visibility, the public-preview product stage, or this local hardening
+public visibility, the public-preview product stage, or this local hardening
 pass.

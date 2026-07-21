@@ -194,7 +194,7 @@ const DOCS: &[DocPage] = &[
             DocSection {
                 id: "install",
                 title: "Install the release candidate",
-                body: "The GitHub tag is available in the private canonical repository. Crates.io publication is intentionally pending.",
+                body: "The public canonical repository is ready. Coordinated crates.io publication is proceeding in dependency order.",
                 code: Some(
                     "cargo install pliego-cssc --version '=0.1.0-rc.2' --locked",
                 ),
@@ -1427,7 +1427,7 @@ fn home() -> View {
                 .child(
                     el("p")
                         .class("hero-preview-label")
-                        .child("PLIEGOCSS / 0.1.0-RC.1 / PUBLIC PREVIEW"),
+                        .child("PLIEGOCSS / 0.1.0-RC.2 / PUBLIC PREVIEW"),
                 )
                 .child(brand_picture(
                     "cascade-chamber",
