@@ -26,7 +26,7 @@ function tableRows() {
 
 const document = `# Browser/output certification v1
 
-Status: **implemented local harness; hosted 3×3 evidence pending**
+Status: **implemented hosted 3×3 workflow; release evidence remains source-bound**
 
 This page is generated from
 [\`authority.json\`](../../benchmarks/browser-output-certification-v1/authority.json). Edit the

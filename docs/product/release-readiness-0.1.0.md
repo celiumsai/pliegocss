@@ -74,7 +74,7 @@ CodeQL run 29864046876 passed Actions, JavaScript/TypeScript, and Rust analysis 
 
 ### g0-corrections-on-candidate
 
-G0 corrections exist only in the later uncommitted worktree. They require a reviewed commit/tree and hosted replay before they can become release evidence.
+G0 corrections are not part of the exact RC.2 candidate. They require a newly named candidate plus hosted replay before they can become release evidence.
 
 - Source: `064dcbce96a3a5cc97a940d07566c008bb5e2d3e` / tree `010a64f5d0bbd142a1d015fda4ccf573cc6e4133`
 - Validity: `2026-07-22T14:10:00Z` → `2026-07-29T14:10:00Z`

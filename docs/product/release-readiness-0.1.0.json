@@ -102,7 +102,7 @@
       "status": "pending",
       "evidenceClass": "pending",
       "requiredForPromotion": true,
-      "summary": "G0 corrections exist only in the later uncommitted worktree. They require a reviewed commit/tree and hosted replay before they can become release evidence.",
+      "summary": "G0 corrections are not part of the exact RC.2 candidate. They require a newly named candidate plus hosted replay before they can become release evidence.",
       "source": {
         "commit": "064dcbce96a3a5cc97a940d07566c008bb5e2d3e",
         "gitTree": "010a64f5d0bbd142a1d015fda4ccf573cc6e4133"

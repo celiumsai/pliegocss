@@ -365,10 +365,10 @@ The schema-3 authority currently binds candidate `0.1.0-rc.2` to commit
 `010a64f5d0bbd142a1d015fda4ccf573cc6e4133`. Exact-candidate CI and CodeQL are
 passed; they do not clear these remaining gates:
 
-- G0 corrections still exist only in a later worktree and need a reviewed commit/tree plus hosted
-  replay before they can become candidate evidence;
-- all required hosted browser lanes are `not-configured` for the exact candidate; the G4 9-host
-  harness exists locally, but its clean commit-bound workflow artifact has not yet been produced;
+- G0 corrections are not part of the exact RC.2 candidate and require a newly named candidate plus
+  hosted replay before they can become release evidence;
+- all required hosted browser lanes remain `not-configured` for the exact RC.2 candidate; the G4
+  workflow can certify later source identities but cannot retroactively promote RC.2;
 - the crates.io replay and production edge/browser replay need fresh, unexpired, artifact-hashed
   evidence;
 - the LTS distribution boundary still lacks signed native binaries, checksums, SBOMs, attestations,

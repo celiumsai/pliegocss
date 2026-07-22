@@ -2,7 +2,7 @@
 
 Date: 2026-07-22
 
-Status: Accepted for implementation; hosted acceptance evidence pending
+Status: Accepted and implemented; release-candidate acceptance evidence remains source-bound
 
 ## Context
 
