@@ -109,7 +109,7 @@ mkdirSync(stageRoot, { recursive: true });
 
 const nativeInputs = [];
 for (const target of policy.targets) {
-  const root = resolve(inputRoot, target.id);
+  const root = resolve(inputRoot, `native-${target.id}`);
   const receiptPath = resolve(root, "native.json");
   if (!existsSync(receiptPath)) fail(`native receipt missing for ${target.id}`);
   const receipt = readJson(receiptPath, `${target.id} native receipt`);

@@ -39,6 +39,7 @@ for (const required of [
   "pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271",
   "version: 11.7.0",
   "actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6",
+  "merge-multiple: false",
   "repos/${GITHUB_REPOSITORY}/immutable-releases",
   "--draft",
 ]) {
@@ -106,7 +107,7 @@ try {
       `--binary-dir=${relative(ROOT, source)}`,
       `--cli-sbom=${relative(ROOT, resolve(source, "pliego-cssc.cdx.json"))}`,
       `--lsp-sbom=${relative(ROOT, resolve(source, "pliego-css-lsp.cdx.json"))}`,
-      `--output=${relative(ROOT, resolve(fixtureInput, target.id))}`,
+      `--output=${relative(ROOT, resolve(fixtureInput, `native-${target.id}`))}`,
       `--source-commit=${sourceCommit}`,
       `--git-tree=${gitTree}`,
     ]);
