@@ -1,15 +1,16 @@
 import { createHash } from "node:crypto";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { isAbsolute, join, resolve } from "node:path";
+import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
+import { cargoTargetRoot, isolatedCargoEnvironment } from "./rust-target.mjs";
 
 const ROOT = resolve(import.meta.dirname, "..");
-const TARGET_ROOT = process.env.CARGO_TARGET_DIR
-  ? isAbsolute(process.env.CARGO_TARGET_DIR)
-    ? process.env.CARGO_TARGET_DIR
-    : resolve(ROOT, process.env.CARGO_TARGET_DIR)
-  : join(ROOT, "target");
+const cargoEnvironment = isolatedCargoEnvironment(ROOT, {
+  env: process.env,
+  toolchain: "1.85.0",
+});
+const TARGET_ROOT = cargoTargetRoot(ROOT, cargoEnvironment);
 const EXECUTABLE_SUFFIX = process.platform === "win32" ? ".exe" : "";
 const BASIC_EXECUTABLE = join(TARGET_ROOT, "debug", `pliego-css-basic-example${EXECUTABLE_SUFFIX}`);
 const CLI_EXECUTABLE = join(TARGET_ROOT, "debug", `pliego-cssc${EXECUTABLE_SUFFIX}`);
@@ -24,6 +25,7 @@ function fail(message, detail = undefined) {
 function run(command, args) {
   const result = spawnSync(command, args, {
     cwd: ROOT,
+    env: cargoEnvironment,
     encoding: "utf8",
     windowsHide: true,
   });

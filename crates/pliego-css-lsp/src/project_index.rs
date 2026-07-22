@@ -659,7 +659,7 @@ mod tests {
             "physicalCoverage":"compiler-verified-complete",
             "styleIdFormatVersion":2,
             "classNameFormatVersion":1,
-            "themeIdFormatVersion":2,
+            "themeIdFormatVersion":3,
             "themeId":"theme","targets":"modern","format":"minified",
             "ruleSelection":"all-compiled",
             "assetPlanFile":"pliego.assets.json",

@@ -49,7 +49,7 @@ for (const [index, capability] of document.capabilities.entries()) {
     if (!existsSync(resolve(root, owner))) fail(`${label}.owners references missing ${owner}`);
   }
 }
-const expected = { stable: 6, beta: 12, experimental: 3 };
+const expected = { stable: 6, beta: 14, experimental: 3 };
 for (const maturity of maturities) {
   if (counts[maturity] !== expected[maturity]) {
     fail(`expected ${expected[maturity]} ${maturity} capabilities, found ${counts[maturity]}`);

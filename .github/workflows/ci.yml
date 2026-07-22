@@ -78,6 +78,7 @@ jobs:
         env:
           PLIEGO_CSSC: target/debug/pliego-cssc${{ runner.os == 'Windows' && '.exe' || '' }}
           PLIEGO_LOCK_HOLDER: target/debug/pliego-publication-lock-holder${{ runner.os == 'Windows' && '.exe' || '' }}
+          PLIEGOCSS_RUST_TOOLCHAIN: ${{ matrix.toolchain }}
         run: node scripts/check-parallel-determinism.mjs
       - name: Check cross-platform bundle contract
         run: node scripts/check-portability.mjs
@@ -120,6 +121,10 @@ jobs:
           node-version: 22.13.0
       - name: Install pnpm for documentation gates
         run: npm install --global pnpm@11.7.0
+      - name: Install Rust toolchains
+        run: |
+          rustup toolchain install 1.85.0 --profile minimal
+          rustup toolchain install 1.96.0 --profile minimal --component rustfmt
       - name: Verify release profile registry
         run: node scripts/check-release.test.mjs
       - name: Check documentation graph
@@ -128,8 +133,6 @@ jobs:
         run: node scripts/check-brand.mjs
       - name: Check compatibility policy
         run: node scripts/check-compatibility-policy.mjs
-      - name: Install rustfmt
-        run: rustup toolchain install 1.96.0 --profile minimal --component rustfmt
       - name: Check formatting
         run: |
           cargo +1.96.0 fmt --all -- --check
@@ -247,6 +250,12 @@ jobs:
           rustup target add wasm32-unknown-unknown --toolchain 1.96.0
       - name: Install benchmark dependencies
         run: pnpm install --frozen-lockfile
+      - name: Check Benchmark Authority v2
+        run: pnpm check:benchmark-authority
+      - name: Check browser/output certification authority
+        run: pnpm check:browser-output-authority
+      - name: Smoke Benchmark Authority v2 runner
+        run: pnpm check:benchmark-smoke
       - name: Build and validate the PliegoRS-authored website
         run: pnpm check:site
       - name: Validate the Cloudflare public deployment profile

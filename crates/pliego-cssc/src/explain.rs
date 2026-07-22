@@ -3,10 +3,10 @@ use serde::Serialize;
 use pliego_css_build::artifacts::{utility_domain_name, utility_form_name};
 use pliego_css_cascade::{CascadeExplanation, CascadeStatus, explain_stylesheet_cascade};
 use pliego_css_compiler::{
-    STYLE_ID_FORMAT_VERSION, UtilityDescriptor, UtilityForm, utility_catalog,
+    STYLE_ID_FORMAT_VERSION, UtilityDescriptor, utility_descriptor_for_style_item,
 };
-use pliego_css_ir::{CLASS_NAME_FORMAT_VERSION, CandidateKind, StyleItem};
-use pliego_css_parser::{format_style_list, parse_named_candidate, parse_style_list};
+use pliego_css_ir::{CLASS_NAME_FORMAT_VERSION, StyleItem};
+use pliego_css_parser::{format_style_list, parse_style_list};
 use pliego_css_theme::THEME_ID_FORMAT_VERSION;
 
 use super::{
@@ -208,7 +208,7 @@ pub(crate) fn build_explanation(arguments: &ExplainArgs) -> Result<ExplainDocume
 }
 
 fn explain_style_item(source: &str, item: &StyleItem) -> Result<ExplainedUtility, String> {
-    let descriptor = descriptor_for_style_item(item)
+    let descriptor = utility_descriptor_for_style_item(item)
         .ok_or_else(|| "compiler accepted a utility without catalog metadata".to_owned())?;
     let item_source = source
         .get(item.span.start..item.span.end)
@@ -224,32 +224,6 @@ fn explain_style_item(source: &str, item: &StyleItem) -> Result<ExplainedUtility
         capabilities: descriptor_capabilities(descriptor),
         summary: descriptor.summary().to_owned(),
     })
-}
-
-fn descriptor_for_style_item(item: &StyleItem) -> Option<&'static UtilityDescriptor> {
-    match &item.candidate.kind {
-        CandidateKind::ArbitraryProperty { .. } => utility_catalog()
-            .iter()
-            .find(|descriptor| descriptor.form() == UtilityForm::ArbitraryProperty),
-        CandidateKind::Named(candidate) => {
-            let body = parse_named_candidate(candidate).ok()?.body;
-            utility_catalog()
-                .iter()
-                .find(|descriptor| {
-                    descriptor.form() == UtilityForm::Fixed && descriptor.match_name() == body
-                })
-                .or_else(|| {
-                    utility_catalog()
-                        .iter()
-                        .filter(|descriptor| descriptor.form() == UtilityForm::Parameterized)
-                        .filter(|descriptor| {
-                            body.strip_prefix(descriptor.match_name())
-                                .is_some_and(|suffix| suffix.starts_with('-'))
-                        })
-                        .max_by_key(|descriptor| descriptor.match_name().len())
-                })
-        }
-    }
 }
 
 fn print_explanation(document: &ExplainDocument) {

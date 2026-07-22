@@ -81,6 +81,7 @@ function staticContract() {
     "docs/integrations/pliegors/index.html",
     "docs/tooling/repair/index.html",
     "docs/reference/diagnostics/index.html",
+    "docs/release-readiness/index.html",
     "docs/utilities/index.html",
     "playground/index.html",
     "examples/index.html",
@@ -97,6 +98,7 @@ function staticContract() {
     "es/index.html",
     "es/docs/index.html",
     "es/docs/getting-started/index.html",
+    "es/docs/release-readiness/index.html",
     "es/docs/utilities/index.html",
     "es/playground/index.html",
     "es/examples/index.html",
@@ -211,11 +213,34 @@ function staticContract() {
   const sitemap = readFileSync(join(output, "sitemap.xml"), "utf8");
   const sitemapUrls = sitemap.match(/<url>/gu)?.length ?? 0;
   if (
-    sitemapUrls !== 88 ||
+    sitemapUrls !== 90 ||
     !sitemap.includes('xmlns:xhtml="http://www.w3.org/1999/xhtml"') ||
     !sitemap.includes("https://pliegocss.dev/es/legal/privacy/")
   ) {
     fail(`bilingual sitemap drifted (${sitemapUrls} URLs)`);
+  }
+  const readiness = JSON.parse(
+    readFileSync(join(root, "docs", "product", "release-readiness-0.1.0.json"), "utf8"),
+  );
+  const generatedDocs = JSON.parse(
+    readFileSync(join(siteRoot, "src", "docs.generated.json"), "utf8"),
+  );
+  const readinessDocument = generatedDocs.documents.find(
+    (document) => document.route === "/docs/release-readiness/",
+  );
+  const readinessHtml = readFileSync(
+    join(output, "docs", "release-readiness", "index.html"),
+    "utf8",
+  );
+  if (
+    !readinessDocument ||
+    !readinessHtml.includes(readiness.source.commit) ||
+    !readinessHtml.includes(readiness.source.gitTree) ||
+    !readinessHtml.includes(readinessDocument.sourcePath) ||
+    !readinessHtml.includes(readinessDocument.sourceSha256) ||
+    !readinessHtml.includes("Current blockers")
+  ) {
+    fail("release readiness route is not bound to the generated Markdown authority");
   }
   const laboratory = JSON.parse(
     readFileSync(join(output, "assets", "laboratory.json")),
@@ -309,22 +334,55 @@ async function browserContract() {
   await new Promise((resolveListen) => server.listen(0, "127.0.0.1", resolveListen));
   const port = server.address().port;
   const profile = mkdtempSync(join(tmpdir(), "pliegocss-site-cdp-"));
-  const debugPort = 10500 + Math.floor(Math.random() * 500);
+  const debugPortFile = join(profile, "DevToolsActivePort");
+  const chromeStderr = [];
+  let childError;
   const child = spawn(
     browser,
     [
       "--headless=new",
-      `--remote-debugging-port=${debugPort}`,
+      "--remote-debugging-port=0",
       `--user-data-dir=${profile}`,
       "--no-first-run",
       "--disable-default-apps",
+      "--disable-dev-shm-usage",
       "about:blank",
     ],
-    { stdio: "ignore" },
+    { stdio: ["ignore", "ignore", "pipe"], windowsHide: true },
   );
+  child.stderr.on("data", (chunk) => {
+    chromeStderr.push(chunk);
+    if (chromeStderr.length > 32) chromeStderr.shift();
+  });
+  child.once("error", (error) => {
+    childError = error;
+  });
   try {
+    let debugPort;
+    for (let attempt = 0; attempt < 300; attempt += 1) {
+      if (existsSync(debugPortFile)) {
+        const candidate = Number.parseInt(
+          readFileSync(debugPortFile, "utf8").split(/\r?\n/u)[0],
+          10,
+        );
+        if (Number.isInteger(candidate) && candidate > 0 && candidate <= 65_535) {
+          debugPort = candidate;
+          break;
+        }
+      }
+      if (childError || child.exitCode !== null) break;
+      await delay(100);
+    }
+    if (!debugPort) {
+      const stderr = Buffer.concat(chromeStderr).toString("utf8").trim().slice(-2_000);
+      fail(
+        `Chrome CDP bootstrap unavailable (browser=${browser}, exit=${
+          child.exitCode ?? "running"
+        }, error=${childError?.message ?? "none"}, stderr=${JSON.stringify(stderr)})`,
+      );
+    }
     let version;
-    for (let attempt = 0; attempt < 80; attempt += 1) {
+    for (let attempt = 0; attempt < 100; attempt += 1) {
       try {
         version = await (
           await fetch(`http://127.0.0.1:${debugPort}/json/version`)
@@ -334,7 +392,13 @@ async function browserContract() {
         await delay(100);
       }
     }
-    if (!version) fail("Chrome CDP endpoint unavailable");
+    if (!version) {
+      fail(
+        `Chrome CDP endpoint unavailable on allocated port ${debugPort} (exit=${
+          child.exitCode ?? "running"
+        })`,
+      );
+    }
     let target;
     for (let attempt = 0; attempt < 60; attempt += 1) {
       const targets = await (
@@ -651,7 +715,7 @@ async function browserContract() {
       })()`,
     });
     if (
-      docs.result.value.items < 29 ||
+      docs.result.value.items < 30 ||
       docs.result.value.groups !== 8 ||
       docs.result.value.visible !== 1 ||
       docs.result.value.visibleGroups !== 1

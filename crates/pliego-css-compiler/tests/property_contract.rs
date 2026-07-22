@@ -8,9 +8,10 @@ use pliego_css_compiler::{
     emit_css_with_theme, encode_style_ir_with_theme, lower_style_with_theme,
     try_encode_style_identity_with_theme, utility_catalog,
 };
+use pliego_css_ir::BreakpointId;
 use pliego_css_ir::SemanticStyle;
 use pliego_css_parser::{format_style_list, parse_style_list};
-use pliego_css_theme::ThemeRegistry;
+use pliego_css_theme::{BreakpointDefinition, ThemeRegistry};
 
 const PROPERTY_CASES: usize = 2_048;
 const CONCURRENT_CASES: usize = 192;
@@ -19,6 +20,7 @@ const THREAD_COUNT: usize = 16;
 const CORPUS_SEED: u64 = 0x504c_4945_474f_4353;
 const PERMUTATION_SEED: u64 = 0x5354_594c_4549_4431;
 const CONCURRENCY_SEED: u64 = 0x434f_4e43_5552_5245;
+const BREAKPOINT_ORDER_SEED: u64 = 0x4252_4541_4b50_4f49;
 
 const VARIANT_PREFIXES: &[&str] = &[
     "",
@@ -243,6 +245,63 @@ fn non_conflicting_permutations_have_one_identity_and_css() {
         assert_eq!(
             actual, expected,
             "case {case_index} non-conflicting permutation must preserve StyleId, identity, and CSS"
+        );
+    }
+}
+
+#[test]
+fn breakpoint_cascade_order_is_independent_of_ids_names_and_input_permutations() {
+    let seed = ThemeRegistry::seed();
+    let mut rng = FixedRng::new(BREAKPOINT_ORDER_SEED);
+    let narrow_names = ["tablet", "zeta-narrow", "screen-a"];
+    let middle_names = ["content-wide", "alpha-middle", "screen-b"];
+    let wide_names = ["desktop", "beta-wide", "screen-c"];
+
+    for case_index in 0..PROPERTY_CASES {
+        let names = [
+            narrow_names[rng.index(narrow_names.len())],
+            middle_names[rng.index(middle_names.len())],
+            wide_names[rng.index(wide_names.len())],
+        ];
+        let mut ids = [7_u16, 40_000, 60_000];
+        rng.shuffle(&mut ids);
+        let mut breakpoints = vec![
+            BreakpointDefinition::new(BreakpointId::new(ids[0]), 0, names[0], "52rem"),
+            BreakpointDefinition::new(BreakpointId::new(ids[1]), 1, names[1], "72rem"),
+            BreakpointDefinition::new(BreakpointId::new(ids[2]), 2, names[2], "80rem"),
+        ];
+        rng.shuffle(&mut breakpoints);
+        let theme = ThemeRegistry::from_definitions(seed.tokens().iter().cloned(), breakpoints)
+            .unwrap_or_else(|error| panic!("case {case_index} theme must build: {error}"));
+
+        let media_source = format!(
+            "{}:grid-cols-2 {}:grid-cols-3 {}:grid-cols-4",
+            names[0], names[1], names[2]
+        );
+        let media_css = full_contract(&theme, &media_source).semantic.css;
+        let media_positions = ["52rem", "72rem", "80rem"].map(|width| {
+            media_css.find(width).unwrap_or_else(|| {
+                panic!("case {case_index} media CSS misses {width}: {media_css}")
+            })
+        });
+        assert!(
+            media_positions.windows(2).all(|pair| pair[0] < pair[1]),
+            "case {case_index} media cascade is not narrow-to-wide: {media_css}"
+        );
+
+        let container_source = format!(
+            "cq-{}:grid-cols-2 cq-{}:grid-cols-3 cq-{}:grid-cols-4",
+            names[0], names[1], names[2]
+        );
+        let container_css = full_contract(&theme, &container_source).semantic.css;
+        let container_positions = ["52rem", "72rem", "80rem"].map(|width| {
+            container_css.find(width).unwrap_or_else(|| {
+                panic!("case {case_index} container CSS misses {width}: {container_css}")
+            })
+        });
+        assert!(
+            container_positions.windows(2).all(|pair| pair[0] < pair[1]),
+            "case {case_index} container cascade is not narrow-to-wide: {container_css}"
         );
     }
 }

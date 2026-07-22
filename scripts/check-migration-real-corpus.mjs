@@ -11,8 +11,11 @@ import {
 } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { cargoTargetRoot, isolatedCargoEnvironment } from "./rust-target.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const cargoEnvironment = isolatedCargoEnvironment(root);
+const cargoTarget = cargoTargetRoot(root, cargoEnvironment);
 const manifestPath = join(root, "integration-tests", "migration-real-corpus", "projects.json");
 const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
 
@@ -130,11 +133,14 @@ if (process.env.PLIEGOCSS_RUN_NETWORK_CORPUS !== "1") {
 
 const cargo = process.env.CARGO ?? "cargo";
 if (!process.env.PLIEGOCSS_BIN) {
-  run(cargo, ["build", "--locked", "--quiet", "-p", "pliego-cssc"], { cwd: root });
+  run(cargo, ["build", "--locked", "--quiet", "-p", "pliego-cssc"], {
+    cwd: root,
+    env: cargoEnvironment,
+  });
 }
 const executable =
   process.env.PLIEGOCSS_BIN ??
-  join(root, "target", "debug", process.platform === "win32" ? "pliego-cssc.exe" : "pliego-cssc");
+  join(cargoTarget, "debug", process.platform === "win32" ? "pliego-cssc.exe" : "pliego-cssc");
 if (!existsSync(executable)) fail(`missing PliegoCSS CLI at ${executable}`);
 
 const temporaryBase = join(root, "target");

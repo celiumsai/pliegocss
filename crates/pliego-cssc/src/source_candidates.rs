@@ -1,8 +1,7 @@
 use std::fs;
 use std::path::Path;
 
-use pliego_css_compiler::{analyze_cross_clause_conflicts, lower_style_with_theme};
-use pliego_css_ir::SemanticStyle;
+use pliego_css_compiler::{AnalysisHost, PcxError, PcxRequest};
 use pliego_css_parser::{format_style_list, parse_style_list};
 use pliego_css_source::{
     InvocationKind, ScanFileError, ScanReport, SourceRange, StyleLiteral, expand_source_paths,
@@ -140,6 +139,7 @@ pub(crate) fn candidates_from_rust(
     candidates_from_scan_report(theme, &report)
 }
 
+#[allow(clippy::too_many_lines)]
 pub(crate) fn candidates_from_scan_report(
     theme: &ThemeRegistry,
     report: &ScanReport,
@@ -148,6 +148,7 @@ pub(crate) fn candidates_from_scan_report(
         return Err(scan_failure(&report.diagnostics));
     }
     let mut candidates = Vec::new();
+    let mut host = AnalysisHost::new(theme.clone());
     for invocation in &report.invocations {
         match &invocation.kind {
             InvocationKind::Pc(pc) => candidates.push(Candidate::Direct {
@@ -161,66 +162,107 @@ pub(crate) fn candidates_from_scan_report(
                 ),
             }),
             InvocationKind::Pcx(pcx) => {
-                let compiled_clauses = pcx
-                    .clauses
-                    .iter()
-                    .map(|clause| {
+                let request = PcxRequest::new(
+                    pcx.base.value.clone(),
+                    pcx.clauses.iter().map(|clause| {
                         clause
                             .branches
                             .iter()
-                            .map(|branch| {
-                                lower_scanned_style(theme, &branch.style, &invocation.source)
-                            })
-                            .collect::<Result<Vec<_>, _>>()
-                    })
-                    .collect::<Result<Vec<_>, _>>()?;
-                if let Err(conflict) = analyze_cross_clause_conflicts(&compiled_clauses) {
-                    let literal =
-                        &pcx.clauses[conflict.right_clause].branches[conflict.right_branch].style;
-                    let slots = conflict
-                        .slots
+                            .map(|branch| branch.style.value.clone())
+                    }),
+                );
+                let analysis = match host.analyze_pcx(&request) {
+                    Ok(analysis) => analysis,
+                    Err(PcxError::Base(error)) => {
+                        return Err(scanned_style_failure(
+                            error,
+                            &pcx.base,
+                            &invocation.source,
+                            "pcx-base",
+                        ));
+                    }
+                    Err(PcxError::Branch {
+                        clause,
+                        branch,
+                        diagnostic,
+                    }) => {
+                        return Err(scanned_style_failure(
+                            diagnostic,
+                            &pcx.clauses[clause].branches[branch].style,
+                            &invocation.source,
+                            "pcx-branch",
+                        ));
+                    }
+                    Err(PcxError::Conflict(conflict)) => {
+                        let literal = &pcx.clauses[conflict.right_clause].branches
+                            [conflict.right_branch]
+                            .style;
+                        let slots = conflict
+                            .slots
+                            .iter()
+                            .map(|slot| format!("{slot:?}"))
+                            .collect::<Vec<_>>()
+                            .join(", ");
+                        let human = format!(
+                            "PCX003: independent clauses {} and {} can both assign [{slots}] under the same condition; express the combined state space in one `match` at {}:{}:{} [bytes {}..{})",
+                            conflict.left_clause + 1,
+                            conflict.right_clause + 1,
+                            invocation.source,
+                            literal.range.start.line,
+                            literal.range.start.column + 1,
+                            literal.range.start.byte,
+                            literal.range.end.byte,
+                        );
+                        return Err(CliFailure {
+                            human,
+                            diagnostics: vec![CliDiagnostic {
+                                code: "PCX003".into(),
+                                category: "composition".into(),
+                                severity: "error".into(),
+                                message: format!(
+                                    "independent clauses {} and {} can both assign [{slots}] under the same condition",
+                                    conflict.left_clause + 1,
+                                    conflict.right_clause + 1,
+                                ),
+                                suggestion: Some(
+                                    "express the combined state space in one `match`".into(),
+                                ),
+                                origin: Some(CliDiagnosticOrigin {
+                                    kind: "rust".into(),
+                                    label: "pcx-cross-clause-conflict".into(),
+                                }),
+                                range: Some(diagnostic_range_from_source(
+                                    &invocation.source,
+                                    literal.range,
+                                )),
+                                style_range: None,
+                                replacement: None,
+                            }],
+                        });
+                    }
+                    Err(PcxError::ExpansionLimit { maximum }) => {
+                        return Err(CliFailure::tool(format!(
+                            "PCX004: `pcx!` expands to more than {maximum} style combinations"
+                        )));
+                    }
+                    Err(error) => return Err(CliFailure::tool(error.to_string())),
+                };
+                for combination in &analysis.combinations {
+                    let composition = pcx
+                        .compositions
                         .iter()
-                        .map(|slot| format!("{slot:?}"))
-                        .collect::<Vec<_>>()
-                        .join(", ");
-                    let human = format!(
-                        "PCX003: independent clauses {} and {} can both assign [{slots}] under the same condition; express the combined state space in one `match` at {}:{}:{} [bytes {}..{})",
-                        conflict.left_clause + 1,
-                        conflict.right_clause + 1,
-                        invocation.source,
-                        literal.range.start.line,
-                        literal.range.start.column + 1,
-                        literal.range.start.byte,
-                        literal.range.end.byte,
-                    );
-                    return Err(CliFailure {
-                        human,
-                        diagnostics: vec![CliDiagnostic {
-                            code: "PCX003".into(),
-                            category: "composition".into(),
-                            severity: "error".into(),
-                            message: format!(
-                                "independent clauses {} and {} can both assign [{slots}] under the same condition",
-                                conflict.left_clause + 1,
-                                conflict.right_clause + 1,
-                            ),
-                            suggestion: Some(
-                                "express the combined state space in one `match`".into(),
-                            ),
-                            origin: Some(CliDiagnosticOrigin {
-                                kind: "rust".into(),
-                                label: "pcx-cross-clause-conflict".into(),
-                            }),
-                            range: Some(diagnostic_range_from_source(
-                                &invocation.source,
-                                literal.range,
-                            )),
-                            style_range: None,
-                            replacement: None,
-                        }],
-                    });
-                }
-                for composition in &pcx.compositions {
+                        .find(|composition| {
+                            composition
+                                .selections
+                                .iter()
+                                .map(|selection| selection.branch)
+                                .eq(combination.selections.iter().copied())
+                        })
+                        .ok_or_else(|| {
+                            CliFailure::tool(
+                                "scanner and shared pcx frontend produced different combinations",
+                            )
+                        })?;
                     let reason = pcx_composition_reason(&composition.selections);
                     let branches = composition
                         .selections
@@ -245,11 +287,12 @@ pub(crate) fn candidates_from_scan_report(
     Ok(candidates)
 }
 
-pub(crate) fn lower_scanned_style(
-    theme: &ThemeRegistry,
+fn scanned_style_failure(
+    error: pliego_css_ir::Diagnostic,
     literal: &StyleLiteral,
     file: &str,
-) -> Result<SemanticStyle, CliFailure> {
+    label: &str,
+) -> CliFailure {
     let location = format!(
         "{file}:{}:{} [bytes {}..{})",
         literal.range.start.line,
@@ -257,14 +300,8 @@ pub(crate) fn lower_scanned_style(
         literal.range.start.byte,
         literal.range.end.byte
     );
-    let syntax = parse_style_list(&literal.value).map_err(|error| {
-        let human = format!("{error} at {location}");
-        style_literal_failure(error, human, file, literal.range, "pcx-branch")
-    })?;
-    lower_style_with_theme(theme, &syntax).map_err(|error| {
-        let human = format!("{error} at {location}");
-        style_literal_failure(error, human, file, literal.range, "pcx-branch")
-    })
+    let human = format!("{error} at {location}");
+    style_literal_failure(error, human, file, literal.range, label)
 }
 
 pub(crate) fn scanner_provenance(

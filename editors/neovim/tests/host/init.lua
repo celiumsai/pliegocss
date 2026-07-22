@@ -18,7 +18,6 @@ vim.opt.runtimepath:prepend(editor)
 
 require("pliegocss").setup({
   server = required("PLIEGOCSS_NEOVIM_LSP"),
-  compiler = required("PLIEGOCSS_NEOVIM_COMPILER"),
   root_dir = workspace,
   theme = { mode = "seed" },
   project_index = workspace .. "/out/pliego.index.json",

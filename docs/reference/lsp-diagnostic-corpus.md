@@ -38,7 +38,7 @@ message, and style byte range. Source cases use `check --source`; `FMT001` uses
 `fmt --source --check`. The LSP session then applies each input as a new full-document version,
 waits for that version's publication, rejects additional diagnostic codes, and requires exact CLI
 code, message, severity, category, suggestion, typed replacement, and UTF-16 range projection.
-The same session independently compares compiler-backed cross-clause `PCX003` over all those fields.
+The same session independently compares shared-engine cross-clause `PCX003` over all those fields.
 
 The corpus exposed three prior mismatches: parser failures used the complete Rust literal range in the
 LSP even though the parser and CLI retained an exact `Diagnostic.span`; zero-width `PCS008` ranges
@@ -50,9 +50,9 @@ still fail closed to the complete token.
 ## Boundary
 
 This closes the current typed utility-authoring families: PCS, PSC, PCR001, FMT001, and PCX003.
-`PCL001`/`PCL002` remain operational fallback paths for unavailable or invalid tools and bounded
-editor limits, so the same session covers them through invalid-JSON and 256-literal fault injection
-rather than authoring corpus inputs. Future codes must add corpus or fault-injection coverage before
-this coverage claim can remain true. Adding a case is append-only inside schema 2 when its fields and
-interpretation are unchanged. Changing the root shape, range meaning, or equality dimensions
-requires a new schema version and migration note.
+`PCL001`/`PCL002` remain operational paths for invalid theme/configuration state and bounded editor
+limits rather than authoring corpus inputs. The session exercises the 256-literal `PCL002` boundary
+and passes a nonexistent legacy compiler path to prove it is not executed. Future authoring codes
+must add corpus coverage before this claim can remain true. Adding a case is append-only inside
+schema 2 when its fields and interpretation are unchanged. Changing the root shape, range meaning,
+or equality dimensions requires a new schema version and migration note.

@@ -95,7 +95,10 @@ fn json_keys(value: &serde_json::Value) -> Vec<&str> {
 fn assert_theme_inspection_shape(theme: &serde_json::Value) {
     assert_eq!(json_keys(theme), ["breakpoints", "id", "tokens"]);
     assert_eq!(json_keys(&theme["tokens"][0]), ["kind", "name", "value"]);
-    assert_eq!(json_keys(&theme["breakpoints"][0]), ["minWidth", "name"]);
+    assert_eq!(
+        json_keys(&theme["breakpoints"][0]),
+        ["cascadeRank", "minWidth", "name"]
+    );
 }
 
 fn assert_manifest_style_shape(style: &serde_json::Value) {
@@ -167,8 +170,8 @@ fn resolved_seed_styles(styles: &[&str]) -> Vec<ResolvedCandidate> {
             provenance: cli_provenance(style, "identity-test"),
         })
         .collect::<Vec<_>>();
-    resolve_candidates(&ThemeRegistry::seed(), &candidates, 1)
-        .expect("resolve identity test styles")
+    let mut host = AnalysisHost::default();
+    resolve_candidates(&mut host, &candidates, 1).expect("resolve identity test styles")
 }
 
 #[test]
@@ -2950,7 +2953,7 @@ fn catalog_render_is_deterministic_complete_and_uses_real_theme_css() {
     assert!(markdown.contains("\n## Breakpoints\n"));
     assert!(markdown.ends_with('\n'));
 
-    assert_eq!(parsed["schemaVersion"], 3);
+    assert_eq!(parsed["schemaVersion"], 4);
     assert_eq!(parsed["styleIdFormatVersion"], STYLE_ID_FORMAT_VERSION);
     assert_eq!(parsed["classNameFormatVersion"], CLASS_NAME_FORMAT_VERSION);
     assert_eq!(parsed["themeIdFormatVersion"], THEME_ID_FORMAT_VERSION);
@@ -3397,7 +3400,7 @@ fn scanner_rejects_cross_clause_conflict_with_shared_pcx003_analysis() {
 }
 
 #[test]
-fn manifest_schema_three_and_inspection_two_retain_ordered_deduplicated_origins() {
+fn manifest_schema_three_and_inspection_three_retain_ordered_deduplicated_origins() {
     let artifact =
         compile_styles(&["flex gap-4".into(), "gap-4 flex".into()], false).expect("compile");
     let reversed =
@@ -3442,7 +3445,7 @@ fn manifest_schema_three_and_inspection_two_retain_ordered_deduplicated_origins(
             .expect("reversed inspection")
     );
     let inspection: serde_json::Value = serde_json::from_str(&inspection).expect("inspection JSON");
-    assert_eq!(inspection["schemaVersion"], 2);
+    assert_eq!(inspection["schemaVersion"], 3);
     assert_eq!(inspection["styleIdFormatVersion"], STYLE_ID_FORMAT_VERSION);
     assert_eq!(
         inspection["classNameFormatVersion"],
@@ -3914,7 +3917,7 @@ fn warm_source_cache_matches_cold_compilation_across_tree_and_theme_mutations() 
         ),
         (0, 1, 0, 1)
     );
-    assert_eq!(cache.css.0.len(), 1);
+    assert_eq!(cache.css.engine.physical_cache_len(), 1);
     let mut previous = initial.snapshot;
 
     fs::write(&first_source, "fn a(){ let _ = pc!(\"grid\"); }")
@@ -3945,7 +3948,7 @@ fn warm_source_cache_matches_cold_compilation_across_tree_and_theme_mutations() 
         ),
         (1, 1, 1, 1)
     );
-    assert_eq!(cache.css.0.len(), 2);
+    assert_eq!(cache.css.engine.physical_cache_len(), 2);
     previous = added.snapshot;
 
     fs::write(
@@ -4026,8 +4029,8 @@ fn warm_source_cache_matches_cold_compilation_across_tree_and_theme_mutations() 
         .collect::<Vec<_>>();
     assert!(origin_files.contains(&renamed_source.to_str().expect("UTF-8 path")));
     assert!(!origin_files.contains(&second_source.to_str().expect("UTF-8 path")));
-    assert_eq!(cache.css.0.len(), 2);
-    assert_eq!(cache.css.1.hits(), 2);
+    assert_eq!(cache.css.engine.physical_cache_len(), 2);
+    assert_eq!(cache.css.fixed.hits(), 2);
     previous = renamed.snapshot;
 
     fs::remove_file(&first_source).expect("remove first source");
@@ -4045,7 +4048,7 @@ fn warm_source_cache_matches_cold_compilation_across_tree_and_theme_mutations() 
     assert!(
         matches!(&removed.outcome, WatchOutcome::Compiled(artifact) if !artifact.css.contains("display:grid"))
     );
-    assert_eq!(cache.css.0.len(), 1);
+    assert_eq!(cache.css.engine.physical_cache_len(), 1);
     previous = removed.snapshot;
 
     fs::write(&invalid_source, "fn bad( {").expect("add invalid Rust source");

@@ -65,6 +65,33 @@ function runCaptured(command, args, options = {}) {
   });
 }
 
+function runPliegoCssCaptured(args) {
+  if (process.platform === "win32" && existsSync(applicationControlMarker)) {
+    const translated = args.map((argument) =>
+      /^[A-Za-z]:[\\/]/u.test(argument) ? windowsToWsl(argument) : argument,
+    );
+    return runCaptured("wsl.exe", [
+      "--cd",
+      windowsToWsl(root),
+      "-e",
+      wslPliegoCssExecutable(),
+      ...translated,
+    ]);
+  }
+  return runCaptured(cli, args);
+}
+
+function runPliegoCss(args) {
+  const result = runPliegoCssCaptured(args);
+  if (result.error) throw result.error;
+  if (result.status !== 0) {
+    throw new Error(`pliego-cssc failed with ${result.status}\n${result.stderr ?? ""}`);
+  }
+  process.stdout.write(result.stdout ?? "");
+  process.stderr.write(result.stderr ?? "");
+  return result.stdout ?? "";
+}
+
 function sha256(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
 }
@@ -132,10 +159,9 @@ function prepareAssets() {
 }
 
 function buildPliegoCss() {
-  run("cargo", ["+1.85.0", "build", "--locked", "-p", "pliego-cssc"]);
   const outputCss = join(generated, "pliegocss.css");
   const manifest = join(generated, "pliegocss.manifest.json");
-  run(cli, [
+  const arguments_ = [
     "compile",
     "--source",
     join(siteRoot, "src"),
@@ -145,7 +171,31 @@ function buildPliegoCss() {
     outputCss,
     "--manifest",
     manifest,
-  ]);
+  ];
+  if (process.platform === "win32" && existsSync(applicationControlMarker)) {
+    buildPliegoCssWithWsl(outputCss, manifest);
+  } else {
+    run("cargo", ["+1.85.0", "build", "--locked", "-p", "pliego-cssc"]);
+    const result = runCaptured(cli, arguments_);
+    const diagnostics = `${result.stdout ?? ""}\n${result.stderr ?? ""}`;
+    if (result.error || result.status !== 0) {
+      if (
+        process.platform === "win32" &&
+        (result.error || diagnostics.includes("Application Control policy has blocked this file"))
+      ) {
+        mkdirSync(dirname(applicationControlMarker), { recursive: true });
+        writeFileSync(applicationControlMarker, "Windows executable launch blocked; use verified WSL build.\n");
+        buildPliegoCssWithWsl(outputCss, manifest);
+      } else if (result.error) {
+        throw result.error;
+      } else {
+        throw new Error(`pliego-cssc failed with ${result.status}\n${diagnostics}`);
+      }
+    } else {
+      process.stdout.write(result.stdout ?? "");
+      process.stderr.write(result.stderr ?? "");
+    }
+  }
   const manifestDocument = JSON.parse(readFileSync(manifest, "utf8"));
   if (
     manifestDocument.cssSha256 !== sha256(readFileSync(outputCss)) ||
@@ -231,7 +281,7 @@ function generateLaboratory() {
   mkdirSync(runtime, { recursive: true });
   const cssPath = join(runtime, "laboratory.css");
   const manifestPath = join(runtime, "laboratory.manifest.json");
-  run(cli, [
+  runPliegoCss([
     "compile",
     ...combinations.flatMap((combination) => ["--style", combination.input]),
     "--seed",
@@ -293,7 +343,7 @@ function generateLaboratory() {
       label: "Interactive action",
     },
   ].map((entry) => {
-    const result = runCaptured(cli, [
+    const result = runPliegoCssCaptured([
       "explain",
       "--style",
       entry.input,
@@ -329,7 +379,7 @@ function generateLaboratory() {
       input: "p-4 md:p-6",
     },
   ].map((entry) => {
-    const result = runCaptured(cli, [
+    const result = runPliegoCssCaptured([
       "--diagnostic-format",
       "json",
       "check",
@@ -384,7 +434,7 @@ function generateLaboratory() {
 
 function generateCatalog() {
   const output = join(generated, "catalog.json");
-  run(cli, [
+  runPliegoCss([
     "catalog",
     "--seed",
     "--format",
@@ -515,6 +565,54 @@ function buildSiteWithWsl() {
   ]);
 }
 
+function buildPliegoCssWithWsl(outputCss, manifest) {
+  const home = wslHome();
+  const cargo = `${home}/.cargo/bin/cargo`;
+  const wslRoot = windowsToWsl(root);
+  const wslTarget = wslPliegoCssTarget();
+  const environment = [
+    `PATH=${home}/.cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin`,
+    `CARGO_TARGET_DIR=${wslTarget}`,
+  ];
+  run("wsl.exe", [
+    "--cd",
+    wslRoot,
+    "-e",
+    "env",
+    ...environment,
+    cargo,
+    "+1.85.0",
+    "build",
+    "--locked",
+    "-p",
+    "pliego-cssc",
+  ]);
+  run("wsl.exe", [
+    "--cd",
+    wslRoot,
+    "-e",
+    `${wslTarget}/debug/pliego-cssc`,
+    "compile",
+    "--source",
+    windowsToWsl(join(siteRoot, "src")),
+    "--seed",
+    "--theme",
+    "--output",
+    windowsToWsl(outputCss),
+    "--manifest",
+    windowsToWsl(manifest),
+  ]);
+}
+
+function wslPliegoCssTarget() {
+  const checkoutKey = sha256(Buffer.from(root, "utf8")).slice(0, 16);
+  return `${wslHome()}/.cache/pliegocss/site-css-${checkoutKey}`;
+}
+
+function wslPliegoCssExecutable() {
+  return `${wslPliegoCssTarget()}/debug/pliego-cssc`;
+}
+
 function buildSite() {
   rmSync(output, { recursive: true, force: true });
   if (process.platform === "win32" && existsSync(applicationControlMarker)) {
@@ -552,6 +650,7 @@ function buildSite() {
   }
 }
 
+run(process.execPath, [join(siteRoot, "scripts", "generate-docs.mjs"), "--check"]);
 prepareAssets();
 buildPliegoCss();
 generateLaboratory();

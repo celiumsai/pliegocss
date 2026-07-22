@@ -15,8 +15,7 @@ end
 
 local function command(options)
   local server = absolute_executable(options.server, "pliego-css-lsp")
-  local compiler = absolute_executable(options.compiler, "pliego-cssc")
-  local args = { server, "--pliego-cssc", compiler }
+  local args = { server }
   local theme = options.theme or { mode = "discover" }
   if theme.mode == "seed" then
     table.insert(args, "--seed")

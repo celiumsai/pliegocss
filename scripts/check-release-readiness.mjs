@@ -1,90 +1,37 @@
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { AuthorityError, validateReleaseReadiness } from "./release-authority.mjs";
 
 const root = resolve(import.meta.dirname, "..");
-const path = resolve(root, "docs/product/release-readiness-0.1.0.json");
-if (!existsSync(path)) throw new Error("release readiness document is missing");
-
-const value = JSON.parse(readFileSync(path, "utf8"));
-const fail = (message) => {
-  throw new Error(`release readiness: ${message}`);
-};
-const requiredChecks = new Set([
-  "targeted-corrections",
-  "brand-system",
-  "fast-profile-current-source",
-  "pliegors-current-contract",
-  "browser-current-source",
-  "package-replay-current-source",
-  "benchmark-evidence-current-source",
-  "supply-chain-policy",
-  "website-current-source",
-  "hosted-cross-os-current-source",
-  "registry-replay",
-  "final-promotion-authorization",
-]);
-const allowedStatuses = new Set([
-  "passed",
-  "pending",
-  "blocked",
-  "not-authorized",
-  "not-applicable",
-]);
-const allowedEvidence = new Set(["measured", "inherited", "pending", "uncertain"]);
-
+const args = process.argv.slice(2);
+const enforceRelease =
+  (args.length === 1 && args[0] === "--profile=release") ||
+  (args.length === 2 && args[0] === "--profile" && args[1] === "release");
 if (
-  value.schemaVersion !== 2 ||
-  value.targetVersion !== "0.1.0" ||
-  value.candidateVersion !== "0.1.0-rc.2"
+  !enforceRelease &&
+  !(
+    args.length === 0 ||
+    (args.length === 1 && args[0] === "--validate")
+  )
 ) {
-  fail("header drifted");
-}
-if (value.repository !== "https://github.com/celiumsai/pliegocss") {
-  fail("repository drifted");
-}
-if (
-  value.repositoryVisibility !== "public" ||
-  value.productStage !== "public-preview"
-) {
-  fail("repository visibility and public-preview product stage drifted");
-}
-if (!Array.isArray(value.checks)) fail("checks must be an array");
-const ids = value.checks.map((check) => check.id);
-if (new Set(ids).size !== ids.length) fail("check identifiers must be unique");
-for (const id of requiredChecks) {
-  if (!ids.includes(id)) fail(`missing required check ${id}`);
-}
-for (const check of value.checks) {
-  if (!allowedStatuses.has(check.status)) fail(`invalid status for ${check.id}`);
-  if (!allowedEvidence.has(check.evidenceClass)) {
-    fail(`invalid evidence class for ${check.id}`);
-  }
-  if (check.status === "passed" && check.evidenceClass === "pending") {
-    fail(`${check.id} cannot pass on pending evidence`);
-  }
-  if (!check.summary || typeof check.summary !== "string") {
-    fail(`${check.id} must include a summary`);
-  }
-}
-const blocking = value.checks.filter(
-  (check) => check.requiredForPromotion && check.status !== "passed",
-);
-const derivedResult = blocking.length === 0 ? "ready" : "blocked";
-if (value.result !== derivedResult) fail("result does not match required checks");
-if (!value.promotionRule || typeof value.promotionRule !== "string") {
-  fail("promotion rule is missing");
+  throw new Error(`release readiness: unknown mode ${args.join(" ")}`);
 }
 
-process.stdout.write(
-  `${JSON.stringify(
-    {
-      schemaVersion: value.schemaVersion,
-      candidate: value.candidateVersion,
-      result: value.result,
-      passed: value.checks.filter((check) => check.status === "passed").length,
-      blocking: blocking.map((check) => check.id),
-    },
-    null,
-    2,
-  )}\n`,
-);
+try {
+  const value = JSON.parse(
+    readFileSync(resolve(root, "docs/product/release-readiness-0.1.0.json"), "utf8"),
+  );
+  const summary = validateReleaseReadiness(value, { root });
+  process.stdout.write(`${JSON.stringify(summary, null, 2)}\n`);
+  if (enforceRelease && summary.result !== "ready") {
+    process.stderr.write(
+      `release readiness: promotion blocked by ${summary.blockers.join(", ")}\n`,
+    );
+    process.exitCode = 1;
+  }
+} catch (error) {
+  if (error instanceof AuthorityError) {
+    throw new Error(`release readiness: ${error.message}`);
+  }
+  throw error;
+}

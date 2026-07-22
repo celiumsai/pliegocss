@@ -74,7 +74,7 @@ fn schema_one_plan_is_integrity_bound_and_canonical() {
     assert_eq!(plan["applicationCoverage"], "adapter-attested-complete");
     assert_eq!(plan["styleIdFormatVersion"], 2);
     assert_eq!(plan["classNameFormatVersion"], 1);
-    assert_eq!(plan["themeIdFormatVersion"], 2);
+    assert_eq!(plan["themeIdFormatVersion"], 3);
     assert_eq!(plan["themeId"], "0123456789abcdef0123456789abcdef");
     assert_eq!(plan["targets"], "modern");
     assert_eq!(plan["format"], "minified");
@@ -562,7 +562,7 @@ fn manifest(schema: u8, css: &[u8], active_components: &[&str], emits_theme: boo
         "schemaVersion": schema,
         "styleIdFormatVersion": 2,
         "classNameFormatVersion": 1,
-        "themeIdFormatVersion": 2,
+        "themeIdFormatVersion": 3,
         "themeId": "0123456789abcdef0123456789abcdef",
         "targets": "modern",
         "format": "minified",

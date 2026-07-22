@@ -1,6 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { isolatedCargoEnvironment } from "./rust-target.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -22,6 +23,24 @@ const gates = Object.freeze([
     tier: "fast",
     command: "cargo",
     args: ["check", "--workspace", "--all-targets", "--locked"],
+  },
+  {
+    id: "engine-boundary",
+    tier: "fast",
+    command: "pnpm",
+    args: ["check:engine-boundary"],
+  },
+  {
+    id: "benchmark-authority-v2",
+    tier: "fast",
+    command: "pnpm",
+    args: ["check:benchmark-authority"],
+  },
+  {
+    id: "browser-output-authority",
+    tier: "fast",
+    command: "pnpm",
+    args: ["check:browser-output-authority"],
   },
   {
     id: "rust-tests",
@@ -101,22 +120,46 @@ const gates = Object.freeze([
     args: ["test", "-p", "pliego-css-usage", "--test", "generic_css_usage", "--locked"],
   },
   {
-    id: "release-readiness",
+    id: "release-authority-contract-tests",
     tier: "fast",
     command: "node",
-    args: ["scripts/check-release-readiness.mjs"],
+    args: ["scripts/release-authority.test.mjs"],
   },
   {
-    id: "hosted-browser-matrix",
+    id: "release-readiness-contract",
     tier: "fast",
     command: "node",
-    args: ["scripts/check-hosted-browser-matrix.mjs"],
+    args: ["scripts/check-release-readiness.mjs", "--validate"],
+  },
+  {
+    id: "hosted-browser-matrix-contract",
+    tier: "fast",
+    command: "node",
+    args: ["scripts/check-hosted-browser-matrix.mjs", "--validate"],
+  },
+  {
+    id: "document-authority",
+    tier: "fast",
+    command: "node",
+    args: ["scripts/check-document-authority.mjs"],
+  },
+  {
+    id: "site-markdown-docs",
+    tier: "fast",
+    command: "pnpm",
+    args: ["check:site-docs"],
   },
   {
     id: "getting-started",
     tier: "integration",
     command: "node",
     args: ["scripts/check-getting-started.mjs"],
+  },
+  {
+    id: "benchmark-authority-smoke",
+    tier: "integration",
+    command: "pnpm",
+    args: ["check:benchmark-smoke"],
   },
   {
     id: "standards-provenance",
@@ -233,12 +276,25 @@ const gates = Object.freeze([
     requires: ["PLIEGORS_ROOT", "PLIEGOCSS_RUN_BROWSERS"],
   },
 
+  {
+    id: "release-readiness",
+    tier: "release",
+    command: "node",
+    args: ["scripts/check-release-readiness.mjs", "--profile=release"],
+  },
+  {
+    id: "hosted-browser-matrix",
+    tier: "release",
+    command: "node",
+    args: ["scripts/check-hosted-browser-matrix.mjs", "--profile=release"],
+  },
   { id: "public-api", tier: "release", command: "pnpm", args: ["check:api"] },
   {
     id: "properties",
     tier: "release",
     command: "pnpm",
     args: ["check:properties"],
+    rustToolchain: "1.85.0",
   },
   {
     id: "determinism",
@@ -258,6 +314,12 @@ const gates = Object.freeze([
     tier: "release",
     command: "pnpm",
     args: ["check:evidence"],
+  },
+  {
+    id: "benchmark-oracle-live",
+    tier: "release",
+    command: "pnpm",
+    args: ["check:benchmark-oracle"],
   },
   {
     id: "media-query-merge",
@@ -337,17 +399,18 @@ function listedGate(gate) {
     tier: gate.tier,
     command: [gate.command, ...gate.args],
     requires: gate.requires ?? [],
+    rustToolchain: gate.rustToolchain ?? "active",
   };
 }
 
-function spawnGate(gate) {
+function spawnGate(gate, environment) {
   if (process.platform === "win32" && gate.command === "pnpm") {
     return spawnSync(
       process.env.ComSpec ?? "cmd.exe",
       ["/d", "/s", "/c", gate.command, ...gate.args],
       {
         cwd: root,
-        env: process.env,
+        env: environment,
         encoding: "utf8",
         stdio: "inherit",
         windowsHide: true,
@@ -356,7 +419,7 @@ function spawnGate(gate) {
   }
   return spawnSync(gate.command, gate.args, {
     cwd: root,
-    env: process.env,
+    env: environment,
     encoding: "utf8",
     stdio: "inherit",
     windowsHide: true,
@@ -371,6 +434,7 @@ function run(profile) {
   }
 
   const results = [];
+  const targetEnvironments = new Map();
   for (const gate of selected.gates) {
     const missing = (gate.requires ?? []).filter((name) => !process.env[name]);
     if (missing.length > 0) {
@@ -380,8 +444,18 @@ function run(profile) {
       );
       continue;
     }
+    const toolchain = gate.rustToolchain ?? "active";
+    let environment = targetEnvironments.get(toolchain);
+    if (!environment) {
+      environment = isolatedCargoEnvironment(root, {
+        env: process.env,
+        toolchain: gate.rustToolchain,
+      });
+      targetEnvironments.set(toolchain, environment);
+      process.stdout.write(`[target] ${toolchain}: ${environment.CARGO_TARGET_DIR}\n`);
+    }
     process.stdout.write(`[running] ${gate.id}\n`);
-    const result = spawnGate(gate);
+    const result = spawnGate(gate, environment);
     if (result.error) {
       results.push({
         id: gate.id,

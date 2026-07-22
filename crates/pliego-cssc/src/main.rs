@@ -34,9 +34,9 @@ use pliego_css_build::artifacts::{
     transform_standard_css, validate_asset_bundle_id,
 };
 use pliego_css_compiler::{
-    CssFragmentCache, STYLE_ID_FORMAT_VERSION, compose_style_override_with_theme,
-    emit_css_with_theme_traced, emit_theme, emit_theme_references, emit_used_theme,
-    lower_style_with_theme, referenced_tokens, try_encode_style_identity_with_theme,
+    AnalysisHost, CompileInput, CompileRequest, STYLE_ID_FORMAT_VERSION, emit_theme,
+    emit_theme_references, emit_used_theme, referenced_tokens,
+    try_encode_style_identity_with_theme,
 };
 use pliego_css_config::{
     BudgetObservation, BudgetPolicy, BudgetSubject, BudgetSubjectKind, CssBudgetInventory,
@@ -47,7 +47,6 @@ use pliego_css_ir::{CLASS_NAME_FORMAT_VERSION, Diagnostic, SemanticStyle, TokenR
 use pliego_css_ownership::{
     AssetRuleSelection as OwnershipRuleSelection, Ownership, parse_asset_plan, parse_ownership,
 };
-use pliego_css_parser::parse_style_list;
 use pliego_css_source::{
     MigrationSourceKind, ScanDiagnostic, ScanReport, SourceRange, UtilityFormatFinding,
     expand_bundle_source_paths, expand_source_paths, format_source_paths, format_style_failure,
@@ -111,7 +110,7 @@ use source_candidates::{
 
 const POLL_INTERVAL: Duration = Duration::from_millis(100);
 const EVENT_FALLBACK_INTERVAL: Duration = Duration::from_secs(2);
-const INSPECTION_SCHEMA_VERSION: u8 = 2;
+const INSPECTION_SCHEMA_VERSION: u8 = 3;
 const EXPLAIN_SCHEMA_VERSION: u8 = 2;
 #[cfg(windows)]
 const FILE_ATTRIBUTE_REPARSE_POINT: u32 = 0x400;
@@ -238,7 +237,11 @@ fn command_help(command: Option<&str>) -> &'static str {
 }
 
 type TargetContract = CompatibilityProfile;
-type CssCaches = (CssFragmentCache, FixedCssOutputCache);
+#[derive(Default)]
+struct CssCaches {
+    engine: AnalysisHost,
+    fixed: FixedCssOutputCache,
+}
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 enum DiagnosticFormat {
@@ -3221,6 +3224,7 @@ fn compile_bundle_group(
     let mut resolved_by_bundle = BTreeMap::new();
     let mut emitted_themes = Vec::with_capacity(plan.bundles.len());
 
+    let mut analysis_host = AnalysisHost::new(theme.clone());
     for name in plan.bundles.keys() {
         let mut candidates = Vec::new();
         for key in files_by_bundle
@@ -3242,7 +3246,7 @@ fn compile_bundle_group(
                 "bundle `{name}` found no PliegoCSS styles in: {sources}"
             )));
         }
-        let resolved = resolve_candidates(theme, &candidates, 1)?;
+        let resolved = resolve_candidates(&mut analysis_host, &candidates, 1)?;
         if arguments.usage_report || graph.pruning.is_enabled() {
             usage_styles.extend(bundle_usage_inputs(name, &resolved)?);
         }
@@ -5974,7 +5978,9 @@ fn compile_candidates_with_manifest(
     format: CssFormat,
     graph: ArtifactGraphOptions<'_>,
 ) -> Result<CompiledArtifact, CliFailure> {
-    let resolved = resolve_candidates(theme, candidates, 1)?;
+    let mut cache = CssCaches::default();
+    cache.engine.set_theme(theme.clone());
+    let resolved = resolve_candidates(&mut cache.engine, candidates, 1)?;
     compile_resolved_candidates_with_manifest(
         theme,
         &resolved,
@@ -5982,13 +5988,13 @@ fn compile_candidates_with_manifest(
         targets,
         format,
         graph,
-        &mut CssCaches::default(),
+        &mut cache,
     )
     .map_err(CliFailure::compilation)
 }
 
 fn resolve_candidates(
-    theme: &ThemeRegistry,
+    host: &mut AnalysisHost,
     candidates: &[Candidate],
     first_index: usize,
 ) -> Result<Vec<ResolvedCandidate>, CliFailure> {
@@ -5999,7 +6005,7 @@ fn resolve_candidates(
             let index = first_index + offset;
             let semantic = match candidate {
                 Candidate::Direct { style, provenance } => {
-                    lower_source(theme, style, index, provenance)?
+                    lower_source(host, style, index, provenance)?
                 }
                 Candidate::Composition {
                     base,
@@ -6007,14 +6013,18 @@ fn resolve_candidates(
                     provenance,
                 } => {
                     let base_provenance = diagnostic_segment_provenance(provenance, "base");
-                    let mut semantic = lower_source(theme, base, index, &base_provenance)?;
+                    let mut semantic = lower_source(host, base, index, &base_provenance)?;
                     for (branch_index, branch) in branches.iter().enumerate() {
                         let branch_provenance = diagnostic_segment_provenance(
                             provenance,
                             &format!("branch-{}", branch_index + 1),
                         );
-                        let branch = lower_source(theme, branch, index, &branch_provenance)?;
-                        semantic = compose_style_override_with_theme(theme, semantic, branch);
+                        let branch = lower_source(host, branch, index, &branch_provenance)?;
+                        semantic = pliego_css_compiler::compose_style_override_with_theme(
+                            host.theme(),
+                            semantic,
+                            branch,
+                        );
                     }
                     semantic
                 }
@@ -6140,12 +6150,25 @@ fn compile_resolved_candidates_with_manifest(
         output.push_str(&theme_css);
         output.push('\n');
     }
-    let mut emission_lineage = Vec::new();
-    for (stream, (semantic, _)) in &semantic_styles {
-        if graph.physical_trace {
-            let (css, lineage) =
-                emit_css_with_theme_traced(theme, semantic).map_err(|error| error.to_string())?;
-            emission_lineage.push(TraceStyle::new(
+    cache.engine.set_theme(theme.clone());
+    let engine_result = cache
+        .engine
+        .compile(&CompileRequest {
+            inputs: semantic_styles
+                .values()
+                .map(|(semantic, _)| CompileInput::Semantic(semantic.clone()))
+                .collect(),
+            include_theme: false,
+            physical_trace: graph.physical_trace,
+        })
+        .map_err(|error| error.to_string())?;
+    output.push_str(&engine_result.css);
+    let emission_lineage = engine_result
+        .styles
+        .into_iter()
+        .filter_map(|style| style.lineage)
+        .map(|lineage| {
+            TraceStyle::new(
                 lineage.style_id.get(),
                 lineage
                     .rules
@@ -6165,18 +6188,9 @@ fn compile_resolved_candidates_with_manifest(
                         )
                     })
                     .collect(),
-            ));
-            output.push_str(&css);
-        } else {
-            let (css, _) = cache
-                .0
-                .emit(stream, theme, semantic)
-                .map_err(|error| error.to_string())?;
-            output.push_str(css);
-        }
-        output.push('\n');
-    }
-    cache.0.retain(semantic_styles.keys());
+            )
+        })
+        .collect::<Vec<_>>();
     let (mut css, trace_input) = if graph.physical_trace {
         let (css, trace_input) =
             optimize_css_with_trace(&output, targets.lightning(), format.is_minified())?;
@@ -6184,7 +6198,7 @@ fn compile_resolved_candidates_with_manifest(
     } else {
         (
             cache
-                .1
+                .fixed
                 .optimize(&output, targets.lightning(), format.is_minified())?,
             None,
         )
@@ -6298,16 +6312,12 @@ fn collect_token_references(
 }
 
 fn lower_source(
-    theme: &ThemeRegistry,
+    host: &mut AnalysisHost,
     source: &str,
     index: usize,
     provenance: &Provenance,
 ) -> Result<SemanticStyle, CliFailure> {
-    let syntax = parse_style_list(source).map_err(|error| {
-        let human = format_style_failure(index, source, &error.to_string());
-        style_failure(error, human, provenance)
-    })?;
-    lower_style_with_theme(theme, &syntax).map_err(|error| {
+    host.analyze_literal(source).map_err(|error| {
         let human = format_style_failure(index, source, &error.to_string());
         style_failure(error, human, provenance)
     })
@@ -6491,6 +6501,7 @@ fn compile_watch_snapshot(
     validate_path_roles(&inputs, &outputs)?;
     let theme = load_watch_theme_snapshot(arguments, snapshot)?;
     let registry = theme.registry();
+    cache.css.engine.set_theme(registry.clone());
     let reachability = snapshot
         .reachability
         .as_ref()
@@ -6506,7 +6517,10 @@ fn compile_watch_snapshot(
             candidates_from_line_source(&input.path, input.utf8("watched input")?)
         }
         .map_err(|error| error.human)?;
-        resolved.extend(resolve_candidates(registry, &candidates, 1).map_err(|error| error.human)?);
+        resolved.extend(
+            resolve_candidates(&mut cache.css.engine, &candidates, 1)
+                .map_err(|error| error.human)?,
+        );
     }
     let first_source_index = resolved.len() + 1;
     resolved.extend(cache.resolved_from_snapshot(
@@ -6676,9 +6690,13 @@ impl RustScanCache {
                     .map_err(Clone::clone)?;
                 let candidates =
                     candidates_from_scan_report(theme, report).map_err(|error| error.human)?;
-                let source_resolved =
-                    resolve_candidates(theme, &candidates, first_index + resolved.len())
-                        .map_err(|error| error.human)?;
+                self.css.engine.set_theme(theme.clone());
+                let source_resolved = resolve_candidates(
+                    &mut self.css.engine,
+                    &candidates,
+                    first_index + resolved.len(),
+                )
+                .map_err(|error| error.human)?;
                 self.entries
                     .get_mut(&key)
                     .expect("active source must have a cache entry")

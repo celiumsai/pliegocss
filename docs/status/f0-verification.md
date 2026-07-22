@@ -8,7 +8,7 @@ Date: 2026-07-12
 - Cargo 1.96.0.
 - Node 24.16.0.
 - pnpm 11.7.0.
-- Tailwind CSS and CLI 4.3.2.
+- Tailwind CSS and CLI 4.3.2 (historical F0 environment; not the current oracle).
 - Windows 10.0.26200, x64.
 - Intel Core Ultra 9 285H, 16 logical CPUs.
 

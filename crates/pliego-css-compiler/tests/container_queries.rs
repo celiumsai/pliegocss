@@ -20,9 +20,9 @@ fn establishes_and_queries_an_inline_size_container() {
 
     assert_eq!(
         format!("{:032x}", style.id.get()),
-        "11893074aaaf88f7b356ad6d53a913e2"
+        "78f8ca7e9a1d8b7737ee243d87faf881"
     );
-    assert_eq!(class, "pc_11dgqogrs5aq1d9ocwyulg6w2");
+    assert_eq!(class, "pc_75tq511l3l9q0mx595ykqafsx");
 
     assert_eq!(
         emit_css(&style).expect("container fixture must emit"),
@@ -66,8 +66,8 @@ fn active_theme_owns_viewport_and_container_widths() {
     let theme = ThemeRegistry::from_definitions(
         seed.tokens().iter().cloned(),
         [
-            BreakpointDefinition::new(BreakpointId::new(0), "sm", "32rem"),
-            BreakpointDefinition::new(BreakpointId::new(1), "md", "44rem"),
+            BreakpointDefinition::new(BreakpointId::new(0), 0, "sm", "32rem"),
+            BreakpointDefinition::new(BreakpointId::new(1), 1, "md", "44rem"),
         ],
     )
     .expect("custom theme must be valid");

@@ -8,6 +8,39 @@ pre-1.0 compatibility policy.
 
 ## [Unreleased]
 
+### Changed
+
+- Separate stable breakpoint identity from narrow-to-wide cascade rank. ThemeId
+  and theme-binary formats move to 3, catalog to schema 4, and inspection to
+  schema 3; older generated theme/identity artifacts must be regenerated.
+- Namespace official Cargo targets by complete Rust toolchain/platform identity,
+  including the Rust 1.85 property/LSP gates and Rust 1.86 PliegoRS gate.
+- Re-pin the fail-closed PliegoRS integration contract to current `main` after
+  the G1 native runtime entered the workspace, and replay the complete SSG,
+  route/island bundle, manifest, and browser-payload gate against that revision.
+- Make release-readiness schema 3 the single current promotion authority,
+  fail closed on unconfigured hosted browser lanes, archive superseded status
+  reports, and generate the public documentation catalog from hash-bound
+  Markdown instead of duplicated Rust page data.
+- Introduce the pure `CompileRequest`/`CompileResult` engine boundary with a
+  theme-bound `AnalysisHost`, compiler-owned `PhysicalRulePlanner`, and shared
+  `pcx` frontend. CLI, watch, macros, source scanning, and LSP now reuse that
+  engine; the LSP no longer launches compiler children or writes synthetic
+  source files.
+- Replace the handwritten Gate B comparison with Benchmark Authority schema 2:
+  live `tailwind-latest` 4.3.3, upstream `v3-lts` 3.4.19, frozen 4.3.2 regression,
+  alternating paired samples, direct-process peak memory, raw/gzip/Brotli output,
+  micro/medium/large corpora, a seven-day oracle, and JSON-generated benchmark docs.
+
+### Fixed
+
+- Emit custom media and container breakpoints by numeric cascade rank instead
+  of name-assigned `BreakpointId`; the 52rem/72rem regression is frozen in
+  property tests and Chrome/Edge computed-style gates.
+- Reject empty reversible migration projects with a typed public error instead
+  of indexing an empty inventory, and audit every current Lightning CSS rule
+  variant without a silent wildcard.
+
 ## [0.1.0-rc.2] - 2026-07-21
 
 This candidate supersedes `0.1.0-rc.1` without moving its immutable tag. It is
@@ -15,6 +48,15 @@ the first release prepared as the complete nineteen-crate crates.io
 compatibility unit.
 
 ### Added
+
+- Browser/output certification v1 against the fresh Tailwind authority lane: 52 computed
+  properties, 1/64-pixel box/text-line geometry bounded to 0.1 CSS px, bounded perceptual screenshots,
+  responsive/hover/focus scenarios, and explicit
+  no-reset/shared-reset contracts.
+- A clean, seven-day, commit/tree-bound 3×3 Playwright matrix for Chromium, Firefox, and WebKit on
+  Windows x64, Linux x64, and macOS ARM64, plus fail-closed aggregation and hashed PNG/JSON evidence.
+  Playwright 1.61.1, pixelmatch 7.2.0, and pngjs 7.0.0 are pinned and attributed. Dirty local
+  Windows x64 and Linux x64 passes are diagnostic; hosted 9/9 acceptance remains pending.
 
 - A complete bilingual public-preview website authored with PliegoRS and
   styled by PliegoCSS, including interactive compiler examples, categorized

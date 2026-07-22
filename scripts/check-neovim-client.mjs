@@ -10,6 +10,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { basename, relative, resolve, sep } from "node:path";
+import { cargoTargetRoot, isolatedCargoEnvironment } from "./rust-target.mjs";
 
 const ROOT = resolve(import.meta.dirname, "..");
 const EDITOR = resolve(ROOT, "editors", "neovim");
@@ -95,14 +96,15 @@ if (!existsSync(executable)) {
 }
 if (!existsSync(executable)) fail(`Neovim executable is missing after extraction: ${executable}`);
 
-const target = process.env.CARGO_TARGET_DIR
-  ? resolve(ROOT, process.env.CARGO_TARGET_DIR)
-  : resolve(ROOT, "target");
+const cargoEnvironment = isolatedCargoEnvironment(ROOT, {
+  env: process.env,
+  toolchain: "1.85.0",
+});
+const target = cargoTargetRoot(ROOT, cargoEnvironment);
 const workspace = resolve(target, "lsp-integration-workspace");
 const output = resolve(target, "neovim-host-result.json");
 const binarySuffix = process.platform === "win32" ? ".exe" : "";
 const lsp = resolve(target, "debug", `pliego-css-lsp${binarySuffix}`);
-const compiler = resolve(target, "debug", `pliego-cssc${binarySuffix}`);
 for (const path of [workspace, output]) {
   if (!path.startsWith(`${target}${sep}`)) fail(`unsafe fixture path: ${path}`);
 }
@@ -112,7 +114,7 @@ const fixture = spawnSync(
   {
     cwd: ROOT,
     encoding: "utf8",
-    env: { ...process.env, PLIEGOCSS_KEEP_LSP_FIXTURE: "1" },
+    env: { ...cargoEnvironment, PLIEGOCSS_KEEP_LSP_FIXTURE: "1" },
   },
 );
 if (fixture.error || fixture.status !== 0) {
@@ -133,7 +135,6 @@ try {
         PLIEGOCSS_NEOVIM_WORKSPACE: workspace,
         PLIEGOCSS_NEOVIM_OUTPUT: output,
         PLIEGOCSS_NEOVIM_LSP: lsp,
-        PLIEGOCSS_NEOVIM_COMPILER: compiler,
       },
       timeout: 60_000,
     },

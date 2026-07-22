@@ -3,10 +3,13 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { cargoTargetRoot, isolatedCargoEnvironment } from "./rust-target.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const corpusRoot = join(root, "integration-tests", "migration-corpus");
 const manifest = JSON.parse(readFileSync(join(corpusRoot, "cases.json"), "utf8"));
+const cargoEnvironment = isolatedCargoEnvironment(root);
+const cargoTarget = cargoTargetRoot(root, cargoEnvironment);
 
 function fail(message) {
   throw new Error(message);
@@ -48,10 +51,13 @@ if (!Array.isArray(manifest.cases) || manifest.cases.length < 3) {
 }
 
 const cargo = process.env.CARGO ?? "cargo";
-run(cargo, ["build", "--locked", "--quiet", "-p", "pliego-cssc"], { cwd: root });
+run(cargo, ["build", "--locked", "--quiet", "-p", "pliego-cssc"], {
+  cwd: root,
+  env: cargoEnvironment,
+});
 const executable =
   process.env.PLIEGOCSS_BIN ??
-  join(root, "target", "debug", process.platform === "win32" ? "pliego-cssc.exe" : "pliego-cssc");
+  join(cargoTarget, "debug", process.platform === "win32" ? "pliego-cssc.exe" : "pliego-cssc");
 if (!existsSync(executable)) fail(`missing PliegoCSS CLI at ${executable}`);
 
 const ids = new Set();

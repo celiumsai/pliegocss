@@ -1,0 +1,59 @@
+{
+  "archiveStatus": "historical-unbound-evidence",
+  "supersededBy": "docs/benchmarks/hosted-browser-matrix.json",
+  "schemaVersion": 1,
+  "statusDate": "2026-07-19",
+  "hosts": [
+    {
+      "id": "windows-chrome",
+      "os": "windows",
+      "browser": "chrome",
+      "status": "passed",
+      "executable": "C:/Program Files/Google/Chrome/Application/chrome.exe",
+      "automation": "passed",
+      "claim": "local-computed-style-smoke"
+    },
+    {
+      "id": "windows-edge",
+      "os": "windows",
+      "browser": "edge",
+      "status": "passed",
+      "executable": "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe",
+      "automation": "passed",
+      "claim": "local-computed-style-smoke"
+    },
+    {
+      "id": "windows-firefox",
+      "os": "windows",
+      "browser": "firefox",
+      "status": "not-configured",
+      "executable": null,
+      "automation": "not-configured",
+      "claim": "none"
+    },
+    {
+      "id": "wsl-chromium",
+      "os": "debian-wsl2",
+      "browser": "chromium",
+      "status": "not-configured",
+      "executable": null,
+      "automation": "not-configured",
+      "claim": "none"
+    },
+    {
+      "id": "macos-safari",
+      "os": "macos",
+      "browser": "safari",
+      "status": "not-configured",
+      "executable": null,
+      "automation": "not-configured",
+      "claim": "none"
+    }
+  ],
+  "historicalEvidence": {
+    "chromiumComputedStyleSmoke": "docs/benchmarks/browser-validation.md",
+    "status": "historical-manual",
+    "ciReplay": "not-configured"
+  },
+  "releaseBoundary": "Executable discovery is not behavioral certification. Only automated or recorded computed-style replay may change a host to passed."
+}

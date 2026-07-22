@@ -3,10 +3,15 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { cargoTargetRoot, isolatedCargoEnvironment } from "./rust-target.mjs";
 
 const root = resolve(import.meta.dirname, "..");
 const fixture = join(root, "integration-tests", "representative", "rust-typed-control");
-const cli = join(root, "target", "debug", process.platform === "win32" ? "pliego-cssc.exe" : "pliego-cssc");
+const cli = join(cargoTargetRoot(root), "debug", process.platform === "win32" ? "pliego-cssc.exe" : "pliego-cssc");
+const msrvEnvironment = isolatedCargoEnvironment(root, {
+  env: process.env,
+  toolchain: "1.85.0",
+});
 function fail(message, detail) { throw new Error(detail === undefined ? message : `${message}\n${JSON.stringify(detail, null, 2)}`); }
 function run(command, args, cwd = root) {
   const result = spawnSync(command, args, { cwd, encoding: "utf8", windowsHide: true });
@@ -16,7 +21,13 @@ function run(command, args, cwd = root) {
 }
 function sha256(bytes) { return createHash("sha256").update(bytes).digest("hex"); }
 for (const name of ["Cargo.toml", "src/main.rs"]) if (!existsSync(join(fixture, name))) fail(`missing ${name}`);
-run("cargo", ["+1.85.0", "check", "--quiet", "--locked", "--manifest-path", join(fixture, "Cargo.toml")]);
+const msrv = spawnSync(
+  "cargo",
+  ["+1.85.0", "check", "--quiet", "--locked", "--manifest-path", join(fixture, "Cargo.toml")],
+  { cwd: root, env: msrvEnvironment, encoding: "utf8", windowsHide: true },
+);
+if (msrv.error) throw msrv.error;
+if (msrv.status !== 0) fail("MSRV fixture check failed", msrv);
 run("cargo", ["build", "--quiet", "--locked", "-p", "pliego-cssc"]);
 let output;
 try {

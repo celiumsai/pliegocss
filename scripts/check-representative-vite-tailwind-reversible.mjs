@@ -2,10 +2,11 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, rmSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { cargoTargetRoot } from "./rust-target.mjs";
 
 const root = resolve(import.meta.dirname, "..");
 const fixture = resolve(root, "integration-tests/representative/vite-tailwind-inventory");
-const binary = resolve(root, process.platform === "win32" ? "target/debug/pliego-cssc.exe" : "target/debug/pliego-cssc");
+const binary = resolve(cargoTargetRoot(root), "debug", process.platform === "win32" ? "pliego-cssc.exe" : "pliego-cssc");
 const sidecar = join(fixture, "pliego.migration.css");
 const receipt = join(fixture, "pliego.migration.receipt.json");
 const files = ["package.json", "index.html", "src/app.css", "src/main.ts"];

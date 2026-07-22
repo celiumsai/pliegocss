@@ -281,6 +281,47 @@ fn unknown_container_conditions_fail_as_unclassified_syntax() {
 }
 
 #[test]
+fn every_supported_leaf_at_rule_is_audited_instead_of_silently_skipped() {
+    let cases = [
+        ("@import", "@import url('theme.css');"),
+        ("@keyframes", "@keyframes pulse { to { opacity: 0; } }"),
+        (
+            "@font-face",
+            "@font-face { font-family: Demo; src: local(Demo); }",
+        ),
+        ("@page", "@page { margin: 1cm; }"),
+        (
+            "@counter-style",
+            "@counter-style thumbs { system: cyclic; symbols: 'x'; }",
+        ),
+        (
+            "@namespace",
+            "@namespace svg url(http://www.w3.org/2000/svg);",
+        ),
+        ("@viewport", "@viewport { width: device-width; }"),
+        ("@custom-media", "@custom-media --narrow (width < 40rem);"),
+        ("@view-transition", "@view-transition { navigation: auto; }"),
+    ];
+    for (syntax, css) in cases {
+        let outcome = audit_standard_css(
+            "src/leaf-at-rule.css",
+            css,
+            CompatibilityProfile::BaselineWidely,
+        )
+        .unwrap_or_else(|error| panic!("{syntax}: {error}"));
+        let value: serde_json::Value =
+            serde_json::from_str(&outcome.document().to_json_pretty().expect("finding JSON"))
+                .expect("document");
+        assert!(
+            value["findings"].as_array().unwrap().iter().any(|finding| {
+                finding["code"] == "PCSS-COMPAT-199" && finding["context"]["syntax"] == syntax
+            }),
+            "missing unclassified finding for {syntax}: {value}"
+        );
+    }
+}
+
+#[test]
 fn declaration_shape_inventory_distinguishes_typed_unparsed_and_custom_values() {
     let css = ".card { display: grid; color: var(--ink); --gap: 1rem; mystery-prop: value; }";
     let outcome =

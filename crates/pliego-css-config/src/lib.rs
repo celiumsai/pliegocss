@@ -341,10 +341,12 @@ fn apply_breakpoints(
             .iter_mut()
             .find(|definition| definition.name == name)
         {
-            *existing = BreakpointDefinition::new(existing.id, name, min_width);
+            *existing =
+                BreakpointDefinition::new(existing.id, existing.cascade_rank, name, min_width);
         } else {
             definitions.push(BreakpointDefinition::new(
                 BreakpointId::new(next_id),
+                0,
                 name,
                 min_width,
             ));
@@ -355,7 +357,67 @@ fn apply_breakpoints(
             })?;
         }
     }
+    rank_breakpoints(definitions).map_err(|error| ConfigError::InvalidValue {
+        table,
+        name: error.name,
+        reason: error.reason,
+    })
+}
+
+#[derive(Debug)]
+struct BreakpointOrderError {
+    name: String,
+    reason: &'static str,
+}
+
+fn rank_breakpoints(definitions: &mut [BreakpointDefinition]) -> Result<(), BreakpointOrderError> {
+    let mut ranked = Vec::with_capacity(definitions.len());
+    let mut common_unit = None;
+    for (index, definition) in definitions.iter().enumerate() {
+        let Some((number, unit)) = breakpoint_number_and_unit(&definition.min_width) else {
+            return Err(BreakpointOrderError {
+                name: definition.name.clone(),
+                reason: "breakpoint must be a positive CSS length in px, rem, em, ch, or vw",
+            });
+        };
+        if let Some(expected) = common_unit {
+            if expected != unit {
+                return Err(BreakpointOrderError {
+                    name: definition.name.clone(),
+                    reason: "all breakpoints must use one common unit so cascade order is unambiguous",
+                });
+            }
+        } else {
+            common_unit = Some(unit);
+        }
+        ranked.push((index, number, definition.name.clone(), definition.id));
+    }
+    ranked.sort_by(|left, right| {
+        left.1
+            .total_cmp(&right.1)
+            .then_with(|| left.2.cmp(&right.2))
+            .then_with(|| left.3.cmp(&right.3))
+    });
+    for (rank, (index, _, _, _)) in ranked.into_iter().enumerate() {
+        definitions[index].cascade_rank =
+            u16::try_from(rank).map_err(|_| BreakpointOrderError {
+                name: "<registry>".to_owned(),
+                reason: "breakpoint cascade rank space is exhausted",
+            })?;
+    }
     Ok(())
+}
+
+fn breakpoint_number_and_unit(value: &str) -> Option<(f64, &str)> {
+    let split = value
+        .find(|character: char| !character.is_ascii_digit() && character != '.')
+        .unwrap_or(value.len());
+    let (number, unit) = value.split_at(split);
+    let number = number
+        .parse::<f64>()
+        .ok()
+        .filter(|number| number.is_finite() && *number > 0.0)?;
+    matches!(unit, "px" | "rem" | "em" | "ch" | "vw").then_some((number, unit))
 }
 
 fn normalize_name(table: &'static str, name: &str) -> Result<String, ConfigError> {
@@ -526,6 +588,50 @@ Content_Wide = "72rem"
                 .is_some()
         );
         assert!(registry.breakpoint_by_name("content-wide").is_some());
+    }
+
+    #[test]
+    fn breakpoint_ids_do_not_determine_narrow_to_wide_cascade_ranks() {
+        let registry = parse_str(
+            r#"
+schema = 1
+extends = "seed"
+
+[breakpoints]
+content-wide = "72rem"
+tablet = "52rem"
+"#,
+        )
+        .expect("ordered breakpoints");
+        let tablet = registry.breakpoint_by_name("tablet").expect("tablet");
+        let content_wide = registry
+            .breakpoint_by_name("content-wide")
+            .expect("content-wide");
+
+        assert!(
+            content_wide.id < tablet.id,
+            "IDs remain stable by canonical name"
+        );
+        assert!(
+            tablet.cascade_rank < content_wide.cascade_rank,
+            "cascade rank follows 52rem before 72rem"
+        );
+    }
+
+    #[test]
+    fn mixed_breakpoint_units_fail_closed_instead_of_guessing_cascade_order() {
+        let error = parse_str(
+            r#"
+schema = 1
+extends = "seed"
+
+[breakpoints]
+tablet = "900px"
+"#,
+        )
+        .expect_err("mixed units must be ambiguous");
+        assert!(matches!(error, ConfigError::InvalidValue { .. }));
+        assert!(error.to_string().contains("one common unit"));
     }
 
     #[test]

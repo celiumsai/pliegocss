@@ -19,6 +19,7 @@ import {
   resolve,
 } from "node:path";
 import { fileURLToPath } from "node:url";
+import { isolatedCargoEnvironment } from "./rust-target.mjs";
 import { gzipSync } from "node:zlib";
 import { verifyPliegorsContract } from "./pliegors-contract.mjs";
 
@@ -124,16 +125,17 @@ mkdirSync(generatedRoot);
 mkdirSync(bundlesPath);
 mkdirSync(allCompiledBundlesPath);
 
-const environment = {
-  ...process.env,
+const targetBaseEnvironment = process.env.PLIEGOCSS_CARGO_TARGET_DIR
+  ? { ...process.env, CARGO_TARGET_DIR: resolve(process.env.PLIEGOCSS_CARGO_TARGET_DIR) }
+  : process.env;
+const environment = isolatedCargoEnvironment(root, {
+  env: targetBaseEnvironment,
+  toolchain: "1.86.0",
   // Keep native executables below the workspace target root. Windows Application
   // Control policies commonly trust Cargo's project target but reject binaries
   // from disposable benchmark directories. WSL callers can opt into a native
   // Linux target directory without weakening the default Windows boundary.
-  CARGO_TARGET_DIR: process.env.PLIEGOCSS_CARGO_TARGET_DIR
-    ? resolve(process.env.PLIEGOCSS_CARGO_TARGET_DIR)
-    : join(root, "target"),
-};
+});
 // `pliego build` deliberately rejects environment-level compiler/profile overrides. The harness
 // keeps only CARGO_TARGET_DIR as the explicit generated-output location and strips inherited
 // overrides before any Cargo child is launched.
@@ -524,7 +526,7 @@ if (
   manifest.schemaVersion !== 3 ||
   manifest.styleIdFormatVersion !== 2 ||
   manifest.classNameFormatVersion !== 1 ||
-  manifest.themeIdFormatVersion !== 2 ||
+  manifest.themeIdFormatVersion !== 3 ||
   manifest.cssSha256 !== cssSha256 ||
   manifest.cssBytes !== Buffer.byteLength(css)
 ) {
@@ -668,7 +670,7 @@ for (const bundle of bundles) {
     bundle.manifestDocument.schemaVersion !== 5 ||
     bundle.manifestDocument.styleIdFormatVersion !== 2 ||
     bundle.manifestDocument.classNameFormatVersion !== 1 ||
-    bundle.manifestDocument.themeIdFormatVersion !== 2 ||
+    bundle.manifestDocument.themeIdFormatVersion !== 3 ||
     bundle.manifestDocument.targets !== "modern" ||
     bundle.manifestDocument.format !== "minified" ||
     bundle.manifestDocument.cssSha256 !== digest ||

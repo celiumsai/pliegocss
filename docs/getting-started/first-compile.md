@@ -110,7 +110,7 @@ downstream tests freeze macro/CLI identity for the same Resolver selection.
 
 The CLI defaults to the `modern` target contract (Chrome 111, Edge 111, Firefox 128, Safari 16.4)
 and writes a schema-3 manifest when requested. The manifest reports StyleId format 2, class-name
-format 1, and ThemeId format 2 as required top-level fields. It auto-discovers one
+format 1, and ThemeId format 3 as required top-level fields. It auto-discovers one
 `pliego.theme.toml` from the working directory or supplied source package; select an exact file with
 `--config`, prevent discovery with `--seed`, or explicitly select a Resolver document with
 `--tokens`. Only TOML participates in conventional discovery. Source-directory scanning is

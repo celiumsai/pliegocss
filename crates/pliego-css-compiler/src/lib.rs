@@ -6,6 +6,7 @@
 #![forbid(unsafe_code)]
 
 mod emitter;
+mod engine;
 mod identity;
 mod ir_binary;
 
@@ -13,6 +14,11 @@ pub use emitter::{
     CssFragmentCache, DeclarationLineage, EmitError, RuleLineage, StyleLineage, class_name,
     emit_css, emit_css_with_theme, emit_css_with_theme_traced, emit_seed_theme, emit_theme,
     emit_theme_references, emit_used_theme, referenced_tokens, theme_custom_property_name,
+};
+pub use engine::{
+    AnalysisCacheStats, AnalysisHost, CompileError, CompileInput, CompileRequest, CompileResult,
+    CompiledStyle, MAX_PCX_COMBINATIONS, PcxAnalysis, PcxCombination, PcxError, PcxRequest,
+    PhysicalRulePlan, PhysicalRulePlanner,
 };
 pub use identity::{
     IdentityError, STYLE_ID_FORMAT_VERSION, derive_style_id, derive_style_id_with_theme,
@@ -39,7 +45,8 @@ use pliego_css_ir::{
     classified_attribute_name, classified_selector_for_variant, is_typed_attribute_variant,
 };
 use pliego_css_parser::{
-    NamedCandidateSyntax, OperandKind, OperandSyntax, parse_named_candidate_at,
+    NamedCandidateSyntax, OperandKind, OperandSyntax, parse_named_candidate,
+    parse_named_candidate_at,
 };
 use pliego_css_theme::ThemeRegistry;
 
@@ -834,6 +841,37 @@ const CATALOG: &[UtilityDescriptor] = &[
 #[must_use]
 pub const fn utility_catalog() -> &'static [UtilityDescriptor] {
     CATALOG
+}
+
+/// Resolves the compiler-owned catalog descriptor for one parsed style item.
+///
+/// This read-only bridge lets editor and inspection adapters explain the exact utility accepted by
+/// lowering without reimplementing longest-prefix catalog resolution.
+#[must_use]
+pub fn utility_descriptor_for_style_item(item: &StyleItem) -> Option<&'static UtilityDescriptor> {
+    match &item.candidate.kind {
+        CandidateKind::ArbitraryProperty { .. } => utility_catalog()
+            .iter()
+            .find(|descriptor| descriptor.form() == UtilityForm::ArbitraryProperty),
+        CandidateKind::Named(candidate) => {
+            let body = parse_named_candidate(candidate).ok()?.body;
+            utility_catalog()
+                .iter()
+                .find(|descriptor| {
+                    descriptor.form() == UtilityForm::Fixed && descriptor.match_name() == body
+                })
+                .or_else(|| {
+                    utility_catalog()
+                        .iter()
+                        .filter(|descriptor| descriptor.form() == UtilityForm::Parameterized)
+                        .filter(|descriptor| {
+                            body.strip_prefix(descriptor.match_name())
+                                .is_some_and(|suffix| suffix.starts_with('-'))
+                        })
+                        .max_by_key(|descriptor| descriptor.match_name().len())
+                })
+        }
+    }
 }
 
 fn seed_theme() -> &'static ThemeRegistry {
@@ -2444,6 +2482,7 @@ mod tests {
             ],
             [BreakpointDefinition::new(
                 pliego_css_ir::BreakpointId::new(7),
+                0,
                 "tablet",
                 "52rem",
             )],
@@ -2461,13 +2500,13 @@ mod tests {
         assert_eq!(pliego_css_ir::CLASS_NAME_FORMAT_VERSION, 1);
         assert_eq!(
             format!("{:032x}", theme.id().get()),
-            "cf5c4c0674fd1c7e5121da0d27222ae0"
+            "eda25b5ed8fa8ce973662d4f18a46bdc"
         );
         assert_eq!(
             format!("{:032x}", style.id.get()),
-            "e0b572e3fdfbf091d9a2ddb126278634"
+            "b742ceb589d4f412c6ba77e81f632f53"
         );
-        assert_eq!(style.id.to_class_name(), "pc_dax2y1pql4op1rjk97yv9e88k");
+        assert_eq!(style.id.to_class_name(), "pc_aukxxmkm8bmauj8duf8zpjdcj");
     }
 
     #[test]
@@ -2478,13 +2517,13 @@ mod tests {
 
         assert_eq!(
             format!("{:032x}", theme.id().get()),
-            "b3d5ad77175995c2b8f51ef7c0d41991"
+            "b98b78da29201938d135b8bb94717788"
         );
         assert_eq!(
             format!("{:032x}", style.id.get()),
-            "70cb04ef9bf9621f5826351f1778f68e"
+            "fe3a92576be2bb53e3240249bc45b829"
         );
-        assert_eq!(style.id.to_class_name(), "pc_6oe73ec16rbb7ublcoa3bpzf2");
+        assert_eq!(style.id.to_class_name(), "pc_f1u1l7d58kemkdqdjie56hdex");
     }
 
     #[test]

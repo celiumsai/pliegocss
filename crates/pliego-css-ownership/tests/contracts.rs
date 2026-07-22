@@ -20,7 +20,7 @@ fn sample_plan_value() -> Value {
         "applicationCoverage": "adapter-attested-complete",
         "styleIdFormatVersion": 1,
         "classNameFormatVersion": 1,
-        "themeIdFormatVersion": 2,
+        "themeIdFormatVersion": 3,
         "themeId": "0123456789abcdef0123456789abcdef",
         "targets": "modern",
         "format": "minified",

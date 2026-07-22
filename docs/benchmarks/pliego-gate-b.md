@@ -2,7 +2,7 @@
 
 Date: 2026-07-13
 
-Status: **complete fixture accepted by the compiler; production compatibility not yet proven**
+Status: **historical 4.3.2 snapshot; superseded for current comparison by [Benchmark Authority v2](./tailwind-benchmark-authority-v2.md)**
 
 Gate B measures the complete tracked Tailwind fixture without removing any responsive or state
 variant. The harness reads `benchmarks/tailwind-v4/fixtures.html` directly, extracts its 44 `class`
@@ -102,11 +102,9 @@ and stability across compiler versions remain open. See
 
 ## Reproduction
 
-```console
-pnpm baseline:measure-pliego-b
-```
-
-The local machine-readable result is written to `benchmarks/results/pliego-gate-b.local.json` and
-remains gitignored. Frozen Tailwind figures come from the 4.3.2 complete profiles documented in
-[`tailwind-v4-baseline.md`](./tailwind-v4-baseline.md). The immutable clean-commit result is
-[`pliego-gate-b-2026-07-21-d16fe5d.json`](../../benchmarks/evidence/pliego-gate-b-2026-07-21-d16fe5d.json).
+The original harness is preserved in the recorded source commit. The current compatibility command
+`pnpm baseline:measure-pliego-b` intentionally runs Benchmark Authority v2 and writes
+`benchmarks/results/benchmark-authority-v2.local.json`; it does not recreate or overwrite this
+historical result. Frozen 4.3.2 figures remain in
+[`pliego-gate-b-2026-07-21-d16fe5d.json`](../../benchmarks/evidence/pliego-gate-b-2026-07-21-d16fe5d.json)
+and [`tailwind-v4-baseline.md`](./tailwind-v4-baseline.md).
