@@ -43,6 +43,12 @@ const gates = Object.freeze([
     args: ["check:browser-output-authority"],
   },
   {
+    id: "repository-distribution-contract",
+    tier: "fast",
+    command: "pnpm",
+    args: ["check:repository-distribution"],
+  },
+  {
     id: "rust-tests",
     tier: "fast",
     command: "cargo",

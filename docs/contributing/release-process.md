@@ -35,7 +35,8 @@ Rust 1.85 is the library MSRV. Release packaging is a contributor operation and 
 pinned Cargo 1.96 exactly because the package gate verifies an unpublished interdependent workspace
 by extracting the current archives into an isolated temporary workspace and patching every internal
 crates.io name to those extracted contents. Node.js 22.13 or newer runs the metadata checks; Node is
-not a crate or application dependency.
+not a crate dependency. The optional Node launcher is an npm-format package distributed only as a
+verified GitHub Release asset and installed with pnpm; npmjs publication is forbidden.
 
 ## 1. Choose the release
 
@@ -358,6 +359,40 @@ the release commit that produced the uploaded archives. After registry installat
 that exact unchanged commit and publish release notes from its changelog section. Do not amend the
 release commit after upload; any correction requires a new package version.
 
+## 8. Build repository-hosted native and pnpm assets
+
+The normative policy is [`distribution/repository-distribution-v1.json`](../../distribution/repository-distribution-v1.json).
+The `Repository distribution` workflow builds `pliego-cssc` and `pliego-css-lsp` for Windows x64,
+Linux x64 GNU, and macOS arm64; emits target archives and CycloneDX 1.5 SBOMs; assembles one universal
+`@pliegocss/cli` `.tgz`; generates `SHA256SUMS`; and installs the local tarball with pnpm on all three
+hosts. The package is `private`, has zero dependencies, has no lifecycle scripts, and never fetches a
+binary.
+
+For branch certification, run the workflow normally and retain the exact-SHA artifact. For the one
+reviewed candidate that needs signed evidence, dispatch it with `attest=true`. GitHub/Sigstore
+attestations then bind each binary, its SBOM, and every assembled release asset to the workflow and
+source identity. This is cryptographic provenance, not Windows Authenticode signing or Apple
+notarization.
+
+A release tag may create only a **draft** GitHub Release, and only after the repository-level
+immutable-release setting is enabled. Attach every asset before publishing the draft. Publishing the
+release locks its tag and assets and generates the release attestation. Verify a candidate consumer
+path before publication:
+
+```console
+gh release download <tag> --repo celiumsai/pliegocss --pattern 'pliegocss-*'
+gh release verify <tag> --repo celiumsai/pliegocss
+gh release verify-asset <tag> ./pliegocss-pnpm-<version>.tgz --repo celiumsai/pliegocss
+gh attestation verify ./pliegocss-pnpm-<version>.tgz --repo celiumsai/pliegocss
+pnpm add --save-dev --save-exact ./pliegocss-pnpm-<version>.tgz
+pnpm exec pliego-cssc --version
+pnpm exec pliego-css-lsp --version
+```
+
+Never run `npm publish`, `pnpm publish`, or install the package by its npmjs name. Never promote a
+workflow artifact directly: only the reviewed, complete draft Release asset set may become the
+immutable public distribution.
+
 ## Current blockers
 
 The schema-3 authority currently binds candidate `0.1.0-rc.2` to commit
@@ -371,8 +406,9 @@ passed; they do not clear these remaining gates:
   workflow can certify later source identities but cannot retroactively promote RC.2;
 - the crates.io replay and production edge/browser replay need fresh, unexpired, artifact-hashed
   evidence;
-- the LTS distribution boundary still lacks signed native binaries, checksums, SBOMs, attestations,
-  and the npm launcher;
+- RC.2 predates G5 and therefore has no exact-source repository native archives, checksums,
+  CycloneDX SBOMs, GitHub/Sigstore attestations, immutable GitHub Release, or verified pnpm package;
+  npmjs publication is forbidden and later-source G5 evidence cannot be inherited by RC.2;
 - external interviews, real incidents, and pilots are not yet recorded as reviewed adoption
   evidence;
 - final `0.1.0` publication is not authorized for this exact commit and tree.

@@ -41,6 +41,7 @@ assert(fast.gates.some((gate) => gate.id === "document-authority"));
 assert(fast.gates.some((gate) => gate.id === "site-markdown-docs"));
 assert(fast.gates.some((gate) => gate.id === "benchmark-authority-v2"));
 assert(fast.gates.some((gate) => gate.id === "browser-output-authority"));
+assert(fast.gates.some((gate) => gate.id === "repository-distribution-contract"));
 assert(!fast.gates.some((gate) => gate.id === "release-readiness"));
 assert(!fast.gates.some((gate) => gate.id === "getting-started"));
 
@@ -54,6 +55,7 @@ assert(integration.gates.some((gate) => gate.id === "benchmark-authority-smoke")
 const release = list("release");
 assert.deepEqual(release.includes, ["fast", "integration", "release"]);
 assert(release.gates.some((gate) => gate.id === "packages"));
+assert(release.gates.some((gate) => gate.id === "repository-distribution-contract"));
 assert(release.gates.some((gate) => gate.id === "benchmark-evidence"));
 assert(release.gates.some((gate) => gate.id === "media-query-merge"));
 assert(release.gates.some((gate) => gate.id === "reachability-pruning"));

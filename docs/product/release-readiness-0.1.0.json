@@ -221,7 +221,7 @@
       "status": "blocked",
       "evidenceClass": "pending",
       "requiredForPromotion": true,
-      "summary": "Signed native binaries, checksums, SBOMs, attestations, and the npm launcher required by the LTS distribution boundary do not exist yet.",
+      "summary": "RC.2 predates the repository-only G5 distribution contract. It has no exact-source native archives, checksums, CycloneDX SBOMs, GitHub/Sigstore attestations, immutable GitHub Release, or verified pnpm package asset; npmjs publication is forbidden.",
       "source": {
         "commit": "064dcbce96a3a5cc97a940d07566c008bb5e2d3e",
         "gitTree": "010a64f5d0bbd142a1d015fda4ccf573cc6e4133"
@@ -235,7 +235,7 @@
         "node": null,
         "browser": null
       },
-      "requiredCoverage": ["windows-x86_64", "linux-x86_64", "macos-arm64", "checksums", "sbom", "attestations", "npm-launcher"],
+      "requiredCoverage": ["windows-x86_64", "linux-x86_64", "macos-arm64", "checksums", "cyclonedx-sbom", "github-sigstore-attestations", "repository-release-assets", "immutable-release", "pnpm-package-install", "no-npmjs"],
       "coveredCoverage": [],
       "waiverAdr": null,
       "artifacts": [],

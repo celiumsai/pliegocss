@@ -26,3 +26,4 @@ ADRs record decisions that constrain implementation or public behavior.
 - [ADR-0022: Require explicit initial-render evidence for critical CSS](./0022-require-explicit-critical-style-evidence.md)
 - [ADR-0023: Establish Benchmark Authority v2](./0023-establish-benchmark-authority-v2.md)
 - [ADR-0024: Certify browser output against Tailwind](./0024-certify-browser-output-against-tailwind.md)
+- [ADR-0025: Distribute the Node launcher from immutable repository releases](./0025-distribute-node-launcher-from-immutable-repository-releases.md)
