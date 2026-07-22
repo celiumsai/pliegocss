@@ -334,22 +334,55 @@ async function browserContract() {
   await new Promise((resolveListen) => server.listen(0, "127.0.0.1", resolveListen));
   const port = server.address().port;
   const profile = mkdtempSync(join(tmpdir(), "pliegocss-site-cdp-"));
-  const debugPort = 10500 + Math.floor(Math.random() * 500);
+  const debugPortFile = join(profile, "DevToolsActivePort");
+  const chromeStderr = [];
+  let childError;
   const child = spawn(
     browser,
     [
       "--headless=new",
-      `--remote-debugging-port=${debugPort}`,
+      "--remote-debugging-port=0",
       `--user-data-dir=${profile}`,
       "--no-first-run",
       "--disable-default-apps",
+      "--disable-dev-shm-usage",
       "about:blank",
     ],
-    { stdio: "ignore" },
+    { stdio: ["ignore", "ignore", "pipe"], windowsHide: true },
   );
+  child.stderr.on("data", (chunk) => {
+    chromeStderr.push(chunk);
+    if (chromeStderr.length > 32) chromeStderr.shift();
+  });
+  child.once("error", (error) => {
+    childError = error;
+  });
   try {
+    let debugPort;
+    for (let attempt = 0; attempt < 300; attempt += 1) {
+      if (existsSync(debugPortFile)) {
+        const candidate = Number.parseInt(
+          readFileSync(debugPortFile, "utf8").split(/\r?\n/u)[0],
+          10,
+        );
+        if (Number.isInteger(candidate) && candidate > 0 && candidate <= 65_535) {
+          debugPort = candidate;
+          break;
+        }
+      }
+      if (childError || child.exitCode !== null) break;
+      await delay(100);
+    }
+    if (!debugPort) {
+      const stderr = Buffer.concat(chromeStderr).toString("utf8").trim().slice(-2_000);
+      fail(
+        `Chrome CDP bootstrap unavailable (browser=${browser}, exit=${
+          child.exitCode ?? "running"
+        }, error=${childError?.message ?? "none"}, stderr=${JSON.stringify(stderr)})`,
+      );
+    }
     let version;
-    for (let attempt = 0; attempt < 80; attempt += 1) {
+    for (let attempt = 0; attempt < 100; attempt += 1) {
       try {
         version = await (
           await fetch(`http://127.0.0.1:${debugPort}/json/version`)
@@ -359,7 +392,13 @@ async function browserContract() {
         await delay(100);
       }
     }
-    if (!version) fail("Chrome CDP endpoint unavailable");
+    if (!version) {
+      fail(
+        `Chrome CDP endpoint unavailable on allocated port ${debugPort} (exit=${
+          child.exitCode ?? "running"
+        })`,
+      );
+    }
     let target;
     for (let attempt = 0; attempt < 60; attempt += 1) {
       const targets = await (
