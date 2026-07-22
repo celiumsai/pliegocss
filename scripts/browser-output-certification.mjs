@@ -98,7 +98,7 @@ function run(command, arguments_, options = {}) {
     cwd: repositoryRoot,
     encoding: "utf8",
     windowsHide: true,
-    timeout: 240_000,
+    timeout: 600_000,
     maxBuffer: 32 * 1024 * 1024,
     ...options,
   });

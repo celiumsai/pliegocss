@@ -21,7 +21,7 @@ const runtime = join(root, "target", "manifest-graph", `run-${process.pid}-${Dat
 const project = join(runtime, "project");
 const cargoEnvironment = isolatedCargoEnvironment(root, {
   env: process.env,
-  toolchain: "1.85",
+  toolchain: "1.85.0",
 });
 const targetDir = cargoTargetRoot(root, cargoEnvironment);
 const expectedCss = readFileSync(join(fixture, "expected.css"));
@@ -76,7 +76,7 @@ function resolveExecutable() {
     return configured;
   }
 
-  run("cargo", ["+1.85", "build", "--locked", "-p", "pliego-cssc"], {
+  run("cargo", ["+1.85.0", "build", "--locked", "-p", "pliego-cssc"], {
     timeout: cargoBuildTimeout,
   });
   const executable = join(

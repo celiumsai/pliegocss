@@ -98,7 +98,7 @@ if (!existsSync(executable)) fail(`Neovim executable is missing after extraction
 
 const cargoEnvironment = isolatedCargoEnvironment(ROOT, {
   env: process.env,
-  toolchain: "1.85",
+  toolchain: "1.85.0",
 });
 const target = cargoTargetRoot(ROOT, cargoEnvironment);
 const workspace = resolve(target, "lsp-integration-workspace");

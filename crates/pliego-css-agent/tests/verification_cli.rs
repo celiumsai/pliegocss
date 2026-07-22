@@ -85,9 +85,22 @@ fn temp_root() -> PathBuf {
 }
 
 fn agent_binary() -> PathBuf {
-    std::env::var_os("CARGO_BIN_EXE_pliego-css-agent")
-        .map(PathBuf::from)
-        .expect("Cargo must provide the pliego-css-agent binary for integration tests")
+    if let Some(path) = std::env::var_os("CARGO_BIN_EXE_pliego-css-agent") {
+        return PathBuf::from(path);
+    }
+
+    let mut path = std::env::current_exe().expect("integration test path must be available");
+    path.pop();
+    if path.ends_with("deps") {
+        path.pop();
+    }
+    path.push(format!("pliego-css-agent{}", std::env::consts::EXE_SUFFIX));
+    assert!(
+        path.is_file(),
+        "Cargo-built pliego-css-agent binary is missing at {}",
+        path.display()
+    );
+    path
 }
 
 fn run(root: &Path, policy: &str, receipt: &str) -> std::process::Output {

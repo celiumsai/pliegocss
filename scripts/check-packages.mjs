@@ -52,6 +52,7 @@ const PUBLIC_API_FIXTURE_FILES = [
   "src/main.rs",
 ];
 const PACKAGE_TOOLCHAIN = "1.96.0";
+const MSRV_TOOLCHAIN = "1.85.0";
 const EXPECTED_REPOSITORY = "https://github.com/celiumsai/pliegocss";
 const EXPECTED_HOMEPAGE = "https://pliegocss.dev";
 const EXPECTED_REGISTRY = "crates-io";
@@ -65,7 +66,7 @@ const packageCargoEnvironment = isolatedCargoEnvironment(ROOT, {
 });
 const msrvCargoEnvironment = isolatedCargoEnvironment(ROOT, {
   env: process.env,
-  toolchain: EXPECTED_MSRV,
+  toolchain: MSRV_TOOLCHAIN,
 });
 
 function fail(message) {

@@ -7,7 +7,7 @@ import { cargoTargetRoot, isolatedCargoEnvironment } from "./rust-target.mjs";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const cargoEnvironment = isolatedCargoEnvironment(root, {
   env: process.env,
-  toolchain: "1.85",
+  toolchain: "1.85.0",
 });
 const targetDir = cargoTargetRoot(root, cargoEnvironment);
 const runtime = join(targetDir, "compatibility-policy", `run-${process.pid}-${Date.now()}`);
@@ -48,7 +48,7 @@ function resolveExecutable() {
     return configured;
   }
 
-  run("cargo", ["+1.85", "build", "--locked", "-p", "pliego-cssc"], {
+  run("cargo", ["+1.85.0", "build", "--locked", "-p", "pliego-cssc"], {
     cwd: root,
     timeout: 300_000,
   });

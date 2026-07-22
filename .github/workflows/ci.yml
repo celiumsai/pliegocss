@@ -120,6 +120,10 @@ jobs:
           node-version: 22.13.0
       - name: Install pnpm for documentation gates
         run: npm install --global pnpm@11.7.0
+      - name: Install Rust toolchains
+        run: |
+          rustup toolchain install 1.85.0 --profile minimal
+          rustup toolchain install 1.96.0 --profile minimal --component rustfmt
       - name: Verify release profile registry
         run: node scripts/check-release.test.mjs
       - name: Check documentation graph
@@ -128,8 +132,6 @@ jobs:
         run: node scripts/check-brand.mjs
       - name: Check compatibility policy
         run: node scripts/check-compatibility-policy.mjs
-      - name: Install rustfmt
-        run: rustup toolchain install 1.96.0 --profile minimal --component rustfmt
       - name: Check formatting
         run: |
           cargo +1.96.0 fmt --all -- --check

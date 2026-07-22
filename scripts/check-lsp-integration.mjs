@@ -9,7 +9,7 @@ const ROOT = resolve(import.meta.dirname, "..");
 const executable = process.platform === "win32" ? ".exe" : "";
 const cargoEnvironment = isolatedCargoEnvironment(ROOT, {
   env: process.env,
-  toolchain: "1.85",
+  toolchain: "1.85.0",
 });
 const target = cargoTargetRoot(ROOT, cargoEnvironment);
 const lsp = resolve(target, "debug", `pliego-css-lsp${executable}`);
@@ -24,7 +24,7 @@ function fail(message) {
 
 const build = spawnSync(
   "cargo",
-  ["+1.85", "build", "--locked", "-p", "pliego-css-lsp", "-p", "pliego-cssc"],
+  ["+1.85.0", "build", "--locked", "-p", "pliego-css-lsp", "-p", "pliego-cssc"],
   { cwd: ROOT, env: cargoEnvironment, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
 );
 if (build.error) fail(`cannot build LSP gate: ${build.error.message}`);
