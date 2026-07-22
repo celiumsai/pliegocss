@@ -14,9 +14,10 @@ import { fileURLToPath } from "node:url";
 import { cargoTargetRoot, isolatedCargoEnvironment } from "./rust-target.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const rustToolchain = process.env.PLIEGOCSS_RUST_TOOLCHAIN ?? "1.85.0";
 const cargoEnvironment = isolatedCargoEnvironment(root, {
   env: process.env,
-  toolchain: "1.85.0",
+  toolchain: rustToolchain,
 });
 const cargoTarget = cargoTargetRoot(root, cargoEnvironment);
 const runtime = join(root, "target", "parallel-determinism", `run-${process.pid}-${Date.now()}`);
@@ -103,7 +104,7 @@ function resolveExecutable() {
     assert(existsSync(configured), `PLIEGO_CSSC does not exist: ${configured}`);
     return configured;
   }
-  run("cargo", ["+1.85.0", "build", "--locked", "-p", "pliego-cssc"]);
+  run("cargo", [`+${rustToolchain}`, "build", "--locked", "-p", "pliego-cssc"]);
   const executable = join(
     cargoTarget,
     "debug",
@@ -120,7 +121,7 @@ function resolveLockHolder() {
     return configured;
   }
   run("cargo", [
-    "+1.85.0",
+    `+${rustToolchain}`,
     "build",
     "--locked",
     "--manifest-path",
@@ -464,6 +465,7 @@ async function main() {
     JSON.stringify(
       {
         schemaVersion: 1,
+        rustToolchain,
         workersPerCohort: workers,
         maximumConcurrentCompilerProcesses: workers,
         referenceProcesses: profiles.length,

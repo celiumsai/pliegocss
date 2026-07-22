@@ -78,6 +78,7 @@ jobs:
         env:
           PLIEGO_CSSC: target/debug/pliego-cssc${{ runner.os == 'Windows' && '.exe' || '' }}
           PLIEGO_LOCK_HOLDER: target/debug/pliego-publication-lock-holder${{ runner.os == 'Windows' && '.exe' || '' }}
+          PLIEGOCSS_RUST_TOOLCHAIN: ${{ matrix.toolchain }}
         run: node scripts/check-parallel-determinism.mjs
       - name: Check cross-platform bundle contract
         run: node scripts/check-portability.mjs
