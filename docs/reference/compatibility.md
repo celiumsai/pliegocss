@@ -46,7 +46,7 @@ must pin every direct PliegoCSS dependency to exact version `0.1.0-rc.2`.
 | Repair check policy / Verification Receipt | latest schemas `1.4.0` / `1.4.0`, canonical `1.0.0`/`1.1.0`/`1.2.0`/`1.3.0` read support under original kind limits; kinds `standard-css-audit|token-graph-integrity|css-budget-audit|test-suite-evidence|browser-evidence`; fixed test/browser evidence schemas `1.0.0`; results `passed|failed|blocked`; complete adjacent FindingDocuments | agent core/bin tests, fixed-runner/verify black-box gates, real Chromium replay, public-API smoke, and extracted-package gate |
 | Declarative bundles | frozen plan schema 1 plus additive schema 2; per-bundle manifest schema 3 or explicit 4/5 | schema-1 bundle/graph/PliegoRS gates; schema-2 DTCG local gates green |
 | PliegoRS source-surface contract | schema 2 | cross-repository integration gate |
-| Portable bundle bytes | CSS/manifest hashes in the portability contract | configured three-OS CI vector; hosted evidence pending |
+| Portable bundle bytes | CSS/manifest hashes in the portability contract | three-OS × Rust 1.85/1.96 CI; every green run is exact-source evidence and cannot promote an older tag |
 | Browser lowering configuration | Chrome/Edge 111, Firefox 128, Safari 16.4 | CLI target tests and reference |
 | Compatibility policy | schema 2 / policy 7; frozen `baseline-widely` snapshot dated 2026-07-14, integrity-bound official data packages, plus bounded configurable attribute and typed direction/container/writing-mode/cascade-layer support | `pnpm check:compatibility`, policy golden, and ADR-0012/0013 |
 
