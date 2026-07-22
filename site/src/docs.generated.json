@@ -874,7 +874,7 @@
     },
     {
       "sourcePath": "docs/site/release-readiness.md",
-      "sourceSha256": "sha256:1c590a940d6876b5f0d2ee180e689eb07ae1412660801352c22da6d72955626b",
+      "sourceSha256": "sha256:14334fe94cee9a55aca0e9c937bf7d2d160726c2c8da14bedbaba27e60a6854a",
       "route": "/docs/release-readiness/",
       "title": "Release truth bound to one exact candidate.",
       "category": "Evidence",
@@ -897,7 +897,7 @@
         {
           "id": "blockers",
           "title": "Current blockers",
-          "body": "g0-corrections-on-candidate (pending): G0 corrections exist only in the later uncommitted worktree. They require a reviewed commit/tree and hosted replay before they can become release evidence. browser-release-matrix (blocked): Every required hosted browser lane is not configured for the exact candidate source; local or historical browser runs have no promotion authority. registry-replay-refresh (pending): RC.2 was previously replayed from crates.io, but schema 3 requires a fresh, unexpired, artifact-hashed replay for the exact promotion candidate. production-deployment-refresh (pending): The production site has historical deployment evidence, but a current exact-source edge and browser replay with hashed artifacts is missing. signed-binary-distribution (blocked): Signed native binaries, checksums, SBOMs, attestations, and the npm launcher required by the LTS distribution boundary do not exist yet. external-adoption-evidence (pending): The required external interviews, real incidents, and pilots have not been recorded as reviewed evidence. final-promotion-authorization (not-authorized): Mario has not explicitly authorized publishing final 0.1.0 for this exact source commit and Git tree.",
+          "body": "g0-corrections-on-candidate (pending): G0 corrections are not part of the exact RC.2 candidate. They require a newly named candidate plus hosted replay before they can become release evidence. browser-release-matrix (blocked): Every required hosted browser lane is not configured for the exact candidate source; local or historical browser runs have no promotion authority. registry-replay-refresh (pending): RC.2 was previously replayed from crates.io, but schema 3 requires a fresh, unexpired, artifact-hashed replay for the exact promotion candidate. production-deployment-refresh (pending): The production site has historical deployment evidence, but a current exact-source edge and browser replay with hashed artifacts is missing. signed-binary-distribution (blocked): Signed native binaries, checksums, SBOMs, attestations, and the npm launcher required by the LTS distribution boundary do not exist yet. external-adoption-evidence (pending): The required external interviews, real incidents, and pilots have not been recorded as reviewed evidence. final-promotion-authorization (not-authorized): Mario has not explicitly authorized publishing final 0.1.0 for this exact source commit and Git tree.",
           "code": null
         }
       ]
