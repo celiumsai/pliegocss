@@ -1,6 +1,6 @@
 # Reachability-pruning benchmark
 
-Date: 2026-07-17
+Date: 2026-07-22
 
 Status: deterministic change gate for the opt-in application-union pruning contract
 
@@ -46,28 +46,33 @@ The reviewed source SHA-256 is
 `159233dbb9258f93bbc0561e795780aa3b803a2cab8bfa3b19d37284d40359c0`; the generated sidecar
 SHA-256 is `d457dd60004d9d989d42928c5665a5ed84561bf4955f61af3a23ecf21b876a76`.
 
+The 2026-07-22 refresh keeps those inputs and every graph count unchanged while accepting the
+StyleId-format-2 output identities from the shared compiler engine. Rust 1.85/1.96 CI lanes on
+Linux and macOS produced one identical result, and isolated Node 22.13/24.16 replays reproduced the
+same CSS, manifest, size, and gzip hashes before this snapshot was updated.
+
 | Profile | Styles | Semantic declarations | Token nodes | Physical rules | Physical declarations | Raw | Gzip -9 |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| Baseline schema 5 | 14 | 147 | 30 | 60 | 207 | 7,283 B | 1,214 B |
+| Baseline schema 5 | 14 | 147 | 30 | 60 | 207 | 7,282 B | 1,213 B |
 | Pruned schema 5 | 2 | 13 | 9 | 2 | 15 | 366 B | 224 B |
-| Difference | -12 | -134 | -21 | -58 | -192 | -6,917 B (94.975%) | -990 B (81.549%) |
+| Difference | -12 | -134 | -21 | -58 | -192 | -6,916 B (94.974%) | -989 B (81.533%) |
 
 | Themed profile | Theme custom properties | Physical rules | Physical declarations | Raw | Gzip -9 |
 |---|---:|---:|---:|---:|---:|
-| Baseline schema 5 | 10 | 61 | 217 | 7,654 B | 1,370 B |
-| Pruned schema 5 | 3 | 3 | 18 | 457 B | 264 B |
-| Difference | -7 | -58 | -199 | -7,197 B (94.029%) | -1,106 B (80.730%) |
+| Baseline schema 5 | 10 | 61 | 217 | 7,653 B | 1,369 B |
+| Pruned schema 5 | 3 | 3 | 18 | 457 B | 265 B |
+| Difference | -7 | -58 | -199 | -7,196 B (94.028%) | -1,104 B (80.643%) |
 
 The retained variables are exactly `--color-accent`, `--color-ink`, and `--color-surface`; the
 seven unused seed color/font variables are absent. The themed baseline CSS SHA-256 is
-`c44f73c55e746cc012b35aaa4519df2933382c4abdf00016eb117718a948033f`; the themed pruned hash is
-`97f7110faa860b545b0d9a432ed68fb094088b0aebdd79db76435dbbc1c28ce5`.
+`cd2a276e221155f29cfc12ff3dbd8394cd144e314ccc1a753ad097b1178cb70f`; the themed pruned hash is
+`a3b4b91dad2f3e627f56d219cf476bd1dfb22b12c5669c8f26af469d380a7799`.
 
 The baseline CSS SHA-256 is
-`83940c253ce21b33283b8424c88d42e41c6b2b9cab1b2193934887f93f9e9504`; the pruned CSS SHA-256
-is `fcd12e252a983989e1006701539aadf375311327ef2aa294afc1e79e44f6edb3`. Their manifest hashes
-are `f4b0d70440860dfb79bbdaeff74d47ec8e71d4bf577a06d83e4165d390ddae93` and
-`2a7f5766f577e487334ad014600602cb315ee846455912572e2192b2e7fa2197`, respectively.
+`a0d4a94b0be27ecbd113b764eca1d20ccbf5c328c896b3f2ca1a0f86516859ee`; the pruned CSS SHA-256
+is `b1e26159f1078fd29403b5f70fb85fed7d1e290941dc07c91a476d96b317222a`. Their manifest hashes
+are `a9e293c0f64cfff3658f0ca8d041c9ce659427915bb0064401999bf7ff210b5a` and
+`8a991deb50fbb5299e3de3008297570bd14c62af2b47f47fe9449e344b7d241b`, respectively.
 
 Gzip byte counts are frozen across the reviewed runtimes. The harness normalizes the informational
 OS byte in the gzip header to `255` before hashing, then records and checks the deflate result for
@@ -75,8 +80,8 @@ each reviewed zlib build:
 
 | Runtime zlib | Baseline gzip SHA-256 | Pruned gzip SHA-256 | Themed baseline | Themed pruned |
 |---|---|---|---|---|
-| Node 22.13, `1.3.0.1-motley-82a5fec` | `f29588fd0dada2e22227f827a752785e2c4bf04f894379b41b10f42e0cc717f2` | `cf24e99f35cd7cdb95bcab9be2fc8e7508f380d8f9a20c9a2f7690ed1eda0d60` | `6fdb9eb9fdbbed3e05b6cdb75fc7c7279ee2d6c3757664c4bb5e02c3fb10bfdd` | `393437116dab5d6803a5842d899546598f5ca2f64c3990267321e76f069b27f1` |
-| Node 24.16, `1.3.1-e00f703` | `f29588fd0dada2e22227f827a752785e2c4bf04f894379b41b10f42e0cc717f2` | `cf24e99f35cd7cdb95bcab9be2fc8e7508f380d8f9a20c9a2f7690ed1eda0d60` | `6fdb9eb9fdbbed3e05b6cdb75fc7c7279ee2d6c3757664c4bb5e02c3fb10bfdd` | `393437116dab5d6803a5842d899546598f5ca2f64c3990267321e76f069b27f1` |
+| Node 22.13, `1.3.0.1-motley-82a5fec` | `941b57383fd67450ae34234876b2b09d64dd6fb68dd138503858b9c4dfa5b4b1` | `4b62e9053298bcfb12e07330bac4c47c68a7c45815832d4d087f89e754a4501c` | `a13dee3f2d2f5093c7b3564d17b6aad9869a05618fb887bd2c0b359dc4a57814` | `8670a47312abec7e2fe58770c2a9c136aa7529eac104923acc9c6efea4f0312c` |
+| Node 24.16, `1.3.1-e00f703` | `941b57383fd67450ae34234876b2b09d64dd6fb68dd138503858b9c4dfa5b4b1` | `4b62e9053298bcfb12e07330bac4c47c68a7c45815832d4d087f89e754a4501c` | `a13dee3f2d2f5093c7b3564d17b6aad9869a05618fb887bd2c0b359dc4a57814` | `8670a47312abec7e2fe58770c2a9c136aa7529eac104923acc9c6efea4f0312c` |
 
 The gate fails if any frozen input, CSS, manifest, reviewed gzip hash, size, or graph count changes.
 It also fails independently if raw or gzip output stops getting smaller, even if someone updates a
