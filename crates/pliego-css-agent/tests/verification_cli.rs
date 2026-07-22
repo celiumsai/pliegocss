@@ -84,8 +84,14 @@ fn temp_root() -> PathBuf {
     path
 }
 
+fn agent_binary() -> PathBuf {
+    std::env::var_os("CARGO_BIN_EXE_pliego-css-agent")
+        .map(PathBuf::from)
+        .expect("Cargo must provide the pliego-css-agent binary for integration tests")
+}
+
 fn run(root: &Path, policy: &str, receipt: &str) -> std::process::Output {
-    Command::new(env!("CARGO_BIN_EXE_pliego-css-agent"))
+    Command::new(agent_binary())
         .current_dir(root)
         .args([
             "verify",
@@ -305,7 +311,7 @@ fn fixed_runner_evidence_reaches_verification_without_a_command_policy_surface()
     )
     .unwrap();
 
-    let run_tests = Command::new(env!("CARGO_BIN_EXE_pliego-css-agent"))
+    let run_tests = Command::new(agent_binary())
         .current_dir(&root)
         .args([
             "run-tests",

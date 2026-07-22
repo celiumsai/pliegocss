@@ -1,18 +1,37 @@
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { AuthorityError, validateBrowserMatrix } from "./release-authority.mjs";
 
 const root = resolve(import.meta.dirname, "..");
-const matrix = JSON.parse(readFileSync(resolve(root, "docs/benchmarks/hosted-browser-matrix.json"), "utf8"));
-const currentOs = process.platform === "win32" ? "windows" : process.platform;
-function fail(message) { throw new Error(`hosted browser matrix: ${message}`); }
-if (matrix.schemaVersion !== 1 || matrix.hosts?.length !== 5) fail("header or host inventory drifted");
-const allowed = new Set(["available", "not-configured", "passed", "failed"]);
-for (const host of matrix.hosts) {
-  if (!allowed.has(host.status)) fail(`invalid status for ${host.id}`);
-  if (host.status === "passed" && host.automation !== "passed") fail(`${host.id} claims pass without automation`);
-  if (host.status === "available" && (!host.executable || !["executable-discovery-only", "local-computed-style-smoke"].includes(host.claim))) fail(`${host.id} availability is not bounded`);
-  if (host.status === "not-configured" && host.claim !== "none") fail(`${host.id} claims evidence while not configured`);
-  if (host.executable && currentOs === host.os && !existsSync(resolve(host.executable))) fail(`${host.id} executable is absent: ${host.executable}`);
+const args = process.argv.slice(2);
+const enforceRelease =
+  (args.length === 1 && args[0] === "--profile=release") ||
+  (args.length === 2 && args[0] === "--profile" && args[1] === "release");
+if (
+  !enforceRelease &&
+  !(
+    args.length === 0 ||
+    (args.length === 1 && args[0] === "--validate")
+  )
+) {
+  throw new Error(`hosted browser matrix: unknown mode ${args.join(" ")}`);
 }
-if (matrix.historicalEvidence?.status !== "historical-manual" || matrix.historicalEvidence.ciReplay !== "not-configured") fail("historical evidence boundary drifted");
-process.stdout.write(`${JSON.stringify({schemaVersion:1,available:matrix.hosts.filter((host)=>host.status==='available').map((host)=>host.id),passed:matrix.hosts.filter((host)=>host.status==='passed').map((host)=>host.id),notConfigured:matrix.hosts.filter((host)=>host.status==='not-configured').map((host)=>host.id)},null,2)}\n`);
+
+try {
+  const value = JSON.parse(
+    readFileSync(resolve(root, "docs/benchmarks/hosted-browser-matrix.json"), "utf8"),
+  );
+  const summary = validateBrowserMatrix(value, { root });
+  process.stdout.write(`${JSON.stringify(summary, null, 2)}\n`);
+  if (enforceRelease && summary.result !== "ready") {
+    process.stderr.write(
+      `hosted browser matrix: release blocked by ${summary.missingRequiredHosts.join(", ")}\n`,
+    );
+    process.exitCode = 1;
+  }
+} catch (error) {
+  if (error instanceof AuthorityError) {
+    throw new Error(`hosted browser matrix: ${error.message}`);
+  }
+  throw error;
+}

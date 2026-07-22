@@ -10,7 +10,7 @@ use serde::Serialize;
 
 use super::optimize_css;
 
-const CATALOG_SCHEMA_VERSION: u8 = 3;
+const CATALOG_SCHEMA_VERSION: u8 = 4;
 
 /// Serialized utility-catalog representation.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
@@ -41,6 +41,7 @@ struct TokenInspection {
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct BreakpointInspection {
+    cascade_rank: u16,
     name: String,
     min_width: String,
 }
@@ -161,10 +162,9 @@ fn catalog_theme(theme: &ThemeRegistry) -> ThemeInspection {
     inspection.tokens.sort_by(|left, right| {
         (left.kind.as_str(), left.name.as_str()).cmp(&(right.kind.as_str(), right.name.as_str()))
     });
-    inspection.breakpoints.sort_by(|left, right| {
-        (left.name.as_str(), left.min_width.as_str())
-            .cmp(&(right.name.as_str(), right.min_width.as_str()))
-    });
+    inspection
+        .breakpoints
+        .sort_by_key(|breakpoint| breakpoint.cascade_rank);
     inspection
 }
 
@@ -184,6 +184,7 @@ fn inspect_theme(theme: &ThemeRegistry) -> ThemeInspection {
             .breakpoints()
             .iter()
             .map(|breakpoint| BreakpointInspection {
+                cascade_rank: breakpoint.cascade_rank,
                 name: breakpoint.name.clone(),
                 min_width: breakpoint.min_width.clone(),
             })
@@ -284,9 +285,12 @@ fn render_catalog_markdown(document: &CatalogDocument) -> String {
         output.push_str("</code> |\n");
     }
 
-    output.push_str("\n## Breakpoints\n\n| Name | Minimum width |\n|---|---|\n");
+    output
+        .push_str("\n## Breakpoints\n\n| Cascade rank | Name | Minimum width |\n|---:|---|---|\n");
     for breakpoint in &document.theme.breakpoints {
-        output.push_str("| <code>");
+        output.push_str("| ");
+        output.push_str(&breakpoint.cascade_rank.to_string());
+        output.push_str(" | <code>");
         output.push_str(&markdown_cell(&breakpoint.name));
         output.push_str("</code> | <code>");
         output.push_str(&markdown_cell(&breakpoint.min_width));

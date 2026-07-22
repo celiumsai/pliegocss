@@ -226,7 +226,7 @@ fn emit_css_with_theme_inner<const TRACE: bool>(
         .into_iter()
         .map(|(id, assignments)| (&style.conditions[id.index()], assignments))
         .collect::<Vec<_>>();
-    groups.sort_by(|left, right| compare_resolved_conditions(style, left.0, right.0));
+    groups.sort_by(|left, right| compare_resolved_conditions(theme, style, left.0, right.0));
 
     let mut css = String::new();
     let mut rules = Vec::new();
@@ -431,14 +431,21 @@ fn selector(
 }
 
 fn compare_resolved_conditions(
+    theme: &ThemeRegistry,
     style: &SemanticStyle,
     left: &Condition,
     right: &Condition,
 ) -> Ordering {
     left.layer
         .cmp(&right.layer)
-        .then_with(|| left.breakpoint.cmp(&right.breakpoint))
-        .then_with(|| left.container_breakpoint.cmp(&right.container_breakpoint))
+        .then_with(|| {
+            breakpoint_order_key(theme, left.breakpoint)
+                .cmp(&breakpoint_order_key(theme, right.breakpoint))
+        })
+        .then_with(|| {
+            breakpoint_order_key(theme, left.container_breakpoint)
+                .cmp(&breakpoint_order_key(theme, right.container_breakpoint))
+        })
         .then_with(|| left.theme.cmp(&right.theme))
         .then_with(|| left.motion.cmp(&right.motion))
         .then_with(|| left.contrast.cmp(&right.contrast))
@@ -454,6 +461,20 @@ fn compare_resolved_conditions(
                         .map(|selector| style.selectors[selector.index()].as_str()),
                 )
         })
+}
+
+fn breakpoint_order_key(
+    theme: &ThemeRegistry,
+    breakpoint: Option<pliego_css_ir::BreakpointId>,
+) -> (u8, u16, u16) {
+    match breakpoint {
+        None => (0, 0, 0),
+        Some(id) => theme
+            .breakpoint_by_id(id)
+            .map_or((2, u16::MAX, id.get()), |definition| {
+                (1, definition.cascade_rank, id.get())
+            }),
+    }
 }
 
 fn wrap_condition(

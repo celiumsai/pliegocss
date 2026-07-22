@@ -1,4 +1,6 @@
 {
+  "archiveStatus": "historical-no-current-authority",
+  "supersededBy": "docs/product/release-readiness-0.1.0.json",
   "schemaVersion": 1,
   "statusDate": "2026-07-20",
   "selectedNext": "accessibility-diagnostic-quality-corpus",

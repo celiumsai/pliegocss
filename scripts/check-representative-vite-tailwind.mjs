@@ -2,10 +2,11 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
+import { cargoTargetRoot } from "./rust-target.mjs";
 
 const root = resolve(import.meta.dirname, "..");
 const fixture = join(root, "integration-tests", "representative", "vite-tailwind-inventory");
-const executable = join(root, "target", "debug", process.platform === "win32" ? "pliego-cssc.exe" : "pliego-cssc");
+const executable = join(cargoTargetRoot(root), "debug", process.platform === "win32" ? "pliego-cssc.exe" : "pliego-cssc");
 
 function fail(message, detail) {
   throw new Error(detail === undefined ? message : `${message}\n${JSON.stringify(detail, null, 2)}`);

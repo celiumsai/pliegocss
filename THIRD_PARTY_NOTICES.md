@@ -64,12 +64,41 @@ bundled software dependencies.
 
 ## Benchmark-only software
 
-### Tailwind CSS and CLI 4.3.2
+### Tailwind CSS and CLI benchmark lanes
 
-- Relationship: frozen performance and ergonomics baseline only; not a PliegoCSS runtime/backend
-  dependency.
+- Relationship: performance and ergonomics baselines only; not PliegoCSS runtime/backend
+  dependencies. Benchmark Authority v2 uses current `4.3.3`, upstream `v3-lts` `3.4.19`, and
+  frozen regression control `4.3.2`.
 - License: MIT.
 - Source: https://github.com/tailwindlabs/tailwindcss
-- Locked evidence: `tailwindcss@4.3.2`, `@tailwindcss/cli@4.3.2`, and the complete transitive
-  `pnpm-lock.yaml` graph at SHA-256
-  `c4f9b91705418524bd91178fd417e3b02585dfce613c2a56e6cef25a6c8c1049`.
+- Locked evidence: `tailwindcss@4.3.3`, `@tailwindcss/cli@4.3.3`,
+  `tailwindcss@3.4.19`, `tailwindcss@4.3.2`, `@tailwindcss/cli@4.3.2`, their registry SRI values,
+  and the complete transitive `pnpm-lock.yaml` graph at SHA-256
+  `39f1ccd3f3b3262805d773e92bf8b2d0efc9ac755ba77460a0cb801d5ccea394`.
+
+## Browser-certification software
+
+These packages are test-only tooling for Browser/output certification v1. They do not ship in the
+PliegoCSS compiler or generated CSS.
+
+### Playwright 1.61.1
+
+- Relationship: launches the pinned Chromium, Firefox, and WebKit certification engines.
+- License: Apache-2.0.
+- Source: https://github.com/microsoft/playwright
+- Locked evidence: `playwright@1.61.1`, `playwright-core@1.61.1`, their npm SRI values, and the
+  complete `pnpm-lock.yaml` SHA-256 recorded above.
+
+### pixelmatch 7.2.0
+
+- Relationship: bounded perceptual comparison of captured PNG pixels.
+- License: ISC.
+- Source: https://github.com/mapbox/pixelmatch
+- Locked evidence: `pixelmatch@7.2.0`, its npm SRI, and the complete pnpm lock SHA-256.
+
+### pngjs 7.0.0
+
+- Relationship: deterministic PNG decoding and diff encoding for certification evidence.
+- License: MIT.
+- Source: https://github.com/pngjs/pngjs
+- Locked evidence: `pngjs@7.0.0`, its npm SRI, and the complete pnpm lock SHA-256.

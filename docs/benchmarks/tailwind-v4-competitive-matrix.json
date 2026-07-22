@@ -1,12 +1,14 @@
 {
-  "schemaVersion": 1,
-  "statusDate": "2026-07-19",
+  "schemaVersion": 2,
+  "statusDate": "2026-07-22",
   "baseline": {
     "product": "Tailwind CSS",
-    "version": "4.3.2",
+    "authority": "benchmarks/benchmark-authority-v2/oracle.json",
+    "primaryLane": "tailwind-latest",
+    "version": "4.3.3",
     "license": "MIT",
     "packageManifest": "node_modules/tailwindcss/package.json",
-    "packageManifestSha256": "92a1151a2e1adb85c736228008ae2d3fa293dc1c51c058f5317a238194298a97",
+    "packageManifestSha256": "3dc86b46c511947ca00838aa3f1776243abe923ac347c092e60a0cbc7ae68559",
     "fixture": "benchmarks/tailwind-v4/fixtures.html",
     "fixtureSha256": "338eb480327e54fe7e56e81b42c67324464afaa8c65d606e5d57c1c45690e86c",
     "fixtureClassAttributes": 44,
@@ -58,8 +60,13 @@
       "versionObserved": "v4.3"
     },
     {
+      "id": "benchmark-authority-v2",
+      "kind": "local-contract",
+      "path": "docs/benchmarks/tailwind-benchmark-authority-v2.md"
+    },
+    {
       "id": "pliego-gate-b",
-      "kind": "local-evidence",
+      "kind": "historical-evidence",
       "path": "docs/benchmarks/pliego-gate-b.md"
     },
     {
@@ -76,6 +83,11 @@
       "id": "pliego-maturity",
       "kind": "local-contract",
       "path": "docs/product/maturity-map.json"
+    },
+    {
+      "id": "browser-output-certification-v1",
+      "kind": "local-contract",
+      "path": "docs/benchmarks/browser-output-certification-v1.md"
     }
   ],
   "dimensions": [
@@ -83,9 +95,9 @@
       "id": "representative-fixture",
       "area": "utility authoring",
       "status": "matched",
-      "tailwind": "The pinned CLI generates the complete five-view fixture from visible class tokens.",
-      "pliego": "Gate B compiles all 44 class attributes, 302 occurrences, 90 unique concrete tokens, and all eight tracked variants.",
-      "evidence": ["pliego-gate-b", "pliego-utilities"],
+      "tailwind": "The primary 4.3.3 lane and both historical lanes must emit every candidate in the complete five-view fixture before timing is comparable.",
+      "pliego": "The shared medium corpus retains 44 class attributes, 302 occurrences, 90 unique concrete tokens, and all eight tracked variants.",
+      "evidence": ["benchmark-authority-v2", "pliego-utilities"],
       "releaseImpact": "keep-green",
       "nextAction": "Preserve the fixture as a regression vector; do not infer full catalog parity."
     },
@@ -144,30 +156,30 @@
       "area": "base styles",
       "status": "tailwind-advantage",
       "tailwind": "Ships Preflight as part of its normal full import.",
-      "pliego": "Emits no reset; current benchmark comparisons correctly use Tailwind no-preflight as the primary baseline.",
-      "evidence": ["pliego-gate-b", "tailwind-installation"],
+      "pliego": "Emits no reset; Benchmark Authority v2 fixes no-preflight as the only primary comparison contract.",
+      "evidence": ["benchmark-authority-v2", "tailwind-installation"],
       "releaseImpact": "non-blocking",
       "nextAction": "Keep the external-reset policy explicit or add a separately versioned/measured optional reset; never fold it silently into output."
     },
     {
       "id": "build-latency-fixture",
       "area": "performance",
-      "status": "matched",
-      "tailwind": "Pinned no-preflight complete fixture median is 204.826 ms across 30 fresh processes on the frozen host.",
-      "pliego": "Matched complete fixture median is 37.894 ms on the same frozen methodology, with one visible process outlier.",
-      "evidence": ["pliego-gate-b"],
-      "releaseImpact": "keep-green",
-      "nextAction": "Treat this as fixture evidence, not a universal speed claim; add representative-app cold/incremental/no-op and memory measurements."
+      "status": "open-gap",
+      "tailwind": "Benchmark Authority v2 pins latest, v3-lts, and a historical frozen lane but has no reviewed clean-tree v2 snapshot yet.",
+      "pliego": "The paired harness records complete alternating latency and peak-working-set samples across micro, medium, and large corpora; legacy Gate B numbers remain historical only.",
+      "evidence": ["benchmark-authority-v2", "pliego-gate-b"],
+      "releaseImpact": "blocking",
+      "nextAction": "Record and review immutable schema-2 evidence from a clean source commit before making a current speed claim."
     },
     {
       "id": "payload-fixture",
       "area": "performance",
-      "status": "matched",
-      "tailwind": "No-preflight fixture emits 8,618 raw / 2,327 gzip CSS bytes and 3,833 gzip transfer bytes with source utility classes.",
-      "pliego": "Matched fixture emits 10,463 raw / 2,049 gzip CSS bytes and 3,550 gzip transfer bytes after manifest class rewriting.",
-      "evidence": ["pliego-gate-b"],
-      "releaseImpact": "keep-green",
-      "nextAction": "Report raw and compressed metrics together; preserve the caveat that Pliego raw CSS is larger."
+      "status": "open-gap",
+      "tailwind": "The v2 harness measures raw, gzip, and Brotli CSS plus source-utility HTML for every lane and corpus.",
+      "pliego": "The v2 harness measures the same compression formats after manifest-driven class rewriting and retains both separate-stream transfer totals.",
+      "evidence": ["benchmark-authority-v2", "pliego-gate-b"],
+      "releaseImpact": "blocking",
+      "nextAction": "Freeze a clean-tree v2 snapshot and keep all raw, gzip, Brotli, HTML, CSS, and transfer values visible."
     },
     {
       "id": "rust-compile-overhead",
@@ -274,10 +286,10 @@
       "area": "platform support",
       "status": "open-gap",
       "tailwind": "Upstream documents a modern-browser compatibility floor and v4.3 behavior.",
-      "pliego": "Uses versioned targets and official-data policy, but complete CSS classification and hosted Chromium/Firefox/WebKit evidence remain incomplete.",
-      "evidence": ["tailwind-compatibility", "pliego-strategy", "pliego-maturity"],
+      "pliego": "Uses versioned targets and official-data policy. Browser/output certification v1 implements same-host computed, bounded 1/64-pixel geometry, and bounded PNG comparison against the current Tailwind lane across Chromium, Firefox, and WebKit; dirty local Windows x64 and Linux x64 diagnostics pass, while the clean hosted 9/9 artifact and complete CSS classification remain incomplete.",
+      "evidence": ["tailwind-compatibility", "pliego-strategy", "pliego-maturity", "browser-output-certification-v1"],
       "releaseImpact": "blocking",
-      "nextAction": "Close the supported CSS corpus and hosted browser matrix while preserving explicit blocked/degraded decisions."
+      "nextAction": "Produce the unexpired clean-tree 9/9 Windows x64, Linux x64, and macOS ARM64 matrix, then close the supported CSS corpus while preserving explicit blocked/degraded decisions."
     },
     {
       "id": "responsive-diagnosis",

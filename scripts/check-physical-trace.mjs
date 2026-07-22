@@ -12,16 +12,25 @@ import {
 } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { cargoTargetRoot, isolatedCargoEnvironment } from "./rust-target.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const fixture = join(root, "integration-tests", "physical-trace");
 const runtime = join(root, "target", "physical-trace", `run-${process.pid}-${Date.now()}`);
 const project = join(runtime, "project");
-const targetDir = join(root, "target");
+const cargoEnvironment = isolatedCargoEnvironment(root, {
+  env: process.env,
+  toolchain: "1.85",
+});
+const targetDir = cargoTargetRoot(root, cargoEnvironment);
 const reachabilityName = "pliego.reachability.json";
 const expectedCss = readFileSync(join(fixture, "expected.css"));
 const expectedManifest = readFileSync(join(fixture, "expected.manifest.json"));
 const updateGoldens = process.env.PLIEGOCSS_UPDATE_GOLDENS === "1";
+const cargoBuildTimeout = Number.parseInt(
+  process.env.PLIEGOCSS_CARGO_BUILD_TIMEOUT_MS ?? "600000",
+  10,
+);
 
 const physicalEdgeKinds = new Set([
   "declarationContributesToPhysicalDeclaration",
@@ -80,7 +89,7 @@ function run(program, args, { cwd = root, expectedStatus = 0, timeout = 30_000 }
   const result = spawnSync(program, args, {
     cwd,
     encoding: "utf8",
-    env: { ...process.env, CARGO_TARGET_DIR: targetDir },
+    env: cargoEnvironment,
     maxBuffer: 16 * 1024 * 1024,
     timeout,
     windowsHide: true,
@@ -103,7 +112,7 @@ function resolveExecutable() {
   }
 
   run("cargo", ["+1.85", "build", "--locked", "-p", "pliego-cssc"], {
-    timeout: 180_000,
+    timeout: cargoBuildTimeout,
   });
   const executable = join(
     targetDir,
@@ -295,7 +304,7 @@ async function assertWatchContract(executable) {
     ],
     {
       cwd: project,
-      env: { ...process.env, CARGO_TARGET_DIR: targetDir },
+      env: cargoEnvironment,
       stdio: ["ignore", "pipe", "pipe"],
       windowsHide: true,
     },
@@ -448,7 +457,7 @@ function assertManifest(manifest, css, schemaVersion, targets, format) {
   assert(manifest.schemaVersion === schemaVersion, `expected manifest schema ${schemaVersion}`);
   assert(manifest.styleIdFormatVersion === 2, "StyleId format version drifted");
   assert(manifest.classNameFormatVersion === 1, "class-name format version drifted");
-  assert(manifest.themeIdFormatVersion === 2, "theme ID format version drifted");
+  assert(manifest.themeIdFormatVersion === 3, "theme ID format version drifted");
   assert(/^[0-9a-f]{32}$/.test(manifest.themeId), "ThemeId is not fixed-width hex");
   assert(manifest.targets === targets, `expected target contract ${targets}`);
   assert(manifest.format === format, `expected CSS format ${format}`);

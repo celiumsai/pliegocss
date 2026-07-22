@@ -1,12 +1,9 @@
 # pliego-css-lsp
 
 `pliego-css-lsp` is the public-preview standard-LSP transport for PliegoCSS Rust literals. It keeps
-open documents in memory, negotiates UTF-16 positions, publishes scanner and `FMT001` diagnostics,
-returns collision-safe whole-literal formatting edits, and delegates completion/hover metadata to
-the versioned `pliego-cssc` catalog/explain JSON contracts. With an explicit generated Project
-Index, Go to Definition follows verified source sites and manifests to final CSS declarations.
-Syntactically valid literals also reuse the compiler's diagnostic schema for bounded theme-aware
-semantic checks instead of maintaining an editor-only utility validator.
+open documents in memory, negotiates UTF-16 positions, publishes scanner, formatter, semantic, and
+`pcx` diagnostics, and serves completion and hover from the same in-process compiler engine used by
+the CLI and watch mode. It does not launch `pliego-cssc` or create temporary source files.
 
 Print the installed package version without entering stdio mode:
 
@@ -17,7 +14,7 @@ pliego-css-lsp --version
 Run it over stdio from the project root:
 
 ```console
-pliego-css-lsp --pliego-cssc /exact/path/to/pliego-cssc --seed
+pliego-css-lsp --seed
 ```
 
 Enable source-to-CSS navigation without repository inference:
@@ -26,6 +23,9 @@ Enable source-to-CSS navigation without repository inference:
 pliego-css-lsp --project-index target/site/assets/pliego.index.json --seed
 ```
 
-Without `--seed`, the delegated compiler uses normal conventional theme discovery. `--config`
-selects one exact theme file. The server currently requests full document synchronization and only
-offers semantic features inside statically supported `pc!`/`pcx!` Rust string literals.
+Without `--seed`, the server discovers `pliego.theme.toml` at the initialized workspace root.
+`--config` selects one exact theme file. `--pliego-cssc` and `PLIEGO_CSSC` remain accepted during
+the 0.1 compatibility window, but are ignored: semantic analysis is always in-process.
+
+The server requests full document synchronization and offers semantic features only inside
+statically supported `pc!`/`pcx!` Rust string literals.

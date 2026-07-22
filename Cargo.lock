@@ -514,9 +514,13 @@ version = "0.1.0-rc.2"
 name = "pliego-css-lsp"
 version = "0.1.0-rc.2"
 dependencies = [
+ "pliego-css-compiler",
+ "pliego-css-config",
  "pliego-css-io",
+ "pliego-css-ir",
  "pliego-css-parser",
  "pliego-css-source",
+ "pliego-css-theme",
  "serde",
  "serde_json",
  "sha2",

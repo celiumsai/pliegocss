@@ -4,9 +4,18 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { isolatedCargoEnvironment } from "./rust-target.mjs";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const root = resolve(scriptDirectory, "..");
+const releaseCargoEnvironment = isolatedCargoEnvironment(root, {
+  env: process.env,
+  toolchain: "1.96.0",
+});
+const msrvCargoEnvironment = isolatedCargoEnvironment(root, {
+  env: process.env,
+  toolchain: "1.85.0",
+});
 const fixtureRoot = join(root, "integration-tests", "public-api-smoke");
 const fixtureManifest = join(fixtureRoot, "Cargo.toml");
 const fixtureSource = join(fixtureRoot, "src");
@@ -53,9 +62,9 @@ function assertIdentityVersions(document, schema, role) {
     document.schemaVersion !== schema ||
     document.styleIdFormatVersion !== 2 ||
     document.classNameFormatVersion !== 1 ||
-    document.themeIdFormatVersion !== 2
+    document.themeIdFormatVersion !== 3
   ) {
-    fail(`${role} does not expose schema ${schema} with identity formats 2/1/2`);
+    fail(`${role} does not expose schema ${schema} with identity formats 2/1/3`);
   }
 }
 
@@ -90,7 +99,7 @@ const cliBuild = run("cargo", [
   "--message-format=json-render-diagnostics",
   "-p",
   "pliego-cssc",
-]);
+], { env: releaseCargoEnvironment });
 let executable;
 for (const line of cliBuild.stdout.split(/\r?\n/u).filter(Boolean)) {
   let message;
@@ -112,7 +121,6 @@ if (!executable) {
   fail("Cargo did not report the pliego-cssc executable it built");
 }
 
-const fixtureTarget = join(root, "target", "public-api-smoke");
 const fixtureRun = run(
   "cargo",
   [
@@ -126,7 +134,7 @@ const fixtureRun = run(
     "--manifest-path",
     fixtureManifest,
   ],
-  { env: { ...process.env, CARGO_TARGET_DIR: fixtureTarget } },
+  { env: msrvCargoEnvironment },
 );
 const publicLine = fixtureRun.stdout.trim();
 const publicMatch = /^([0-9a-f]{32})\t(pc_[0-9a-z]+)$/u.exec(publicLine);
@@ -199,14 +207,14 @@ try {
       { cwd: workspace },
     ).stdout,
   );
-  assertIdentityVersions(inspection, 2, "inspection");
+  assertIdentityVersions(inspection, 3, "inspection");
 
   const catalog = JSON.parse(
     run(executable, ["catalog", "--config", fixtureTheme, "--format", "json"], {
       cwd: workspace,
     }).stdout,
   );
-  assertIdentityVersions(catalog, 3, "catalog");
+  assertIdentityVersions(catalog, 4, "catalog");
 
   const explanation = JSON.parse(
     run(
@@ -243,7 +251,7 @@ try {
         inspectionSchema: inspection.schemaVersion,
         catalogSchema: catalog.schemaVersion,
         explainSchema: explanation.schemaVersion,
-        identityFormats: [2, 1, 2],
+        identityFormats: [2, 1, 3],
         renamedFacadeDependency: true,
         dtcgBuildMacro: true,
         tomlRegistryConvergence: true,

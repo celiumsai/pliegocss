@@ -12,8 +12,13 @@ import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import { basename, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { isolatedCargoEnvironment } from "./rust-target.mjs";
 
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
+const cargoEnvironment = isolatedCargoEnvironment(root, {
+  env: process.env,
+  toolchain: "1.85.0",
+});
 const fixtureRoot = join(root, "integration-tests", "plain-html-smoke");
 const adapterPath = join(fixtureRoot, "adapter.json");
 
@@ -140,7 +145,7 @@ function runCompiler(adapter, outputRoot) {
       "--manifest-version",
       "3",
     ],
-    { cwd: root, encoding: "utf8", windowsHide: true },
+    { cwd: root, env: cargoEnvironment, encoding: "utf8", windowsHide: true },
   );
   if (result.error) {
     throw result.error;

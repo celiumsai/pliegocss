@@ -1,0 +1,111 @@
+name: Browser output certification
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  host:
+    name: ${{ matrix.host }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - host: windows-x64-chromium
+            runner: windows-latest
+            browser: chromium
+          - host: windows-x64-firefox
+            runner: windows-latest
+            browser: firefox
+          - host: windows-x64-webkit
+            runner: windows-latest
+            browser: webkit
+          - host: linux-x64-chromium
+            runner: ubuntu-24.04
+            browser: chromium
+          - host: linux-x64-firefox
+            runner: ubuntu-24.04
+            browser: firefox
+          - host: linux-x64-webkit
+            runner: ubuntu-24.04
+            browser: webkit
+          - host: macos-arm64-chromium
+            runner: macos-15
+            browser: chromium
+          - host: macos-arm64-firefox
+            runner: macos-15
+            browser: firefox
+          - host: macos-arm64-webkit
+            runner: macos-15
+            browser: webkit
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22.13.0
+      - name: Install pnpm
+        run: npm install --global pnpm@11.7.0
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Validate certification authority
+        run: pnpm check:browser-output-authority
+      - name: Install Rust toolchain
+        run: rustup toolchain install 1.96.0 --profile minimal
+      - name: Install browser and Linux dependencies
+        if: runner.os == 'Linux'
+        run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
+      - name: Install browser
+        if: runner.os != 'Linux'
+        run: pnpm exec playwright install ${{ matrix.browser }}
+      - name: Execute browser/output host
+        run: pnpm check:browser-output -- --browser=${{ matrix.browser }} --host=${{ matrix.host }} --output=target/browser-output-certification/evidence/${{ matrix.host }}.json --require-clean
+      - name: Upload host evidence
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: browser-output-${{ matrix.host }}-${{ github.sha }}
+          path: |
+            target/browser-output-certification/evidence/${{ matrix.host }}.json
+            target/browser-output-certification/evidence/${{ matrix.host }}.screenshots
+          if-no-files-found: error
+          retention-days: 30
+
+  matrix:
+    name: Aggregate browser/output matrix
+    needs: host
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22.13.0
+      - name: Install pnpm
+        run: npm install --global pnpm@11.7.0
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Validate certification authority
+        run: pnpm check:browser-output-authority
+      - name: Download all host evidence
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: browser-output-*-${{ github.sha }}
+          path: target/browser-output-certification/incoming
+          merge-multiple: true
+      - name: Validate complete matrix
+        run: pnpm check:browser-output-matrix -- --evidence-root=target/browser-output-certification/incoming --output=target/browser-output-certification/browser-output-matrix.json
+      - name: Upload complete matrix
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: browser-output-matrix-${{ github.sha }}
+          path: target/browser-output-certification/browser-output-matrix.json
+          if-no-files-found: error
+          retention-days: 30

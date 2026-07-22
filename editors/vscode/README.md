@@ -1,21 +1,18 @@
 # PliegoCSS for VS Code
 
-This unreleased extension connects file-backed Rust documents to an externally installed
-`pliego-css-lsp` process. It provides the completion, hover, diagnostics, formatting, and optional
-source-to-CSS navigation capabilities advertised by that server. The extension never downloads or
-updates native executables.
+This unreleased extension launches an external `pliego-css-lsp` for file-backed Rust documents. It
+does not download or embed native executables, and editor semantics do not require `pliego-cssc`.
 
-Configure `pliegocss.server.path` and `pliegocss.compiler.path` to exact same-version binaries. Set
-`pliegocss.theme.mode` to `discover`, `seed`, or `config`; config mode also requires
-`pliegocss.theme.config`. Use **PliegoCSS: Restart Language Server** after changing external files.
-Set `pliegocss.projectIndex.path` to a generated `pliego.index.json` to enable verified Go to
-Definition from a Rust utility literal to its final physical CSS declarations. An empty value keeps
-navigation disabled.
+Configure `pliegocss.server.path`, select `discover`, `seed`, or `config` theme mode, and optionally
+set `pliegocss.projectIndex.path` for verified source-to-CSS navigation. The historical
+`pliegocss.compiler.path` setting is deprecated and ignored.
 
-Only the first local workspace folder is currently used as the native process working directory.
-Virtual and untrusted workspaces are explicitly unsupported.
+Build and test from the repository root:
 
-`pnpm integration:vscode-host` launches the development extension in pinned VS Code 1.105.1 and
-exercises real `PCS001`/cross-clause `PCX003` diagnostics plus Project Index definition. Its first
-run downloads that editor test
-runtime; this is test infrastructure and does not change the extension's no-server-download policy.
+```console
+pnpm integration:vscode
+pnpm integration:vscode-host
+```
+
+The real-host gate uses VS Code 1.105.1, opens a Rust buffer, verifies Project Index definition, and
+observes shared-engine `PCS001` and `PCX003` diagnostics.

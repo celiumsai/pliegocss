@@ -490,6 +490,8 @@ fn build_theme(document: Value) -> Result<DtcgTheme, DtcgError> {
         &mut input_names,
         &mut report,
     )?;
+    super::rank_breakpoints(&mut breakpoints)
+        .map_err(|error| invalid(&error.name, error.reason))?;
     let registry =
         ThemeRegistry::from_definitions(tokens, breakpoints).map_err(DtcgError::Registry)?;
     verify_profile_theme_id(root, profile, &registry)?;
@@ -1459,7 +1461,7 @@ fn merge_breakpoint(
         .iter_mut()
         .find(|definition| definition.name == name)
     {
-        *existing = BreakpointDefinition::new(existing.id, name, value);
+        *existing = BreakpointDefinition::new(existing.id, existing.cascade_rank, name, value);
         return Ok(());
     }
     let next = breakpoints
@@ -1471,6 +1473,7 @@ fn merge_breakpoint(
         .ok_or_else(|| invalid("breakpoints", "breakpoint ID space is exhausted"))?;
     breakpoints.push(BreakpointDefinition::new(
         BreakpointId::new(next),
+        0,
         name,
         value,
     ));

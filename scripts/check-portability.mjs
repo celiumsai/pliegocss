@@ -619,7 +619,7 @@ if (
   manifest.schemaVersion !== 3 ||
   manifest.styleIdFormatVersion !== 2 ||
   manifest.classNameFormatVersion !== 1 ||
-  manifest.themeIdFormatVersion !== 2 ||
+  manifest.themeIdFormatVersion !== 3 ||
   manifest.cssBytes !== firstCss.byteLength ||
   manifest.cssSha256 !== sha256(firstCss) ||
   manifest.styles.length !== 1

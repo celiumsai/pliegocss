@@ -345,6 +345,10 @@ They expose `pub` items because sibling packages need them. Their mutable IR, pa
 catalog model, binary encoder/decoder, scanner DTOs/functions, and composition helpers are not
 covered by the minimal `0.1.x` application promise unless a later RC document explicitly promotes
 an item.
+The G2 `CompileRequest`, `CompileResult`, `AnalysisHost`, `PhysicalRulePlanner`, and `PcxRequest`
+surfaces are likewise exact-version advanced APIs shared by the packaged CLI, watch, macro, scanner,
+and LSP adapters. Their architectural role is documented and tested; they are not yet a stable
+third-party library promise. See [Shared compiler engine](./engine-api.md).
 Persisted bytes and schemas named above remain versioned regardless of this Rust-API classification.
 
 ## Change policy

@@ -60,7 +60,7 @@ files.
   "applicationCoverage": "adapter-attested-complete",
   "styleIdFormatVersion": 2,
   "classNameFormatVersion": 1,
-  "themeIdFormatVersion": 2,
+  "themeIdFormatVersion": 3,
   "themeId": "b3d5ad77175995c2b8f51ef7c0d41991",
   "targets": "modern",
   "format": "minified",

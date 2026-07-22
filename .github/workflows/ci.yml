@@ -247,6 +247,12 @@ jobs:
           rustup target add wasm32-unknown-unknown --toolchain 1.96.0
       - name: Install benchmark dependencies
         run: pnpm install --frozen-lockfile
+      - name: Check Benchmark Authority v2
+        run: pnpm check:benchmark-authority
+      - name: Check browser/output certification authority
+        run: pnpm check:browser-output-authority
+      - name: Smoke Benchmark Authority v2 runner
+        run: pnpm check:benchmark-smoke
       - name: Build and validate the PliegoRS-authored website
         run: pnpm check:site
       - name: Validate the Cloudflare public deployment profile

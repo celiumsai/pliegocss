@@ -124,16 +124,103 @@
       "integrity": []
     },
     {
+      "id": "pixelmatch",
+      "name": "pixelmatch",
+      "kind": "software",
+      "version": "7.2.0",
+      "status": "versioned-package",
+      "license": "ISC",
+      "url": "https://github.com/mapbox/pixelmatch",
+      "relationship": "browser-certification",
+      "usage": "test-only",
+      "evidence": [
+        "benchmarks/browser-output-certification-v1/authority.json",
+        "package.json",
+        "pnpm-lock.yaml",
+        "scripts/browser-output-certification.mjs"
+      ],
+      "integrity": [
+        {
+          "subject": "pixelmatch@7.2.0",
+          "value": "sha512-xhcb4yHu9sM/G7foGzoLtXYcC0zHEaOXXjRKhGup0fw78Nf2Tkiapv4EQyMzrbcmQPsllAI7DbFY2UT7PlI9Pg=="
+        },
+        {
+          "subject": "pnpm-lock.yaml",
+          "value": "sha256:39f1ccd3f3b3262805d773e92bf8b2d0efc9ac755ba77460a0cb801d5ccea394"
+        }
+      ]
+    },
+    {
+      "id": "playwright",
+      "name": "Playwright",
+      "kind": "software",
+      "version": "1.61.1",
+      "status": "versioned-package",
+      "license": "Apache-2.0",
+      "url": "https://github.com/microsoft/playwright",
+      "relationship": "browser-certification",
+      "usage": "test-only",
+      "evidence": [
+        ".github/workflows/browser-output-certification.yml",
+        "benchmarks/browser-output-certification-v1/authority.json",
+        "package.json",
+        "pnpm-lock.yaml",
+        "scripts/browser-output-certification.mjs"
+      ],
+      "integrity": [
+        {
+          "subject": "playwright-core@1.61.1",
+          "value": "sha512-h7Qlt6m4REp25qvIdvbDtVmD4LqVXfpRxhORv9L0jzETM05p4fuPJ3dKyuSXQxDSbXnmS79HAgi9589lGSpLkg=="
+        },
+        {
+          "subject": "playwright@1.61.1",
+          "value": "sha512-DWnY5o3YbLWK4GovuAVwpqL+1VwGNdUGrRr++8j8PtQQzvAVZUIMjKQ90fY689sEJZJBbZVw1rXaOKSTitkzPQ=="
+        },
+        {
+          "subject": "pnpm-lock.yaml",
+          "value": "sha256:39f1ccd3f3b3262805d773e92bf8b2d0efc9ac755ba77460a0cb801d5ccea394"
+        }
+      ]
+    },
+    {
+      "id": "pngjs",
+      "name": "pngjs",
+      "kind": "software",
+      "version": "7.0.0",
+      "status": "versioned-package",
+      "license": "MIT",
+      "url": "https://github.com/pngjs/pngjs",
+      "relationship": "browser-certification",
+      "usage": "test-only",
+      "evidence": [
+        "benchmarks/browser-output-certification-v1/authority.json",
+        "package.json",
+        "pnpm-lock.yaml",
+        "scripts/browser-output-certification.mjs"
+      ],
+      "integrity": [
+        {
+          "subject": "pngjs@7.0.0",
+          "value": "sha512-LKWqWJRhstyYo9pGvgor/ivk2w94eSjE3RGVuzLGlr3NmD8bf7RcYGze1mNdEHRP6TRP6rMuDHk5t44hnTRyow=="
+        },
+        {
+          "subject": "pnpm-lock.yaml",
+          "value": "sha256:39f1ccd3f3b3262805d773e92bf8b2d0efc9ac755ba77460a0cb801d5ccea394"
+        }
+      ]
+    },
+    {
       "id": "tailwindcss",
       "name": "Tailwind CSS and CLI",
       "kind": "software",
-      "version": "4.3.2",
+      "version": "4.3.3",
       "status": "versioned-package",
       "license": "MIT",
       "url": "https://github.com/tailwindlabs/tailwindcss",
       "relationship": "benchmark-baseline",
       "usage": "benchmark-only",
       "evidence": [
+        "benchmarks/benchmark-authority-v2/oracle.json",
         "benchmarks/tailwind-v4/input.css",
         "package.json",
         "pnpm-lock.yaml"
@@ -144,12 +231,24 @@
           "value": "sha512-Fzt+HrIZHDlkRYKdLMBeufaroaPvwCBG70sMLdmurdeadNMO/LxbmT8Sbb+P83ep0iAlAImettb7Y+rO+37rXw=="
         },
         {
+          "subject": "@tailwindcss/cli@4.3.3",
+          "value": "sha512-ZvS/n1ZHOBKcVlhkt8l5NNr1EDXk1NboYO5CYDOs6NUmvT9z6bzkwsosaJftY57T/3gWNzWMJzIXLodZC8ssdw=="
+        },
+        {
           "subject": "pnpm-lock.yaml",
-          "value": "sha256:333f16de16053c85708ea74473a3008f314e1c3ee45490106e1462df06de93f9"
+          "value": "sha256:39f1ccd3f3b3262805d773e92bf8b2d0efc9ac755ba77460a0cb801d5ccea394"
+        },
+        {
+          "subject": "tailwindcss@3.4.19",
+          "value": "sha512-3ofp+LL8E+pK/JuPLPggVAIaEuhvIz4qNcf3nA1Xn2o/7fb7s/TYpHhwGDv1ZU3PkBluUVaF8PyCHcm48cKLWQ=="
         },
         {
           "subject": "tailwindcss@4.3.2",
           "value": "sha512-WtctNNSH8A9jlMIqxzuYumOHU5uGZyRv0Q5svQl+oEPy5w84YpBxdb7MdqyiSPQge5jTJ6zFQLq0PFygdccSBA=="
+        },
+        {
+          "subject": "tailwindcss@4.3.3",
+          "value": "sha512-gOhV3P7ufE62QDGg1zVaTgCR+EtPv92k2nIhVcVKcLmxT1sUBsQGhnZj175j+MqRt4zLF7ic+sCYjfhxMxj7YQ=="
         }
       ]
     },

@@ -364,8 +364,8 @@ integrity mismatches.
 
 Every successful JSON document that exposes identity carries three required top-level fields:
 `styleIdFormatVersion`, `classNameFormatVersion`, and `themeIdFormatVersion`. Their current values
-are 2, 1, and 1 respectively. They appear in manifest schemas 3, 4, and 5, inspection schema 2, catalog
-schema 3, and explain schema 2. A consumer must check them before interpreting a `styleId`, class, or theme
+are 2, 1, and 3 respectively. They appear in manifest schemas 3, 4, and 5, inspection schema 3, catalog
+schema 4, and explain schema 2. A consumer must check them before interpreting a `styleId`, class, or theme
 identity. The schema-1 diagnostic envelope is unchanged and does not claim that identity resolution
 completed.
 
@@ -1084,7 +1084,7 @@ pliego.manifest.json` writes pretty JSON with one trailing newline:
   "schemaVersion": 3,
   "styleIdFormatVersion": 2,
   "classNameFormatVersion": 1,
-  "themeIdFormatVersion": 2,
+  "themeIdFormatVersion": 3,
   "themeId": "b3d5ad77175995c2b8f51ef7c0d41991",
   "targets": "modern",
   "format": "minified",

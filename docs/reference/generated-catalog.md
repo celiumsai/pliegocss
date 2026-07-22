@@ -2,74 +2,74 @@
 
 # PliegoCSS utility catalog
 
-Theme ID: <code>b3d5ad77175995c2b8f51ef7c0d41991</code>
+Theme ID: <code>b98b78da29201938d135b8bb94717788</code>
 
-Identity formats: StyleId <code>2</code>, class name <code>1</code>, ThemeId <code>2</code>
+Identity formats: StyleId <code>2</code>, class name <code>1</code>, ThemeId <code>3</code>
 
 ## Utilities
 
 | Pattern | Match | Form | Domain | Capabilities | Example | CSS | Summary |
 |---|---|---|---|---|---|---|---|
-| <code>[property:value]</code> | <code></code> | arbitrary-property | arbitrary-property | arbitrary-value | <code>[mask-type:luminance]</code> | <code>.pc_90jbn16g8xs3raj9jq5txt7ky{mask-type:luminance}</code> | Emit one parsed arbitrary CSS declaration. |
-| <code>antialiased</code> | <code>antialiased</code> | fixed | none | none | <code>antialiased</code> | <code>.pc_cweac74cfxlcfoseflffeyox3{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}</code> | Enable platform font smoothing. |
-| <code>aspect-square</code> | <code>aspect-square</code> | fixed | none | none | <code>aspect-square</code> | <code>.pc_55wxt09qepbyuyhzoubgrp8mv{aspect-ratio:1}</code> | Set a one-to-one aspect ratio. |
-| <code>bg-{color}</code> | <code>bg</code> | parameterized | color | arbitrary-value, custom-property, modifier | <code>bg-accent/20</code> | <code>.pc_ckn2d0zesr9si73hx6cxwj4hd{background-color:color-mix(in oklab,var(--color-accent) 20%,transparent)}</code> | Set the background color with optional named-token alpha. |
-| <code>block</code> | <code>block</code> | fixed | none | none | <code>block</code> | <code>.pc_11340wm8ue1yzys72dq1fs2qn{display:block}</code> | Use block display. |
-| <code>border</code> | <code>border</code> | fixed | none | none | <code>border</code> | <code>.pc_dvxt11rxb0khipwqt4gh41890{border-width:1px;border-style:solid}</code> | Set all border widths to one pixel with solid style. |
-| <code>border-b</code> | <code>border-b</code> | fixed | none | none | <code>border-b</code> | <code>.pc_3ci9dol8oqt347vxjhx1t43id{border-bottom-width:1px;border-bottom-style:solid}</code> | Set the bottom border width to one pixel with solid style. |
-| <code>border-{width-or-color}</code> | <code>border</code> | parameterized | border-width-or-color | none | <code>border-2</code> | <code>.pc_aqdp2val6hl1lc4vdb5jzmu3m{border-width:2px;border-style:solid}</code> | Set all border widths in pixels or set the border color. |
-| <code>col-span-{n}</code> | <code>col-span</code> | parameterized | grid-column-span | none | <code>col-span-2</code> | <code>.pc_efn1ei6zp7vzh2kir8cwggdjd{grid-column:span 2/span 2}</code> | Span one through twelve grid columns. |
-| <code>container-inline</code> | <code>container-inline</code> | fixed | none | none | <code>container-inline</code> | <code>.pc_6g3aza3qqu26w1tvj5cura0qr{container-type:inline-size}</code> | Establish an inline-size query container. |
-| <code>container-normal</code> | <code>container-normal</code> | fixed | none | none | <code>container-normal</code> | <code>.pc_djfko9bt4e9bftrdomgm1n46r{container-type:normal}</code> | Disable size-query containment. |
-| <code>cursor-not-allowed</code> | <code>cursor-not-allowed</code> | fixed | none | none | <code>cursor-not-allowed</code> | <code>.pc_217o07dreaw53gn6rxyvhzoca{cursor:not-allowed}</code> | Use the not-allowed cursor. |
-| <code>cursor-pointer</code> | <code>cursor-pointer</code> | fixed | none | none | <code>cursor-pointer</code> | <code>.pc_b5coidj10znziv0o4mqtcgfmv{cursor:pointer}</code> | Use the pointer cursor. |
-| <code>flex</code> | <code>flex</code> | fixed | none | none | <code>flex</code> | <code>.pc_ddlill52a5p39osfnemitptkc{display:flex}</code> | Use flex display. |
-| <code>flex-1</code> | <code>flex-1</code> | fixed | none | none | <code>flex-1</code> | <code>.pc_e72wtvtzal0hpv2c59asge73{flex-grow:1;flex-shrink:1;flex-basis:0%}</code> | Set flex grow and shrink to one with a zero-percent basis. |
-| <code>flex-col</code> | <code>flex-col</code> | fixed | none | none | <code>flex-col</code> | <code>.pc_6w2dqw01d84npdiuz7ej99z9n{flex-direction:column}</code> | Lay out flex items in a column. |
-| <code>flex-row</code> | <code>flex-row</code> | fixed | none | none | <code>flex-row</code> | <code>.pc_5bor40m0bco1vtevgoz1oj2t6{flex-direction:row}</code> | Lay out flex items in a row. |
-| <code>flex-wrap</code> | <code>flex-wrap</code> | fixed | none | none | <code>flex-wrap</code> | <code>.pc_boc158u3hb242jo6k06gj4f6w{flex-wrap:wrap}</code> | Allow flex items to wrap. |
-| <code>font-{family-or-weight}</code> | <code>font</code> | parameterized | font-family-or-weight | none | <code>font-semibold</code> | <code>.pc_9hnopdixbijow17i23ww9ytjz{font-weight:600}</code> | Set a registered font family or font weight. |
-| <code>gap-{space}</code> | <code>gap</code> | parameterized | spacing | arbitrary-value, custom-property | <code>gap-4</code> | <code>.pc_bk89fbsw4a72vaguue8b1dubm{gap:1rem}</code> | Set row and column gap from one spacing value. |
-| <code>grid</code> | <code>grid</code> | fixed | none | none | <code>grid</code> | <code>.pc_5ezmrouunnef1ulz4bo5gyrq3{display:grid}</code> | Use grid display. |
-| <code>grid-cols-{value}</code> | <code>grid-cols</code> | parameterized | grid-template | arbitrary-value, custom-property | <code>grid-cols-[1fr 2fr]</code> | <code>.pc_59o9ufvvg69gjxxz262a5t0iy{grid-template-columns:1fr 2fr}</code> | Set a grid column count or explicit template. |
-| <code>h-{size}</code> | <code>h</code> | parameterized | size | arbitrary-value, custom-property | <code>h-full</code> | <code>.pc_bjw5g39k92pvnhlputh8qia48{height:100%}</code> | Set height from the size domain. |
-| <code>hidden</code> | <code>hidden</code> | fixed | none | none | <code>hidden</code> | <code>.pc_5gta22yo1fuga2bnf66d59dal{display:none}</code> | Use none display. |
-| <code>inline-block</code> | <code>inline-block</code> | fixed | none | none | <code>inline-block</code> | <code>.pc_1uw87eycqqa1bobkrng2azv0e{display:inline-block}</code> | Use inline-block display. |
-| <code>inline-flex</code> | <code>inline-flex</code> | fixed | none | none | <code>inline-flex</code> | <code>.pc_18pykli966y1z59l7khalaufr{display:inline-flex}</code> | Use inline-flex display. |
-| <code>items-center</code> | <code>items-center</code> | fixed | none | none | <code>items-center</code> | <code>.pc_bxkwuhz64dp87d6n4hochf2cs{align-items:center}</code> | Center items on the cross axis. |
-| <code>items-end</code> | <code>items-end</code> | fixed | none | none | <code>items-end</code> | <code>.pc_8pbwdrjt1z4bjnnjbcqj69cuq{align-items:end}</code> | Align items to the cross-axis end. |
-| <code>items-start</code> | <code>items-start</code> | fixed | none | none | <code>items-start</code> | <code>.pc_5fngqgj5t03lttmim9rh7k6s{align-items:start}</code> | Align items to the cross-axis start. |
-| <code>justify-between</code> | <code>justify-between</code> | fixed | none | none | <code>justify-between</code> | <code>.pc_2k703u6k30bxtqb3v2eansu4a{justify-content:space-between}</code> | Distribute items with space between them. |
-| <code>justify-center</code> | <code>justify-center</code> | fixed | none | none | <code>justify-center</code> | <code>.pc_ydlz64r4ktzyqvjupt8f4vyy{justify-content:center}</code> | Center items on the main axis. |
-| <code>justify-end</code> | <code>justify-end</code> | fixed | none | none | <code>justify-end</code> | <code>.pc_bhdk08uzj7t9r11r7hrcxly3b{justify-content:end}</code> | Align items to the main-axis end. |
-| <code>justify-start</code> | <code>justify-start</code> | fixed | none | none | <code>justify-start</code> | <code>.pc_3xwd28heju5qozeknop14ep39{justify-content:start}</code> | Align items to the main-axis start. |
-| <code>leading-{line-height}</code> | <code>leading</code> | parameterized | line-height | arbitrary-value, custom-property | <code>leading-6</code> | <code>.pc_3zpeaughafqdvzjluqfta6hwm{line-height:1.5rem}</code> | Set line height from the line-height domain. |
-| <code>m-{value}</code> | <code>m</code> | parameterized | margin | negative, arbitrary-value, custom-property | <code>-m-4</code> | <code>.pc_8tgg7v0riuwuxs5wqs643qmgk{margin:-1rem}</code> | Set all margins from spacing or auto. |
-| <code>max-w-{size}</code> | <code>max-w</code> | parameterized | size | arbitrary-value, custom-property | <code>max-w-6xl</code> | <code>.pc_7uk3rfdh9y5rykwlr4sfr71de{max-width:72rem}</code> | Set maximum width from the size domain. |
-| <code>min-h-{size}</code> | <code>min-h</code> | parameterized | size | arbitrary-value, custom-property | <code>min-h-0</code> | <code>.pc_10ifxt13gorhy536y3bjkjps8{min-height:0}</code> | Set minimum height from the size domain. |
-| <code>min-w-{size}</code> | <code>min-w</code> | parameterized | size | arbitrary-value, custom-property | <code>min-w-0</code> | <code>.pc_4lmgjibe0qazi4e96zmuwhwn7{min-width:0}</code> | Set minimum width from the size domain. |
-| <code>mt-{value}</code> | <code>mt</code> | parameterized | margin | negative, arbitrary-value, custom-property | <code>-mt-4</code> | <code>.pc_en25e1e9s3shr3wqzx7f3zjqh{margin-top:-1rem}</code> | Set top margin from spacing or auto. |
-| <code>mx-{value}</code> | <code>mx</code> | parameterized | margin | negative, arbitrary-value, custom-property | <code>-mx-4</code> | <code>.pc_3fihk9k1bmmrxdhp6mi3dgslk{margin-right:-1rem;margin-left:-1rem}</code> | Set horizontal margins from spacing or auto. |
-| <code>opacity-{percentage}</code> | <code>opacity</code> | parameterized | opacity-percentage | none | <code>opacity-50</code> | <code>.pc_516a2o6hzmr4i040nis9pw58z{opacity:.5}</code> | Set opacity from zero through one hundred percent. |
-| <code>outline-2</code> | <code>outline-2</code> | fixed | none | none | <code>outline-2</code> | <code>.pc_49z8uhzvs5jhe0j18h6z8ysn3{outline-width:2px;outline-style:solid}</code> | Set outline width to two pixels. |
-| <code>outline-accent</code> | <code>outline-accent</code> | fixed | none | none | <code>outline-accent</code> | <code>.pc_cg766b8pvkhsclx9klp51bbww{outline-color:var(--color-accent)}</code> | Set outline color from the accent token. |
-| <code>outline-none</code> | <code>outline-none</code> | fixed | none | none | <code>outline-none</code> | <code>.pc_3ow4zm0mtnml5yg2arpy42pwu{outline-style:none}</code> | Disable the outline style. |
-| <code>outline-offset-2</code> | <code>outline-offset-2</code> | fixed | none | none | <code>outline-offset-2</code> | <code>.pc_1r4qla0to76q4tti83p22kcm1{outline-offset:2px}</code> | Offset the outline by two pixels. |
-| <code>p-{space}</code> | <code>p</code> | parameterized | spacing | arbitrary-value, custom-property | <code>p-4</code> | <code>.pc_595dj5pk381winfzvy5inds9f{padding:1rem}</code> | Set all padding sides from one spacing value. |
-| <code>pb-{space}</code> | <code>pb</code> | parameterized | spacing | arbitrary-value, custom-property | <code>pb-4</code> | <code>.pc_85p1evlpyxm8n1o7twajw8k4c{padding-bottom:1rem}</code> | Set bottom padding from one spacing value. |
-| <code>px-{space}</code> | <code>px</code> | parameterized | spacing | arbitrary-value, custom-property | <code>px-4</code> | <code>.pc_8w1x3b7ezhid3rixwv6ff1tbt{padding-right:1rem;padding-left:1rem}</code> | Set horizontal padding from one spacing value. |
-| <code>py-{space}</code> | <code>py</code> | parameterized | spacing | arbitrary-value, custom-property | <code>py-4</code> | <code>.pc_6lufe7xchslj6sah8ss93tutk{padding-top:1rem;padding-bottom:1rem}</code> | Set vertical padding from one spacing value. |
-| <code>resize-y</code> | <code>resize-y</code> | fixed | none | none | <code>resize-y</code> | <code>.pc_37qs40fr2dhmwhyvomgpxedrd{resize:vertical}</code> | Allow vertical resizing. |
-| <code>ring-{width-or-color}</code> | <code>ring</code> | parameterized | ring-width-or-color | modifier | <code>ring-accent/20</code> | <code>.pc_awd7yc4v4t8pfj90brwxxd6cf{--pc-shadow:0 0 #0000;--pc-ring-width:0;--pc-ring-color:currentColor;--pc-ring-color:color-mix(in oklab,var(--color-accent) 20%,transparent);box-shadow:0 0 0 var(--pc-ring-width,0) var(--pc-ring-color,currentColor),var(--pc-shadow,0 0 #0000)}</code> | Set focus-ring width in pixels or set its color. |
-| <code>rounded-{radius}</code> | <code>rounded</code> | parameterized | radius | arbitrary-value, custom-property | <code>rounded-lg</code> | <code>.pc_39xkg6lc3evoe7nkrdhhy8qe2{border-radius:.5rem}</code> | Set all corner radii from one radius value. |
-| <code>shadow-{shadow}</code> | <code>shadow</code> | parameterized | shadow | arbitrary-value, custom-property | <code>shadow-md</code> | <code>.pc_i3wu9af1v7x2nzb1hd43nnja{--pc-shadow:0 0 #0000;--pc-ring-width:0;--pc-ring-color:currentColor;--pc-shadow:0 4px 6px -1px #0000001a;box-shadow:0 0 0 var(--pc-ring-width,0) var(--pc-ring-color,currentColor),var(--pc-shadow,0 0 #0000)}</code> | Set the composed box-shadow value. |
-| <code>text-{size-or-color}</code> | <code>text</code> | parameterized | font-size-or-color | custom-property, modifier | <code>text-sm/6</code> | <code>.pc_cek8klq5f4fbtenechqlckokf{font-size:.875rem;line-height:1.25rem;line-height:1.5rem}</code> | Set font size or text color with the supported modifier. |
-| <code>tracking-tight</code> | <code>tracking-tight</code> | fixed | none | negative | <code>-tracking-tight</code> | <code>.pc_5g1lrku7i8mgilyd3dvwh3efy{letter-spacing:.025em}</code> | Set tight letter spacing, optionally negated. |
-| <code>transition-colors</code> | <code>transition-colors</code> | fixed | none | none | <code>transition-colors</code> | <code>.pc_db69ko23cdd794nvwvwypu1iv{transition-property:color,background-color,border-color,text-decoration-color,fill,stroke;transition-duration:.15s;transition-timing-function:cubic-bezier(.4,0,.2,1)}</code> | Transition the compiler-defined color property bundle. |
-| <code>w-{size}</code> | <code>w</code> | parameterized | size | arbitrary-value, custom-property | <code>w-full</code> | <code>.pc_p74tboen32syz5iiyutp41yt{width:100%}</code> | Set width from the size domain. |
-| <code>writing-horizontal</code> | <code>writing-horizontal</code> | fixed | none | none | <code>writing-horizontal</code> | <code>.pc_d6rsbq6gz3yy8nvj5x6eff2gi{writing-mode:horizontal-tb}</code> | Use horizontal top-to-bottom writing mode. |
-| <code>writing-vertical-lr</code> | <code>writing-vertical-lr</code> | fixed | none | none | <code>writing-vertical-lr</code> | <code>.pc_8s3cbvw2k8vxr1go2u41jylm6{writing-mode:vertical-lr}</code> | Use vertical writing with left-to-right block flow. |
-| <code>writing-vertical-rl</code> | <code>writing-vertical-rl</code> | fixed | none | none | <code>writing-vertical-rl</code> | <code>.pc_2py1trrr2aqdoizbkeci6r8lz{writing-mode:vertical-rl}</code> | Use vertical writing with right-to-left block flow. |
+| <code>[property:value]</code> | <code></code> | arbitrary-property | arbitrary-property | arbitrary-value | <code>[mask-type:luminance]</code> | <code>.pc_28oa5ebiymd12c8v5osz4w1vv{mask-type:luminance}</code> | Emit one parsed arbitrary CSS declaration. |
+| <code>antialiased</code> | <code>antialiased</code> | fixed | none | none | <code>antialiased</code> | <code>.pc_b1h7ctd16ln3f9o879ajt3s9q{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}</code> | Enable platform font smoothing. |
+| <code>aspect-square</code> | <code>aspect-square</code> | fixed | none | none | <code>aspect-square</code> | <code>.pc_bvwg9dpdc7ib18xm2ibcxi8ug{aspect-ratio:1}</code> | Set a one-to-one aspect ratio. |
+| <code>bg-{color}</code> | <code>bg</code> | parameterized | color | arbitrary-value, custom-property, modifier | <code>bg-accent/20</code> | <code>.pc_6qczwr4g417yod3s2yxhs561a{background-color:color-mix(in oklab,var(--color-accent) 20%,transparent)}</code> | Set the background color with optional named-token alpha. |
+| <code>block</code> | <code>block</code> | fixed | none | none | <code>block</code> | <code>.pc_axlg9s0759ac530lrwli708ge{display:block}</code> | Use block display. |
+| <code>border</code> | <code>border</code> | fixed | none | none | <code>border</code> | <code>.pc_8gs0qt9y10a6q5j8leb6ip0v5{border-width:1px;border-style:solid}</code> | Set all border widths to one pixel with solid style. |
+| <code>border-b</code> | <code>border-b</code> | fixed | none | none | <code>border-b</code> | <code>.pc_d8rmvzxe99vh5werhx9axkgdy{border-bottom-width:1px;border-bottom-style:solid}</code> | Set the bottom border width to one pixel with solid style. |
+| <code>border-{width-or-color}</code> | <code>border</code> | parameterized | border-width-or-color | none | <code>border-2</code> | <code>.pc_6yhudj91fax2ip81y8gr6uuuy{border-width:2px;border-style:solid}</code> | Set all border widths in pixels or set the border color. |
+| <code>col-span-{n}</code> | <code>col-span</code> | parameterized | grid-column-span | none | <code>col-span-2</code> | <code>.pc_en1zh3waan1u74cx7m3q3jxs0{grid-column:span 2/span 2}</code> | Span one through twelve grid columns. |
+| <code>container-inline</code> | <code>container-inline</code> | fixed | none | none | <code>container-inline</code> | <code>.pc_20eex3v1vmorf1pix4pzasm11{container-type:inline-size}</code> | Establish an inline-size query container. |
+| <code>container-normal</code> | <code>container-normal</code> | fixed | none | none | <code>container-normal</code> | <code>.pc_45nvw3zrd4yi1p5zfowa8dwgz{container-type:normal}</code> | Disable size-query containment. |
+| <code>cursor-not-allowed</code> | <code>cursor-not-allowed</code> | fixed | none | none | <code>cursor-not-allowed</code> | <code>.pc_6maem1787z5qgmpmd3r3a33pa{cursor:not-allowed}</code> | Use the not-allowed cursor. |
+| <code>cursor-pointer</code> | <code>cursor-pointer</code> | fixed | none | none | <code>cursor-pointer</code> | <code>.pc_4p2hu9dlkwx98kauoh24u5vdd{cursor:pointer}</code> | Use the pointer cursor. |
+| <code>flex</code> | <code>flex</code> | fixed | none | none | <code>flex</code> | <code>.pc_3kz8pmwcy005k05ceo9sih9uk{display:flex}</code> | Use flex display. |
+| <code>flex-1</code> | <code>flex-1</code> | fixed | none | none | <code>flex-1</code> | <code>.pc_77wg4j4n9du1k0uveexezd8xk{flex-grow:1;flex-shrink:1;flex-basis:0%}</code> | Set flex grow and shrink to one with a zero-percent basis. |
+| <code>flex-col</code> | <code>flex-col</code> | fixed | none | none | <code>flex-col</code> | <code>.pc_dlcrxte81ff0ohk6eyv3zb1sj{flex-direction:column}</code> | Lay out flex items in a column. |
+| <code>flex-row</code> | <code>flex-row</code> | fixed | none | none | <code>flex-row</code> | <code>.pc_7mr5e2djhoamvbe2a3yl9u3xf{flex-direction:row}</code> | Lay out flex items in a row. |
+| <code>flex-wrap</code> | <code>flex-wrap</code> | fixed | none | none | <code>flex-wrap</code> | <code>.pc_8euf2gyoz2fop6bgdllrodj4l{flex-wrap:wrap}</code> | Allow flex items to wrap. |
+| <code>font-{family-or-weight}</code> | <code>font</code> | parameterized | font-family-or-weight | none | <code>font-semibold</code> | <code>.pc_9l5bnrf81pmzbzmb6ztqk8qg8{font-weight:600}</code> | Set a registered font family or font weight. |
+| <code>gap-{space}</code> | <code>gap</code> | parameterized | spacing | arbitrary-value, custom-property | <code>gap-4</code> | <code>.pc_22avs875ur7iem8cd7fjv3g5g{gap:1rem}</code> | Set row and column gap from one spacing value. |
+| <code>grid</code> | <code>grid</code> | fixed | none | none | <code>grid</code> | <code>.pc_amxmlp30jk0sp630gla7rf9pf{display:grid}</code> | Use grid display. |
+| <code>grid-cols-{value}</code> | <code>grid-cols</code> | parameterized | grid-template | arbitrary-value, custom-property | <code>grid-cols-[1fr 2fr]</code> | <code>.pc_4ytqim6azkgcbm1348fkqbgjd{grid-template-columns:1fr 2fr}</code> | Set a grid column count or explicit template. |
+| <code>h-{size}</code> | <code>h</code> | parameterized | size | arbitrary-value, custom-property | <code>h-full</code> | <code>.pc_8jaev1osn87d9jjy3r7lgnafg{height:100%}</code> | Set height from the size domain. |
+| <code>hidden</code> | <code>hidden</code> | fixed | none | none | <code>hidden</code> | <code>.pc_297l7w3wemfz683380x1id1ap{display:none}</code> | Use none display. |
+| <code>inline-block</code> | <code>inline-block</code> | fixed | none | none | <code>inline-block</code> | <code>.pc_2pcgqy4zpg9n3h019mc96ifkb{display:inline-block}</code> | Use inline-block display. |
+| <code>inline-flex</code> | <code>inline-flex</code> | fixed | none | none | <code>inline-flex</code> | <code>.pc_1wnirt6p4vgksoerjvbd9vp3f{display:inline-flex}</code> | Use inline-flex display. |
+| <code>items-center</code> | <code>items-center</code> | fixed | none | none | <code>items-center</code> | <code>.pc_2jg116v3gu9f012gjiuu6zhl1{align-items:center}</code> | Center items on the cross axis. |
+| <code>items-end</code> | <code>items-end</code> | fixed | none | none | <code>items-end</code> | <code>.pc_d8egzo5z6qx6b18khy0oybr3z{align-items:end}</code> | Align items to the cross-axis end. |
+| <code>items-start</code> | <code>items-start</code> | fixed | none | none | <code>items-start</code> | <code>.pc_8hlakyvrcs0dwzp062v5wqa1g{align-items:start}</code> | Align items to the cross-axis start. |
+| <code>justify-between</code> | <code>justify-between</code> | fixed | none | none | <code>justify-between</code> | <code>.pc_ezpgekofdw36xaaakqaurlebn{justify-content:space-between}</code> | Distribute items with space between them. |
+| <code>justify-center</code> | <code>justify-center</code> | fixed | none | none | <code>justify-center</code> | <code>.pc_fy7j4m8ugmf23hbhwi9a3m8k{justify-content:center}</code> | Center items on the main axis. |
+| <code>justify-end</code> | <code>justify-end</code> | fixed | none | none | <code>justify-end</code> | <code>.pc_4xuyx10bbjle9frky18rmheto{justify-content:end}</code> | Align items to the main-axis end. |
+| <code>justify-start</code> | <code>justify-start</code> | fixed | none | none | <code>justify-start</code> | <code>.pc_9x2hos0rsm46pi45pyg1796qy{justify-content:start}</code> | Align items to the main-axis start. |
+| <code>leading-{line-height}</code> | <code>leading</code> | parameterized | line-height | arbitrary-value, custom-property | <code>leading-6</code> | <code>.pc_a11r2pil5qqkm9bhrki6t5uu9{line-height:1.5rem}</code> | Set line height from the line-height domain. |
+| <code>m-{value}</code> | <code>m</code> | parameterized | margin | negative, arbitrary-value, custom-property | <code>-m-4</code> | <code>.pc_866dg934rlp9c5o42xit8zt6d{margin:-1rem}</code> | Set all margins from spacing or auto. |
+| <code>max-w-{size}</code> | <code>max-w</code> | parameterized | size | arbitrary-value, custom-property | <code>max-w-6xl</code> | <code>.pc_8t7g8oq5oqny8ugbo6x4syr8q{max-width:72rem}</code> | Set maximum width from the size domain. |
+| <code>min-h-{size}</code> | <code>min-h</code> | parameterized | size | arbitrary-value, custom-property | <code>min-h-0</code> | <code>.pc_4795w9lt9izc7lx2jqwddx8yt{min-height:0}</code> | Set minimum height from the size domain. |
+| <code>min-w-{size}</code> | <code>min-w</code> | parameterized | size | arbitrary-value, custom-property | <code>min-w-0</code> | <code>.pc_9pzfrf4pd9hbsyuo17hnnwxgq{min-width:0}</code> | Set minimum width from the size domain. |
+| <code>mt-{value}</code> | <code>mt</code> | parameterized | margin | negative, arbitrary-value, custom-property | <code>-mt-4</code> | <code>.pc_3v7gx79z9p8l8pnvys1h19cgv{margin-top:-1rem}</code> | Set top margin from spacing or auto. |
+| <code>mx-{value}</code> | <code>mx</code> | parameterized | margin | negative, arbitrary-value, custom-property | <code>-mx-4</code> | <code>.pc_ax2yjl9py3ite625rmrim0wt6{margin-right:-1rem;margin-left:-1rem}</code> | Set horizontal margins from spacing or auto. |
+| <code>opacity-{percentage}</code> | <code>opacity</code> | parameterized | opacity-percentage | none | <code>opacity-50</code> | <code>.pc_2zf3kka46ql8kspjxspkzp3kz{opacity:.5}</code> | Set opacity from zero through one hundred percent. |
+| <code>outline-2</code> | <code>outline-2</code> | fixed | none | none | <code>outline-2</code> | <code>.pc_4p5brs81xzwfsxyvtgsp2v4i7{outline-width:2px;outline-style:solid}</code> | Set outline width to two pixels. |
+| <code>outline-accent</code> | <code>outline-accent</code> | fixed | none | none | <code>outline-accent</code> | <code>.pc_ari3p8cbz68nak6ot1xf84z94{outline-color:var(--color-accent)}</code> | Set outline color from the accent token. |
+| <code>outline-none</code> | <code>outline-none</code> | fixed | none | none | <code>outline-none</code> | <code>.pc_76a0isafwis6phn0eiftv2kdh{outline-style:none}</code> | Disable the outline style. |
+| <code>outline-offset-2</code> | <code>outline-offset-2</code> | fixed | none | none | <code>outline-offset-2</code> | <code>.pc_ay5cr66qgpc50elk9aff79mv7{outline-offset:2px}</code> | Offset the outline by two pixels. |
+| <code>p-{space}</code> | <code>p</code> | parameterized | spacing | arbitrary-value, custom-property | <code>p-4</code> | <code>.pc_e4pctv7mkogg6mh7donuaw8cq{padding:1rem}</code> | Set all padding sides from one spacing value. |
+| <code>pb-{space}</code> | <code>pb</code> | parameterized | spacing | arbitrary-value, custom-property | <code>pb-4</code> | <code>.pc_ae09smvc1ie3wslg2ujp8t7d4{padding-bottom:1rem}</code> | Set bottom padding from one spacing value. |
+| <code>px-{space}</code> | <code>px</code> | parameterized | spacing | arbitrary-value, custom-property | <code>px-4</code> | <code>.pc_2ecsfnutp2rchfibgm5tlju7g{padding-right:1rem;padding-left:1rem}</code> | Set horizontal padding from one spacing value. |
+| <code>py-{space}</code> | <code>py</code> | parameterized | spacing | arbitrary-value, custom-property | <code>py-4</code> | <code>.pc_4z17nbro259wb81vpmkxxrnvv{padding-top:1rem;padding-bottom:1rem}</code> | Set vertical padding from one spacing value. |
+| <code>resize-y</code> | <code>resize-y</code> | fixed | none | none | <code>resize-y</code> | <code>.pc_e9jv53huml1xjv3fkpvq5flc{resize:vertical}</code> | Allow vertical resizing. |
+| <code>ring-{width-or-color}</code> | <code>ring</code> | parameterized | ring-width-or-color | modifier | <code>ring-accent/20</code> | <code>.pc_4eyc58suxnfcjiw95bm2ses8m{--pc-shadow:0 0 #0000;--pc-ring-width:0;--pc-ring-color:currentColor;--pc-ring-color:color-mix(in oklab,var(--color-accent) 20%,transparent);box-shadow:0 0 0 var(--pc-ring-width,0) var(--pc-ring-color,currentColor),var(--pc-shadow,0 0 #0000)}</code> | Set focus-ring width in pixels or set its color. |
+| <code>rounded-{radius}</code> | <code>rounded</code> | parameterized | radius | arbitrary-value, custom-property | <code>rounded-lg</code> | <code>.pc_5rps1losic6fe536q2l33hep{border-radius:.5rem}</code> | Set all corner radii from one radius value. |
+| <code>shadow-{shadow}</code> | <code>shadow</code> | parameterized | shadow | arbitrary-value, custom-property | <code>shadow-md</code> | <code>.pc_1jqgpu2z41t72cryqx3jwt3wz{--pc-shadow:0 0 #0000;--pc-ring-width:0;--pc-ring-color:currentColor;--pc-shadow:0 4px 6px -1px #0000001a;box-shadow:0 0 0 var(--pc-ring-width,0) var(--pc-ring-color,currentColor),var(--pc-shadow,0 0 #0000)}</code> | Set the composed box-shadow value. |
+| <code>text-{size-or-color}</code> | <code>text</code> | parameterized | font-size-or-color | custom-property, modifier | <code>text-sm/6</code> | <code>.pc_4s2wqpgiueral6gkxcgvjyqt2{font-size:.875rem;line-height:1.25rem;line-height:1.5rem}</code> | Set font size or text color with the supported modifier. |
+| <code>tracking-tight</code> | <code>tracking-tight</code> | fixed | none | negative | <code>-tracking-tight</code> | <code>.pc_755gq9w983piddlqinbv0nq8r{letter-spacing:.025em}</code> | Set tight letter spacing, optionally negated. |
+| <code>transition-colors</code> | <code>transition-colors</code> | fixed | none | none | <code>transition-colors</code> | <code>.pc_4gsr5ihv66onzzfrrwaypmaut{transition-property:color,background-color,border-color,text-decoration-color,fill,stroke;transition-duration:.15s;transition-timing-function:cubic-bezier(.4,0,.2,1)}</code> | Transition the compiler-defined color property bundle. |
+| <code>w-{size}</code> | <code>w</code> | parameterized | size | arbitrary-value, custom-property | <code>w-full</code> | <code>.pc_5n9hx3ynrvx37e0wb98wcuv28{width:100%}</code> | Set width from the size domain. |
+| <code>writing-horizontal</code> | <code>writing-horizontal</code> | fixed | none | none | <code>writing-horizontal</code> | <code>.pc_yowlmeg1ennmiaqildbqufx1{writing-mode:horizontal-tb}</code> | Use horizontal top-to-bottom writing mode. |
+| <code>writing-vertical-lr</code> | <code>writing-vertical-lr</code> | fixed | none | none | <code>writing-vertical-lr</code> | <code>.pc_2gniebrd4j98kt8cc1nhi94l2{writing-mode:vertical-lr}</code> | Use vertical writing with left-to-right block flow. |
+| <code>writing-vertical-rl</code> | <code>writing-vertical-rl</code> | fixed | none | none | <code>writing-vertical-rl</code> | <code>.pc_a4icxk6oqgay305sckdvfhru0{writing-mode:vertical-rl}</code> | Use vertical writing with right-to-left block flow. |
 
 ## Tokens
 
@@ -129,8 +129,8 @@ Identity formats: StyleId <code>2</code>, class name <code>1</code>, ThemeId <co
 
 ## Breakpoints
 
-| Name | Minimum width |
-|---|---|
-| <code>lg</code> | <code>64rem</code> |
-| <code>md</code> | <code>48rem</code> |
-| <code>sm</code> | <code>40rem</code> |
+| Cascade rank | Name | Minimum width |
+|---:|---|---|
+| 0 | <code>sm</code> | <code>40rem</code> |
+| 1 | <code>md</code> | <code>48rem</code> |
+| 2 | <code>lg</code> | <code>64rem</code> |

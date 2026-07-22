@@ -54,9 +54,10 @@ if (manifest.capabilities?.untrustedWorkspaces?.supported !== false) {
   fail("untrusted workspaces must fail closed");
 }
 const bundle = readFileSync(resolve(EXTENSION, "dist", "extension.js"), "utf8");
-for (const contract of ["pliego-css-lsp", "pliego-cssc", "onDidChangeConfiguration"]) {
+for (const contract of ["pliego-css-lsp", "onDidChangeConfiguration"]) {
   if (!bundle.includes(contract)) fail(`bundle is missing ${contract}`);
 }
+if (bundle.includes("--pliego-cssc")) fail("VS Code client still delegates to a compiler path");
 
 process.stdout.write(
   `${JSON.stringify({

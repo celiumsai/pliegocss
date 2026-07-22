@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "kind": "pliegocss-release-source-evidence",
+  "recordedAt": "2026-07-22T14:10:00Z",
+  "source": {
+    "tag": "v0.1.0-rc.2",
+    "commit": "064dcbce96a3a5cc97a940d07566c008bb5e2d3e",
+    "gitTree": "010a64f5d0bbd142a1d015fda4ccf573cc6e4133"
+  },
+  "observations": [
+    {
+      "id": "github-actions-ci",
+      "status": "passed",
+      "observedAt": "2026-07-22T14:05:00Z",
+      "expiresAt": "2026-07-29T14:05:00Z",
+      "url": "https://github.com/celiumsai/pliegocss/actions/runs/29864046865",
+      "sourceCommit": "064dcbce96a3a5cc97a940d07566c008bb5e2d3e",
+      "gitTree": "010a64f5d0bbd142a1d015fda4ccf573cc6e4133",
+      "coverage": [
+        "ubuntu-rust-1.85",
+        "ubuntu-rust-1.96",
+        "windows-rust-1.85",
+        "windows-rust-1.96",
+        "macos-rust-1.85",
+        "macos-rust-1.96",
+        "package-archives",
+        "supply-chain",
+        "wasm-diagnostics"
+      ]
+    },
+    {
+      "id": "github-actions-codeql",
+      "status": "passed",
+      "observedAt": "2026-07-22T14:05:00Z",
+      "expiresAt": "2026-07-29T14:05:00Z",
+      "url": "https://github.com/celiumsai/pliegocss/actions/runs/29864046876",
+      "sourceCommit": "064dcbce96a3a5cc97a940d07566c008bb5e2d3e",
+      "gitTree": "010a64f5d0bbd142a1d015fda4ccf573cc6e4133",
+      "coverage": ["actions", "javascript-typescript", "rust"]
+    },
+    {
+      "id": "github-release",
+      "status": "published-prerelease",
+      "observedAt": "2026-07-22T14:05:00Z",
+      "expiresAt": "2026-07-29T14:05:00Z",
+      "url": "https://github.com/celiumsai/pliegocss/releases/tag/v0.1.0-rc.2",
+      "sourceCommit": "064dcbce96a3a5cc97a940d07566c008bb5e2d3e",
+      "gitTree": "010a64f5d0bbd142a1d015fda4ccf573cc6e4133",
+      "coverage": ["tag", "release-notes"]
+    }
+  ],
+  "claimBoundary": "This snapshot proves only the listed external observations for the exact RC.2 commit and tree. It does not cover the later G0/G1 worktree, browser certification, adoption, or final authorization."
+}

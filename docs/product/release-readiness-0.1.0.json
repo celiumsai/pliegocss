@@ -1,103 +1,298 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
+  "kind": "pliegocss-release-readiness",
+  "state": "current",
   "targetVersion": "0.1.0",
   "candidateVersion": "0.1.0-rc.2",
   "repository": "https://github.com/celiumsai/pliegocss",
-  "repositoryVisibility": "public",
   "productStage": "public-preview",
+  "source": {
+    "tag": "v0.1.0-rc.2",
+    "commit": "064dcbce96a3a5cc97a940d07566c008bb5e2d3e",
+    "gitTree": "010a64f5d0bbd142a1d015fda4ccf573cc6e4133"
+  },
+  "observedAt": "2026-07-22T14:10:00Z",
+  "expiresAt": "2026-07-29T14:10:00Z",
   "result": "blocked",
+  "dimensions": {
+    "technicalReady": false,
+    "operationallyReady": false,
+    "adoptionReady": false,
+    "authorized": false,
+    "promotionReady": false
+  },
   "checks": [
     {
-      "id": "targeted-corrections",
+      "id": "exact-candidate-ci",
+      "dimension": "technical",
       "status": "passed",
       "evidenceClass": "measured",
       "requiredForPromotion": true,
-      "summary": "Focused Rust tests pass for physical !important propagation, migration revalidation, LSP bounds, repair-agent bounds, package paths, media merging, and CLI help."
+      "summary": "GitHub Actions run 29864046865 passed the exact RC.2 commit across Ubuntu, Windows, and macOS with Rust 1.85 and 1.96 plus the listed release jobs.",
+      "source": {
+        "commit": "064dcbce96a3a5cc97a940d07566c008bb5e2d3e",
+        "gitTree": "010a64f5d0bbd142a1d015fda4ccf573cc6e4133"
+      },
+      "observedAt": "2026-07-22T14:05:00Z",
+      "expiresAt": "2026-07-29T14:05:00Z",
+      "environment": {
+        "os": "github-hosted-ubuntu-windows-macos",
+        "arch": "x86_64-arm64-hosted",
+        "rust": "1.85.0,1.96.0",
+        "node": "22.13+",
+        "browser": null
+      },
+      "requiredCoverage": ["ubuntu-rust-1.85", "ubuntu-rust-1.96", "windows-rust-1.85", "windows-rust-1.96", "macos-rust-1.85", "macos-rust-1.96", "package-archives", "supply-chain", "wasm-diagnostics"],
+      "coveredCoverage": ["ubuntu-rust-1.85", "ubuntu-rust-1.96", "windows-rust-1.85", "windows-rust-1.96", "macos-rust-1.85", "macos-rust-1.96", "package-archives", "supply-chain", "wasm-diagnostics"],
+      "waiverAdr": null,
+      "artifacts": [
+        {
+          "path": "docs/product/evidence/v0.1.0-rc.2-source.json",
+          "url": "https://github.com/celiumsai/pliegocss/blob/main/docs/product/evidence/v0.1.0-rc.2-source.json",
+          "sha256": "sha256:51afb97c3b86fbd34ad7d827e7fc5347f1e8d85e5dd1456e44d0c9389a82fecb"
+        }
+      ],
+      "references": [
+        {
+          "kind": "github-actions-run",
+          "url": "https://github.com/celiumsai/pliegocss/actions/runs/29864046865"
+        }
+      ]
     },
     {
-      "id": "brand-system",
-      "status": "passed",
-      "evidenceClass": "measured",
-      "requiredForPromotion": false,
-      "summary": "The automated brand contract passes for the versioned brandbook, seven vector variants, two exact-dimension raster exports, font licenses, fourteen DTCG-to-CSS token projections, six reviewed GPT Image 2 masters, their AVIF/WebP derivatives, prompt specifications, and generation manifest."
-    },
-    {
-      "id": "fast-profile-current-source",
-      "status": "passed",
-      "evidenceClass": "measured",
-      "requiredForPromotion": true,
-      "summary": "Every fast-profile constituent is measured on the current working source: Windows passes formatting, cargo check, and JavaScript documentation/product gates; WSL passes the complete locked workspace tests, doctests, and Clippy with warnings denied. Windows Application Control error 4551 still prevents a single-environment local replay, so hosted Windows remains a separate required check."
-    },
-    {
-      "id": "pliegors-current-contract",
-      "status": "passed",
-      "evidenceClass": "measured",
-      "requiredForPromotion": true,
-      "summary": "The WSL integration passed against remote-reachable PliegoRS revision f3f4eb9 with registry-replayable 0.0.2 fixture locks."
-    },
-    {
-      "id": "browser-current-source",
-      "status": "passed",
-      "evidenceClass": "measured",
-      "requiredForPromotion": true,
-      "summary": "Chrome 150 passes computed layout, WebGL/Three.js readiness, real compiler playground interaction, desktop/mobile overflow, and representative site routes on the current working source."
-    },
-    {
-      "id": "package-replay-current-source",
-      "status": "passed",
-      "evidenceClass": "measured",
-      "requiredForPromotion": true,
-      "summary": "Hosted package archives pass for the public-preview source, all nineteen 0.1.0-rc.2 archives remain below the 72 KiB compressed limit, and the published compatibility unit replays through a registry-only Rust 1.85 downstream public-API fixture."
-    },
-    {
-      "id": "benchmark-evidence-current-source",
+      "id": "exact-candidate-codeql",
+      "dimension": "technical",
       "status": "passed",
       "evidenceClass": "measured",
       "requiredForPromotion": true,
-      "summary": "Gate A, Gate B, and paired Rust MSRV snapshots were regenerated from reachable clean commit d16fe5da26d4943ebcfd70ce7c14e743d1e25e54, hash-allowlisted, and independently verified against the exact source blobs."
+      "summary": "CodeQL run 29864046876 passed Actions, JavaScript/TypeScript, and Rust analysis on the exact RC.2 commit.",
+      "source": {
+        "commit": "064dcbce96a3a5cc97a940d07566c008bb5e2d3e",
+        "gitTree": "010a64f5d0bbd142a1d015fda4ccf573cc6e4133"
+      },
+      "observedAt": "2026-07-22T14:05:00Z",
+      "expiresAt": "2026-07-29T14:05:00Z",
+      "environment": {
+        "os": "github-hosted-ubuntu",
+        "arch": "x86_64",
+        "rust": "workflow-managed",
+        "node": "workflow-managed",
+        "browser": null
+      },
+      "requiredCoverage": ["actions", "javascript-typescript", "rust"],
+      "coveredCoverage": ["actions", "javascript-typescript", "rust"],
+      "waiverAdr": null,
+      "artifacts": [
+        {
+          "path": "docs/product/evidence/v0.1.0-rc.2-source.json",
+          "url": "https://github.com/celiumsai/pliegocss/blob/main/docs/product/evidence/v0.1.0-rc.2-source.json",
+          "sha256": "sha256:51afb97c3b86fbd34ad7d827e7fc5347f1e8d85e5dd1456e44d0c9389a82fecb"
+        }
+      ],
+      "references": [
+        {
+          "kind": "github-actions-run",
+          "url": "https://github.com/celiumsai/pliegocss/actions/runs/29864046876"
+        }
+      ]
     },
     {
-      "id": "supply-chain-policy",
-      "status": "passed",
-      "evidenceClass": "measured",
+      "id": "g0-corrections-on-candidate",
+      "dimension": "technical",
+      "status": "pending",
+      "evidenceClass": "pending",
       "requiredForPromotion": true,
-      "summary": "cargo-audit reports zero advisories and cargo-deny passes licenses, bans, and sources under WSL. CI deliberately runs those non-overlapping checks instead of making cargo-deny fetch a second advisory database after cargo-audit."
+      "summary": "G0 corrections exist only in the later uncommitted worktree. They require a reviewed commit/tree and hosted replay before they can become release evidence.",
+      "source": {
+        "commit": "064dcbce96a3a5cc97a940d07566c008bb5e2d3e",
+        "gitTree": "010a64f5d0bbd142a1d015fda4ccf573cc6e4133"
+      },
+      "observedAt": "2026-07-22T14:10:00Z",
+      "expiresAt": "2026-07-29T14:10:00Z",
+      "environment": {
+        "os": "pending-hosted-matrix",
+        "arch": "pending",
+        "rust": "1.85.0,1.96.0",
+        "node": "22.13+",
+        "browser": "chrome,edge"
+      },
+      "requiredCoverage": ["breakpoints-52-72", "migration-empty", "css-rule-walker", "toolchain-isolation"],
+      "coveredCoverage": [],
+      "waiverAdr": null,
+      "artifacts": [],
+      "references": []
     },
     {
-      "id": "website-current-source",
-      "status": "passed",
-      "evidenceClass": "measured",
+      "id": "browser-release-matrix",
+      "dimension": "technical",
+      "status": "blocked",
+      "evidenceClass": "pending",
       "requiredForPromotion": true,
-      "summary": "The 90-route bilingual PliegoRS site passes deterministic byte-for-byte rebuild, ledger and corpus integrity, gzip budgets, English/Spanish route and legal parity, generated image delivery, desktop/mobile interaction, command search, reduced motion, WebGL, and horizontal-overflow contracts in Chrome 150 on the current working source."
+      "summary": "Every required hosted browser lane is not configured for the exact candidate source; local or historical browser runs have no promotion authority.",
+      "source": {
+        "commit": "064dcbce96a3a5cc97a940d07566c008bb5e2d3e",
+        "gitTree": "010a64f5d0bbd142a1d015fda4ccf573cc6e4133"
+      },
+      "observedAt": "2026-07-22T14:10:00Z",
+      "expiresAt": "2026-07-29T14:10:00Z",
+      "environment": {
+        "os": "windows-linux-macos",
+        "arch": "x86_64-arm64",
+        "rust": null,
+        "node": null,
+        "browser": "chrome,edge,firefox,chromium,safari"
+      },
+      "requiredCoverage": ["windows-chrome", "windows-edge", "windows-firefox", "linux-chromium", "macos-safari"],
+      "coveredCoverage": [],
+      "waiverAdr": null,
+      "artifacts": [],
+      "references": [
+        {
+          "kind": "current-matrix",
+          "url": "https://github.com/celiumsai/pliegocss/blob/main/docs/benchmarks/hosted-browser-matrix.json"
+        }
+      ]
     },
     {
-      "id": "cloudflare-deployment-contract",
-      "status": "passed",
-      "evidenceClass": "measured",
+      "id": "registry-replay-refresh",
+      "dimension": "technical",
+      "status": "pending",
+      "evidenceClass": "inherited",
       "requiredForPromotion": true,
-      "summary": "Cloudflare Worker pliegocss-site version c3f34e3d-43be-4f87-b07a-3cc9f946df4f serves the final registry-replay status at https://pliegocss.dev through an enabled custom domain, Worker-managed apex DNS, and active Google Trust Services certificates. Production edge and Browser Rendering replay pass English, Spanish, documentation, legal, playground, security.txt, 404, CSP/security headers, immutable-asset caching, WebGL canvas, accessibility tree, and the RC.2 public-preview masthead."
+      "summary": "RC.2 was previously replayed from crates.io, but schema 3 requires a fresh, unexpired, artifact-hashed replay for the exact promotion candidate.",
+      "source": {
+        "commit": "064dcbce96a3a5cc97a940d07566c008bb5e2d3e",
+        "gitTree": "010a64f5d0bbd142a1d015fda4ccf573cc6e4133"
+      },
+      "observedAt": "2026-07-22T14:10:00Z",
+      "expiresAt": "2026-07-29T14:10:00Z",
+      "environment": {
+        "os": "pending-clean-host",
+        "arch": "x86_64",
+        "rust": "1.85.0",
+        "node": null,
+        "browser": null
+      },
+      "requiredCoverage": ["nineteen-crates", "cli-install", "lsp-install", "downstream-public-api"],
+      "coveredCoverage": [],
+      "waiverAdr": null,
+      "artifacts": [],
+      "references": [
+        {
+          "kind": "crates-io-release",
+          "url": "https://crates.io/crates/pliego-cssc/0.1.0-rc.2"
+        }
+      ]
     },
     {
-      "id": "hosted-cross-os-current-source",
-      "status": "passed",
-      "evidenceClass": "measured",
+      "id": "production-deployment-refresh",
+      "dimension": "operational",
+      "status": "pending",
+      "evidenceClass": "inherited",
       "requiredForPromotion": true,
-      "summary": "GitHub Actions run 29857699284 passes all twelve CI jobs at 42e0c2230967b322a989fd550ebd289f34380338 across Ubuntu, Windows, and macOS with Rust 1.85 and 1.96; CodeQL run 29857699053 passes JavaScript/TypeScript, Rust, and Actions analysis."
+      "summary": "The production site has historical deployment evidence, but a current exact-source edge and browser replay with hashed artifacts is missing.",
+      "source": {
+        "commit": "064dcbce96a3a5cc97a940d07566c008bb5e2d3e",
+        "gitTree": "010a64f5d0bbd142a1d015fda4ccf573cc6e4133"
+      },
+      "observedAt": "2026-07-22T14:10:00Z",
+      "expiresAt": "2026-07-29T14:10:00Z",
+      "environment": {
+        "os": "cloudflare-workers",
+        "arch": "edge",
+        "rust": null,
+        "node": null,
+        "browser": "cloudflare-browser-rendering"
+      },
+      "requiredCoverage": ["apex", "security-headers", "immutable-assets", "browser-rendering"],
+      "coveredCoverage": [],
+      "waiverAdr": null,
+      "artifacts": [],
+      "references": [
+        {
+          "kind": "production-url",
+          "url": "https://pliegocss.dev/"
+        }
+      ]
     },
     {
-      "id": "registry-replay",
-      "status": "passed",
-      "evidenceClass": "measured",
+      "id": "signed-binary-distribution",
+      "dimension": "operational",
+      "status": "blocked",
+      "evidenceClass": "pending",
       "requiredForPromotion": true,
-      "summary": "All nineteen exact-version 0.1.0-rc.2 crates are visible on crates.io. Rust 1.85 installs pliego-cssc and pliego-css-lsp with --locked, resolves the registry-only downstream graph without path or patch overrides, checks all targets and features, and runs the public API fixture."
+      "summary": "Signed native binaries, checksums, SBOMs, attestations, and the npm launcher required by the LTS distribution boundary do not exist yet.",
+      "source": {
+        "commit": "064dcbce96a3a5cc97a940d07566c008bb5e2d3e",
+        "gitTree": "010a64f5d0bbd142a1d015fda4ccf573cc6e4133"
+      },
+      "observedAt": "2026-07-22T14:10:00Z",
+      "expiresAt": "2026-07-29T14:10:00Z",
+      "environment": {
+        "os": "windows-linux-macos",
+        "arch": "x86_64-arm64",
+        "rust": null,
+        "node": null,
+        "browser": null
+      },
+      "requiredCoverage": ["windows-x86_64", "linux-x86_64", "macos-arm64", "checksums", "sbom", "attestations", "npm-launcher"],
+      "coveredCoverage": [],
+      "waiverAdr": null,
+      "artifacts": [],
+      "references": []
+    },
+    {
+      "id": "external-adoption-evidence",
+      "dimension": "adoption",
+      "status": "pending",
+      "evidenceClass": "pending",
+      "requiredForPromotion": true,
+      "summary": "The required external interviews, real incidents, and pilots have not been recorded as reviewed evidence.",
+      "source": {
+        "commit": "064dcbce96a3a5cc97a940d07566c008bb5e2d3e",
+        "gitTree": "010a64f5d0bbd142a1d015fda4ccf573cc6e4133"
+      },
+      "observedAt": "2026-07-22T14:10:00Z",
+      "expiresAt": "2026-07-29T14:10:00Z",
+      "environment": {
+        "os": "external-research",
+        "arch": null,
+        "rust": null,
+        "node": null,
+        "browser": null
+      },
+      "requiredCoverage": ["ten-to-fifteen-interviews", "twenty-incidents", "three-to-five-pilots"],
+      "coveredCoverage": [],
+      "waiverAdr": null,
+      "artifacts": [],
+      "references": []
     },
     {
       "id": "final-promotion-authorization",
+      "dimension": "authorization",
       "status": "not-authorized",
       "evidenceClass": "pending",
       "requiredForPromotion": true,
-      "summary": "Creating or publishing 0.1.0 requires explicit owner approval after all technical checks pass."
+      "summary": "Mario has not explicitly authorized publishing final 0.1.0 for this exact source commit and Git tree.",
+      "source": {
+        "commit": "064dcbce96a3a5cc97a940d07566c008bb5e2d3e",
+        "gitTree": "010a64f5d0bbd142a1d015fda4ccf573cc6e4133"
+      },
+      "observedAt": "2026-07-22T14:10:00Z",
+      "expiresAt": "2026-07-29T14:10:00Z",
+      "environment": {
+        "os": "owner-decision",
+        "arch": null,
+        "rust": null,
+        "node": null,
+        "browser": null
+      },
+      "requiredCoverage": ["explicit-owner-authorization"],
+      "coveredCoverage": [],
+      "waiverAdr": null,
+      "artifacts": [],
+      "references": []
     }
   ],
-  "promotionRule": "0.1.0 may be created only when every requiredForPromotion check is passed on the exact source commit and the owner explicitly authorizes publication."
+  "promotionRule": "Promotion requires every required check to pass on this exact source commit and Git tree with unexpired complete coverage, hashed artifacts, no implicit waiver, all four readiness dimensions true, and explicit owner authorization."
 }

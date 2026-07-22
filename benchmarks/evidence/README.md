@@ -16,6 +16,7 @@ Generate a new file; never overwrite an existing snapshot:
 node scripts/measure-pliego-gate-a.mjs --evidence benchmarks/evidence/<snapshot>.json
 node scripts/measure-pliego-gate-b.mjs --evidence benchmarks/evidence/<snapshot>.json
 node scripts/measure-rust-check.mjs --evidence benchmarks/evidence/<snapshot>.json
+node scripts/measure-benchmark-authority-v2.mjs --evidence=benchmarks/evidence/v2/<snapshot>.json
 ```
 
 If an audit supersedes a snapshot, remove it from the current approved set without editing its
@@ -35,6 +36,11 @@ The verifier needs Git history for the recorded commits. It recomputes statistic
 comparison arithmetic, and every paired Rust delta; it does not rerun performance measurements.
 The approved filename/SHA-256 set is explicit in the verifier, so adding or replacing evidence
 requires an intentional review of both the immutable snapshot and its allowlist entry.
+
+Benchmark Authority v2 evidence is a separate schema-2 family. It requires a non-expired live
+oracle, canonical 5/30 pairs, a clean tree, a new path below `benchmarks/evidence/v2`, direct-process
+peak memory, raw/gzip/Brotli output, and complete samples for all three lanes and corpora. Until a
+snapshot is reviewed and allowlisted, machine-local v2 output does not authorize a competitive score.
 Evidence-mode harnesses also require every recorded harness, fixture, and lock input to match the
 exact Git blob at the clean source commit; Git's clean status alone is not treated as byte identity.
 Once evidence is approved, its recorded source commit must remain reachable: do not squash, rebase,

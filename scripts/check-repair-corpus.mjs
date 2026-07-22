@@ -2,12 +2,14 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
+import { isolatedCargoEnvironment } from "./rust-target.mjs";
 
 const root = resolve(import.meta.dirname, "..");
 const corpusPath = resolve(root, "benchmarks", "repair-corpus", "cases.json");
 const corpusBytes = readFileSync(corpusPath);
 const corpus = JSON.parse(corpusBytes.toString("utf8"));
 const reportPrefix = "PLIEGOCSS_REPAIR_CORPUS_REPORT ";
+const cargoEnvironment = isolatedCargoEnvironment(root);
 
 function fail(message) {
   throw new Error(message);
@@ -80,6 +82,7 @@ const result = spawnSync(
   ["test", "--locked", "-p", "pliego-css-agent", "--test", "repair_corpus", "--", "--nocapture"],
   {
     cwd: root,
+    env: cargoEnvironment,
     encoding: "utf8",
     windowsHide: true,
     maxBuffer: 16 * 1024 * 1024,

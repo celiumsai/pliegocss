@@ -20,7 +20,6 @@ use syn::{
     parse_macro_input,
 };
 
-use pliego_css_ir::SemanticStyle;
 use pliego_css_theme::ThemeRegistry;
 
 const THEME_PATH_ENV: &str = "PLIEGO_CSS_THEME_PATH";
@@ -52,12 +51,8 @@ pub fn pc_id(tokens: TokenStream) -> TokenStream {
         Ok(theme) => theme,
         Err(error) => return error,
     };
-    let source = literal.value();
-    let syntax = match pliego_css_parser::parse_style_list(&source) {
-        Ok(syntax) => syntax,
-        Err(diagnostic) => return compile_error(&literal, diagnostic),
-    };
-    let semantic = match pliego_css_compiler::lower_style_with_theme(&theme, &syntax) {
+    let mut host = pliego_css_compiler::AnalysisHost::new((*theme).clone());
+    let semantic = match host.analyze_literal(&literal.value()) {
         Ok(semantic) => semantic,
         Err(diagnostic) => return compile_error(&literal, diagnostic),
     };
@@ -93,11 +88,8 @@ impl Parse for ConditionalInput {
     }
 }
 
-const MAX_PCX_COMBINATIONS: usize = 64;
-
 struct CompiledBranch {
     literal: LitStr,
-    style: SemanticStyle,
 }
 
 struct CompiledClause {
@@ -109,64 +101,94 @@ struct CompiledClause {
 /// Compiles every visible conditional combination and returns the selected identity bits.
 #[doc(hidden)]
 #[proc_macro]
+#[allow(clippy::too_many_lines)]
 pub fn pcx_id(tokens: TokenStream) -> TokenStream {
     let ConditionalInput { base, clauses } = parse_macro_input!(tokens as ConditionalInput);
     let theme = match active_theme(&base) {
         Ok(theme) => theme,
         Err(error) => return error,
     };
-    let base_style = match compile_visible_literal(&theme, &base) {
-        Ok(style) => style,
-        Err(error) => return error,
-    };
-
     let mut compiled_clauses = Vec::with_capacity(clauses.len());
     for clause in clauses {
-        match compile_clause(&theme, clause) {
+        match compile_clause(clause) {
             Ok(clause) => compiled_clauses.push(clause),
             Err(error) => return error,
         }
     }
-
-    if let Err(error) = validate_cross_clause_conflicts(&compiled_clauses) {
-        return error.into_compile_error().into();
-    }
-
-    let branch_counts = compiled_clauses
-        .iter()
-        .map(|clause| clause.branches.len())
-        .collect::<Vec<_>>();
-    let combination_count = branch_counts.iter().try_fold(1_usize, |count, branches| {
-        count
-            .checked_mul(*branches)
-            .filter(|next| *next <= MAX_PCX_COMBINATIONS)
-    });
-    if combination_count.is_none() {
-        let span = compiled_clauses
-            .last()
-            .map_or_else(|| base.span(), |clause| clause.span);
-        return syn::Error::new(
-            span,
-            format!(
-                "PCX004: `pcx!` expands to more than {MAX_PCX_COMBINATIONS} style combinations; collapse related state into one `match`"
-            ),
-        )
-        .into_compile_error()
-        .into();
-    }
-
-    let combinations = cartesian_indices(&branch_counts);
-    let mut result_arms = Vec::with_capacity(combinations.len());
-    for indices in combinations {
-        let mut style = base_style.clone();
-        for (clause, branch_index) in compiled_clauses.iter().zip(&indices) {
-            style = pliego_css_compiler::compose_style_override_with_theme(
-                &theme,
-                style,
-                clause.branches[*branch_index].style.clone(),
+    let request = pliego_css_compiler::PcxRequest::new(
+        base.value(),
+        compiled_clauses
+            .iter()
+            .map(|clause| clause.branches.iter().map(|branch| branch.literal.value())),
+    );
+    let mut host = pliego_css_compiler::AnalysisHost::new((*theme).clone());
+    let analysis = match host.analyze_pcx(&request) {
+        Ok(analysis) => analysis,
+        Err(pliego_css_compiler::PcxError::Base(diagnostic)) => {
+            return compile_error(&base, diagnostic);
+        }
+        Err(pliego_css_compiler::PcxError::Branch {
+            clause,
+            branch,
+            diagnostic,
+        }) => {
+            return compile_error(
+                &compiled_clauses[clause].branches[branch].literal,
+                diagnostic,
             );
         }
-        let id = style.id.get();
+        Err(pliego_css_compiler::PcxError::Conflict(conflict)) => {
+            let slots = conflict
+                .slots
+                .iter()
+                .map(|slot| format!("{slot:?}"))
+                .collect::<Vec<_>>()
+                .join(", ");
+            let literal =
+                &compiled_clauses[conflict.right_clause].branches[conflict.right_branch].literal;
+            return syn::Error::new_spanned(
+                literal,
+                format!(
+                    "PCX003: independent clauses {} and {} can both assign [{slots}] under the same condition; express the combined state space in one `match`",
+                    conflict.left_clause + 1,
+                    conflict.right_clause + 1,
+                ),
+            )
+            .into_compile_error()
+            .into();
+        }
+        Err(pliego_css_compiler::PcxError::ExpansionLimit { maximum }) => {
+            let span = compiled_clauses
+                .last()
+                .map_or_else(|| base.span(), |clause| clause.span);
+            return syn::Error::new(
+                span,
+                format!(
+                    "PCX004: `pcx!` expands to more than {maximum} style combinations; collapse related state into one `match`"
+                ),
+            )
+            .into_compile_error()
+            .into();
+        }
+        Err(pliego_css_compiler::PcxError::EmptyClause { clause }) => {
+            return syn::Error::new(
+                compiled_clauses[clause].span,
+                "PCX001: `pcx!` clause must expose at least one branch",
+            )
+            .into_compile_error()
+            .into();
+        }
+        Err(error) => {
+            return syn::Error::new(base.span(), error.to_string())
+                .into_compile_error()
+                .into();
+        }
+    };
+
+    let mut result_arms = Vec::with_capacity(analysis.combinations.len());
+    for combination in analysis.combinations {
+        let indices = combination.selections;
+        let id = combination.semantic.id.get();
         result_arms.push(quote! {
             (#(#indices,)*) => #id
         });
@@ -197,13 +219,10 @@ pub fn pcx_id(tokens: TokenStream) -> TokenStream {
     .into()
 }
 
-fn compile_clause(
-    theme: &ThemeRegistry,
-    expression: Expr,
-) -> core::result::Result<CompiledClause, TokenStream> {
+fn compile_clause(expression: Expr) -> core::result::Result<CompiledClause, TokenStream> {
     match expression {
-        Expr::If(expression) => compile_if_clause(theme, expression),
-        Expr::Match(expression) => compile_match_clause(theme, expression),
+        Expr::If(expression) => compile_if_clause(expression),
+        Expr::Match(expression) => compile_match_clause(expression),
         other => Err(syn::Error::new_spanned(
             other,
             "`pcx!` clauses must be complete `if ... else ...` or `match ...` expressions",
@@ -213,10 +232,7 @@ fn compile_clause(
     }
 }
 
-fn compile_if_clause(
-    theme: &ThemeRegistry,
-    expression: ExprIf,
-) -> core::result::Result<CompiledClause, TokenStream> {
+fn compile_if_clause(expression: ExprIf) -> core::result::Result<CompiledClause, TokenStream> {
     let span = expression.span();
     let ExprIf {
         cond,
@@ -249,9 +265,6 @@ fn compile_if_clause(
         Err(error) => return Err(error.into_compile_error().into()),
     };
 
-    let then_style = compile_visible_literal(theme, &then_literal)?;
-    let else_style = compile_visible_literal(theme, &else_literal)?;
-
     Ok(CompiledClause {
         selector: quote! {
             if #cond { 0usize } else { 1usize }
@@ -259,11 +272,9 @@ fn compile_if_clause(
         branches: vec![
             CompiledBranch {
                 literal: then_literal,
-                style: then_style,
             },
             CompiledBranch {
                 literal: else_literal,
-                style: else_style,
             },
         ],
         span,
@@ -271,7 +282,6 @@ fn compile_if_clause(
 }
 
 fn compile_match_clause(
-    theme: &ThemeRegistry,
     expression: ExprMatch,
 ) -> core::result::Result<CompiledClause, TokenStream> {
     let span = expression.span();
@@ -306,11 +316,10 @@ fn compile_match_clause(
             Ok(literal) => literal,
             Err(error) => return Err(error.into_compile_error().into()),
         };
-        let style = compile_visible_literal(theme, &literal)?;
         selector_arms.push(quote! {
             #pat => #index
         });
-        branches.push(CompiledBranch { literal, style });
+        branches.push(CompiledBranch { literal });
     }
 
     Ok(CompiledClause {
@@ -322,54 +331,6 @@ fn compile_match_clause(
         branches,
         span,
     })
-}
-
-fn validate_cross_clause_conflicts(clauses: &[CompiledClause]) -> Result<()> {
-    let semantic_clauses = clauses
-        .iter()
-        .map(|clause| {
-            clause
-                .branches
-                .iter()
-                .map(|branch| branch.style.clone())
-                .collect::<Vec<_>>()
-        })
-        .collect::<Vec<_>>();
-    let Err(conflict) = pliego_css_compiler::analyze_cross_clause_conflicts(&semantic_clauses)
-    else {
-        return Ok(());
-    };
-    let slots = conflict
-        .slots
-        .iter()
-        .map(|slot| format!("{slot:?}"))
-        .collect::<Vec<_>>()
-        .join(", ");
-    let literal = &clauses[conflict.right_clause].branches[conflict.right_branch].literal;
-    Err(syn::Error::new_spanned(
-        literal,
-        format!(
-            "PCX003: independent clauses {} and {} can both assign [{slots}] under the same condition; express the combined state space in one `match`",
-            conflict.left_clause + 1,
-            conflict.right_clause + 1,
-        ),
-    ))
-}
-
-fn cartesian_indices(branch_counts: &[usize]) -> Vec<Vec<usize>> {
-    let mut combinations = vec![Vec::new()];
-    for branch_count in branch_counts {
-        let mut next = Vec::with_capacity(combinations.len() * branch_count);
-        for prefix in combinations {
-            for branch in 0..*branch_count {
-                let mut combination = prefix.clone();
-                combination.push(branch);
-                next.push(combination);
-            }
-        }
-        combinations = next;
-    }
-    combinations
 }
 
 fn visible_block_literal(block: &Block) -> Result<LitStr> {
@@ -394,17 +355,6 @@ fn visible_expression_literal(expression: &Expr) -> Result<LitStr> {
         ));
     };
     Ok(literal.clone())
-}
-
-fn compile_visible_literal(
-    theme: &ThemeRegistry,
-    literal: &LitStr,
-) -> core::result::Result<SemanticStyle, TokenStream> {
-    let source = literal.value();
-    let syntax = pliego_css_parser::parse_style_list(&source)
-        .map_err(|diagnostic| compile_error(literal, diagnostic))?;
-    pliego_css_compiler::lower_style_with_theme(theme, &syntax)
-        .map_err(|diagnostic| compile_error(literal, diagnostic))
 }
 
 fn active_theme(literal: &LitStr) -> core::result::Result<Arc<ThemeRegistry>, TokenStream> {

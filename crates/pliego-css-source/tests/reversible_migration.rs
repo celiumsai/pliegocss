@@ -11,6 +11,13 @@ use pliego_css_source::{
 };
 
 #[test]
+fn reversible_plan_rejects_an_empty_public_project_without_panicking() {
+    let error = build_reversible_migration_plan(&MigrationProject::new(), &[])
+        .expect_err("empty public project must fail closed");
+    assert!(error.to_string().contains("at least one declared source"));
+}
+
+#[test]
 fn reversible_plan_binds_inventory_and_refuses_automatic_edits() {
     let project = MigrationProject::new().source(MigrationProjectSource::new(
         MigrationSourceKind::Tailwind,

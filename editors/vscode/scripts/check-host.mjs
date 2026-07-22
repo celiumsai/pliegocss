@@ -11,7 +11,6 @@ const target = process.env.CARGO_TARGET_DIR
 const workspace = resolve(target, "lsp-integration-workspace");
 const executable = process.platform === "win32" ? ".exe" : "";
 const lsp = resolve(target, "debug", `pliego-css-lsp${executable}`);
-const compiler = resolve(target, "debug", `pliego-cssc${executable}`);
 
 /** @param {string} message */
 function fail(message) {
@@ -34,7 +33,6 @@ writeFileSync(
   `${JSON.stringify(
     {
       "pliegocss.server.path": lsp,
-      "pliegocss.compiler.path": compiler,
       "pliegocss.theme.mode": "seed",
       "pliegocss.projectIndex.path": "out/pliego.index.json",
     },
@@ -68,7 +66,7 @@ process.stdout.write(
     schemaVersion: 1,
     vscode: "1.105.1",
     extension: "celiums.pliegocss-vscode",
-    diagnostics: "compiler-backed-pcs-and-pcx",
+    diagnostics: "shared-engine-pcs-and-pcx",
     definition: "project-index-to-physical-css",
     serverDownload: false,
   }, null, 2)}\n`,

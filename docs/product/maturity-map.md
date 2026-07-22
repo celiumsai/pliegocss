@@ -30,6 +30,9 @@ experimental because its intended product scope is explicitly broader than its s
 These claims are deliberately narrower than “all public Rust types,” “complete CSS,” or “published
 packages.” Their exact boundaries are enforced by the public API, compatibility, determinism,
 packaging, and portability gates named in the JSON map.
+The pure `CompileRequest → CompileResult` engine, shared `PcxRequest` frontend, and
+semantic/physical planner separation are implementation architecture inside that exact-version
+unit; they do not expand the stable application API.
 
 ## Beta surface
 
@@ -41,6 +44,9 @@ promise:
 - budgets, ownership, usage evidence, retention, and pruning;
 - static accessibility policy;
 - bounded agent repair and verification receipts;
+- paired Tailwind Benchmark Authority v2 (latest, v3-LTS, and frozen regression lanes);
+- computed and bounded visual browser-output certification against Tailwind across the declared
+  3×3 host matrix;
 - LSP/editor clients;
 - migration inventory;
 - watch mode;

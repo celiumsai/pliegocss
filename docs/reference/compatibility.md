@@ -23,24 +23,24 @@ must pin every direct PliegoCSS dependency to exact version `0.1.0-rc.2`.
 | Surface | Version/vector | Enforced by |
 |---|---|---|
 | Representative StyleId vector | `STYLE_ID_FORMAT_VERSION = 2`; minimal-theme vector below | `v2_style_identity_and_class_are_frozen` |
-| Minimal-theme style | `flex gap-gutter tablet:grid` → `e0b572e3fdfbf091d9a2ddb126278634` | compiler unit test |
-| Class-name encoding | `CLASS_NAME_FORMAT_VERSION = 1`; same style → `pc_dax2y1pql4op1rjk97yv9e88k` | IR/compiler unit tests |
+| Minimal-theme style | `flex gap-gutter tablet:grid` → `b742ceb589d4f412c6ba77e81f632f53` | compiler unit test |
+| Class-name encoding | `CLASS_NAME_FORMAT_VERSION = 1`; same style → `pc_aukxxmkm8bmauj8duf8zpjdcj` | IR/compiler unit tests |
 | Full-width class boundary | `u128::MAX` → `pc_f5lxx1zz5pnorynqglhzmsp33` | IR unit test |
-| Candidate seed ThemeId | `b3d5ad77175995c2b8f51ef7c0d41991` | seed/portability vectors |
-| Candidate seed style | `flex gap-4` → `70cb04ef9bf9621f5826351f1778f68e` / `pc_6oe73ec16rbb7ublcoa3bpzf2` | compiler unit test |
-| Theme identity stream | `THEME_ID_FORMAT_VERSION = 2`; SHA-256 truncated to its first 128 bits | `v2_theme_identity_stream_digest_and_id_are_frozen` |
-| Theme binary | magic `PLGCTHM\0`, format 2; format 1 rejected explicitly | theme unit test |
+| Candidate seed ThemeId | `b98b78da29201938d135b8bb94717788` | seed/portability vectors |
+| Candidate seed style | `flex gap-4` → `fe3a92576be2bb53e3240249bc45b829` / `pc_f1u1l7d58kemkdqdjie56hdex` | compiler unit test |
+| Theme identity stream | `THEME_ID_FORMAT_VERSION = 3`; SHA-256 truncated to its first 128 bits; breakpoint cascade rank is explicit | `v3_theme_identity_stream_digest_and_id_are_frozen` |
+| Theme binary | magic `PLGCTHM\0`, format 3; older formats rejected explicitly | theme unit test |
 | Cargo theme bridge | legacy TOML `theme!(PATH)` plus DTCG `theme!(tokens = PATH, inputs = { "modifier" => "context" })`; one selected registry artifact per package | build unit tests, Debian WSL2 full-workspace/Rust 1.85 public-API smoke, Windows dirty-package extracted DTCG/TOML consumers, and clean package gate at `9714b09` |
-| Semantic IR binary | magic `PLGCIR\0\0`, format 2; 309-byte golden SHA-256 `337865f8e7b5b32fe58f67442537ad1d2926d94164d1692863a2616dddc85023`; append-only container, writing-mode, and cascade-layer extensions; embeds StyleId format 2 and ThemeId format 2 | compiler golden/round-trip tests |
-| Minimal theme fixture | ID `cf5c4c0674fd1c7e5121da0d27222ae0` | theme unit test |
-| Minimal theme binary | format 2, 102 bytes, SHA-256 `19ee963bb9476a70732eaf338497e977eaa6abcffaddcd35c9ebbbeeac615bc3` | theme unit test |
+| Semantic IR binary | magic `PLGCIR\0\0`, format 2; 309-byte golden SHA-256 `1d19d4bf7735acaf6b574d95fdb930389713c55983fff87c4c26a6cc2880532b`; append-only container, writing-mode, and cascade-layer extensions; embeds StyleId format 2 and ThemeId format 3 | compiler golden/round-trip tests |
+| Minimal theme fixture | ID `eda25b5ed8fa8ce973662d4f18a46bdc` | theme unit test |
+| Minimal theme binary | format 3, 104 bytes, SHA-256 `d2ce5bd919ba720e3b108fe1479e52c70b0441af708ddd5c7025e16fb2a0f4e0` | theme unit test |
 | Theme configuration | schema 1 | config tests and reference |
 | CSS manifest | schema 3 default; schema 4 semantic graph; schema 5 physical trace | CLI, manifest-graph, and physical-trace gates |
 | Nested provenance graph | schema 1 semantic; schema 2 physical superset; declaration/physical ID formats 1 | graph/trace gates and references |
 | Reachability sidecar | schema 1 | strict decoder and manifest-graph gate |
 | Structured diagnostics | schema 1 | CLI tests and process smoke |
-| Inspect document | schema 2 | CLI tests |
-| Catalog document | schema 3 | CLI tests and generated-reference smoke |
+| Inspect document | schema 3 | CLI tests |
+| Catalog document | schema 4 | CLI tests and generated-reference smoke |
 | Explain document | schema 2 | CLI tests and editor-query smoke |
 | Repair proposal / plan / dry-run report / Change Receipt | schemas `1.0.0` / `1.0.0` / `1.0.0` / `1.0.0`; plan mode `dry-run-only`; patch format `pliegocss-byte-edits/1`; receipt result `checks-pending` | agent unit tests, CLI black-box apply/rollback gate, public-API smoke, and extracted-package gate |
 | Repair check policy / Verification Receipt | latest schemas `1.4.0` / `1.4.0`, canonical `1.0.0`/`1.1.0`/`1.2.0`/`1.3.0` read support under original kind limits; kinds `standard-css-audit|token-graph-integrity|css-budget-audit|test-suite-evidence|browser-evidence`; fixed test/browser evidence schemas `1.0.0`; results `passed|failed|blocked`; complete adjacent FindingDocuments | agent core/bin tests, fixed-runner/verify black-box gates, real Chromium replay, public-API smoke, and extracted-package gate |
@@ -117,10 +117,10 @@ third transaction implementation should be introduced.
   contract makes the reason explicit; integrity hashes and portability vectors must move together.
 
 The JSON schema bumps associated with StyleId format 2 make identity versions self-describing at
-the document boundary. Manifest schemas 3, 4, and 5, inspection schema 2, catalog schema 3, and
+the document boundary. Manifest schemas 3, 4, and 5, inspection schema 3, catalog schema 4, and
 utility explain schema 2 require the top-level `styleIdFormatVersion`, `classNameFormatVersion`, and
 `themeIdFormatVersion` fields. Diagnostic schema 1, theme configuration schema 1, theme identity and
-binary format 2, semantic IR binary format 2, bundle-plan schemas 1/2, reachability schema 1, nested
+binary format 3, semantic IR binary format 2, bundle-plan schemas 1/2, reachability schema 1, nested
 graph schemas 1/2, cascade explain schema 1, repair proposal/plan/dry-run/Change Receipt schemas
 1.0.0, check-policy/Verification Receipt schemas 1.4.0 with canonical
 1.0.0/1.1.0/1.2.0/1.3.0 read support, fixed test/browser evidence schemas 1.0.0, patch format 1,
@@ -153,10 +153,10 @@ Consumers moving an existing checkout must:
 
 `CLASS_NAME_FORMAT_VERSION` remains 1 because `pc_` plus lowercase base 36 did not change. Every
 previously generated class must nevertheless be treated as obsolete because the encoded StyleId
-contract changed. ThemeId format 2 and theme-binary format 2 are also incompatible with their format-1 candidates.
-Consumers must regenerate theme binaries and every ThemeId-derived artifact; the decoder rejects a
-format-1 theme binary with an explicit unsupported-version error rather than reinterpreting its
-stored FNV identity under SHA-256 semantics.
+contract changed. ThemeId format 3 and theme-binary format 3 are also incompatible with older
+candidates. Consumers must regenerate theme binaries and every ThemeId-derived artifact; the decoder
+rejects an older theme binary with an explicit unsupported-version error rather than reinterpreting
+a registry that has no explicit breakpoint cascade rank.
 
 ## Candidate SemVer policy
 

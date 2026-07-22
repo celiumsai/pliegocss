@@ -81,6 +81,7 @@ function staticContract() {
     "docs/integrations/pliegors/index.html",
     "docs/tooling/repair/index.html",
     "docs/reference/diagnostics/index.html",
+    "docs/release-readiness/index.html",
     "docs/utilities/index.html",
     "playground/index.html",
     "examples/index.html",
@@ -97,6 +98,7 @@ function staticContract() {
     "es/index.html",
     "es/docs/index.html",
     "es/docs/getting-started/index.html",
+    "es/docs/release-readiness/index.html",
     "es/docs/utilities/index.html",
     "es/playground/index.html",
     "es/examples/index.html",
@@ -211,11 +213,34 @@ function staticContract() {
   const sitemap = readFileSync(join(output, "sitemap.xml"), "utf8");
   const sitemapUrls = sitemap.match(/<url>/gu)?.length ?? 0;
   if (
-    sitemapUrls !== 88 ||
+    sitemapUrls !== 90 ||
     !sitemap.includes('xmlns:xhtml="http://www.w3.org/1999/xhtml"') ||
     !sitemap.includes("https://pliegocss.dev/es/legal/privacy/")
   ) {
     fail(`bilingual sitemap drifted (${sitemapUrls} URLs)`);
+  }
+  const readiness = JSON.parse(
+    readFileSync(join(root, "docs", "product", "release-readiness-0.1.0.json"), "utf8"),
+  );
+  const generatedDocs = JSON.parse(
+    readFileSync(join(siteRoot, "src", "docs.generated.json"), "utf8"),
+  );
+  const readinessDocument = generatedDocs.documents.find(
+    (document) => document.route === "/docs/release-readiness/",
+  );
+  const readinessHtml = readFileSync(
+    join(output, "docs", "release-readiness", "index.html"),
+    "utf8",
+  );
+  if (
+    !readinessDocument ||
+    !readinessHtml.includes(readiness.source.commit) ||
+    !readinessHtml.includes(readiness.source.gitTree) ||
+    !readinessHtml.includes(readinessDocument.sourcePath) ||
+    !readinessHtml.includes(readinessDocument.sourceSha256) ||
+    !readinessHtml.includes("Current blockers")
+  ) {
+    fail("release readiness route is not bound to the generated Markdown authority");
   }
   const laboratory = JSON.parse(
     readFileSync(join(output, "assets", "laboratory.json")),
@@ -651,7 +676,7 @@ async function browserContract() {
       })()`,
     });
     if (
-      docs.result.value.items < 29 ||
+      docs.result.value.items < 30 ||
       docs.result.value.groups !== 8 ||
       docs.result.value.visible !== 1 ||
       docs.result.value.visibleGroups !== 1

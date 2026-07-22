@@ -13,6 +13,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { isolatedCargoEnvironment } from "./rust-target.mjs";
 
 const ROOT = resolve(import.meta.dirname, "..");
 const EXPECTED_ORDER = [
@@ -58,14 +59,23 @@ const EXPECTED_MSRV = "1.85";
 const MAX_COMPRESSED_ARCHIVE_BYTES = 72 * 1024;
 const EXPECTED_LICENSE_SHA256 =
   "8ada45cd9f843acf64e4722ae262c622a2b3b3007c7310ef36ac1061a30f6adb";
+const packageCargoEnvironment = isolatedCargoEnvironment(ROOT, {
+  env: process.env,
+  toolchain: PACKAGE_TOOLCHAIN,
+});
+const msrvCargoEnvironment = isolatedCargoEnvironment(ROOT, {
+  env: process.env,
+  toolchain: EXPECTED_MSRV,
+});
 
 function fail(message) {
   throw new Error(message);
 }
 
-function run(command, args, { capture = false, cwd = ROOT } = {}) {
+function run(command, args, { capture = false, cwd = ROOT, env = process.env } = {}) {
   const result = spawnSync(command, args, {
     cwd,
+    env,
     encoding: "utf8",
     stdio: capture ? ["ignore", "pipe", "pipe"] : "inherit",
   });
@@ -85,7 +95,10 @@ function run(command, args, { capture = false, cwd = ROOT } = {}) {
 }
 
 function runPackageCargo(args, options = {}) {
-  return run("cargo", [`+${PACKAGE_TOOLCHAIN}`, ...args], options);
+  return run("cargo", [`+${PACKAGE_TOOLCHAIN}`, ...args], {
+    ...options,
+    env: packageCargoEnvironment,
+  });
 }
 
 function dependencyContract(dependency) {
@@ -616,13 +629,14 @@ try {
   run("cargo", ["+1.85.0", "generate-lockfile"], {
     cwd: downstreamRoot,
     capture: true,
+    env: msrvCargoEnvironment,
   });
 
   const downstreamMetadata = JSON.parse(
     run(
       "cargo",
       ["+1.85.0", "metadata", "--format-version", "1", "--all-features", "--locked"],
-      { cwd: downstreamRoot, capture: true },
+      { cwd: downstreamRoot, capture: true, env: msrvCargoEnvironment },
     ),
   );
   if (canonical(downstreamMetadata.workspace_root) !== canonical(downstreamRoot)) {
@@ -766,12 +780,12 @@ try {
   run(
     "cargo",
     ["+1.85.0", "check", "--release", "--all-targets", "--all-features", "--locked"],
-    { cwd: downstreamRoot },
+    { cwd: downstreamRoot, env: msrvCargoEnvironment },
   );
   const dtcgDownstreamRun = run(
     "cargo",
     ["+1.85.0", "run", "--release", "--quiet", "--locked"],
-    { cwd: downstreamRoot, capture: true },
+    { cwd: downstreamRoot, capture: true, env: msrvCargoEnvironment },
   ).trim();
   if (!/^[0-9a-f]{32}\tpc_[0-9a-z]+$/u.test(dtcgDownstreamRun)) {
     fail(
@@ -783,7 +797,7 @@ try {
   const tomlDownstreamRun = run(
     "cargo",
     ["+1.85.0", "run", "--release", "--quiet", "--locked"],
-    { cwd: downstreamRoot, capture: true },
+    { cwd: downstreamRoot, capture: true, env: msrvCargoEnvironment },
   ).trim();
   if (!/^[0-9a-f]{32}\tpc_[0-9a-z]+$/u.test(tomlDownstreamRun)) {
     fail(

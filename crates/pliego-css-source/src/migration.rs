@@ -2048,6 +2048,11 @@ pub fn build_reversible_migration_plan(
             "reversible migration plan inventories must exactly cover declared sources",
         ));
     }
+    if sources.is_empty() {
+        return Err(MigrationInventoryError::new(
+            "reversible migration plan requires at least one declared source",
+        ));
+    }
     let document = ReversibleMigrationPlanDocument {
         schema_version: 1,
         mode: "inventory-only",

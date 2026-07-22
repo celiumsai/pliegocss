@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "statusDate": "2026-07-19",
+  "statusDate": "2026-07-22",
   "releaseTarget": "0.1.0",
   "levels": {
     "stable": "Selected for the supported 0.1.x contract and protected by local deterministic gates; this classification activates as a SemVer promise only at RC.",
@@ -15,7 +15,7 @@
       "scope": "Visible literals, statically enumerable conditional branches, sealed Style construction, Cargo dependency renames, and class interoperability.",
       "owners": ["crates/pliego-css", "crates/pliego-css-macros", "crates/pliego-css-parser", "crates/pliego-css-compiler"],
       "schemas": ["StyleId format 2", "class-name format 1"],
-      "gates": ["check:api", "check:properties", "check:determinism"],
+      "gates": ["check:api", "check:properties", "check:determinism", "check:engine-boundary"],
       "graduationCriteria": ["Keep the selected public API compiling on Rust 1.85.", "Preserve frozen identity/class vectors for identical semantic inputs."],
       "limitations": ["The full public Rust workspace surface and crate boundaries are not stable application API."]
     },
@@ -26,7 +26,7 @@
       "scope": "Semantic lowering, conflict detection, target transformation, pretty/minified output, and deterministic manifests for typed inputs.",
       "owners": ["crates/pliego-css-compiler", "crates/pliego-css-build", "crates/pliego-cssc"],
       "schemas": ["semantic IR format 2", "manifest schema 3"],
-      "gates": ["check:determinism", "check:properties", "check:packages"],
+      "gates": ["check:determinism", "check:properties", "check:packages", "check:engine-boundary"],
       "graduationCriteria": ["Retain byte identity and MSRV package replay.", "Keep backend target configuration versioned."],
       "limitations": ["This does not claim a complete arbitrary standard-CSS compile/minify product path."]
     },
@@ -36,7 +36,7 @@
       "maturity": "stable",
       "scope": "Schema-1 TOML themes, theme! build integration, bounded input, and versioned theme identity/artifacts.",
       "owners": ["crates/pliego-css-theme", "crates/pliego-css-config", "crates/pliego-css-build"],
-      "schemas": ["theme configuration schema 1", "ThemeId format 2", "theme binary format 2"],
+      "schemas": ["theme configuration schema 1", "ThemeId format 3", "theme binary format 3"],
       "gates": ["check:api", "check:packages", "check:portability"],
       "graduationCriteria": ["Preserve format rejection and exact-version bridge behavior."],
       "limitations": ["Build helper implementation types remain internal."]
@@ -47,7 +47,7 @@
       "maturity": "stable",
       "scope": "Documented finite commands, structured failures, atomic outputs, and read-only check modes.",
       "owners": ["crates/pliego-cssc"],
-      "schemas": ["diagnostic schema 1", "inspect schema 2", "catalog schema 3", "explain schema 2"],
+      "schemas": ["diagnostic schema 1", "inspect schema 3", "catalog schema 4", "explain schema 2"],
       "gates": ["verify:fast", "check:getting-started", "check:packages"],
       "graduationCriteria": ["Keep documented flags and successful output bytes compatible through 0.1.x."],
       "limitations": ["Watch is classified separately because it is a long-lived producer."]
@@ -152,13 +152,35 @@
       "limitations": ["Synthetic authority evidence is not agent efficacy; browser evidence currently has one pinned Chromium profile."]
     },
     {
+      "id": "benchmark-authority-v2",
+      "title": "Paired Tailwind competitor benchmark authority",
+      "maturity": "beta",
+      "scope": "Fresh Tailwind latest, upstream v3-lts, and frozen-release lanes with alternating paired samples, peak working set, raw/gzip/Brotli output, and micro/medium/large corpora.",
+      "owners": ["benchmarks/benchmark-authority-v2", "scripts/measure-benchmark-authority-v2.mjs"],
+      "schemas": ["Benchmark Authority schema 2", "Benchmark result schema 2"],
+      "gates": ["check:benchmark-authority", "check:benchmark-oracle", "check:tailwind-matrix"],
+      "graduationCriteria": ["Record reviewed immutable schema-2 evidence from a clean source commit.", "Keep the primary oracle no more than seven days behind the live registry at measurement time."],
+      "limitations": ["Legacy Gate A/B snapshots are historical only; local smoke or machine-local samples do not authorize a current competitive score."]
+    },
+    {
+      "id": "browser-output-certification-v1",
+      "title": "Computed and visual browser output certification against Tailwind",
+      "maturity": "beta",
+      "scope": "Frozen shared utility intent across responsive, hover, focus, explicit reset modes, 52 computed properties, 1/64-pixel box/text-line geometry bounded to 0.1 CSS px, and bounded PNG comparison on a 3×3 browser/OS matrix.",
+      "owners": ["benchmarks/browser-output-certification-v1", "scripts/browser-output-certification.mjs", "scripts/check-browser-output-matrix.mjs"],
+      "schemas": ["Browser/output authority schema 1", "host evidence schema 1", "matrix evidence schema 1"],
+      "gates": ["check:browser-output-authority", "check:browser-output", "check:browser-output-matrix"],
+      "graduationCriteria": ["Pass all nine clean hosted lanes on the exact release commit and Git tree.", "Retain current Tailwind provenance and unexpired hash-valid screenshot evidence."],
+      "limitations": ["Local three-engine Windows and Linux evidence is diagnostic; passing the frozen fixture is not general Tailwind compatibility or cross-engine pixel identity."]
+    },
+    {
       "id": "lsp-editor-hosts",
       "title": "LSP, VS Code, and Neovim clients",
       "maturity": "beta",
-      "scope": "Completion, hover, diagnostics, formatting, cancellation, and Project Index navigation over bounded full-sync documents.",
-      "owners": ["crates/pliego-css-lsp", "editors/vscode", "editors/neovim"],
+      "scope": "In-process completion, hover, diagnostics, formatting, stale-version suppression, and Project Index navigation over bounded full-sync documents.",
+      "owners": ["crates/pliego-css-compiler", "crates/pliego-css-lsp", "editors/vscode", "editors/neovim"],
       "schemas": ["LSP diagnostic corpus schema 2", "LSP 3.18 transport subset"],
-      "gates": ["integration:lsp", "integration:vscode", "integration:vscode-host", "integration:neovim"],
+      "gates": ["check:engine-boundary", "integration:lsp", "integration:vscode", "integration:vscode-host", "integration:neovim"],
       "graduationCriteria": ["Obtain hosted extension-host evidence on supported OSes.", "Publish and version client/server installation compatibility."],
       "limitations": ["Editor packages are unreleased and host gates require explicit environment configuration."]
     },
@@ -177,10 +199,10 @@
       "id": "watch-loop",
       "title": "Exact-snapshot watch producer",
       "maturity": "beta",
-      "scope": "Event-assisted snapshot fallback, source/theme caches, last-valid output retention, and grouped publication.",
-      "owners": ["crates/pliego-css-watch", "crates/pliego-cssc"],
+      "scope": "Event-assisted snapshot fallback, shared AnalysisHost caches, last-valid output retention, and grouped publication.",
+      "owners": ["crates/pliego-css-compiler", "crates/pliego-css-watch", "crates/pliego-cssc"],
       "schemas": ["compile control manifest/receipt 1.0.0"],
-      "gates": ["verify:integration", "integration:pliegors-dev", "check:portability"],
+      "gates": ["check:engine-boundary", "verify:integration", "integration:pliegors-dev", "check:portability"],
       "graduationCriteria": ["Pass hosted long-running watch/recovery tests on supported OSes.", "Publish supported latency and resource envelopes."],
       "limitations": ["It regenerates artifacts; it is not CSS-only browser HMR."]
     },
