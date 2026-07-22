@@ -31,6 +31,7 @@ import {
 function parse(args) {
   const value = { allowDirty: false };
   for (const arg of args) {
+    if (arg === "--") continue;
     if (arg === "--allow-dirty") {
       value.allowDirty = true;
       continue;

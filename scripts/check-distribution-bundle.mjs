@@ -19,6 +19,7 @@ import {
 function parse(args) {
   const parsed = {};
   for (const arg of args) {
+    if (arg === "--") continue;
     const match = /^--([a-z-]+)=(.+)$/u.exec(arg);
     if (!match || Object.hasOwn(parsed, match[1])) fail(`invalid option: ${arg}`);
     parsed[match[1]] = match[2];

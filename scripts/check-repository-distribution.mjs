@@ -121,6 +121,7 @@ try {
   ]);
   const result = JSON.parse(
     run("check-distribution-bundle.mjs", [
+      "--",
       `--root=${relative(ROOT, resolve(fixtureOutput, "release-assets"))}`,
     ]),
   );
