@@ -254,6 +254,8 @@ jobs:
         run: pnpm check:benchmark-authority
       - name: Check browser/output certification authority
         run: pnpm check:browser-output-authority
+      - name: Check repository-only pnpm distribution contract
+        run: pnpm check:repository-distribution
       - name: Smoke Benchmark Authority v2 runner
         run: pnpm check:benchmark-smoke
       - name: Build and validate the PliegoRS-authored website

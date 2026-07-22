@@ -40,7 +40,7 @@ Historical reports and release notes do not change this state.
 | `browser-release-matrix` | technical | **blocked** | pending | 0/5 | none |
 | `registry-replay-refresh` | technical | **pending** | inherited | 0/4 | none |
 | `production-deployment-refresh` | operational | **pending** | inherited | 0/4 | none |
-| `signed-binary-distribution` | operational | **blocked** | pending | 0/7 | none |
+| `signed-binary-distribution` | operational | **blocked** | pending | 0/10 | none |
 | `external-adoption-evidence` | adoption | **pending** | pending | 0/3 | none |
 | `final-promotion-authorization` | authorization | **not-authorized** | pending | 0/1 | none |
 
@@ -120,11 +120,11 @@ The production site has historical deployment evidence, but a current exact-sour
 
 ### signed-binary-distribution
 
-Signed native binaries, checksums, SBOMs, attestations, and the npm launcher required by the LTS distribution boundary do not exist yet.
+RC.2 predates the repository-only G5 distribution contract. It has no exact-source native archives, checksums, CycloneDX SBOMs, GitHub/Sigstore attestations, immutable GitHub Release, or verified pnpm package asset; npmjs publication is forbidden.
 
 - Source: `064dcbce96a3a5cc97a940d07566c008bb5e2d3e` / tree `010a64f5d0bbd142a1d015fda4ccf573cc6e4133`
 - Validity: `2026-07-22T14:10:00Z` → `2026-07-29T14:10:00Z`
-- Required coverage: `windows-x86_64`, `linux-x86_64`, `macos-arm64`, `checksums`, `sbom`, `attestations`, `npm-launcher`
+- Required coverage: `windows-x86_64`, `linux-x86_64`, `macos-arm64`, `checksums`, `cyclonedx-sbom`, `github-sigstore-attestations`, `repository-release-assets`, `immutable-release`, `pnpm-package-install`, `no-npmjs`
 - Covered: none
 - Hashed artifacts: none
 

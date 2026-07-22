@@ -8,6 +8,13 @@ pre-1.0 compatibility policy.
 
 ## [Unreleased]
 
+### Added
+
+- Add the G5 repository-only native distribution pipeline: Windows x64, Linux
+  x64 GNU, and macOS arm64 CLI/LSP archives; CycloneDX SBOMs; SHA-256
+  manifests; GitHub/Sigstore attestations; and a universal no-lifecycle pnpm
+  package that is never published to npmjs.
+
 ### Changed
 
 - Separate stable breakpoint identity from narrow-to-wide cascade rank. ThemeId

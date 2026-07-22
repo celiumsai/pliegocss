@@ -84,13 +84,19 @@ the [Tailwind CSS v4.3.2 matrix](./docs/benchmarks/tailwind-v4-competitive-matri
 
 - Rust **1.85 or newer**
 - Git
-- Node.js and pnpm are required only for repository development and full verification
+- Node.js and pnpm are required for repository development/full verification and for the optional
+  repository-hosted pnpm launcher; they are not Rust crate dependencies
 
 Install the public-preview CLI from crates.io:
 
 ```console
 cargo install pliego-cssc --version '=0.1.0-rc.2' --locked
 ```
+
+Later candidates may also attach a repository-only universal pnpm package to their immutable GitHub
+Release. It is never published to npmjs, contains no dependencies or lifecycle scripts, and must be
+downloaded, verified, and installed as a local `.tgz` with pnpm. RC.2 predates that G5 artifact; see
+the [installation guide](./docs/getting-started/installation.md#repository-hosted-pnpm-package).
 
 Or clone the repository and build locally:
 

@@ -252,14 +252,14 @@
     },
     {
       "id": "registry-distribution",
-      "title": "Registry packages and supported installation",
+      "title": "Registry crates and repository-hosted binary distribution",
       "maturity": "beta",
-      "scope": "Published exact-version 19-crate graph plus installable CLI and LSP artifacts.",
-      "owners": ["scripts/check-packages.mjs", "docs/contributing/release-process.md"],
-      "schemas": [],
-      "gates": ["check:packages", "verify:release"],
-      "graduationCriteria": ["Retain registry-only Rust 1.85 replay for every release.", "Publish and version editor client installation compatibility.", "Promote final 0.1.0 only through the separate readiness authorization."],
-      "limitations": ["The VS Code and Neovim clients remain source-distributed candidates; crates.io versions must be consumed as one exact compatibility unit."]
+      "scope": "Published exact-version 19-crate graph plus GitHub Release native CLI/LSP archives and one universal no-lifecycle pnpm package asset.",
+      "owners": ["scripts/check-packages.mjs", "scripts/check-repository-distribution.mjs", "distribution/repository-distribution-v1.json", ".github/workflows/distribution.yml", "docs/contributing/release-process.md"],
+      "schemas": ["repository distribution policy 1", "repository distribution manifest 1"],
+      "gates": ["check:packages", "check:repository-distribution", "verify:release"],
+      "graduationCriteria": ["Retain registry-only Rust 1.85 replay for every release.", "Build, attest, install, and execute exact-source repository assets on every declared host.", "Publish the npm-format package only as an immutable GitHub Release asset and install it with pnpm after verification.", "Publish and version editor client installation compatibility.", "Promote final 0.1.0 only through the separate readiness authorization."],
+      "limitations": ["npmjs publication is forbidden; the pnpm package contains no dependencies or lifecycle scripts and supports only Windows x64, Linux x64 GNU, and macOS arm64.", "GitHub/Sigstore provenance is not Authenticode signing or Apple notarization.", "The VS Code and Neovim clients remain source-distributed candidates; crates.io versions must be consumed as one exact compatibility unit."]
     }
   ]
 }

@@ -74,7 +74,7 @@ bundled software dependencies.
 - Locked evidence: `tailwindcss@4.3.3`, `@tailwindcss/cli@4.3.3`,
   `tailwindcss@3.4.19`, `tailwindcss@4.3.2`, `@tailwindcss/cli@4.3.2`, their registry SRI values,
   and the complete transitive `pnpm-lock.yaml` graph at SHA-256
-  `39f1ccd3f3b3262805d773e92bf8b2d0efc9ac755ba77460a0cb801d5ccea394`.
+  `b841e850a294c98603dd98fa8ba847ecd67d4fa490439726ac07939635ac2a51`.
 
 ## Browser-certification software
 

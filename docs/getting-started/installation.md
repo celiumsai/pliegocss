@@ -13,9 +13,10 @@ PliegoCSS versions.
 The PliegoCSS repository pins Rust 1.96 with `rust-toolchain.toml` for contributor tooling. That pin
 does not raise the crate MSRV above Rust 1.85.
 
-Node.js 22.13 or newer and pnpm are needed only for this repository's verification, packaging,
-benchmark, and integration harnesses. They are not application dependencies and are not required by
-the Rust crates.
+Node.js 22.13 or newer and pnpm are needed for this repository's verification, packaging, benchmark,
+and integration harnesses. They are not dependencies of the Rust crates. Node is also required when
+using the optional repository-hosted pnpm launcher described below; that launcher never downloads a
+binary during installation or execution.
 
 Registry consumers should use exact versions for the compatibility unit:
 
@@ -32,6 +33,30 @@ Install the CLI with the same exact candidate:
 ```console
 cargo install pliego-cssc --version '=0.1.0-rc.2' --locked
 ```
+
+## Repository-hosted pnpm package
+
+The G5 Node distribution is an npm-format package, but PliegoCSS does **not** publish it to npmjs.
+It is built as one universal `.tgz` containing the declared native CLI/LSP binaries and is attached
+only to an immutable GitHub Release. The package has zero dependencies and no lifecycle scripts.
+
+`0.1.0-rc.2` predates this contract and does not carry that asset. For a later candidate whose
+release page contains the G5 bundle, download and verify the exact asset before asking pnpm to install
+the local file:
+
+```console
+gh release download <tag> --repo celiumsai/pliegocss --pattern 'pliegocss-pnpm-*.tgz'
+gh release verify-asset <tag> ./pliegocss-pnpm-<version>.tgz --repo celiumsai/pliegocss
+gh attestation verify ./pliegocss-pnpm-<version>.tgz --repo celiumsai/pliegocss
+pnpm add --save-dev --save-exact ./pliegocss-pnpm-<version>.tgz
+pnpm exec pliego-cssc --version
+pnpm exec pliego-css-lsp --version
+```
+
+Do not install from a branch, a moving Git reference, npmjs, or an unverified remote tarball. Commit
+the resulting `pnpm-lock.yaml`; pnpm is the supported and recommended package manager for this path.
+Windows x64, Linux x64 GNU, and macOS arm64 are the declared binary hosts. Use Cargo from an exact
+version or checkout on any other Rust target.
 
 ## Install the command-line compiler
 

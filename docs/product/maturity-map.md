@@ -51,7 +51,8 @@ promise:
 - migration inventory;
 - watch mode;
 - PliegoRS SSR/SSG/resumability integration;
-- exact-version registry distribution for the published Rust workspace and CLI/LSP binaries.
+- exact-version crates.io distribution for the Rust workspace plus repository-hosted native CLI/LSP
+  archives and a no-lifecycle pnpm package. The npm-format package is never published to npmjs.
 
 Each row in the machine map names the owning paths, persisted schemas, current gates, graduation
 criteria, and claim limits. A beta capability cannot graduate solely because its tests pass locally;
