@@ -874,7 +874,7 @@
     },
     {
       "sourcePath": "docs/site/release-readiness.md",
-      "sourceSha256": "sha256:41e5e4188aaf3d082d3590ac189cc97fe82737228ba14bf308ba92732acc6abb",
+      "sourceSha256": "sha256:d4574180ec81b0c7d592883cebf374b54d5f4677bfc6e4a1dc148f249df2c5e4",
       "route": "/docs/release-readiness/",
       "title": "Release truth bound to one exact candidate.",
       "category": "Evidence",
@@ -897,7 +897,7 @@
         {
           "id": "blockers",
           "title": "Current blockers",
-          "body": "g0-corrections-on-candidate (pending): G0 corrections are not part of the exact RC.2 candidate. They require a newly named candidate plus hosted replay before they can become release evidence. browser-release-matrix (blocked): Every required hosted browser lane is not configured for the exact candidate source; local or historical browser runs have no promotion authority. registry-replay-refresh (pending): RC.2 was previously replayed from crates.io, but schema 3 requires a fresh, unexpired, artifact-hashed replay for the exact promotion candidate. production-deployment-refresh (pending): The production site has historical deployment evidence, but a current exact-source edge and browser replay with hashed artifacts is missing. signed-binary-distribution (blocked): RC.2 predates the repository-only G5 distribution contract. It has no exact-source native archives, checksums, CycloneDX SBOMs, GitHub/Sigstore attestations, immutable GitHub Release, or verified pnpm package asset; npmjs publication is forbidden. external-adoption-evidence (pending): The required external interviews, real incidents, and pilots have not been recorded as reviewed evidence. final-promotion-authorization (not-authorized): Mario has not explicitly authorized publishing final 0.1.0 for this exact source commit and Git tree.",
+          "body": "g0-corrections-on-candidate (pending): G0 corrections are not part of the exact RC.2 candidate. They require a newly named candidate plus hosted replay before they can become release evidence. browser-release-matrix (blocked): Every required hosted browser lane is not configured for the exact candidate source; local or historical browser runs have no promotion authority. adapter-coexistence-matrix (blocked): RC.2 predates the G6 adapter authority. It has no clean exact-source 21-project HTML/Vite/PliegoRS matrix, Tailwind v3/v4 source/output audit, DOM/ARIA/style equivalence, exact rollback, or pinned PliegoRS framework replay. registry-replay-refresh (pending): RC.2 was previously replayed from crates.io, but schema 3 requires a fresh, unexpired, artifact-hashed replay for the exact promotion candidate. production-deployment-refresh (pending): The production site has historical deployment evidence, but a current exact-source edge and browser replay with hashed artifacts is missing. signed-binary-distribution (blocked): RC.2 predates the repository-only G5 distribution contract. It has no exact-source native archives, checksums, CycloneDX SBOMs, GitHub/Sigstore attestations, immutable GitHub Release, or verified pnpm package asset; npmjs publication is forbidden. external-adoption-evidence (pending): The required external interviews, real incidents, and pilots have not been recorded as reviewed evidence. final-promotion-authorization (not-authorized): Mario has not explicitly authorized publishing final 0.1.0 for this exact source commit and Git tree.",
           "code": null
         }
       ]

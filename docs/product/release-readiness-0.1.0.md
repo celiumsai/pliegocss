@@ -38,6 +38,7 @@ Historical reports and release notes do not change this state.
 | `exact-candidate-codeql` | technical | **passed** | measured | 3/3 | none |
 | `g0-corrections-on-candidate` | technical | **pending** | pending | 0/4 | none |
 | `browser-release-matrix` | technical | **blocked** | pending | 0/5 | none |
+| `adapter-coexistence-matrix` | technical | **blocked** | pending | 0/13 | none |
 | `registry-replay-refresh` | technical | **pending** | inherited | 0/4 | none |
 | `production-deployment-refresh` | operational | **pending** | inherited | 0/4 | none |
 | `signed-binary-distribution` | operational | **blocked** | pending | 0/10 | none |
@@ -93,6 +94,18 @@ Every required hosted browser lane is not configured for the exact candidate sou
 - Hashed artifacts: none
 - References:
   - [current-matrix](https://github.com/celiumsai/pliegocss/blob/main/docs/benchmarks/hosted-browser-matrix.json)
+
+### adapter-coexistence-matrix
+
+RC.2 predates the G6 adapter authority. It has no clean exact-source 21-project HTML/Vite/PliegoRS matrix, Tailwind v3/v4 source/output audit, DOM/ARIA/style equivalence, exact rollback, or pinned PliegoRS framework replay.
+
+- Source: `064dcbce96a3a5cc97a940d07566c008bb5e2d3e` / tree `010a64f5d0bbd142a1d015fda4ccf573cc6e4133`
+- Validity: `2026-07-22T14:10:00Z` → `2026-07-29T14:10:00Z`
+- Required coverage: `twenty-one-projects`, `html-seven`, `vite-seven`, `pliegors-seven`, `tailwind-v3-lts`, `tailwind-v4-current`, `tailwind-source-output-audit`, `dom-aria-style-geometry`, `exact-rollback`, `windows-x64`, `linux-x64`, `macos-arm64`, `pinned-pliegors-framework-browser`
+- Covered: none
+- Hashed artifacts: none
+- References:
+  - [adapter-coexistence-workflow](https://github.com/celiumsai/pliegocss/actions/workflows/adapter-coexistence.yml)
 
 ### registry-replay-refresh
 

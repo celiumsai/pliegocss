@@ -48,7 +48,8 @@ promise:
 - computed and bounded visual browser-output certification against Tailwind across the declared
   3×3 host matrix;
 - LSP/editor clients;
-- migration inventory;
+- migration inventory plus bounded static Tailwind v3/v4 coexistence across 21 HTML, Vite, and
+  PliegoRS project snapshots with browser equivalence and exact rollback;
 - watch mode;
 - PliegoRS SSR/SSG/resumability integration;
 - exact-version crates.io distribution for the Rust workspace plus repository-hosted native CLI/LSP

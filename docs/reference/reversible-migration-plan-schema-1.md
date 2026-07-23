@@ -39,3 +39,9 @@ proposal only when explicitly invoked. Apply refuses existing output/receipt pat
 receipt bound to exact output bytes. Rollback refuses drift and removes the receipt only after the
 sidecar is safely removed. This is still not a Tailwind codemod: authored sources and templates stay
 untouched, and the plan's executable edit set remains empty.
+
+G6 does not change that command's schema or read-only promise. The separate
+[`adapter coexistence protocol`](./adapter-coexistence.md) composes compiler-manifest mappings with
+an explicitly authored `migration-group-apply` manifest for literal complete class groups. That
+bounded protocol has browser and exact-rollback evidence; it does not silently populate or execute
+the inventory-only plan's `edits` field.

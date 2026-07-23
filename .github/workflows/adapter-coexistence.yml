@@ -1,0 +1,131 @@
+name: Adapter coexistence certification
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  host:
+    name: ${{ matrix.host }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - host: windows-x64-chromium
+            runner: windows-latest
+          - host: linux-x64-chromium
+            runner: ubuntu-24.04
+          - host: macos-arm64-chromium
+            runner: macos-15
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22.13.0
+      - name: Install pnpm
+        run: npm install --global pnpm@11.7.0
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Validate adapter authority
+        run: pnpm check:adapter-coexistence-authority
+      - name: Install Rust toolchain
+        run: rustup toolchain install 1.96.0 --profile minimal
+      - name: Install Chromium and Linux dependencies
+        if: runner.os == 'Linux'
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Install Chromium
+        if: runner.os != 'Linux'
+        run: pnpm exec playwright install chromium
+      - name: Execute adapter coexistence host
+        run: pnpm check:adapter-coexistence -- --browser=chromium --host=${{ matrix.host }} --output=target/adapter-coexistence-certification/evidence/${{ matrix.host }}.json --require-clean
+      - name: Upload host evidence
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: adapter-coexistence-${{ matrix.host }}-${{ github.sha }}
+          path: target/adapter-coexistence-certification/evidence/${{ matrix.host }}.json
+          if-no-files-found: error
+          retention-days: 30
+
+  pliegors-framework:
+    name: PliegoRS framework/browser adapter
+    runs-on: windows-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          repository: celiumsai/pliegors
+          ref: cc61a41b49ab60eb76e82fedebccf17fe00bdc0c
+          path: target/upstream/pliegors
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22.13.0
+      - name: Install pnpm
+        run: npm install --global pnpm@11.7.0
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Install PliegoRS Rust toolchain
+        run: |
+          rustup toolchain install 1.86.0 --profile minimal
+          rustup target add wasm32-unknown-unknown --toolchain 1.86.0
+      - name: Execute pinned PliegoRS browser gate
+        run: pnpm integration:pliegors-browser
+        env:
+          PLIEGORS_ROOT: ${{ github.workspace }}\target\upstream\pliegors
+          PLIEGOCSS_PLIEGORS_BROWSER_EVIDENCE: target/adapter-coexistence-certification/pliegors-framework.json
+      - name: Upload PliegoRS evidence
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: adapter-coexistence-pliegors-framework-${{ github.sha }}
+          path: target/adapter-coexistence-certification/pliegors-framework.json
+          if-no-files-found: error
+          retention-days: 30
+
+  matrix:
+    name: Aggregate adapter coexistence matrix
+    needs: [host, pliegors-framework]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22.13.0
+      - name: Install pnpm
+        run: npm install --global pnpm@11.7.0
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Validate adapter authority
+        run: pnpm check:adapter-coexistence-authority
+      - name: Download host evidence
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: adapter-coexistence-*-chromium-${{ github.sha }}
+          path: target/adapter-coexistence-certification/incoming
+          merge-multiple: true
+      - name: Download PliegoRS evidence
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: adapter-coexistence-pliegors-framework-${{ github.sha }}
+          path: target/adapter-coexistence-certification/pliegors
+      - name: Validate complete matrix
+        run: pnpm check:adapter-coexistence-matrix -- --evidence-root=target/adapter-coexistence-certification/incoming --pliegors-evidence=target/adapter-coexistence-certification/pliegors/pliegors-framework.json --output=target/adapter-coexistence-certification/adapter-coexistence-matrix.json --require-clean
+      - name: Upload complete matrix
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: adapter-coexistence-matrix-${{ github.sha }}
+          path: target/adapter-coexistence-certification/adapter-coexistence-matrix.json
+          if-no-files-found: error
+          retention-days: 30

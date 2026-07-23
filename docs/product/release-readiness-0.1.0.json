@@ -154,6 +154,37 @@
       ]
     },
     {
+      "id": "adapter-coexistence-matrix",
+      "dimension": "technical",
+      "status": "blocked",
+      "evidenceClass": "pending",
+      "requiredForPromotion": true,
+      "summary": "RC.2 predates the G6 adapter authority. It has no clean exact-source 21-project HTML/Vite/PliegoRS matrix, Tailwind v3/v4 source/output audit, DOM/ARIA/style equivalence, exact rollback, or pinned PliegoRS framework replay.",
+      "source": {
+        "commit": "064dcbce96a3a5cc97a940d07566c008bb5e2d3e",
+        "gitTree": "010a64f5d0bbd142a1d015fda4ccf573cc6e4133"
+      },
+      "observedAt": "2026-07-22T14:10:00Z",
+      "expiresAt": "2026-07-29T14:10:00Z",
+      "environment": {
+        "os": "github-hosted-windows-linux-macos",
+        "arch": "x86_64-arm64",
+        "rust": "1.96.0,1.86.0-pliegors",
+        "node": "22.13+",
+        "browser": "chromium"
+      },
+      "requiredCoverage": ["twenty-one-projects", "html-seven", "vite-seven", "pliegors-seven", "tailwind-v3-lts", "tailwind-v4-current", "tailwind-source-output-audit", "dom-aria-style-geometry", "exact-rollback", "windows-x64", "linux-x64", "macos-arm64", "pinned-pliegors-framework-browser"],
+      "coveredCoverage": [],
+      "waiverAdr": null,
+      "artifacts": [],
+      "references": [
+        {
+          "kind": "adapter-coexistence-workflow",
+          "url": "https://github.com/celiumsai/pliegocss/actions/workflows/adapter-coexistence.yml"
+        }
+      ]
+    },
+    {
       "id": "registry-replay-refresh",
       "dimension": "technical",
       "status": "pending",

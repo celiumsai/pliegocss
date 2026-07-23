@@ -1,0 +1,174 @@
+{
+  "schemaVersion": 1,
+  "kind": "pliegocss-adapter-coexistence-corpus",
+  "projects": [
+    {
+      "id": "html-action-buttons",
+      "adapter": "html",
+      "tailwindProfile": "tailwind-v3-lts",
+      "title": "Action buttons",
+      "viewport": { "width": 390, "height": 844 },
+      "body": "<main aria-labelledby=\"title\" class=\"mx-auto flex max-w-6xl flex-col gap-12 px-4 py-12 sm:px-6 lg:px-8\"><h1 id=\"title\" class=\"text-2xl font-semibold tracking-tight text-ink\">Publish controls</h1><section aria-label=\"Document actions\" class=\"flex flex-wrap items-center gap-4\"><button class=\"inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-accent-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50\">Publish</button><button disabled class=\"inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-line bg-surface px-4 py-2 text-sm font-semibold text-ink shadow-sm transition-colors hover:bg-surface-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50\">Archived</button></section></main>"
+    },
+    {
+      "id": "html-editorial-card",
+      "adapter": "html",
+      "tailwindProfile": "tailwind-v4-current",
+      "title": "Editorial card",
+      "viewport": { "width": 768, "height": 900 },
+      "body": "<main class=\"mx-auto flex max-w-6xl flex-col gap-12 px-4 py-12 sm:px-6 lg:px-8\"><article aria-labelledby=\"card-title\" class=\"flex flex-col gap-6 rounded-2xl border border-line bg-surface p-6 shadow-sm md:flex-row md:items-center\"><div aria-hidden=\"true\" class=\"aspect-square w-full rounded-xl bg-surface-raised md:w-40\"></div><div class=\"flex min-w-0 flex-1 flex-col gap-3\"><p class=\"text-sm font-medium text-accent\">Edition 006</p><h1 id=\"card-title\" class=\"text-2xl font-semibold tracking-tight text-ink\">Architecture as evidence</h1><p class=\"max-w-prose text-sm leading-6 text-muted\">A bounded card with semantic heading and descriptive copy.</p></div></article></main>"
+    },
+    {
+      "id": "html-primary-navigation",
+      "adapter": "html",
+      "tailwindProfile": "tailwind-v3-lts",
+      "title": "Primary navigation",
+      "viewport": { "width": 1440, "height": 900 },
+      "body": "<header class=\"mx-auto flex max-w-6xl flex-col gap-12 px-4 py-12 sm:px-6 lg:px-8\"><nav aria-label=\"Primary navigation\" class=\"flex flex-col gap-4 border-b border-line pb-4 md:flex-row md:items-center md:justify-between\"><a class=\"text-lg font-bold tracking-tight text-ink\" href=\"#home\">PliegoCSS</a><div class=\"flex flex-wrap items-center gap-2\"><a class=\"rounded-md px-3 py-2 text-sm font-medium text-muted hover:bg-surface-raised hover:text-ink\" href=\"#docs\">Docs</a><a class=\"rounded-md px-3 py-2 text-sm font-medium text-muted hover:bg-surface-raised hover:text-ink\" href=\"#examples\">Examples</a><a class=\"rounded-md bg-ink px-3 py-2 text-sm font-semibold text-white hover:opacity-90\" href=\"#start\">Start</a></div></nav></header>"
+    },
+    {
+      "id": "html-project-form",
+      "adapter": "html",
+      "tailwindProfile": "tailwind-v4-current",
+      "title": "Project form",
+      "viewport": { "width": 1024, "height": 900 },
+      "body": "<main class=\"mx-auto flex max-w-6xl flex-col gap-12 px-4 py-12 sm:px-6 lg:px-8\"><form aria-labelledby=\"form-title\" class=\"grid gap-6 rounded-2xl border border-line bg-surface p-6 md:grid-cols-2\"><h1 id=\"form-title\" class=\"text-2xl font-semibold tracking-tight text-ink\">Create project</h1><label class=\"flex flex-col gap-2 text-sm font-medium text-ink\">Name<input class=\"w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink outline-none placeholder:text-muted focus:border-accent focus:ring-2 focus:ring-accent/20\" placeholder=\"my-app\"></label><label class=\"flex flex-col gap-2 text-sm font-medium text-ink\">Runtime<select class=\"w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent/20\"><option>Cloudflare Workers</option></select></label><div class=\"flex justify-end gap-3 md:col-span-2\"><button class=\"rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-strong\" type=\"submit\">Create</button></div></form></main>"
+    },
+    {
+      "id": "html-build-metrics",
+      "adapter": "html",
+      "tailwindProfile": "tailwind-v3-lts",
+      "title": "Build metrics",
+      "viewport": { "width": 1280, "height": 800 },
+      "body": "<main aria-labelledby=\"metrics-title\" class=\"mx-auto flex max-w-6xl flex-col gap-12 px-4 py-12 sm:px-6 lg:px-8\"><h1 id=\"metrics-title\" class=\"text-2xl font-semibold tracking-tight text-ink\">Build metrics</h1><section aria-label=\"Compilation metrics\" class=\"grid gap-4 sm:grid-cols-2 lg:grid-cols-4\"><article class=\"rounded-xl border border-line bg-surface p-5 shadow-sm\"><p class=\"text-sm font-medium text-muted\">Build time</p><p class=\"mt-2 text-3xl font-bold tracking-tight text-ink\">12 ms</p></article><article class=\"rounded-xl border border-line bg-surface p-5 shadow-sm\"><p class=\"text-sm font-medium text-muted\">CSS gzip</p><p class=\"mt-2 text-3xl font-bold tracking-tight text-ink\">4.2 KB</p></article></section></main>"
+    },
+    {
+      "id": "html-release-article",
+      "adapter": "html",
+      "tailwindProfile": "tailwind-v4-current",
+      "title": "Release article",
+      "viewport": { "width": 820, "height": 1000 },
+      "body": "<main class=\"mx-auto flex max-w-6xl flex-col gap-12 px-4 py-12 sm:px-6 lg:px-8\"><article aria-labelledby=\"release-title\" class=\"flex flex-col gap-6 rounded-2xl border border-line bg-surface p-6 shadow-sm md:flex-row md:items-center\"><div class=\"flex min-w-0 flex-1 flex-col gap-3\"><p class=\"text-sm font-medium text-accent\">Release candidate</p><h1 id=\"release-title\" class=\"text-2xl font-semibold tracking-tight text-ink\">Immutable by default</h1><p class=\"max-w-prose text-sm leading-6 text-muted\">Every promoted artifact stays bound to its source commit.</p><a class=\"rounded-md bg-ink px-3 py-2 text-sm font-semibold text-white hover:opacity-90\" href=\"#notes\">Read notes</a></div></article></main>"
+    },
+    {
+      "id": "html-status-alert",
+      "adapter": "html",
+      "tailwindProfile": "tailwind-v3-lts",
+      "title": "Status alert",
+      "viewport": { "width": 600, "height": 700 },
+      "body": "<main class=\"mx-auto flex max-w-6xl flex-col gap-12 px-4 py-12 sm:px-6 lg:px-8\"><section role=\"status\" aria-labelledby=\"status-title\" class=\"rounded-xl border border-line bg-surface p-5 shadow-sm\"><p class=\"text-sm font-medium text-accent\">All systems operational</p><h1 id=\"status-title\" class=\"text-2xl font-semibold tracking-tight text-ink\">Release evidence is current</h1><p class=\"mt-1 text-xs font-medium text-muted\">Verified on the selected source commit.</p></section></main>"
+    },
+    {
+      "id": "vite-sign-in",
+      "adapter": "vite",
+      "tailwindProfile": "tailwind-v4-current",
+      "title": "Vite sign in",
+      "viewport": { "width": 430, "height": 900 },
+      "body": "<main class=\"mx-auto flex max-w-6xl flex-col gap-12 px-4 py-12 sm:px-6 lg:px-8\"><form aria-labelledby=\"signin-title\" class=\"grid gap-6 rounded-2xl border border-line bg-surface p-6 md:grid-cols-2\"><h1 id=\"signin-title\" class=\"text-2xl font-semibold tracking-tight text-ink\">Sign in</h1><label class=\"flex flex-col gap-2 text-sm font-medium text-ink\">Email<input class=\"w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink outline-none placeholder:text-muted focus:border-accent focus:ring-2 focus:ring-accent/20\" placeholder=\"you@example.com\"></label><div class=\"flex justify-end gap-3 md:col-span-2\"><button class=\"rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-strong\" type=\"submit\">Continue</button></div></form></main>"
+    },
+    {
+      "id": "vite-pricing-options",
+      "adapter": "vite",
+      "tailwindProfile": "tailwind-v3-lts",
+      "title": "Vite pricing",
+      "viewport": { "width": 1100, "height": 800 },
+      "body": "<main aria-labelledby=\"pricing-title\" class=\"mx-auto flex max-w-6xl flex-col gap-12 px-4 py-12 sm:px-6 lg:px-8\"><h1 id=\"pricing-title\" class=\"text-2xl font-semibold tracking-tight text-ink\">Choose a plan</h1><section aria-label=\"Pricing plans\" class=\"grid gap-4 sm:grid-cols-2 lg:grid-cols-4\"><article class=\"rounded-xl border border-line bg-surface p-5 shadow-sm\"><p class=\"text-sm font-medium text-muted\">Community</p><p class=\"mt-2 text-3xl font-bold tracking-tight text-ink\">Free</p><button class=\"rounded-lg border border-line px-4 py-2 text-sm font-semibold text-ink hover:bg-surface-raised\">Select</button></article><article class=\"rounded-xl border border-line bg-surface p-5 shadow-sm\"><p class=\"text-sm font-medium text-accent\">LTS</p><p class=\"mt-2 text-3xl font-bold tracking-tight text-ink\">Stable</p><button class=\"rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-strong\">Select</button></article></section></main>"
+    },
+    {
+      "id": "vite-runtime-settings",
+      "adapter": "vite",
+      "tailwindProfile": "tailwind-v4-current",
+      "title": "Vite settings",
+      "viewport": { "width": 900, "height": 850 },
+      "body": "<main class=\"mx-auto flex max-w-6xl flex-col gap-12 px-4 py-12 sm:px-6 lg:px-8\"><form aria-labelledby=\"settings-title\" class=\"grid gap-6 rounded-2xl border border-line bg-surface p-6 md:grid-cols-2\"><h1 id=\"settings-title\" class=\"text-2xl font-semibold tracking-tight text-ink\">Runtime settings</h1><label class=\"flex flex-col gap-2 text-sm font-medium text-ink\">Target<select class=\"w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent/20\"><option>Modern</option></select></label><label class=\"flex flex-col gap-2 text-sm font-medium text-ink\">Output<input class=\"w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink outline-none placeholder:text-muted focus:border-accent focus:ring-2 focus:ring-accent/20\" value=\"minified\"></label><div class=\"flex justify-end gap-3 md:col-span-2\"><button class=\"rounded-lg border border-line px-4 py-2 text-sm font-semibold text-ink hover:bg-surface-raised\" type=\"button\">Reset</button><button class=\"rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-strong\" type=\"submit\">Save</button></div></form></main>"
+    },
+    {
+      "id": "vite-profile-summary",
+      "adapter": "vite",
+      "tailwindProfile": "tailwind-v3-lts",
+      "title": "Vite profile",
+      "viewport": { "width": 760, "height": 760 },
+      "body": "<main class=\"mx-auto flex max-w-6xl flex-col gap-12 px-4 py-12 sm:px-6 lg:px-8\"><article aria-labelledby=\"profile-title\" class=\"flex flex-col gap-6 rounded-2xl border border-line bg-surface p-6 shadow-sm md:flex-row md:items-center\"><div aria-label=\"Mario avatar placeholder\" role=\"img\" class=\"aspect-square w-full rounded-xl bg-surface-raised md:w-40\"></div><div class=\"flex min-w-0 flex-1 flex-col gap-3\"><p class=\"text-sm font-medium text-accent\">Founder</p><h1 id=\"profile-title\" class=\"text-2xl font-semibold tracking-tight text-ink\">Mario Gutierrez</h1><p class=\"max-w-prose text-sm leading-6 text-muted\">Building deterministic systems from Medellin.</p></div></article></main>"
+    },
+    {
+      "id": "vite-document-search",
+      "adapter": "vite",
+      "tailwindProfile": "tailwind-v4-current",
+      "title": "Vite search",
+      "viewport": { "width": 960, "height": 720 },
+      "body": "<main aria-labelledby=\"search-title\" class=\"mx-auto flex max-w-6xl flex-col gap-12 px-4 py-12 sm:px-6 lg:px-8\"><h1 id=\"search-title\" class=\"text-2xl font-semibold tracking-tight text-ink\">Search documentation</h1><form role=\"search\" class=\"flex flex-wrap items-center gap-4\"><label class=\"flex flex-col gap-2 text-sm font-medium text-ink\">Query<input class=\"w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink outline-none placeholder:text-muted focus:border-accent focus:ring-2 focus:ring-accent/20\" placeholder=\"migration receipt\"></label><button class=\"rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-strong\" type=\"submit\">Search</button></form></main>"
+    },
+    {
+      "id": "vite-build-table",
+      "adapter": "vite",
+      "tailwindProfile": "tailwind-v3-lts",
+      "title": "Vite build table",
+      "viewport": { "width": 1200, "height": 780 },
+      "body": "<main aria-labelledby=\"build-title\" class=\"mx-auto flex max-w-6xl flex-col gap-12 px-4 py-12 sm:px-6 lg:px-8\"><h1 id=\"build-title\" class=\"text-2xl font-semibold tracking-tight text-ink\">Build matrix</h1><div role=\"table\" aria-label=\"Build matrix\" class=\"grid gap-4 sm:grid-cols-2 lg:grid-cols-4\"><div role=\"row\" class=\"rounded-xl border border-line bg-surface p-5 shadow-sm\"><p role=\"cell\" class=\"text-sm font-medium text-muted\">Windows</p><p role=\"cell\" class=\"mt-1 text-xs font-medium text-accent\">Passed</p></div><div role=\"row\" class=\"rounded-xl border border-line bg-surface p-5 shadow-sm\"><p role=\"cell\" class=\"text-sm font-medium text-muted\">Linux</p><p role=\"cell\" class=\"mt-1 text-xs font-medium text-accent\">Passed</p></div></div></main>"
+    },
+    {
+      "id": "vite-empty-state",
+      "adapter": "vite",
+      "tailwindProfile": "tailwind-v4-current",
+      "title": "Vite empty state",
+      "viewport": { "width": 700, "height": 700 },
+      "body": "<main class=\"mx-auto flex max-w-6xl flex-col gap-12 px-4 py-12 sm:px-6 lg:px-8\"><section aria-labelledby=\"empty-title\" class=\"flex flex-col gap-6 rounded-2xl border border-line bg-surface p-6 shadow-sm md:flex-row md:items-center\"><div aria-hidden=\"true\" class=\"aspect-square w-full rounded-xl bg-surface-raised md:w-40\"></div><div class=\"flex min-w-0 flex-1 flex-col gap-3\"><h1 id=\"empty-title\" class=\"text-2xl font-semibold tracking-tight text-ink\">No releases yet</h1><p class=\"max-w-prose text-sm leading-6 text-muted\">Draft a release and attach every artifact before publication.</p><button class=\"rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-strong\">Draft release</button></div></section></main>"
+    },
+    {
+      "id": "pliegors-release-hero",
+      "adapter": "pliegors",
+      "tailwindProfile": "tailwind-v3-lts",
+      "title": "PliegoRS hero",
+      "viewport": { "width": 1440, "height": 900 },
+      "body": "<main data-pliegors-route=\"/\" aria-labelledby=\"hero-title\" class=\"mx-auto flex max-w-6xl flex-col gap-12 px-4 py-12 sm:px-6 lg:px-8\"><section class=\"flex flex-col gap-6 rounded-2xl border border-line bg-surface p-6 shadow-sm md:flex-row md:items-center\"><div class=\"flex min-w-0 flex-1 flex-col gap-3\"><p class=\"text-sm font-medium text-accent\">PliegoRS rendered</p><h1 id=\"hero-title\" class=\"text-2xl font-semibold tracking-tight text-ink\">One typed deployment graph</h1><p class=\"max-w-prose text-sm leading-6 text-muted\">Server output preserves semantic markup while styles migrate.</p><a class=\"rounded-md bg-ink px-3 py-2 text-sm font-semibold text-white hover:opacity-90\" href=\"/docs\">Open docs</a></div></section></main>"
+    },
+    {
+      "id": "pliegors-counter-island",
+      "adapter": "pliegors",
+      "tailwindProfile": "tailwind-v4-current",
+      "title": "PliegoRS counter island",
+      "viewport": { "width": 480, "height": 720 },
+      "body": "<main data-pliegors-route=\"/counter\" class=\"mx-auto flex max-w-6xl flex-col gap-12 px-4 py-12 sm:px-6 lg:px-8\"><section data-pliegors-island=\"counter\" aria-labelledby=\"counter-title\" class=\"rounded-xl border border-line bg-surface p-5 shadow-sm\"><p class=\"text-sm font-medium text-accent\">Resumable island</p><h1 id=\"counter-title\" class=\"text-2xl font-semibold tracking-tight text-ink\">Counter: 0</h1><div class=\"flex flex-wrap items-center gap-4\"><button aria-label=\"Decrease counter\" class=\"rounded-lg border border-line px-4 py-2 text-sm font-semibold text-ink hover:bg-surface-raised\">Decrease</button><button aria-label=\"Increase counter\" class=\"rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-strong\">Increase</button></div></section></main>"
+    },
+    {
+      "id": "pliegors-docs-navigation",
+      "adapter": "pliegors",
+      "tailwindProfile": "tailwind-v3-lts",
+      "title": "PliegoRS docs navigation",
+      "viewport": { "width": 1024, "height": 768 },
+      "body": "<header data-pliegors-route=\"/docs\" class=\"mx-auto flex max-w-6xl flex-col gap-12 px-4 py-12 sm:px-6 lg:px-8\"><nav aria-label=\"Documentation\" class=\"flex flex-col gap-4 border-b border-line pb-4 md:flex-row md:items-center md:justify-between\"><a aria-current=\"page\" class=\"text-lg font-bold tracking-tight text-ink\" href=\"/docs\">Docs</a><div class=\"flex flex-wrap items-center gap-2\"><a class=\"rounded-md px-3 py-2 text-sm font-medium text-muted hover:bg-surface-raised hover:text-ink\" href=\"/docs/compiler\">Compiler</a><a class=\"rounded-md px-3 py-2 text-sm font-medium text-muted hover:bg-surface-raised hover:text-ink\" href=\"/docs/migration\">Migration</a></div></nav></header>"
+    },
+    {
+      "id": "pliegors-host-status",
+      "adapter": "pliegors",
+      "tailwindProfile": "tailwind-v4-current",
+      "title": "PliegoRS host status",
+      "viewport": { "width": 760, "height": 800 },
+      "body": "<main data-pliegors-route=\"/status\" aria-labelledby=\"host-title\" class=\"mx-auto flex max-w-6xl flex-col gap-12 px-4 py-12 sm:px-6 lg:px-8\"><h1 id=\"host-title\" class=\"text-2xl font-semibold tracking-tight text-ink\">Hosted adapter status</h1><section aria-label=\"Host results\" class=\"grid gap-4 sm:grid-cols-2 lg:grid-cols-4\"><article class=\"rounded-xl border border-line bg-surface p-5 shadow-sm\"><p class=\"text-sm font-medium text-muted\">Source</p><p class=\"mt-1 text-xs font-medium text-accent\">Exact</p></article><article class=\"rounded-xl border border-line bg-surface p-5 shadow-sm\"><p class=\"text-sm font-medium text-muted\">Rollback</p><p class=\"mt-1 text-xs font-medium text-accent\">Verified</p></article></section></main>"
+    },
+    {
+      "id": "pliegors-control-dashboard",
+      "adapter": "pliegors",
+      "tailwindProfile": "tailwind-v3-lts",
+      "title": "PliegoRS dashboard",
+      "viewport": { "width": 1366, "height": 900 },
+      "body": "<main data-pliegors-route=\"/control\" aria-labelledby=\"control-title\" class=\"mx-auto flex max-w-6xl flex-col gap-12 px-4 py-12 sm:px-6 lg:px-8\"><h1 id=\"control-title\" class=\"text-2xl font-semibold tracking-tight text-ink\">Control dashboard</h1><section class=\"grid gap-4 sm:grid-cols-2 lg:grid-cols-4\"><article class=\"rounded-xl border border-line bg-surface p-5 shadow-sm\"><p class=\"text-sm font-medium text-muted\">Receipts</p><p class=\"mt-2 text-3xl font-bold tracking-tight text-ink\">21</p><p class=\"mt-1 text-xs font-medium text-accent\">Bound</p></article><article class=\"rounded-xl border border-line bg-surface p-5 shadow-sm sm:col-span-2 lg:col-span-1\"><p class=\"text-sm font-medium text-muted\">ARIA drift</p><p class=\"mt-2 text-3xl font-bold tracking-tight text-ink\">0</p><p class=\"mt-1 text-xs font-medium text-accent\">Equivalent</p></article></section></main>"
+    },
+    {
+      "id": "pliegors-confirm-dialog",
+      "adapter": "pliegors",
+      "tailwindProfile": "tailwind-v4-current",
+      "title": "PliegoRS dialog",
+      "viewport": { "width": 640, "height": 720 },
+      "body": "<main data-pliegors-route=\"/release\" class=\"mx-auto flex max-w-6xl flex-col gap-12 px-4 py-12 sm:px-6 lg:px-8\"><section role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"dialog-title\" aria-describedby=\"dialog-copy\" class=\"rounded-xl border border-line bg-surface p-5 shadow-sm\"><h1 id=\"dialog-title\" class=\"text-2xl font-semibold tracking-tight text-ink\">Publish immutable release?</h1><p id=\"dialog-copy\" class=\"max-w-prose text-sm leading-6 text-muted\">Assets cannot be replaced after publication.</p><div class=\"flex justify-end gap-3 md:col-span-2\"><button class=\"rounded-lg border border-line px-4 py-2 text-sm font-semibold text-ink hover:bg-surface-raised\">Cancel</button><button class=\"rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-strong\">Publish</button></div></section></main>"
+    },
+    {
+      "id": "pliegors-pagination",
+      "adapter": "pliegors",
+      "tailwindProfile": "tailwind-v4-current",
+      "title": "PliegoRS pagination",
+      "viewport": { "width": 900, "height": 650 },
+      "body": "<main data-pliegors-route=\"/releases\" aria-labelledby=\"releases-title\" class=\"mx-auto flex max-w-6xl flex-col gap-12 px-4 py-12 sm:px-6 lg:px-8\"><h1 id=\"releases-title\" class=\"text-2xl font-semibold tracking-tight text-ink\">Releases</h1><nav aria-label=\"Release pages\" class=\"flex flex-wrap items-center gap-2\"><a class=\"rounded-md px-3 py-2 text-sm font-medium text-muted hover:bg-surface-raised hover:text-ink\" href=\"?page=1\">Previous</a><a aria-current=\"page\" class=\"rounded-md bg-ink px-3 py-2 text-sm font-semibold text-white hover:opacity-90\" href=\"?page=2\">2</a><a class=\"rounded-md px-3 py-2 text-sm font-medium text-muted hover:bg-surface-raised hover:text-ink\" href=\"?page=3\">Next</a></nav></main>"
+    }
+  ]
+}
