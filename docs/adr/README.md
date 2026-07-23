@@ -27,3 +27,4 @@ ADRs record decisions that constrain implementation or public behavior.
 - [ADR-0023: Establish Benchmark Authority v2](./0023-establish-benchmark-authority-v2.md)
 - [ADR-0024: Certify browser output against Tailwind](./0024-certify-browser-output-against-tailwind.md)
 - [ADR-0025: Distribute the Node launcher from immutable repository releases](./0025-distribute-node-launcher-from-immutable-repository-releases.md)
+- [ADR-0026: Certify static adapter coexistence before migration promotion](./0026-certify-adapter-coexistence.md)

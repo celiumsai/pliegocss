@@ -43,6 +43,12 @@ const gates = Object.freeze([
     args: ["check:browser-output-authority"],
   },
   {
+    id: "adapter-coexistence-authority",
+    tier: "fast",
+    command: "pnpm",
+    args: ["check:adapter-coexistence-authority"],
+  },
+  {
     id: "repository-distribution-contract",
     tier: "fast",
     command: "pnpm",
@@ -227,6 +233,13 @@ const gates = Object.freeze([
     tier: "integration",
     command: "node",
     args: ["scripts/check-representative-framework-routes.mjs"],
+  },
+  {
+    id: "adapter-coexistence",
+    tier: "integration",
+    command: "pnpm",
+    args: ["check:adapter-coexistence"],
+    requires: ["PLIEGOCSS_RUN_BROWSERS"],
   },
   {
     id: "lsp",

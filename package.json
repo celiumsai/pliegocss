@@ -47,6 +47,9 @@
     "check:browser-output-authority": "node ./scripts/check-browser-output-authority.mjs && node ./scripts/check-browser-output-matrix.test.mjs && node ./scripts/render-browser-output-certification.mjs --check",
     "check:browser-output": "node ./scripts/browser-output-certification.mjs",
     "check:browser-output-matrix": "node ./scripts/check-browser-output-matrix.mjs",
+    "check:adapter-coexistence-authority": "node ./scripts/check-adapter-coexistence-authority.mjs && node ./scripts/adapter-coexistence-v1.test.mjs && node ./scripts/check-adapter-coexistence-matrix.test.mjs",
+    "check:adapter-coexistence": "node ./scripts/adapter-coexistence-certification.mjs",
+    "check:adapter-coexistence-matrix": "node ./scripts/check-adapter-coexistence-matrix.mjs",
     "check:release-authority": "node ./scripts/release-authority.test.mjs && node ./scripts/check-release-readiness.mjs --validate && node ./scripts/check-hosted-browser-matrix.mjs --validate && node ./scripts/check-document-authority.mjs && pnpm check:site-docs",
     "check:repository-distribution": "node ./scripts/check-repository-distribution.mjs",
     "check:distribution-bundle": "node ./scripts/check-distribution-bundle.mjs",
@@ -110,6 +113,7 @@
     "tailwindcss": "4.3.3",
     "tailwindcss-frozen": "npm:tailwindcss@4.3.2",
     "tailwindcss-v3-lts": "npm:tailwindcss@3.4.19",
-    "three": "0.185.1"
+    "three": "0.185.1",
+    "vite": "8.1.5"
   }
 }

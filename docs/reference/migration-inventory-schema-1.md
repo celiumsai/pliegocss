@@ -1,7 +1,7 @@
 # Migration inventory schema 1
 
 Status: **Rust producer and fail-closed CLI implemented for bounded single-file Sass, Tailwind CSS
-v4 entry CSS, and CSS Modules inventory; project graphs remain open**
+v3/v4 entry CSS, and CSS Modules inventory; project graphs remain open**
 
 `pliego-css-source` exposes a read-only migration bridge that accepts an explicit source kind,
 portable logical path, and exact UTF-8 source bytes. It never runs Sass, Tailwind, PostCSS,
@@ -77,15 +77,17 @@ it can prove from the supplied source and leaves execution semantics to the orig
 
 ## Covered constructs
 
-### Tailwind CSS v4 entry CSS
+### Tailwind CSS v3/v4 entry CSS
 
+- v3 `@tailwind base`, `@tailwind components`, and `@tailwind utilities` layer directives;
 - `@import "tailwindcss"` and `@import "tailwindcss/preflight"`;
 - `@source`, including dynamic `inline(...)` candidate generation;
 - `@theme`, `@utility`, `@variant`, `@custom-variant`, and `@reference`;
 - unsupported `@apply`, `@plugin`, and `@config` seams.
 
 `preflightReliance` is `not-observed`, `implicit`, `explicit`, or `mixed`. A full
-`@import "tailwindcss"` is implicit reliance; the dedicated preflight import is explicit. This
+`@import "tailwindcss"` is implicit reliance; the dedicated preflight import or v3
+`@tailwind base` directive is explicit. Unknown v3 layer names are retained as unsupported. This
 classification does not inspect generated CSS or prove that later tooling did not remove Preflight.
 
 ### Sass/SCSS

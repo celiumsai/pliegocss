@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 const root = resolve(import.meta.dirname, "..");
 const document = JSON.parse(readFileSync(resolve(root, "docs/product/representative-applications-gap-map.json"), "utf8"));
 function fail(message) { throw new Error(`representative gap map: ${message}`); }
-if (document.schemaVersion !== 1 || document.selectedNext !== "standard-css-transform") fail("header drifted");
+if (document.schemaVersion !== 1 || document.selectedNext !== "external-pilot-evidence") fail("header drifted");
 if (!Array.isArray(document.applications) || document.applications.length !== 5) fail("exactly five applications required");
 if (!Array.isArray(document.priorities) || document.priorities.length !== 5) fail("exactly five priorities required");
 const ids = new Set();

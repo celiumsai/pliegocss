@@ -193,6 +193,7 @@ export function validateReleaseReadiness(value, { root, now = Date.now(), verify
     "exact-candidate-codeql",
     "g0-corrections-on-candidate",
     "browser-release-matrix",
+    "adapter-coexistence-matrix",
     "registry-replay-refresh",
     "production-deployment-refresh",
     "signed-binary-distribution",
