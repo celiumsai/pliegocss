@@ -63,11 +63,12 @@ jobs:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           fetch-depth: 0
+          path: pliegocss
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           repository: celiumsai/pliegors
           ref: cc61a41b49ab60eb76e82fedebccf17fe00bdc0c
-          path: target/upstream/pliegors
+          path: pliegors
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22.13.0
@@ -75,21 +76,23 @@ jobs:
         run: npm install --global pnpm@11.7.0
       - name: Install locked dependencies
         run: pnpm install --frozen-lockfile
+        working-directory: pliegocss
       - name: Install PliegoRS Rust toolchain
         run: |
           rustup toolchain install 1.86.0 --profile minimal
           rustup target add wasm32-unknown-unknown --toolchain 1.86.0
       - name: Execute pinned PliegoRS browser gate
         run: pnpm integration:pliegors-browser
+        working-directory: pliegocss
         env:
-          PLIEGORS_ROOT: ${{ github.workspace }}\target\upstream\pliegors
+          PLIEGORS_ROOT: ${{ github.workspace }}\pliegors
           PLIEGOCSS_PLIEGORS_BROWSER_EVIDENCE: target/adapter-coexistence-certification/pliegors-framework.json
       - name: Upload PliegoRS evidence
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: adapter-coexistence-pliegors-framework-${{ github.sha }}
-          path: target/adapter-coexistence-certification/pliegors-framework.json
+          path: pliegocss/target/adapter-coexistence-certification/pliegors-framework.json
           if-no-files-found: error
           retention-days: 30
 
