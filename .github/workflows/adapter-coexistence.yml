@@ -81,6 +81,10 @@ jobs:
         run: |
           rustup toolchain install 1.86.0 --profile minimal
           rustup target add wasm32-unknown-unknown --toolchain 1.86.0
+      - name: Install pinned wasm-bindgen CLI
+        run: |
+          cargo +1.86.0 install wasm-bindgen-cli --version 0.2.126 --locked --root "$env:RUNNER_TEMP\wasm-bindgen-cli"
+          "$env:RUNNER_TEMP\wasm-bindgen-cli\bin" | Out-File -FilePath $env:GITHUB_PATH -Append
       - name: Execute pinned PliegoRS browser gate
         run: pnpm integration:pliegors-browser
         working-directory: pliegocss
