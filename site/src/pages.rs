@@ -2207,6 +2207,11 @@ fn legal_document(slug: &str) -> View {
                 ),
                 (
                     "05",
+                    "External adoption research",
+                    "Voluntary G7 interviews, incident reports, and pilots are handled through private correspondence. Before any material is admitted, PliegoCSS records affirmative research and public-redacted-record consent, assigns pseudonymous identifiers, keeps raw material in private custody, and publishes only reviewed redacted fields plus a SHA-256 digest. A recruitment comment or email alone is not consent and is not evidence.",
+                ),
+                (
+                    "06",
                     "Requests and contact",
                     "For a privacy question about correspondence controlled by Celiums Solutions LLC, contact hello@pliegocss.dev with enough context to identify the relevant exchange. Do not send unrelated credentials or sensitive data.",
                 ),

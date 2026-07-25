@@ -41,6 +41,7 @@ assert(fast.gates.some((gate) => gate.id === "document-authority"));
 assert(fast.gates.some((gate) => gate.id === "site-markdown-docs"));
 assert(fast.gates.some((gate) => gate.id === "benchmark-authority-v2"));
 assert(fast.gates.some((gate) => gate.id === "browser-output-authority"));
+assert(fast.gates.some((gate) => gate.id === "external-adoption-authority"));
 assert(fast.gates.some((gate) => gate.id === "repository-distribution-contract"));
 assert(!fast.gates.some((gate) => gate.id === "release-readiness"));
 assert(!fast.gates.some((gate) => gate.id === "getting-started"));
@@ -64,6 +65,7 @@ assert(release.gates.some((gate) => gate.id === "site"));
 assert(release.gates.some((gate) => gate.id === "site-deployment"));
 assert(release.gates.some((gate) => gate.id === "migration-real-corpus"));
 assert(release.gates.some((gate) => gate.id === "benchmark-oracle-live"));
+assert(release.gates.some((gate) => gate.id === "external-adoption"));
 assert.deepEqual(
   release.gates.find((gate) => gate.id === "release-readiness")?.command,
   ["node", "scripts/check-release-readiness.mjs", "--profile=release"],

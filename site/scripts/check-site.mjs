@@ -82,6 +82,7 @@ function staticContract() {
     "docs/tooling/repair/index.html",
     "docs/reference/diagnostics/index.html",
     "docs/release-readiness/index.html",
+    "docs/external-adoption/index.html",
     "docs/utilities/index.html",
     "playground/index.html",
     "examples/index.html",
@@ -99,6 +100,7 @@ function staticContract() {
     "es/docs/index.html",
     "es/docs/getting-started/index.html",
     "es/docs/release-readiness/index.html",
+    "es/docs/external-adoption/index.html",
     "es/docs/utilities/index.html",
     "es/playground/index.html",
     "es/examples/index.html",
@@ -213,7 +215,7 @@ function staticContract() {
   const sitemap = readFileSync(join(output, "sitemap.xml"), "utf8");
   const sitemapUrls = sitemap.match(/<url>/gu)?.length ?? 0;
   if (
-    sitemapUrls !== 90 ||
+    sitemapUrls !== 92 ||
     !sitemap.includes('xmlns:xhtml="http://www.w3.org/1999/xhtml"') ||
     !sitemap.includes("https://pliegocss.dev/es/legal/privacy/")
   ) {
@@ -228,6 +230,9 @@ function staticContract() {
   const readinessDocument = generatedDocs.documents.find(
     (document) => document.route === "/docs/release-readiness/",
   );
+  const externalAdoptionDocument = generatedDocs.documents.find(
+    (document) => document.route === "/docs/external-adoption/",
+  );
   const readinessHtml = readFileSync(
     join(output, "docs", "release-readiness", "index.html"),
     "utf8",
@@ -241,6 +246,39 @@ function staticContract() {
     !readinessHtml.includes("Current blockers")
   ) {
     fail("release readiness route is not bound to the generated Markdown authority");
+  }
+  const externalAdoptionHtml = readFileSync(
+    join(output, "docs", "external-adoption", "index.html"),
+    "utf8",
+  );
+  if (
+    !externalAdoptionDocument ||
+    !externalAdoptionHtml.includes(externalAdoptionDocument.sourcePath) ||
+    !externalAdoptionHtml.includes(externalAdoptionDocument.sourceSha256) ||
+    !externalAdoptionHtml.includes("External adoption is a measured gate") ||
+    !externalAdoptionHtml.includes("Applications are open") ||
+    !externalAdoptionHtml.includes("https://github.com/celiumsai/pliegocss/issues/7") ||
+    !externalAdoptionHtml.includes("Interviews: 0/10") ||
+    !externalAdoptionHtml.includes("Tailwind CSS 3.4.19 or 4.3.3")
+  ) {
+    fail("external adoption route is not bound to the G7 Markdown authority");
+  }
+  const privacyHtml = readFileSync(
+    join(output, "legal", "privacy", "index.html"),
+    "utf8",
+  );
+  const spanishPrivacyHtml = readFileSync(
+    join(output, "es", "legal", "privacy", "index.html"),
+    "utf8",
+  );
+  if (
+    !privacyHtml.includes("External adoption research") ||
+    !privacyHtml.includes("A recruitment comment or email alone is not consent") ||
+    !spanishPrivacyHtml.includes("Investigación de adopción externa") ||
+    !spanishPrivacyHtml.includes("Un comentario de reclutamiento") ||
+    !spanishPrivacyHtml.includes('<html lang="es"')
+  ) {
+    fail("external adoption privacy boundary is not bilingual");
   }
   const laboratory = JSON.parse(
     readFileSync(join(output, "assets", "laboratory.json")),

@@ -49,6 +49,12 @@ const gates = Object.freeze([
     args: ["check:adapter-coexistence-authority"],
   },
   {
+    id: "external-adoption-authority",
+    tier: "fast",
+    command: "pnpm",
+    args: ["check:external-adoption-authority"],
+  },
+  {
     id: "repository-distribution-contract",
     tier: "fast",
     command: "pnpm",
@@ -300,6 +306,12 @@ const gates = Object.freeze([
     tier: "release",
     command: "node",
     args: ["scripts/check-release-readiness.mjs", "--profile=release"],
+  },
+  {
+    id: "external-adoption",
+    tier: "release",
+    command: "pnpm",
+    args: ["check:external-adoption"],
   },
   {
     id: "hosted-browser-matrix",

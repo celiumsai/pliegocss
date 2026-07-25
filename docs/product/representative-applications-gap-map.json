@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "statusDate": "2026-07-22",
+  "statusDate": "2026-07-25",
   "applications": [
     {
       "id": "plain-html-audit-first",
@@ -44,7 +44,7 @@
       "id": "external-pilot-evidence",
       "releaseImpact": "blocking",
       "exposedBy": ["plain-html-audit-first", "vite-tailwind-inventory-first", "framework-neutral-multiroute"],
-      "reason": "Owned fixtures now close the bounded adapter protocol, but LTS promotion still needs independent projects and maintainers to validate adoption, rollback, and integration behavior."
+      "reason": "The schema-1 G7 authority and 0.1.x adapter policy are frozen and recruitment is open in GitHub issue #7, but the reviewed ledgers contain zero external records. LTS promotion still needs independent projects and maintainers to validate adoption, rollback, and integration behavior."
     },
     {
       "rank": 2,

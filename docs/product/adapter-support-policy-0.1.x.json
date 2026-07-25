@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "kind": "pliegocss-adapter-support-policy",
+  "status": "frozen-for-0.1-promotion",
+  "releaseLine": "0.1.x",
+  "frozenAt": "2026-07-25",
+  "protocol": {
+    "name": "static-complete-class-group-coexistence",
+    "authoritySchema": 1,
+    "migrationInventorySchema": 1
+  },
+  "supportedTailwindProfiles": [
+    {
+      "id": "tailwind-v3-lts",
+      "certifiedVersion": "3.4.19",
+      "sourceContract": "v3-directives-no-preflight"
+    },
+    {
+      "id": "tailwind-v4-current",
+      "certifiedVersion": "4.3.3",
+      "sourceContract": "v4-import-no-preflight"
+    }
+  ],
+  "supportedAdapters": [
+    {
+      "id": "html",
+      "supportTier": "certified",
+      "inputContract": "complete-static-html-document",
+      "version": null
+    },
+    {
+      "id": "vite",
+      "supportTier": "certified",
+      "inputContract": "vite-production-build",
+      "version": "8.1.5"
+    },
+    {
+      "id": "pliegors",
+      "supportTier": "certified",
+      "inputContract": "rendered-static-html-plus-pinned-framework-browser-replay",
+      "version": "pliego-dom=0.0.2;pliego-ssg=0.0.2"
+    }
+  ],
+  "migration": {
+    "mode": "coexistence",
+    "tailwindRuntimeRetained": true,
+    "applyUnit": "complete-literal-class-group",
+    "rollback": "exact-source-bytes",
+    "dynamicClasses": "unsupported-fail-closed",
+    "arbitraryConfigOrPluginExecution": "unsupported-fail-closed",
+    "tailwindRemoval": "not-certified"
+  },
+  "verification": {
+    "requiredHosts": [
+      "windows-x64-chromium",
+      "linux-x64-chromium",
+      "macos-arm64-chromium"
+    ],
+    "requiredComparisons": [
+      "dom",
+      "aria",
+      "computed-style",
+      "layout-geometry",
+      "exact-rollback"
+    ],
+    "maximumLayoutGeometryDeltaCssPx": 0.1
+  },
+  "supportTiers": {
+    "certified": "Exact versions and bounded inputs replayed by the promotion authority.",
+    "best-effort": "Accepted for issue triage but not covered by the promotion claim.",
+    "unsupported": "Rejected or left unchanged; no compatibility or migration claim."
+  },
+  "claimBoundary": "The 0.1.x promoted adapter claim covers only literal complete class groups in static HTML, Vite 8.1.5 production builds, and pinned PliegoRS rendered output, coexisting with Tailwind CSS 3.4.19 or 4.3.3 without Preflight. It does not certify dynamic class construction, arbitrary Tailwind configuration or plugin execution, unsupported utilities, Tailwind removal, or other framework versions."
+}
