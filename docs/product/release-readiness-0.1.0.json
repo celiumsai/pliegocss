@@ -278,7 +278,7 @@
       "status": "pending",
       "evidenceClass": "pending",
       "requiredForPromotion": true,
-      "summary": "The required external interviews, real incidents, and pilots have not been recorded as reviewed evidence.",
+      "summary": "RC.2 predates the G7 authority. The required external interviews, real incidents, and pilots have not been recorded as consented, redacted, reviewed, hash-bound evidence.",
       "source": {
         "commit": "064dcbce96a3a5cc97a940d07566c008bb5e2d3e",
         "gitTree": "010a64f5d0bbd142a1d015fda4ccf573cc6e4133"
@@ -292,7 +292,7 @@
         "node": null,
         "browser": null
       },
-      "requiredCoverage": ["ten-to-fifteen-interviews", "twenty-incidents", "three-to-five-pilots"],
+      "requiredCoverage": ["ten-to-fifteen-interviews", "twenty-incidents", "three-to-five-pilots", "three-independent-projects", "three-independent-organizations", "frozen-adapter-support-policy"],
       "coveredCoverage": [],
       "waiverAdr": null,
       "artifacts": [],

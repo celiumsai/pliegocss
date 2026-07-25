@@ -7,6 +7,8 @@
 Read the [project documentation](docs/index.md), CLI help, and
 [troubleshooting guides](docs/troubleshooting/lsp.md) before opening a request.
 Include stable diagnostic identifiers whenever one is emitted.
+The exact certified adapter/version matrix and explicit exclusions are published in the
+[0.1.x adapter support policy](docs/reference/adapter-support-policy-0.1.x.md).
 
 ## Public support
 
@@ -24,5 +26,7 @@ General Rust or CSS consulting, private-project debugging, and requests without
 a reproduction may be redirected or closed.
 
 Use `hello@pliegocss.dev` for private project correspondence.
+External teams interested in a consented G7 interview or bounded adoption pilot should use the same
+address and review the [evidence intake protocol](docs/contributing/external-adoption-intake.md).
 Vulnerabilities must follow [SECURITY.md](SECURITY.md). PliegoCSS is provided
 under Apache-2.0 without a support SLA or warranty.

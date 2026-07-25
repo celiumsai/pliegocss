@@ -42,7 +42,7 @@ Historical reports and release notes do not change this state.
 | `registry-replay-refresh` | technical | **pending** | inherited | 0/4 | none |
 | `production-deployment-refresh` | operational | **pending** | inherited | 0/4 | none |
 | `signed-binary-distribution` | operational | **blocked** | pending | 0/10 | none |
-| `external-adoption-evidence` | adoption | **pending** | pending | 0/3 | none |
+| `external-adoption-evidence` | adoption | **pending** | pending | 0/6 | none |
 | `final-promotion-authorization` | authorization | **not-authorized** | pending | 0/1 | none |
 
 ## Evidence and blockers
@@ -143,11 +143,11 @@ RC.2 predates the repository-only G5 distribution contract. It has no exact-sour
 
 ### external-adoption-evidence
 
-The required external interviews, real incidents, and pilots have not been recorded as reviewed evidence.
+RC.2 predates the G7 authority. The required external interviews, real incidents, and pilots have not been recorded as consented, redacted, reviewed, hash-bound evidence.
 
 - Source: `064dcbce96a3a5cc97a940d07566c008bb5e2d3e` / tree `010a64f5d0bbd142a1d015fda4ccf573cc6e4133`
 - Validity: `2026-07-22T14:10:00Z` → `2026-07-29T14:10:00Z`
-- Required coverage: `ten-to-fifteen-interviews`, `twenty-incidents`, `three-to-five-pilots`
+- Required coverage: `ten-to-fifteen-interviews`, `twenty-incidents`, `three-to-five-pilots`, `three-independent-projects`, `three-independent-organizations`, `frozen-adapter-support-policy`
 - Covered: none
 - Hashed artifacts: none
 

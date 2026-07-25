@@ -146,7 +146,8 @@ violation gate.
 
 Real incidents additionally require provenance, consent/redaction status, expected diagnosis,
 allowed ambiguity, and stable content hashes. Synthetic conformance cases cannot be counted toward
-the required 20 incidents or diagnostic precision/recall.
+the required 20 incidents or diagnostic precision/recall. Admission to that count is governed by
+the [G7 external adoption authority](../product/external-adoption-g7.md).
 
 ## Environment and reproducibility
 

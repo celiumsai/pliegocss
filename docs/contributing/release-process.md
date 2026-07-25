@@ -109,6 +109,8 @@ pnpm check:benchmark-oracle
 pnpm check:evidence
 pnpm check:repair-corpus
 pnpm check:migration-corpus
+pnpm check:external-adoption-authority
+pnpm check:external-adoption
 PLIEGOCSS_RUN_NETWORK_CORPUS=1 pnpm check:migration-real-corpus
 pnpm check:attribution
 pnpm check:portability

@@ -462,7 +462,10 @@ Toda optimización tiene benchmark; ninguna complejidad entra solamente por intu
   Otro gate de red fija tres proyectos oficiales MIT: 119 archivos revisados producen 104 TP,
   0 FP y 0 FN para discovery archivo–rol. Esa métrica no cubre precisión semántica, codemods ni
   resultados de migración.
-- [ ] Entrevistar 10–15 developers/equipos y reunir 20 incidentes reales anonimizados.
+- [ ] Entrevistar 10–15 developers/equipos y reunir 20 incidentes reales anonimizados. G7 ya tiene
+  autoridad schema 1, ledgers públicos hash-bound, custodia privada/redacción/consentimiento,
+  verificador fail-closed y política de adapters 0.1.x congelada; al 2026-07-25 siguen en
+  0 entrevistas, 0 incidentes y 0 pilotos externos admitidos, por lo que el gate permanece bloqueado.
 - [x] Medir precision/recall y falsos positivos de discovery archivo–rol sobre el corpus público
   fijado; resultado 104 TP / 0 FP / 0 FN en 119 archivos.
 - [ ] Medir precision/recall semántico, excepciones y tiempo de resolución por categoría sobre un

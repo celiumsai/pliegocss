@@ -6,9 +6,9 @@ import { generateManifest, parseDocument } from "./generate-docs.mjs";
 const manifest = generateManifest();
 assert.equal(manifest.schemaVersion, 1);
 assert.equal(manifest.kind, "pliegocss-site-markdown");
-assert.equal(manifest.documents.length, 30);
-assert.equal(new Set(manifest.documents.map((document) => document.route)).size, 30);
-assert.equal(manifest.documents.at(-1).route, "/docs/release-readiness/");
+assert.equal(manifest.documents.length, 31);
+assert.equal(new Set(manifest.documents.map((document) => document.route)).size, 31);
+assert.equal(manifest.documents.at(-1).route, "/docs/external-adoption/");
 assert.match(manifest.documents.at(-1).sourceSha256, /^sha256:[a-f0-9]{64}$/u);
 
 const sample = `<!-- pliegocss-site

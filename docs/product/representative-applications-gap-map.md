@@ -1,34 +1,35 @@
 # Representative applications and selected gaps
 
-Status: **five application gates complete; first evidence-driven gap selected**
+Status: **five owned application gates complete; external pilot evidence remains selected**
 
-The machine authority is [`representative-applications-gap-map.json`](./representative-applications-gap-map.json).
-The applications deliberately cover distinct adoption modes rather than five variants of the typed
-utility fixture.
+The machine authority is
+[`representative-applications-gap-map.json`](./representative-applications-gap-map.json). Owned
+applications establish bounded product behavior; they are not adoption evidence.
 
-| Application | Gate | Proven boundary | Main exposed gap |
-|---|---|---|---|
-| Plain HTML audit-first | `integration:representative:plain-html-audit` | Ordinary CSS, budgets, static accessibility, receipt | No deterministic standard-CSS transform/minify output |
-| Vite/Tailwind inventory-first | `integration:representative:vite-tailwind` | Read-only source/template inventory and Preflight reliance | No reversible semantic migration |
-| CSS Modules consumer | `integration:representative:css-modules` | Sources, imports, aliases, destructuring, dynamic usage, composition | No export/bundler proof or reversible migration |
-| Typed Rust controlled build | `integration:representative:rust-control` | Rust 1.85 API, `pc`/`pcx`, seven controlled artifacts | Clean-build and rendered-app evidence |
-| Framework-neutral routes | `integration:representative:framework-routes` | Routes/island, Asset Plan, Project Index, physical trace | PliegoRS/browser/hosted evidence not configured |
+| Application | Proven boundary | Remaining gap |
+|---|---|---|
+| Plain HTML audit-first | Ordinary CSS adoption, budgets, static accessibility, audit receipt | Complete CSS classification and external adoption |
+| Vite/Tailwind inventory-first | Tailwind source/template inventory, v3/v4 coexistence, exact rollback, browser equivalence | Dynamic templates/config/plugins and external adoption |
+| CSS Modules consumer | Source, consumer-use, and composition inventory | Export/bundler proof and reversible CSS Modules migration |
+| Typed Rust controlled build | Rust 1.85 API and controlled artifacts | Registry replay and clean external consumption |
+| Framework-neutral routes | Asset Plan, Project Index, physical trace, pinned PliegoRS browser replay | Multiple external PliegoRS applications |
 
 ## Priority order
 
-1. **Standard-CSS transform/minify output** — release blocking and directly exposed by the first-value
-   plain HTML application.
-2. **Supported classification corpus** — release blocking; the coverage warning remains honest.
-3. **Hosted browser/OS evidence** — release blocking and cannot be manufactured locally.
-4. **One reversible migration slice** — report-level Should, selected from Tailwind or CSS Modules.
-5. **Published RC replay** — release blocking and owner-dependent at publication time.
+1. **External pilot evidence** — release blocking. The authority and frozen support policy exist, but
+   the reviewed ledgers currently contain zero interviews, incidents, or pilots.
+2. **Published RC replay** — release blocking. A repository checkout does not activate installation
+   or SemVer promises.
+3. **Classification corpus** — release blocking for broader standard-CSS claims.
+4. **Dynamic Tailwind seams** — intentionally outside schema 1 and not part of the 0.1.x claim.
+5. **CSS Modules reversible migration** — useful but outside the promoted G6 slice.
 
-The first implementation gap is therefore a bounded deterministic output path for ordinary CSS. It
-must reuse the existing Lightning CSS boundary, preserve audit findings and target policy, keep input
-read-only, and bind generated output into explicit artifacts rather than changing `audit` silently.
+## G7 boundary
 
-## Evidence boundary
+G7 requires 10–15 consented external interviews, 20 real incidents, and 3–5 completed pilots across
+at least three independent projects and organizations. The
+[machine-counted status](./external-adoption-g7.md) rejects Celiums/PliegoCSS-owned projects,
+synthetic incidents, duplicate identities, missing consent, missing review, and unhashed source
+material.
 
-Four applications are fully local. The fifth proves the neutral adapter contract because the sibling
-PliegoRS checkout was absent. Its report records `not-configured` and `not-run`; no PliegoRS or browser
-success is inferred. External environment gates remain separate.
+The selected next gap remains `external-pilot-evidence` until real participants satisfy it.
