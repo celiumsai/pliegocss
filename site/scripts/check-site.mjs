@@ -256,10 +256,29 @@ function staticContract() {
     !externalAdoptionHtml.includes(externalAdoptionDocument.sourcePath) ||
     !externalAdoptionHtml.includes(externalAdoptionDocument.sourceSha256) ||
     !externalAdoptionHtml.includes("External adoption is a measured gate") ||
+    !externalAdoptionHtml.includes("Applications are open") ||
+    !externalAdoptionHtml.includes("https://github.com/celiumsai/pliegocss/issues/7") ||
     !externalAdoptionHtml.includes("Interviews: 0/10") ||
     !externalAdoptionHtml.includes("Tailwind CSS 3.4.19 or 4.3.3")
   ) {
     fail("external adoption route is not bound to the G7 Markdown authority");
+  }
+  const privacyHtml = readFileSync(
+    join(output, "legal", "privacy", "index.html"),
+    "utf8",
+  );
+  const spanishPrivacyHtml = readFileSync(
+    join(output, "es", "legal", "privacy", "index.html"),
+    "utf8",
+  );
+  if (
+    !privacyHtml.includes("External adoption research") ||
+    !privacyHtml.includes("A recruitment comment or email alone is not consent") ||
+    !spanishPrivacyHtml.includes("Investigación de adopción externa") ||
+    !spanishPrivacyHtml.includes("Un comentario de reclutamiento") ||
+    !spanishPrivacyHtml.includes('<html lang="es"')
+  ) {
+    fail("external adoption privacy boundary is not bilingual");
   }
   const laboratory = JSON.parse(
     readFileSync(join(output, "assets", "laboratory.json")),

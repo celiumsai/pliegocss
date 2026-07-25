@@ -18,6 +18,11 @@ The source remains in private custody. Owned projects, Celiums/PliegoCSS organiz
 `celiumsai` repositories, synthetic incidents, duplicate identities, incomplete pilots, and
 unreviewed records fail closed.
 
+Recruitment uses a public, no-private-data cohort notice while consent and evidence intake happen
+through private correspondence. A public issue or email is only an interest signal; it is not
+consent and never counts as evidence. Interviews, incidents, and pilots all require an explicit
+reviewed-redaction record.
+
 The 0.1.x adapter support policy is frozen alongside the authority. It certifies only complete
 literal class groups in static HTML, Vite 8.1.5, and pinned PliegoRS rendered output against
 Tailwind CSS 3.4.19 and 4.3.3. Tailwind remains loaded during coexistence. Dynamic classes,
@@ -29,6 +34,7 @@ command and fails until all external thresholds are satisfied.
 ## Consequences
 
 - G7 progress is machine-countable without turning private research material into public source.
+- The public cohort can recruit participants without becoming a shadow evidence ledger.
 - A support-policy change invalidates the authority hash and requires explicit review.
 - Fixtures and synthetic cases remain useful but can never inflate adoption counts.
 - The repository cannot complete G7 by itself; qualified external participation is a real input.

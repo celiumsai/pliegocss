@@ -143,7 +143,7 @@ RC.2 predates the repository-only G5 distribution contract. It has no exact-sour
 
 ### external-adoption-evidence
 
-RC.2 predates the G7 authority. The required external interviews, real incidents, and pilots have not been recorded as consented, redacted, reviewed, hash-bound evidence.
+RC.2 predates the G7 authority. Recruitment is open, but the required external interviews, real incidents, and pilots have not been recorded as consented, redacted, reviewed, hash-bound evidence.
 
 - Source: `064dcbce96a3a5cc97a940d07566c008bb5e2d3e` / tree `010a64f5d0bbd142a1d015fda4ccf573cc6e4133`
 - Validity: `2026-07-22T14:10:00Z` → `2026-07-29T14:10:00Z`

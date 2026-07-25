@@ -17,7 +17,9 @@ applications establish bounded product behavior; they are not adoption evidence.
 ## Priority order
 
 1. **External pilot evidence** — release blocking. The authority and frozen support policy exist, but
-   the reviewed ledgers currently contain zero interviews, incidents, or pilots.
+   the reviewed ledgers currently contain zero interviews, incidents, or pilots. Recruitment is
+   open through [GitHub issue #7](https://github.com/celiumsai/pliegocss/issues/7); applications do
+   not count as evidence.
 2. **Published RC replay** — release blocking. A repository checkout does not activate installation
    or SemVer promises.
 3. **Classification corpus** — release blocking for broader standard-CSS claims.

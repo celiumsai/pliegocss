@@ -10,6 +10,10 @@ G7 is currently blocked. Owned fixtures and synthetic incidents cannot satisfy i
 
 Interviews: 0/10. Real incidents: 0/20. Completed pilots: 0/3. Independent projects: 0/3. Independent organizations: 0/3.
 
+## Applications are open {#apply}
+
+Read the [public cohort notice](https://github.com/celiumsai/pliegocss/issues/7) or apply privately at [hello@pliegocss.dev](mailto:hello@pliegocss.dev?subject=G7%20external%20adoption). Do not post names, email addresses, credentials, private repository URLs, proprietary source, transcripts, or incident material on GitHub. A public application is not consent and is not evidence.
+
 ## Admission boundary {#boundary}
 
 Only consented, redacted, reviewed external records bound to private source evidence by SHA-256 count. Projects owned by Celiums Solutions, PliegoCSS, or celiumsai do not count.

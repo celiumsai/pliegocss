@@ -51,6 +51,7 @@ for (let index = 1; index <= 3; index += 1) {
       researchUse: true,
       publicRedactedRecord: true,
     },
+    redaction: { status: "reviewed", containsPersonalData: false },
     source: {
       url: `https://github.com/external-owner-${index}/project-${index}`,
       commit: hex(index, 40),
@@ -133,6 +134,25 @@ const readyStatus = validateExternalAdoptionBundle(ready, { root, verifyFiles: f
 assert.equal(readyStatus.result, "ready");
 assert.deepEqual(readyStatus.missingCoverage, []);
 
+const unredactedPilot = structuredClone(ready);
+delete unredactedPilot.pilots.records[0].redaction;
+assert.throws(
+  () => validateExternalAdoptionBundle(unredactedPilot, { root, verifyFiles: false }),
+  (error) =>
+    error instanceof ExternalAdoptionError &&
+    /pilots\.records\[0\] fields drifted/u.test(error.message),
+);
+
+const forgedRecruitment = clone();
+forgedRecruitment.authority.recruitment.publicCohortUrl =
+  "https://example.invalid/unreviewed";
+assert.throws(
+  () => validateExternalAdoptionBundle(forgedRecruitment, { root, verifyFiles: false }),
+  (error) =>
+    error instanceof ExternalAdoptionError &&
+    /recruitment contract drifted/u.test(error.message),
+);
+
 const internalPilot = clone();
 internalPilot.pilots.records.push({
   id: "pilot-internal",
@@ -152,6 +172,7 @@ internalPilot.pilots.records.push({
     researchUse: true,
     publicRedactedRecord: true,
   },
+  redaction: { status: "reviewed", containsPersonalData: false },
   source: {
     url: "https://github.com/celiumsai/pliegocss",
     commit: "0000000000000000000000000000000000000000",

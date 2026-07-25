@@ -111,6 +111,19 @@ function redaction(value, role) {
   }
 }
 
+function rejectSensitiveRecord(value, role) {
+  const text = JSON.stringify(value);
+  for (const [pattern, label] of [
+    [/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/iu, "email address"],
+    [/-----BEGIN [A-Z ]+PRIVATE KEY-----/u, "private key"],
+    [/\bgh[pousr]_[A-Za-z0-9]{20,}\b/u, "GitHub token"],
+    [/\bAKIA[0-9A-Z]{16}\b/u, "AWS access key"],
+    [/\b[A-Za-z]:\\\\[^"]+/u, "absolute Windows path"],
+  ]) {
+    if (pattern.test(text)) fail(`${role} appears to contain a ${label}`);
+  }
+}
+
 function source(value, role) {
   exactKeys(value, ["custodyRef", "sha256"], role);
   nonEmpty(value.custodyRef, `${role}.custodyRef`);
@@ -171,6 +184,7 @@ function validateInterviews(value, authority) {
       ],
       role,
     );
+    rejectSensitiveRecord(entry, role);
     canonicalId(entry.id, `${role}.id`);
     canonicalId(entry.participantId, `${role}.participantId`);
     canonicalId(entry.organizationId, `${role}.organizationId`);
@@ -186,6 +200,9 @@ function validateInterviews(value, authority) {
     }
     redaction(entry.redaction, `${role}.redaction`);
     source(entry.source, `${role}.source`);
+    if (entry.source.custodyRef !== `private:g7/interviews/${entry.id}`) {
+      fail(`${role}.source.custodyRef does not match its interview ID`);
+    }
     if (sourceDigests.has(entry.source.sha256)) fail(`${role} duplicates another interview source`);
     sourceDigests.add(entry.source.sha256);
     review(entry.review, `${role}.review`, authority.eligibility.requiredReviewStatus);
@@ -231,6 +248,7 @@ function validateIncidents(value, authority) {
       ],
       role,
     );
+    rejectSensitiveRecord(entry, role);
     canonicalId(entry.id, `${role}.id`);
     canonicalId(entry.projectId, `${role}.projectId`);
     canonicalId(entry.organizationId, `${role}.organizationId`);
@@ -251,6 +269,9 @@ function validateIncidents(value, authority) {
     nonEmpty(entry.expectedDiagnosis, `${role}.expectedDiagnosis`);
     nonEmpty(entry.allowedAmbiguity, `${role}.allowedAmbiguity`);
     source(entry.source, `${role}.source`);
+    if (entry.source.custodyRef !== `private:g7/incidents/${entry.id}`) {
+      fail(`${role}.source.custodyRef does not match its incident ID`);
+    }
     if (sourceDigests.has(entry.source.sha256)) fail(`${role} duplicates another incident source`);
     sourceDigests.add(entry.source.sha256);
     review(entry.review, `${role}.review`, authority.eligibility.requiredReviewStatus);
@@ -282,12 +303,14 @@ function validatePilots(value, authority) {
         "status",
         "maintainerIds",
         "consent",
+        "redaction",
         "source",
         "outcomes",
         "review",
       ],
       role,
     );
+    rejectSensitiveRecord(entry, role);
     canonicalId(entry.id, `${role}.id`);
     canonicalId(entry.projectId, `${role}.projectId`);
     canonicalId(entry.organizationId, `${role}.organizationId`);
@@ -313,6 +336,7 @@ function validatePilots(value, authority) {
     if (Date.parse(entry.consent.recordedAt) > started) {
       fail(`${role}.consent was recorded after the pilot started`);
     }
+    redaction(entry.redaction, `${role}.redaction`);
     exactKeys(entry.source, ["url", "commit", "sha256"], `${role}.source`);
     if (typeof entry.source.url !== "string" || !entry.source.url.startsWith("https://")) {
       fail(`${role}.source.url must use HTTPS`);
@@ -537,6 +561,7 @@ function validateAuthority(authority, { root, verifyFiles }) {
       "status",
       "kind",
       "studyId",
+      "recruitment",
       "evidence",
       "adapterSupportPolicy",
       "thresholds",
@@ -553,6 +578,31 @@ function validateAuthority(authority, { root, verifyFiles }) {
     authority.studyId !== "g7-external-adoption-0.1"
   ) {
     fail("authority header drifted");
+  }
+  exactKeys(
+    authority.recruitment,
+    [
+      "status",
+      "openedAt",
+      "publicCohortUrl",
+      "privateContact",
+      "privacyNotice",
+      "publicApplicationPolicy",
+    ],
+    "authority.recruitment",
+  );
+  instant(authority.recruitment.openedAt, "authority.recruitment.openedAt");
+  if (
+    authority.recruitment.status !== "open" ||
+    authority.recruitment.publicCohortUrl !==
+      "https://github.com/celiumsai/pliegocss/issues/7" ||
+    authority.recruitment.privateContact !==
+      "mailto:hello@pliegocss.dev?subject=G7%20external%20adoption" ||
+    authority.recruitment.privacyNotice !== "https://pliegocss.dev/legal/privacy/" ||
+    authority.recruitment.publicApplicationPolicy !==
+      "recruitment-only-no-private-data"
+  ) {
+    fail("authority recruitment contract drifted");
   }
   exactKeys(authority.evidence, ["interviews", "incidents", "pilots"], "authority.evidence");
   for (const name of ["interviews", "incidents", "pilots"]) {
@@ -700,6 +750,7 @@ export function validateExternalAdoptionBundle(bundle, { root, verifyFiles = tru
       status: bundle.policy.status,
       releaseLine: bundle.policy.releaseLine,
     },
+    recruitment: structuredClone(bundle.authority.recruitment),
     claimBoundary: bundle.authority.claimBoundary,
   };
 }

@@ -874,7 +874,7 @@
     },
     {
       "sourcePath": "docs/site/release-readiness.md",
-      "sourceSha256": "sha256:8fe60515ebd999f0381841ef95373ed4a5343387b7399fb183693fb3e6c20be7",
+      "sourceSha256": "sha256:1d555f1d7653cc424e8f9c9a7f49d21464b5f8ce8b833ba6b14bbc3cc0dd527a",
       "route": "/docs/release-readiness/",
       "title": "Release truth bound to one exact candidate.",
       "category": "Evidence",
@@ -897,14 +897,14 @@
         {
           "id": "blockers",
           "title": "Current blockers",
-          "body": "g0-corrections-on-candidate (pending): G0 corrections are not part of the exact RC.2 candidate. They require a newly named candidate plus hosted replay before they can become release evidence. browser-release-matrix (blocked): Every required hosted browser lane is not configured for the exact candidate source; local or historical browser runs have no promotion authority. adapter-coexistence-matrix (blocked): RC.2 predates the G6 adapter authority. It has no clean exact-source 21-project HTML/Vite/PliegoRS matrix, Tailwind v3/v4 source/output audit, DOM/ARIA/style equivalence, exact rollback, or pinned PliegoRS framework replay. registry-replay-refresh (pending): RC.2 was previously replayed from crates.io, but schema 3 requires a fresh, unexpired, artifact-hashed replay for the exact promotion candidate. production-deployment-refresh (pending): The production site has historical deployment evidence, but a current exact-source edge and browser replay with hashed artifacts is missing. signed-binary-distribution (blocked): RC.2 predates the repository-only G5 distribution contract. It has no exact-source native archives, checksums, CycloneDX SBOMs, GitHub/Sigstore attestations, immutable GitHub Release, or verified pnpm package asset; npmjs publication is forbidden. external-adoption-evidence (pending): RC.2 predates the G7 authority. The required external interviews, real incidents, and pilots have not been recorded as consented, redacted, reviewed, hash-bound evidence. final-promotion-authorization (not-authorized): Mario has not explicitly authorized publishing final 0.1.0 for this exact source commit and Git tree.",
+          "body": "g0-corrections-on-candidate (pending): G0 corrections are not part of the exact RC.2 candidate. They require a newly named candidate plus hosted replay before they can become release evidence. browser-release-matrix (blocked): Every required hosted browser lane is not configured for the exact candidate source; local or historical browser runs have no promotion authority. adapter-coexistence-matrix (blocked): RC.2 predates the G6 adapter authority. It has no clean exact-source 21-project HTML/Vite/PliegoRS matrix, Tailwind v3/v4 source/output audit, DOM/ARIA/style equivalence, exact rollback, or pinned PliegoRS framework replay. registry-replay-refresh (pending): RC.2 was previously replayed from crates.io, but schema 3 requires a fresh, unexpired, artifact-hashed replay for the exact promotion candidate. production-deployment-refresh (pending): The production site has historical deployment evidence, but a current exact-source edge and browser replay with hashed artifacts is missing. signed-binary-distribution (blocked): RC.2 predates the repository-only G5 distribution contract. It has no exact-source native archives, checksums, CycloneDX SBOMs, GitHub/Sigstore attestations, immutable GitHub Release, or verified pnpm package asset; npmjs publication is forbidden. external-adoption-evidence (pending): RC.2 predates the G7 authority. Recruitment is open, but the required external interviews, real incidents, and pilots have not been recorded as consented, redacted, reviewed, hash-bound evidence. final-promotion-authorization (not-authorized): Mario has not explicitly authorized publishing final 0.1.0 for this exact source commit and Git tree.",
           "code": null
         }
       ]
     },
     {
       "sourcePath": "docs/site/external-adoption.md",
-      "sourceSha256": "sha256:b3c019d824702678100da8f617ddb16736e5f425a75d7e1d9df82d4e55e749f3",
+      "sourceSha256": "sha256:48066f009e353b7b7a4983d82d9ac1a518d430260be4d824128f1f7d5af4e408",
       "route": "/docs/external-adoption/",
       "title": "External adoption is a measured gate.",
       "category": "Evidence",
@@ -916,6 +916,12 @@
           "id": "status",
           "title": "Qualified evidence",
           "body": "Interviews: 0/10. Real incidents: 0/20. Completed pilots: 0/3. Independent projects: 0/3. Independent organizations: 0/3.",
+          "code": null
+        },
+        {
+          "id": "apply",
+          "title": "Applications are open",
+          "body": "Read the [public cohort notice](https://github.com/celiumsai/pliegocss/issues/7) or apply privately at [hello@pliegocss.dev](mailto:hello@pliegocss.dev?subject=G7%20external%20adoption). Do not post names, email addresses, credentials, private repository URLs, proprietary source, transcripts, or incident material on GitHub. A public application is not consent and is not evidence.",
           "code": null
         },
         {

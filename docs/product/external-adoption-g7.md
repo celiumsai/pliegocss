@@ -9,6 +9,14 @@ G7 is an external-evidence gate, not a fixture-writing milestone. Its machine au
 The public ledgers contain only consented, redacted, reviewed records; raw material remains in
 private custody and is represented by a stable SHA-256 digest.
 
+## Recruitment
+
+Recruitment is **open**. The public cohort notice is
+[GitHub issue #7](https://github.com/celiumsai/pliegocss/issues/7). Apply privately through
+[hello@pliegocss.dev](mailto:hello@pliegocss.dev?subject=G7%20external%20adoption) after reading the
+[privacy notice](https://pliegocss.dev/legal/privacy/). Public posts are recruitment signals
+only and never count as consent or evidence.
+
 ## Current qualified evidence
 
 | Evidence | Qualified | Required |

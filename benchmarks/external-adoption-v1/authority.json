@@ -3,6 +3,14 @@
   "status": "active-contract",
   "kind": "pliegocss-external-adoption-authority",
   "studyId": "g7-external-adoption-0.1",
+  "recruitment": {
+    "status": "open",
+    "openedAt": "2026-07-25T21:21:33Z",
+    "publicCohortUrl": "https://github.com/celiumsai/pliegocss/issues/7",
+    "privateContact": "mailto:hello@pliegocss.dev?subject=G7%20external%20adoption",
+    "privacyNotice": "https://pliegocss.dev/legal/privacy/",
+    "publicApplicationPolicy": "recruitment-only-no-private-data"
+  },
   "evidence": {
     "interviews": {
       "path": "benchmarks/external-adoption-v1/interviews.json",

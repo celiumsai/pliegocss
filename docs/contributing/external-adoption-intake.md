@@ -7,6 +7,11 @@ source. It implements
 [`external-adoption-v1/authority.json`](../../benchmarks/external-adoption-v1/authority.json) and
 the [0.1.x adapter support policy](../reference/adapter-support-policy-0.1.x.md).
 
+Recruitment is open through
+[GitHub issue #7](https://github.com/celiumsai/pliegocss/issues/7). Public issues are only interest
+signals: do not post names, email addresses, private URLs, proprietary source, transcripts, or
+incident material. Consent and evidence intake happen privately through `hello@pliegocss.dev`.
+
 ## Before any interview or pilot
 
 1. Confirm that the participant controls or maintains a project outside Celiums Solutions,
@@ -16,6 +21,18 @@ the [0.1.x adapter support policy](../reference/adapter-support-policy-0.1.x.md)
 4. Assign pseudonymous participant, organization, project, and evidence IDs. Do not put names,
    email addresses, access tokens, private repository URLs, or raw source in the public ledger.
 5. Store the raw evidence in approved private custody and calculate its SHA-256 digest.
+
+The private source and the redacted record draft must remain outside the repository or under the
+ignored `benchmarks/external-adoption-v1/private/` directory. Prepare a review candidate without
+copying raw bytes into the output:
+
+```console
+pnpm prepare:external-adoption-record -- \
+  --type=interview \
+  --source=/private/custody/interview-001.bin \
+  --record=/private/custody/interview-001.public.json \
+  --output=target/external-adoption-intake/interview-001.json
+```
 
 Consent may be withdrawn before promotion. Remove the public record, rotate the ledger hash in the
 authority, and re-run the gate. A deleted or withdrawn record stops counting immediately.
