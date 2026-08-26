@@ -6,7 +6,7 @@ This document is generated. Edit the schema-2 JSON authority and run
 `node scripts/render-benchmark-authority-v2.mjs --write`; do not maintain the tables by hand.
 
 The primary competitor is `tailwind-latest`. The oracle was observed at
-`2026-07-22T15:25:28.117Z`, expires at `2026-07-29T15:25:28.117Z`, and has a maximum age of
+`2026-08-26T12:40:21.000Z`, expires at `2026-09-02T12:40:21.000Z`, and has a maximum age of
 168 hours. An expired or live-registry-mismatched oracle blocks a new
 competitive result. The reset contract is explicitly **no-preflight** because
 PliegoCSS does not emit Preflight.

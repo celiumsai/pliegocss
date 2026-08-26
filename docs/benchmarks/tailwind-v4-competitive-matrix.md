@@ -12,8 +12,8 @@ receipts. Catalog breadth and a historical single-fixture timing are not a compl
 
 ## Active oracle
 
-Primary lane: `tailwind-latest`. Oracle observation: `2026-07-22T15:25:28.117Z`.
-Expiration: `2026-07-29T15:25:28.117Z`. Reset contract: **no-preflight**.
+Primary lane: `tailwind-latest`. Oracle observation: `2026-08-26T12:40:21.000Z`.
+Expiration: `2026-09-02T12:40:21.000Z`. Reset contract: **no-preflight**.
 
 | Lane | Role | Registry selector | Version |
 |---|---|---|---:|

@@ -33,6 +33,8 @@ assert.throws(
 );
 
 const artifactless = structuredClone(readiness);
+artifactless.checks[0].status = "passed";
+artifactless.checks[0].evidenceClass = "measured";
 artifactless.checks[0].artifacts = [];
 assert.throws(
   () => validateReleaseReadiness(artifactless, { root, now: fixedNow, verifyGit: false }),

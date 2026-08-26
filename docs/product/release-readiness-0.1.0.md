@@ -34,8 +34,8 @@ Historical reports and release notes do not change this state.
 
 | Check | Dimension | Status | Evidence | Coverage | Waiver |
 | --- | --- | --- | --- | ---: | --- |
-| `exact-candidate-ci` | technical | **passed** | measured | 9/9 | none |
-| `exact-candidate-codeql` | technical | **passed** | measured | 3/3 | none |
+| `exact-candidate-ci` | technical | **pending** | inherited | 9/9 | none |
+| `exact-candidate-codeql` | technical | **pending** | inherited | 3/3 | none |
 | `g0-corrections-on-candidate` | technical | **pending** | pending | 0/4 | none |
 | `browser-release-matrix` | technical | **blocked** | pending | 0/5 | none |
 | `adapter-coexistence-matrix` | technical | **blocked** | pending | 0/13 | none |
@@ -49,7 +49,7 @@ Historical reports and release notes do not change this state.
 
 ### exact-candidate-ci
 
-GitHub Actions run 29864046865 passed the exact RC.2 commit across Ubuntu, Windows, and macOS with Rust 1.85 and 1.96 plus the listed release jobs.
+GitHub Actions run 29864046865 passed the exact RC.2 commit across Ubuntu, Windows, and macOS with Rust 1.85 and 1.96 plus the listed release jobs, but its promotion window has expired and requires a fresh candidate replay.
 
 - Source: `064dcbce96a3a5cc97a940d07566c008bb5e2d3e` / tree `010a64f5d0bbd142a1d015fda4ccf573cc6e4133`
 - Validity: `2026-07-22T14:05:00Z` → `2026-07-29T14:05:00Z`
@@ -62,7 +62,7 @@ GitHub Actions run 29864046865 passed the exact RC.2 commit across Ubuntu, Windo
 
 ### exact-candidate-codeql
 
-CodeQL run 29864046876 passed Actions, JavaScript/TypeScript, and Rust analysis on the exact RC.2 commit.
+CodeQL run 29864046876 passed Actions, JavaScript/TypeScript, and Rust analysis on the exact RC.2 commit, but its promotion window has expired and requires a fresh candidate replay.
 
 - Source: `064dcbce96a3a5cc97a940d07566c008bb5e2d3e` / tree `010a64f5d0bbd142a1d015fda4ccf573cc6e4133`
 - Validity: `2026-07-22T14:05:00Z` → `2026-07-29T14:05:00Z`

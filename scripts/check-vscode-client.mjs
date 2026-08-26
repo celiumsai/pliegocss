@@ -7,6 +7,7 @@ const ROOT = resolve(import.meta.dirname, "..");
 const EXTENSION = resolve(ROOT, "editors", "vscode");
 const VSIX = resolve(ROOT, "target", "pliegocss-vscode-0.0.0.vsix");
 const pnpmScript = process.env.npm_execpath;
+const pnpmScriptUsesNode = pnpmScript && /\.(?:cjs|mjs|js)$/iu.test(pnpmScript);
 const fallbackPnpm = [
   "C:/Program Files/nodejs/node_modules/npm/bin/npm-cli.js",
   "exec", "--yes", "--package=pnpm@10.14.0", "--", "pnpm",
@@ -17,8 +18,10 @@ function fail(message) {
 }
 
 function run(args, cwd = ROOT) {
-  const command = pnpmScript ? process.execPath : process.execPath;
-  const commandArgs = pnpmScript ? [pnpmScript, ...args] : [...fallbackPnpm, ...args];
+  const command = pnpmScript && !pnpmScriptUsesNode ? pnpmScript : process.execPath;
+  const commandArgs = pnpmScript
+    ? (pnpmScriptUsesNode ? [pnpmScript, ...args] : args)
+    : [...fallbackPnpm, ...args];
   const result = spawnSync(command, commandArgs, {
     cwd,
     encoding: "utf8",

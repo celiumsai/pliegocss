@@ -25,10 +25,10 @@
     {
       "id": "exact-candidate-ci",
       "dimension": "technical",
-      "status": "passed",
-      "evidenceClass": "measured",
+      "status": "pending",
+      "evidenceClass": "inherited",
       "requiredForPromotion": true,
-      "summary": "GitHub Actions run 29864046865 passed the exact RC.2 commit across Ubuntu, Windows, and macOS with Rust 1.85 and 1.96 plus the listed release jobs.",
+      "summary": "GitHub Actions run 29864046865 passed the exact RC.2 commit across Ubuntu, Windows, and macOS with Rust 1.85 and 1.96 plus the listed release jobs, but its promotion window has expired and requires a fresh candidate replay.",
       "source": {
         "commit": "064dcbce96a3a5cc97a940d07566c008bb5e2d3e",
         "gitTree": "010a64f5d0bbd142a1d015fda4ccf573cc6e4133"
@@ -62,10 +62,10 @@
     {
       "id": "exact-candidate-codeql",
       "dimension": "technical",
-      "status": "passed",
-      "evidenceClass": "measured",
+      "status": "pending",
+      "evidenceClass": "inherited",
       "requiredForPromotion": true,
-      "summary": "CodeQL run 29864046876 passed Actions, JavaScript/TypeScript, and Rust analysis on the exact RC.2 commit.",
+      "summary": "CodeQL run 29864046876 passed Actions, JavaScript/TypeScript, and Rust analysis on the exact RC.2 commit, but its promotion window has expired and requires a fresh candidate replay.",
       "source": {
         "commit": "064dcbce96a3a5cc97a940d07566c008bb5e2d3e",
         "gitTree": "010a64f5d0bbd142a1d015fda4ccf573cc6e4133"

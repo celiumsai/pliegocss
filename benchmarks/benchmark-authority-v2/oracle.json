@@ -1,8 +1,8 @@
 {
   "schemaVersion": 2,
   "status": "active",
-  "observedAtUtc": "2026-07-22T15:25:28.117Z",
-  "expiresAtUtc": "2026-07-29T15:25:28.117Z",
+  "observedAtUtc": "2026-08-26T12:40:21.000Z",
+  "expiresAtUtc": "2026-09-02T12:40:21.000Z",
   "maximumAgeHours": 168,
   "registry": "https://registry.npmjs.org",
   "primaryLane": "tailwind-latest",
