@@ -215,6 +215,13 @@ attests only the declared roots and graph: it does not discover the product Carg
 registry, infer identities from paths, or derive bundle partitions. Scanner DTOs and standalone
 scanner functions remain advanced tooling rather than promoted adapter API.
 
+Frameworks that publish `pliegors-product-topology/1` can instead use the
+closed `ProductTopology::from_json` decoder and `collect_css_inputs`. The
+returned `ProductCssInputs` exposes canonical reachability, a deterministic
+bundle plan, and read-only `ProductBundle` IDs, source partitions, and theme
+ownership. This wire consumer does not link PliegoRS types or move styling into
+runtime code.
+
 ## Migration-inventory tooling bridge
 
 Exact-version audit and migration tooling may use the selected `pliego-css-source` inventory

@@ -1,7 +1,8 @@
 # PliegoRS development-loop gate
 
-Status: **automated local two-process/SSE gate green; controlled Chromium replay observed;
-hosted multi-browser evidence pending**
+Status: **source-pinned gate migration in progress; SSG and controlled Chromium
+replay pass, while the local two-process watcher replay remains blocked on this
+host; hosted multi-browser evidence pending**
 
 The automated gate measures the server-side development path rather than only PliegoCSS
 compilation:
@@ -18,9 +19,10 @@ visual/browser completion measurement.
 
 The fixture is a detached, lockfile-pinned Rust project under
 `integration-tests/pliegors-dev-loop`. The harness copies it to a disposable directory and pins the
-sibling PliegoRS revision plus source bytes, including `crates/pliego-cli/**`, before it starts either
+sibling PliegoRS revision plus source bytes, including `crates/pliego-cli/**` and the product-topology schema, before it starts either
 process. The canonical contract hashes committed Git blobs for `Cargo.toml`, `Cargo.lock`, the core
-SSR/SSG surfaces, `crates/pliego-starters/**`, and `crates/pliego-cli/**`; covered dirty files fail
+SSR/SSG surfaces, `crates/pliego-starters/**`, `crates/pliego-cli/**`, and
+`schemas/pliego.product-topology.schema.json`; covered dirty files fail
 closed. The PliegoRS watcher excludes PliegoCSS's reserved `.pliego.lock`, `.tmp`, and `.bak`
 coordination files. Among PliegoCSS publication files, only a changed final CSS or manifest is
 application input.
@@ -33,7 +35,8 @@ Run from the PliegoCSS root with a clean sibling `pliegors` checkout matching th
 pnpm integration:pliegors-dev
 ```
 
-The command builds both CLIs with Rust 1.85, starts `pliego-cssc watch` and `pliego dev` on an
+The command currently builds both CLIs with the stricter Rust 1.86 toolchain,
+starts `pliego-cssc watch` and `pliego dev` on an
 ephemeral loopback port, alternates `p-4` and `p-6` 20 times, and returns schema-2 JSON. On Windows
 machines whose Application Control policy rejects freshly rebuilt test executables, run the same
 script in Debian WSL2 with native Linux binaries and a target directory on the Linux filesystem:

@@ -5,9 +5,8 @@ use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 
-use pliegocss_pliegors_smoke::css_adapter::{
-    GeneratedBundle, generate_css_inputs_from_inventory,
-};
+use pliego_css_source::ProductBundle;
+use pliegocss_pliegors_smoke::css_adapter::generate_css_inputs_from_inventory;
 use pliegocss_pliegors_smoke::product::application_registry;
 
 #[derive(Serialize)]
@@ -20,7 +19,7 @@ struct CollectorSummary<'a> {
     style_sites: usize,
     reachability_bytes: usize,
     bundle_plan_bytes: usize,
-    bundles: &'a [GeneratedBundle],
+    bundles: &'a [ProductBundle],
 }
 
 #[derive(Deserialize)]

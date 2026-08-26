@@ -5,7 +5,8 @@ use std::fmt;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 use crate::{ScanDiagnostic, SourceParseError, scan_source_named};
 
@@ -16,6 +17,9 @@ const MAX_ITEMS: usize = 65_535;
 const MAX_PATH_SEGMENTS: usize = 256;
 const MAX_ID_BYTES: usize = 256;
 const MAX_PATH_OR_NAME_BYTES: usize = 4 * 1024;
+
+/// Framework-neutral wire-format identifier for product topology snapshots.
+pub const PRODUCT_TOPOLOGY_SCHEMA: &str = "pliegors-product-topology/1";
 
 /// One framework component and the `PliegoCSS` source sites it owns.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -57,6 +61,31 @@ pub struct CollectedReachability {
     invocations: usize,
 }
 
+/// Product topology decoded from a framework-owned canonical snapshot.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ProductTopology {
+    components: Vec<ProductTopologyComponent>,
+    routes: Vec<ProductTopologyRoute>,
+    islands: Vec<ProductTopologyIsland>,
+}
+
+/// One deterministic physical source partition derived from product topology.
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProductBundle {
+    id: String,
+    sources: Vec<String>,
+    emit_theme: bool,
+}
+
+/// Reachability and bundle-plan inputs derived without linking a framework crate.
+#[derive(Debug)]
+pub struct ProductCssInputs {
+    reachability: CollectedReachability,
+    bundle_plan: Vec<u8>,
+    bundles: Vec<ProductBundle>,
+}
+
 /// Failure while validating topology, inventorying Rust, or collecting exact sites.
 #[non_exhaustive]
 #[derive(Debug)]
@@ -85,6 +114,8 @@ pub enum CollectError {
         /// Scanner explanation.
         message: String,
     },
+    /// A closed product topology snapshot could not be decoded.
+    Decode(serde_json::Error),
     /// Canonical JSON serialization failed.
     Serialize(serde_json::Error),
 }
@@ -97,6 +128,45 @@ enum SourceOwnership {
         byte_start: usize,
         byte_end: usize,
     },
+}
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct ProductTopologyDocument {
+    schema: String,
+    components: Vec<ProductTopologyComponent>,
+    routes: Vec<ProductTopologyRoute>,
+    islands: Vec<ProductTopologyIsland>,
+}
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct ProductTopologyComponent {
+    id: String,
+    source_units: Vec<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
+#[serde(deny_unknown_fields)]
+struct ProductTopologyRoute {
+    id: String,
+    path: String,
+    components: Vec<String>,
+    islands: Vec<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
+#[serde(deny_unknown_fields)]
+struct ProductTopologyIsland {
+    id: String,
+    name: String,
+    components: Vec<String>,
+}
+
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+enum ProductRoot {
+    Route(String),
+    Island(String),
 }
 
 #[derive(Serialize)]
@@ -289,6 +359,259 @@ impl CollectedReachability {
     }
 }
 
+impl ProductTopology {
+    /// Decodes one closed, bounded framework product topology snapshot.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error for oversized, unknown, duplicate, unsafe, dangling,
+    /// or noncanonical topology content.
+    pub fn from_json(bytes: &[u8]) -> Result<Self, CollectError> {
+        valid(
+            bytes.len() <= MAX_DOCUMENT_BYTES,
+            "product topology snapshot exceeds 16 MiB",
+        )?;
+        let document: ProductTopologyDocument =
+            serde_json::from_slice(bytes).map_err(CollectError::Decode)?;
+        valid(
+            document.schema == PRODUCT_TOPOLOGY_SCHEMA,
+            "unsupported product topology schema",
+        )?;
+        let topology = Self {
+            components: document.components,
+            routes: document.routes,
+            islands: document.islands,
+        };
+        topology.validate()?;
+        Ok(topology)
+    }
+
+    /// Collects canonical reachability and seed-policy physical bundle-plan inputs.
+    ///
+    /// The generated plan uses the fixture seed theme, modern targets, and
+    /// minified output. Applications with other policy should consume the
+    /// returned partitions through the normal bundle-plan surface.
+    ///
+    /// The optional source inventory must be the complete Cargo/rustc-attested
+    /// Rust source set. Without it, the registered component units define the
+    /// bounded scan roots.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when topology, source inventory, ownership, scanning,
+    /// or bundle planning fails closed.
+    pub fn collect_css_inputs(
+        &self,
+        project_root: impl AsRef<Path>,
+        source_units: Option<&[String]>,
+    ) -> Result<ProductCssInputs, CollectError> {
+        self.validate()?;
+        if let Some(source_units) = source_units {
+            valid(
+                !source_units.is_empty(),
+                "Cargo source inventory cannot be empty",
+            )?;
+        }
+        let application = self.application_topology(source_units);
+        let reachability = application.collect(project_root)?;
+        let bundles = self.partition()?;
+        let bundle_plan = render_product_bundle_plan(&bundles)?;
+        Ok(ProductCssInputs {
+            reachability,
+            bundle_plan,
+            bundles,
+        })
+    }
+
+    fn validate(&self) -> Result<(), CollectError> {
+        valid(
+            !self.components.is_empty(),
+            "product topology has no components",
+        )?;
+        valid(!self.routes.is_empty(), "product topology has no routes")?;
+        let component_ids = canonical_product_components(&self.components)?;
+        let island_ids = canonical_product_islands(&self.islands, &component_ids)?;
+        canonical_product_routes(&self.routes, &component_ids, &island_ids)?;
+        let item_count = self
+            .components
+            .len()
+            .checked_add(self.routes.len())
+            .and_then(|count| count.checked_add(self.islands.len()));
+        valid(
+            item_count.is_some_and(|count| count <= MAX_ITEMS),
+            "product topology exceeds 65,535 top-level items",
+        )
+    }
+
+    fn application_topology(&self, inventory: Option<&[String]>) -> ApplicationTopology {
+        let mut topology = ApplicationTopology::new();
+        let mut source_roots = BTreeSet::new();
+        for component in &self.components {
+            let mut application_component = ApplicationComponent::new(&component.id);
+            for source in &component.source_units {
+                application_component = application_component.source_unit(source);
+                source_roots.insert(source_parent(source));
+            }
+            topology = topology.component(application_component);
+        }
+        if let Some(inventory) = inventory {
+            source_roots = inventory.iter().cloned().collect();
+        }
+        for source_root in source_roots {
+            topology = topology.source_root(source_root);
+        }
+        for route in &self.routes {
+            let mut application_route = ApplicationRoute::new(&route.id, &route.path);
+            for component in &route.components {
+                application_route = application_route.component(component);
+            }
+            topology = topology.route(application_route);
+        }
+        for island in &self.islands {
+            let mut application_island = ApplicationIsland::new(&island.id, &island.name);
+            for component in &island.components {
+                application_island = application_island.component(component);
+            }
+            topology = topology.island(application_island);
+        }
+        topology
+    }
+
+    fn partition(&self) -> Result<Vec<ProductBundle>, CollectError> {
+        let mut memberships = self
+            .components
+            .iter()
+            .map(|component| (component.id.as_str(), BTreeSet::new()))
+            .collect::<BTreeMap<_, _>>();
+        for route in &self.routes {
+            for component in &route.components {
+                memberships
+                    .get_mut(component.as_str())
+                    .ok_or_else(|| invalid(format!("unknown route component `{component}`")))?
+                    .insert(ProductRoot::Route(route.id.clone()));
+            }
+        }
+        for island in &self.islands {
+            for component in &island.components {
+                memberships
+                    .get_mut(component.as_str())
+                    .ok_or_else(|| invalid(format!("unknown island component `{component}`")))?
+                    .insert(ProductRoot::Island(island.id.clone()));
+            }
+        }
+        let island_routes = self
+            .islands
+            .iter()
+            .map(|island| {
+                let routes = self
+                    .routes
+                    .iter()
+                    .filter(|route| route.islands.contains(&island.id))
+                    .map(|route| route.id.clone())
+                    .collect::<BTreeSet<_>>();
+                (island.id.as_str(), routes)
+            })
+            .collect::<BTreeMap<_, _>>();
+        let mut sources = BTreeMap::<String, BTreeSet<ProductRoot>>::new();
+        for component in &self.components {
+            let roots = memberships.get(component.id.as_str()).ok_or_else(|| {
+                invalid(format!("component `{}` has no membership", component.id))
+            })?;
+            for source in &component.source_units {
+                sources
+                    .entry(source.clone())
+                    .or_default()
+                    .extend(roots.iter().cloned());
+            }
+        }
+        let mut groups = BTreeMap::<BTreeSet<ProductRoot>, BTreeSet<String>>::new();
+        for (source, roots) in sources {
+            groups.entry(roots).or_default().insert(source);
+        }
+        let route_ids = self
+            .routes
+            .iter()
+            .map(|route| route.id.clone())
+            .collect::<BTreeSet<_>>();
+        let mut bundles = BTreeMap::new();
+        let mut universal = Vec::new();
+        for (roots, sources) in groups {
+            let id = product_bundle_id(&roots, &route_ids);
+            valid(
+                !bundles.contains_key(&id),
+                format!("automatic bundle ID collision `{id}`"),
+            )?;
+            let selected_routes = selected_route_ids(&roots, &island_routes);
+            if selected_routes == route_ids {
+                universal.push(id.clone());
+            }
+            bundles.insert(
+                id.clone(),
+                ProductBundle {
+                    id,
+                    sources: sources.into_iter().collect(),
+                    emit_theme: false,
+                },
+            );
+        }
+        universal.sort();
+        let theme_bundle = universal.first().ok_or_else(|| {
+            invalid("automatic partition requires one bundle shared by every route")
+        })?;
+        bundles
+            .get_mut(theme_bundle)
+            .expect("selected theme bundle came from the bundle map")
+            .emit_theme = true;
+        Ok(bundles.into_values().collect())
+    }
+}
+
+impl ProductBundle {
+    /// Returns the portable physical bundle ID.
+    #[must_use]
+    pub fn id(&self) -> &str {
+        &self.id
+    }
+
+    /// Returns the exact source-unit partition.
+    #[must_use]
+    pub fn sources(&self) -> &[String] {
+        &self.sources
+    }
+
+    /// Reports whether this bundle owns theme emission.
+    #[must_use]
+    pub const fn emits_theme(&self) -> bool {
+        self.emit_theme
+    }
+}
+
+impl ProductCssInputs {
+    /// Returns the collected canonical reachability document.
+    #[must_use]
+    pub const fn reachability(&self) -> &CollectedReachability {
+        &self.reachability
+    }
+
+    /// Returns the canonical declarative bundle plan.
+    #[must_use]
+    pub fn bundle_plan(&self) -> &[u8] {
+        &self.bundle_plan
+    }
+
+    /// Returns deterministic physical source partitions.
+    #[must_use]
+    pub fn bundles(&self) -> &[ProductBundle] {
+        &self.bundles
+    }
+
+    /// Consumes the generated inputs into independently owned artifacts.
+    #[must_use]
+    pub fn into_parts(self) -> (CollectedReachability, Vec<u8>, Vec<ProductBundle>) {
+        (self.reachability, self.bundle_plan, self.bundles)
+    }
+}
+
 impl fmt::Display for CollectError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -304,6 +627,7 @@ impl fmt::Display for CollectError {
                 column,
                 message,
             } => write!(formatter, "{code}: {message} at {source}:{line}:{column}"),
+            Self::Decode(source) => write!(formatter, "cannot decode product topology: {source}"),
             Self::Serialize(source) => write!(formatter, "cannot serialize reachability: {source}"),
         }
     }
@@ -314,7 +638,7 @@ impl std::error::Error for CollectError {
         match self {
             Self::Io { source, .. } => Some(source),
             Self::Parse(source) => Some(source),
-            Self::Serialize(source) => Some(source),
+            Self::Decode(source) | Self::Serialize(source) => Some(source),
             Self::Invalid(_) | Self::Diagnostic { .. } => None,
         }
     }
@@ -561,6 +885,266 @@ fn render_document(
         "reachability document exceeds 16 MiB",
     )?;
     Ok(bytes)
+}
+
+fn canonical_product_components(
+    components: &[ProductTopologyComponent],
+) -> Result<BTreeSet<String>, CollectError> {
+    let mut ids = BTreeSet::new();
+    let mut source_keys = BTreeMap::new();
+    for component in components {
+        validate_product_id(&component.id)?;
+        valid(
+            ids.insert(component.id.clone()),
+            format!("duplicate product component `{}`", component.id),
+        )?;
+        valid(
+            !component.source_units.is_empty(),
+            format!("product component `{}` has no source units", component.id),
+        )?;
+        let mut sources = BTreeSet::new();
+        for source in &component.source_units {
+            valid(
+                is_portable_source_path(source)
+                    && Path::new(source)
+                        .extension()
+                        .is_some_and(|extension| extension.eq_ignore_ascii_case("rs")),
+                format!("invalid product source unit `{source}`"),
+            )?;
+            valid(
+                sources.insert(source),
+                format!(
+                    "product component `{}` repeats source unit `{source}`",
+                    component.id
+                ),
+            )?;
+            let portable_key = source.to_lowercase();
+            valid(
+                source_keys
+                    .insert(portable_key, source.as_str())
+                    .is_none_or(|existing| existing == source),
+                format!("portable product source-unit collision `{source}`"),
+            )?;
+        }
+    }
+    Ok(ids)
+}
+
+fn canonical_product_islands(
+    islands: &[ProductTopologyIsland],
+    component_ids: &BTreeSet<String>,
+) -> Result<BTreeSet<String>, CollectError> {
+    let mut ids = BTreeSet::new();
+    let mut names = BTreeSet::new();
+    for island in islands {
+        validate_product_id(&island.id)?;
+        validate_text(&island.name, MAX_ID_BYTES, "product island name")?;
+        valid(
+            ids.insert(island.id.clone()),
+            format!("duplicate product island `{}`", island.id),
+        )?;
+        valid(
+            names.insert(island.name.as_str()),
+            format!("duplicate rendered island name `{}`", island.name),
+        )?;
+        validate_product_references(
+            &island.components,
+            component_ids,
+            &format!("island `{}`", island.id),
+        )?;
+    }
+    Ok(ids)
+}
+
+fn canonical_product_routes(
+    routes: &[ProductTopologyRoute],
+    component_ids: &BTreeSet<String>,
+    island_ids: &BTreeSet<String>,
+) -> Result<(), CollectError> {
+    let mut ids = BTreeSet::new();
+    let mut paths = BTreeSet::new();
+    for route in routes {
+        validate_product_id(&route.id)?;
+        valid(
+            route.path.starts_with('/')
+                && route.path.len() <= MAX_PATH_OR_NAME_BYTES
+                && !route.path.contains(['\\', '?', '#', '\0'])
+                && !route.path.contains("//")
+                && route
+                    .path
+                    .split('/')
+                    .skip(1)
+                    .all(|segment| segment != "." && segment != ".."),
+            format!("invalid product route path `{}`", route.path),
+        )?;
+        valid(
+            ids.insert(route.id.as_str()),
+            format!("duplicate product route `{}`", route.id),
+        )?;
+        valid(
+            paths.insert(route.path.as_str()),
+            format!("duplicate product route path `{}`", route.path),
+        )?;
+        validate_product_references(
+            &route.components,
+            component_ids,
+            &format!("route `{}`", route.id),
+        )?;
+        let mut seen = BTreeSet::new();
+        for island in &route.islands {
+            validate_product_id(island)?;
+            valid(
+                island_ids.contains(island),
+                format!("route `{}` references unknown island `{island}`", route.id),
+            )?;
+            valid(
+                seen.insert(island),
+                format!("route `{}` repeats island `{island}`", route.id),
+            )?;
+        }
+    }
+    Ok(())
+}
+
+fn validate_product_references(
+    references: &[String],
+    known: &BTreeSet<String>,
+    owner: &str,
+) -> Result<(), CollectError> {
+    valid(!references.is_empty(), format!("{owner} has no components"))?;
+    let mut seen = BTreeSet::new();
+    for reference in references {
+        validate_product_id(reference)?;
+        valid(
+            known.contains(reference),
+            format!("{owner} references unknown component `{reference}`"),
+        )?;
+        valid(
+            seen.insert(reference),
+            format!("{owner} repeats component `{reference}`"),
+        )?;
+    }
+    Ok(())
+}
+
+fn validate_product_id(value: &str) -> Result<(), CollectError> {
+    valid(
+        !value.is_empty()
+            && value.len() <= MAX_ID_BYTES
+            && value.trim() == value
+            && value
+                .bytes()
+                .all(|byte| byte.is_ascii_alphanumeric() || b"-_.:".contains(&byte)),
+        format!("invalid product ID `{value}`"),
+    )
+}
+
+fn source_parent(source: &str) -> String {
+    Path::new(source)
+        .parent()
+        .filter(|parent| !parent.as_os_str().is_empty())
+        .and_then(Path::to_str)
+        .unwrap_or(source)
+        .replace('\\', "/")
+}
+
+fn product_bundle_id(roots: &BTreeSet<ProductRoot>, route_ids: &BTreeSet<String>) -> String {
+    if roots.is_empty() {
+        return "unreachable".to_owned();
+    }
+    let routes = roots
+        .iter()
+        .filter_map(|root| match root {
+            ProductRoot::Route(id) => Some(id.as_str()),
+            ProductRoot::Island(_) => None,
+        })
+        .collect::<Vec<_>>();
+    let islands = roots
+        .iter()
+        .filter_map(|root| match root {
+            ProductRoot::Island(id) => Some(id.as_str()),
+            ProductRoot::Route(_) => None,
+        })
+        .collect::<Vec<_>>();
+    if islands.is_empty()
+        && routes.len() == route_ids.len()
+        && routes.iter().all(|route| route_ids.contains(*route))
+    {
+        return "shared".to_owned();
+    }
+    if routes.len() == 1 && islands.is_empty() {
+        return physical_bundle_id("route", routes[0]);
+    }
+    if routes.is_empty() && islands.len() == 1 {
+        return physical_bundle_id("island", islands[0]);
+    }
+    let mut digest = Sha256::new();
+    for root in roots {
+        match root {
+            ProductRoot::Route(id) => digest.update(format!("route\0{id}\0")),
+            ProductRoot::Island(id) => digest.update(format!("island\0{id}\0")),
+        }
+    }
+    format!("shared-{}", &format!("{:x}", digest.finalize())[..12])
+}
+
+fn selected_route_ids(
+    roots: &BTreeSet<ProductRoot>,
+    island_routes: &BTreeMap<&str, BTreeSet<String>>,
+) -> BTreeSet<String> {
+    let mut selected = BTreeSet::new();
+    for root in roots {
+        match root {
+            ProductRoot::Route(id) => {
+                selected.insert(id.clone());
+            }
+            ProductRoot::Island(id) => {
+                if let Some(routes) = island_routes.get(id.as_str()) {
+                    selected.extend(routes.iter().cloned());
+                }
+            }
+        }
+    }
+    selected
+}
+
+fn physical_bundle_id(kind: &str, product_id: &str) -> String {
+    let simple = product_id
+        .bytes()
+        .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-')
+        && !product_id.starts_with('-')
+        && !product_id.ends_with('-')
+        && !product_id.contains("--");
+    if simple && kind.len() + product_id.len() < 64 {
+        return format!("{kind}-{product_id}");
+    }
+    let digest = Sha256::digest(format!("{kind}\0{product_id}").as_bytes());
+    format!("{kind}-{}", &format!("{digest:x}")[..12])
+}
+
+fn render_product_bundle_plan(bundles: &[ProductBundle]) -> Result<Vec<u8>, CollectError> {
+    let mut output = String::from(
+        "schema = 1\ntargets = \"modern\"\nformat = \"minified\"\n\n[theme]\nkind = \"seed\"\n",
+    );
+    for bundle in bundles {
+        output.push_str("\n[bundles.");
+        output.push_str(&bundle.id);
+        output.push_str("]\nsources = [");
+        for (index, source) in bundle.sources.iter().enumerate() {
+            if index > 0 {
+                output.push_str(", ");
+            }
+            output.push_str(&serde_json::to_string(source).map_err(CollectError::Serialize)?);
+        }
+        output.push_str("]\nemit-theme = ");
+        output.push_str(if bundle.emit_theme { "true" } else { "false" });
+        output.push('\n');
+    }
+    valid(
+        output.len() <= MAX_DOCUMENT_BYTES,
+        "bundle plan exceeds 16 MiB",
+    )?;
+    Ok(output.into_bytes())
 }
 
 fn canonical_source_roots(source_roots: &[String]) -> Result<Vec<String>, CollectError> {
@@ -1035,6 +1619,136 @@ mod tests {
             error
                 .to_string()
                 .contains("collected site ownership exceeds")
+        );
+    }
+
+    #[test]
+    fn product_topology_snapshot_collects_without_linking_framework_types() {
+        let fixture = Fixture::new();
+        fixture.write("src/global.rs", "fn global() { let _ = pc!(\"block\"); }\n");
+        fixture.write("src/home.rs", "fn home() { let _ = pc!(\"grid\"); }\n");
+        fixture.write(
+            "src/counter.rs",
+            "fn counter() { let _ = pc!(\"flex\"); }\n",
+        );
+        let topology = ProductTopology::from_json(
+            br#"{
+  "schema": "pliegors-product-topology/1",
+  "components": [
+    {"id":"app::counter","sourceUnits":["src/counter.rs"]},
+    {"id":"app::global","sourceUnits":["src/global.rs"]},
+    {"id":"app::home","sourceUnits":["src/home.rs"]}
+  ],
+  "routes": [
+    {"id":"Home:Route","path":"/","components":["app::global","app::home"],"islands":["counter"]}
+  ],
+  "islands": [
+    {"id":"counter","name":"visit-counter","components":["app::counter"]}
+  ]
+}
+"#,
+        )
+        .unwrap();
+        let generated = topology.collect_css_inputs(&fixture.0, None).unwrap();
+        assert_eq!(generated.reachability().source_file_count(), 3);
+        assert_eq!(generated.reachability().invocation_count(), 3);
+        assert!(
+            generated
+                .bundles()
+                .iter()
+                .all(|bundle| bundle.id() != "route-Home:Route")
+        );
+        assert!(
+            generated
+                .bundles()
+                .iter()
+                .any(|bundle| bundle.id() == "island-counter")
+        );
+        assert_eq!(
+            generated
+                .bundles()
+                .iter()
+                .filter(|bundle| bundle.emits_theme())
+                .count(),
+            1
+        );
+        assert!(String::from_utf8_lossy(generated.bundle_plan()).contains("[bundles.shared]"));
+    }
+
+    #[test]
+    fn product_topology_rejects_unknown_route_islands() {
+        let error = ProductTopology::from_json(
+            br#"{"schema":"pliegors-product-topology/1","components":[{"id":"app","sourceUnits":["src/app.rs"]}],"routes":[{"id":"home","path":"/","components":["app"],"islands":["missing"]}],"islands":[]}"#,
+        )
+        .unwrap_err();
+        assert!(error.to_string().contains("unknown island"));
+    }
+
+    #[test]
+    fn product_topology_counts_route_island_occurrences_for_shared_selection() {
+        let fixture = Fixture::new();
+        fixture.write("src/home.rs", "fn home() { let _ = pc!(\"grid\"); }\n");
+        fixture.write("src/visit.rs", "fn visit() { let _ = pc!(\"block\"); }\n");
+        fixture.write(
+            "src/counter.rs",
+            "fn counter() { let _ = pc!(\"flex\"); }\n",
+        );
+        let topology = ProductTopology::from_json(
+            br#"{
+  "schema":"pliegors-product-topology/1",
+  "components":[
+    {"id":"counter","sourceUnits":["src/counter.rs"]},
+    {"id":"home","sourceUnits":["src/home.rs"]},
+    {"id":"visit","sourceUnits":["src/visit.rs"]}
+  ],
+  "routes":[
+    {"id":"home","path":"/","components":["home"],"islands":["counter"]},
+    {"id":"visit","path":"/visit","components":["visit"],"islands":["counter"]}
+  ],
+  "islands":[{"id":"counter","name":"counter","components":["counter"]}]
+}"#,
+        )
+        .unwrap();
+        let generated = topology.collect_css_inputs(&fixture.0, None).unwrap();
+        assert_eq!(
+            generated
+                .bundles()
+                .iter()
+                .filter(|bundle| bundle.emits_theme())
+                .map(ProductBundle::id)
+                .collect::<Vec<_>>(),
+            ["island-counter"]
+        );
+    }
+
+    #[test]
+    fn product_topology_hashes_long_ids_and_rejects_portable_source_aliases() {
+        let long_id = "a".repeat(256);
+        let json = format!(
+            "{{\"schema\":\"pliegors-product-topology/1\",\"components\":[{{\"id\":\"app\",\"sourceUnits\":[\"src/app.rs\"]}}],\"routes\":[{{\"id\":\"{long_id}\",\"path\":\"/\",\"components\":[\"app\"],\"islands\":[]}}],\"islands\":[]}}"
+        );
+        let topology = ProductTopology::from_json(json.as_bytes()).unwrap();
+        let bundles = topology.partition().unwrap();
+        assert!(bundles.iter().all(|bundle| bundle.id().len() <= 64));
+
+        let aliases = ProductTopology::from_json(
+            br#"{"schema":"pliegors-product-topology/1","components":[{"id":"app","sourceUnits":["src/App.rs","src/app.rs"]}],"routes":[{"id":"home","path":"/","components":["app"],"islands":[]}],"islands":[]}"#,
+        )
+        .unwrap_err();
+        assert!(
+            aliases
+                .to_string()
+                .contains("portable product source-unit collision")
+        );
+    }
+
+    #[test]
+    fn malformed_product_topology_reports_decoding() {
+        let error = ProductTopology::from_json(b"{").unwrap_err();
+        assert!(
+            error
+                .to_string()
+                .starts_with("cannot decode product topology:")
         );
     }
 

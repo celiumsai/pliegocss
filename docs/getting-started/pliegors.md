@@ -1,39 +1,43 @@
 # PliegoRS + PliegoCSS from an empty project
 
-Status: implemented registry workflow for PliegoRS `0.0.2` and PliegoCSS
-`0.1.0-rc.3`
+Status: implemented source-pinned workflow for PliegoRS
+`5e68e902da4f952a8a96f56b878a3dabedd3bb1d` and PliegoCSS `0.1.0-rc.3`
 
 This guide starts with `pliego new` and ends with deterministic SSR/SSG output that can contain
 PliegoCSS classes, route and island CSS partitions, resumable state, and ordinary external CSS.
-Both exact public-preview package units are available from crates.io.
+The topology seam is newer than the published PliegoRS beta and is currently
+consumed from the exact source revision above. PliegoCSS RC.3 remains under
+exact-source verification until its coordinated publication gates pass.
 
 ## What the integration does today
 
 PliegoCSS emits standard CSS and stable class names. It does not add a browser styling runtime.
 PliegoRS owns views, SSR, resumability, SSG publication, and asset delivery.
 
-The current integration automatically collects typed component/route/island reachability and derives
-`shared`, route, island, and `unreachable` source partitions from one `ProductRegistry`. The bridge
-from the PliegoRS registry to `pliego-css-source::ApplicationTopology` is still application-owned.
-It is implemented and tested in the executable fixture, but it is not yet a one-command PliegoRS
+The current integration consumes the canonical `pliegors-product-topology/1`
+snapshot and derives typed component/route/island reachability plus `shared`,
+route, island, and `unreachable` source partitions. It is implemented and
+tested in the executable fixture, but it is not yet a one-command PliegoRS
 starter feature.
 
 ## 1. Scaffold the PliegoRS application
 
-Install the exact PliegoRS CLI and create the project from its registry-backed
-starter:
+Build the exact PliegoRS source revision and create the project from its
+registry-backed starter:
 
 ```console
-cargo +1.85.0 install pliego-cli --version '=0.0.2' --locked
+git clone https://github.com/celiumsai/pliegors.git ../pliegors
+git -C ../pliegors checkout 5e68e902da4f952a8a96f56b878a3dabedd3bb1d
+cargo +1.86.0 install --path ../pliegors/crates/pliego-cli --locked
 pliego new my-site
 cd my-site
 pliego check
 ```
 
-`pliego new` creates a standalone Rust 2024 project, standard asset directory, `pliego.toml`, and
-an initial deterministic SSG application. The published `0.0.2` framework
-supports Rust 1.85; the current unreleased PliegoRS `main` branch has a separate
-Rust 1.86 requirement.
+`pliego new` creates a standalone Rust 2024 project, standard asset directory,
+`pliego.toml`, and an initial deterministic SSG application. PliegoRS
+source revision requires Rust 1.86. PliegoCSS keeps Rust 1.85 as its independent
+library MSRV.
 
 ## 2. Add the PliegoCSS and resumability crates
 
@@ -42,14 +46,17 @@ Add these exact entries to the generated `[dependencies]`:
 ```toml
 pliego-css = "=0.1.0-rc.3"
 pliego-css-source = "=0.1.0-rc.3"
-pliego-macros = "=0.0.2"
-pliego-resume = "=0.0.2"
+pliego-dom = { version = "=0.4.0-beta.1", path = "../pliegors/crates/pliego-dom" }
+pliego-macros = { version = "=0.4.0-beta.1", path = "../pliegors/crates/pliego-macros" }
+pliego-resume = { version = "=0.4.0-beta.1", path = "../pliegors/crates/pliego-resume" }
+pliego-ssg = { version = "=0.4.0-beta.1", path = "../pliegors/crates/pliego-ssg" }
 ```
 
-Keep the generated `pliego-dom` and `pliego-ssg` dependencies. Then refresh and verify the lockfile:
+Replace the generated `pliego-dom` and `pliego-ssg` entries with the exact
+paths above. Then refresh and verify the lockfile:
 
 ```console
-cargo +1.85.0 generate-lockfile
+cargo +1.86.0 generate-lockfile
 pliego check
 pliego css check --seed
 ```
@@ -104,15 +111,18 @@ use pliego_ssg::{ProductIsland, ProductRegistry, ProductRoute};
 pub fn application_registry() -> ProductRegistry {
     let home = crate::styles::home::component();
     let counter = crate::styles::counter::component();
+    let visit = crate::styles::visit::component();
     let home_id = home.id().to_owned();
     let counter_id = counter.id().to_owned();
+    let visit_id = visit.id().to_owned();
 
     ProductRegistry::new()
         .component(home)
         .component(counter)
+        .component(visit)
         .island(ProductIsland::new("visit-counter", "visit-counter").component(counter_id))
         .route(ProductRoute::new("home", "/").component(home_id))
-        .route(ProductRoute::new("visit", "/visit").island("visit-counter"))
+        .route(ProductRoute::new("visit", "/visit").component(visit_id).island("visit-counter"))
 }
 ```
 
@@ -121,8 +131,9 @@ rejects duplicate IDs, unsafe routes, missing component references, and missing 
 
 ## 5. Derive reachability and CSS partitions
 
-The application adapter converts the immutable `ProductRegistry` into
-`pliego_css_source::ApplicationTopology`, scans the exact Cargo/rustc source inventory, and emits:
+The application serializes the immutable `ProductRegistry` with
+`to_topology_json()`. `pliego_css_source::ProductTopology` consumes that closed
+snapshot, scans the exact Cargo/rustc source inventory, and emits:
 
 - canonical reachability schema 1;
 - an automatic bundle plan for shared, route, island, and unreachable sources;
@@ -132,7 +143,7 @@ The application adapter converts the immutable `ProductRegistry` into
 Use these fixture files as the current executable implementation:
 
 - [registry shared by collection and SSG](../../integration-tests/pliegors-smoke/src/product.rs)
-- [registry-to-topology and automatic partition adapter](../../integration-tests/pliegors-smoke/src/css_adapter.rs)
+- [snapshot consumer and automatic partition adapter](../../integration-tests/pliegors-smoke/src/css_adapter.rs)
 - [collector entry point](../../integration-tests/pliegors-smoke/src/bin/collector.rs)
 - [verified SSG consumer](../../integration-tests/pliegors-smoke/src/bin/ssg.rs)
 

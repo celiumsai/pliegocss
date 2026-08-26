@@ -1,6 +1,6 @@
 # PliegoRS development reload loop
 
-Status: automated local two-process/SSE contract certified; controlled Chromium replay observed
+Status: source-pinned gate migration in progress; controlled Chromium replay observed
 
 PliegoCSS does not need its own HTTP or WebSocket server. The current PliegoRS development server
 already owns browser reload through its loopback-only `pliego dev` server and `/_pliego/reload` SSE
@@ -32,7 +32,7 @@ Rust/theme edit
 → the browser's existing EventSource triggers a full-page reload
 ```
 
-The cross-repository gate pins the PliegoRS CLI source, runs both processes with Rust 1.85, and
+The cross-repository gate pins the PliegoRS CLI source, runs both processes with Rust 1.86, and
 verifies 20 alternating `pc!` edits plus invalid and unchanged-output negative cases. Run it with:
 
 ```console

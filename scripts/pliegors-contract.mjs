@@ -12,6 +12,7 @@ export const PLIEGORS_CONTRACT_SURFACES = Object.freeze([
   "crates/pliego-ssg/**",
   "crates/pliego-starters/**",
   "crates/pliego-cli/**",
+  "schemas/pliego.product-topology.schema.json",
 ]);
 
 function git(root, args, encoding = null) {

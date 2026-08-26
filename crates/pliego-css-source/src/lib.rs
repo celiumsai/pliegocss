@@ -37,7 +37,8 @@ use syn::{Arm, Block, Expr, ExprIf, ExprLit, ExprMatch, Lit, LitStr, Stmt, Token
 
 pub use application::{
     ApplicationComponent, ApplicationIsland, ApplicationRoute, ApplicationTopology, CollectError,
-    CollectedReachability,
+    CollectedReachability, PRODUCT_TOPOLOGY_SCHEMA, ProductBundle, ProductCssInputs,
+    ProductTopology,
 };
 pub use discovery::discover_migration_project;
 pub use formatting::{

@@ -146,6 +146,11 @@ assert.match(
   /join\(cargoOverrideDirectory, "config\.toml"\)/u,
   "the development-loop gate must materialize a local Cargo path override",
 );
+assert.match(
+  pliegorsDevLoopSource,
+  /"generate-lockfile", "--manifest-path", manifestPath/u,
+  "the development-loop gate must bind its copied lockfile to the path-overridden source graph",
+);
 assert.doesNotMatch(
   pliegorsDevLoopSource,
   /\.\.\/\.\.\/\.\.\/pliegors\/crates/u,

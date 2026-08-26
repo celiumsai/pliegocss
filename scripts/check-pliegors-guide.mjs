@@ -27,7 +27,8 @@ for (const section of requiredSections) {
 const requiredClaims = [
   "product_component!",
   "ProductRegistry",
-  "ApplicationTopology",
+  "ProductTopology",
+  "to_topology_json",
   "pliego build",
   "pliego css check",
   "pliego.build.json",
@@ -46,7 +47,7 @@ for (const claim of requiredClaims) {
 const fixtureContracts = new Map([
   ["integration-tests/pliegors-smoke/src/product.rs", ["ProductRegistry", "application_registry"]],
   ["integration-tests/pliegors-smoke/src/styles/home.rs", ["product_component!", "pc!"]],
-  ["integration-tests/pliegors-smoke/src/css_adapter.rs", ["ApplicationTopology", "generate_css_inputs"]],
+  ["integration-tests/pliegors-smoke/src/css_adapter.rs", ["ProductTopology", "to_topology_json", "generate_css_inputs"]],
   ["integration-tests/pliegors-smoke/src/bin/collector.rs", ["application_registry"]],
   ["integration-tests/pliegors-smoke/src/bin/ssg.rs", ["preload_stylesheet", "Site::new"]],
 ]);

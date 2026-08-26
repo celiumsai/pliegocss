@@ -77,8 +77,9 @@ pliego-cssc bundle \
 
 `ProductRegistry` es la fuente explícita de componentes, rutas, islands y ocurrencia route→island.
 Cada componente usa `product_component!` para capturar el `file!()` normalizado de su declaración;
-esto evita duplicar el path, pero no descubre componentes no registrados. El adapter transforma un
-snapshot validado en `ApplicationTopology`, inventaría los Rust sources y genera el sidecar neutral
+esto evita duplicar el path, pero no descubre componentes no registrados. PliegoRS emite el
+snapshot canónico `pliegors-product-topology/1`; `ProductTopology` lo valida,
+inventaría los Rust sources y genera el sidecar neutral
 de [reachability schema 1](../reference/reachability-schema.md). También agrupa cada source por su
 conjunto exacto de raíces route/island y genera el bundle plan; ya no hay JSON ni TOML de ownership
 mantenido a mano. El collector rechaza una invocación visible `pc!`/`pcx!` sin dueño, un site exacto
@@ -127,7 +128,9 @@ resumability; no debe presentarse como hidratación.
 
 ## Compatibilidad
 
-PliegoCSS y PliegoRS declaran Rust 1.85 como versión mínima. La suite del workspace de PliegoCSS se verifica también con ese toolchain.
+PliegoCSS declara Rust 1.85 como versión mínima; PliegoRS `0.4.0-beta.1`
+requiere Rust 1.86. La suite del workspace de PliegoCSS se verifica también con
+su toolchain mínimo independiente.
 
 El gate cruzado vive en `integration-tests/pliegors-smoke` y presupone que `PliegoCSS` y `pliegors`
 son directorios hermanos. Es un workspace separado con `Cargo.lock` versionado; usa `pliego-dom` y
@@ -135,11 +138,12 @@ son directorios hermanos. Es un workspace separado con `Cargo.lock` versionado; 
 builder DOM, SSR directo, ramas precompiladas de `pcx!` y el sitio de dos rutas:
 
 ```console
-cargo +1.85 test --locked --manifest-path integration-tests/pliegors-smoke/Cargo.toml
+cargo +1.86 test --locked --manifest-path integration-tests/pliegors-smoke/Cargo.toml
 ```
 
-La superficie fijada incluye también `Cargo.lock`, `crates/pliego-starters/**` y
-`crates/pliego-cli/**`. El gate F6 separado materializa
+La superficie fijada incluye también `Cargo.lock`, `crates/pliego-starters/**`,
+`crates/pliego-cli/**` y `schemas/pliego.product-topology.schema.json`. El gate
+F6 separado materializa
 `integration-tests/pliegors-dev-loop`, levanta `pliego-cssc watch` y `pliego dev`, alterna ediciones
 válidas 20 veces, comprueba CSS servido contra artifact, padding semántico, ausencia de clase stale,
 una sola generación SSE estable y conserva el grupo de publicación ante errores. Puede ejecutarse
