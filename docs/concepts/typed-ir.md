@@ -87,7 +87,7 @@ SHA-256 compacts that stream and its first 128 bits, interpreted big-endian, bec
 
 The CSS class still uses class-name format 1: `pc_` plus the complete ID in lowercase base 36.
 StyleId format 2 and its candidate vectors are machine-enforced at public preview
-`0.1.0-rc.2`, while final `0.1.0` promotion remains open. The complete byte grammar and migration boundary are in the
+`0.1.0-rc.3`, while final `0.1.0` promotion remains open. The complete byte grammar and migration boundary are in the
 [StyleId format-2 reference](../reference/style-id-format-v2.md).
 
 ## Persistence is not identity

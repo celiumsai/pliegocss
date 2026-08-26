@@ -1,6 +1,6 @@
 # StyleId binary format 2
 
-Status: **implemented and protected by exact prerelease vectors at `0.1.0-rc.2`**
+Status: **implemented and protected by exact prerelease vectors at `0.1.0-rc.3`**
 
 This document specifies the canonical byte stream used by
 `STYLE_ID_FORMAT_VERSION = 2`, the derivation of the 128-bit `StyleId`, and its relationship to a

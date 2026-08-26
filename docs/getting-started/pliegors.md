@@ -1,7 +1,7 @@
 # PliegoRS + PliegoCSS from an empty project
 
 Status: implemented registry workflow for PliegoRS `0.0.2` and PliegoCSS
-`0.1.0-rc.2`
+`0.1.0-rc.3`
 
 This guide starts with `pliego new` and ends with deterministic SSR/SSG output that can contain
 PliegoCSS classes, route and island CSS partitions, resumable state, and ordinary external CSS.
@@ -40,8 +40,8 @@ Rust 1.86 requirement.
 Add these exact entries to the generated `[dependencies]`:
 
 ```toml
-pliego-css = "=0.1.0-rc.2"
-pliego-css-source = "=0.1.0-rc.2"
+pliego-css = "=0.1.0-rc.3"
+pliego-css-source = "=0.1.0-rc.3"
 pliego-macros = "=0.0.2"
 pliego-resume = "=0.0.2"
 ```

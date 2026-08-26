@@ -15,7 +15,7 @@ body:
     attributes:
       label: PliegoCSS version
       description: Exact crate version, CLI version, or commit SHA.
-      placeholder: 0.1.0-rc.2
+      placeholder: 0.1.0-rc.3
     validations:
       required: true
   - type: dropdown

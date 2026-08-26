@@ -1,12 +1,12 @@
 # First compile
 
-Status: available in the `0.1.0-rc.2` public preview
+Status: prepared for the `0.1.0-rc.3` public-preview candidate
 
 Add the exact public-preview compatibility unit:
 
 ```toml
 [dependencies]
-pliego-css = "=0.1.0-rc.2"
+pliego-css = "=0.1.0-rc.3"
 ```
 
 Then validate a utility list during Rust compilation:

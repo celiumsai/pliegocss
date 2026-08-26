@@ -8,10 +8,10 @@ Audit first, compile when it adds value, and keep the browser contract ordinary.
 
 ## Install the release candidate {#install}
 
-The complete 0.1.0-rc.2 compatibility unit is published on crates.io and replayed from the registry with Rust 1.85.
+The 0.1.0-rc.3 compatibility unit is under exact-source verification. Use this command after all nineteen crates are published and replayed with Rust 1.85.
 
 ```console
-cargo install pliego-cssc --version '=0.1.0-rc.2' --locked
+cargo install pliego-cssc --version '=0.1.0-rc.3' --locked
 ```
 
 ## Audit ordinary CSS {#audit}

@@ -7,10 +7,10 @@ CSS, compiles typed utility literals, transforms CSS, explains cascade and
 physical lineage, inventories migration candidates, and verifies
 deterministic artifacts.
 
-Install the `0.1.0-rc.2` public-preview candidate from crates.io:
+After publication, install the `0.1.0-rc.3` public-preview candidate from crates.io:
 
 ```console
-cargo install pliego-cssc --version '=0.1.0-rc.2' --locked
+cargo install pliego-cssc --version '=0.1.0-rc.3' --locked
 ```
 
 ## Discover commands

@@ -252,6 +252,7 @@ const gates = Object.freeze([
     tier: "integration",
     command: "node",
     args: ["scripts/check-lsp-integration.mjs"],
+    rustToolchain: "1.85.0",
   },
   {
     id: "vscode",
@@ -265,6 +266,7 @@ const gates = Object.freeze([
     command: "pnpm",
     args: ["--filter", "pliegocss-vscode", "test:host"],
     requires: ["PLIEGOCSS_RUN_EDITOR_HOSTS"],
+    rustToolchain: "1.85.0",
   },
   {
     id: "neovim",
@@ -272,6 +274,7 @@ const gates = Object.freeze([
     command: "node",
     args: ["scripts/check-neovim-client.mjs"],
     requires: ["PLIEGOCSS_RUN_EDITOR_HOSTS"],
+    rustToolchain: "1.85.0",
   },
   {
     id: "pliegors-guide",

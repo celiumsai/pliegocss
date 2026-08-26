@@ -9,8 +9,8 @@ the project also needs build, watch, audit, or artifact commands.
 ## Install the native tools
 
 ```console
-cargo install pliego-css-lsp --version '=0.1.0-rc.2' --locked
-cargo install pliego-cssc --version '=0.1.0-rc.2' --locked
+cargo install pliego-css-lsp --version '=0.1.0-rc.3' --locked
+cargo install pliego-cssc --version '=0.1.0-rc.3' --locked
 pliego-css-lsp --version
 pliego-cssc --version
 ```

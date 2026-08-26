@@ -11,7 +11,7 @@ Install the CLI for any project, add the Rust crates only when typed authoring b
 The command-line compiler can audit, transform, explain, bundle, and migrate standard CSS without adding a runtime dependency to the application.
 
 ```console
-cargo install pliego-cssc --version '=0.1.0-rc.2' --locked
+cargo install pliego-cssc --version '=0.1.0-rc.3' --locked
 pliego-cssc --version
 ```
 
@@ -21,7 +21,7 @@ Add pliego-css and its macro crate to applications that want compile-time style 
 
 ```console
 [dependencies]
-pliego-css = "=0.1.0-rc.2"
+pliego-css = "=0.1.0-rc.3"
 ```
 
 ## Pin the exact release identity {#pin}

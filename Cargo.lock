@@ -397,7 +397,7 @@ dependencies = [
 
 [[package]]
 name = "pliego-css"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 dependencies = [
  "pliego-css-ir",
  "pliego-css-macros",
@@ -406,7 +406,7 @@ dependencies = [
 
 [[package]]
 name = "pliego-css-agent"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 dependencies = [
  "pliego-css-build",
  "pliego-css-config",
@@ -417,14 +417,14 @@ dependencies = [
 
 [[package]]
 name = "pliego-css-basic-example"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 dependencies = [
  "pliego-css",
 ]
 
 [[package]]
 name = "pliego-css-build"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 dependencies = [
  "cssparser",
  "lightningcss",
@@ -441,7 +441,7 @@ dependencies = [
 
 [[package]]
 name = "pliego-css-cascade"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 dependencies = [
  "cssparser",
  "lightningcss",
@@ -451,7 +451,7 @@ dependencies = [
 
 [[package]]
 name = "pliego-css-compiler"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 dependencies = [
  "pliego-css-ir",
  "pliego-css-parser",
@@ -461,7 +461,7 @@ dependencies = [
 
 [[package]]
 name = "pliego-css-config"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 dependencies = [
  "cssparser",
  "libc",
@@ -477,7 +477,7 @@ dependencies = [
 
 [[package]]
 name = "pliego-css-control"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 dependencies = [
  "cssparser",
  "lightningcss",
@@ -493,7 +493,7 @@ dependencies = [
 
 [[package]]
 name = "pliego-css-custom-theme-example"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 dependencies = [
  "pliego-css",
  "pliego-css-build",
@@ -501,18 +501,18 @@ dependencies = [
 
 [[package]]
 name = "pliego-css-io"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 dependencies = [
  "libc",
 ]
 
 [[package]]
 name = "pliego-css-ir"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 
 [[package]]
 name = "pliego-css-lsp"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 dependencies = [
  "pliego-css-compiler",
  "pliego-css-config",
@@ -528,7 +528,7 @@ dependencies = [
 
 [[package]]
 name = "pliego-css-macros"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 dependencies = [
  "pliego-css-compiler",
  "pliego-css-ir",
@@ -541,7 +541,7 @@ dependencies = [
 
 [[package]]
 name = "pliego-css-ownership"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 dependencies = [
  "serde",
  "serde_json",
@@ -550,14 +550,14 @@ dependencies = [
 
 [[package]]
 name = "pliego-css-parser"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 dependencies = [
  "pliego-css-ir",
 ]
 
 [[package]]
 name = "pliego-css-publication"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 dependencies = [
  "fs2",
  "libc",
@@ -566,7 +566,7 @@ dependencies = [
 
 [[package]]
 name = "pliego-css-source"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 dependencies = [
  "libc",
  "pliego-css-io",
@@ -579,7 +579,7 @@ dependencies = [
 
 [[package]]
 name = "pliego-css-theme"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 dependencies = [
  "pliego-css-ir",
  "sha2",
@@ -587,7 +587,7 @@ dependencies = [
 
 [[package]]
 name = "pliego-css-usage"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 dependencies = [
  "pliego-css-build",
  "pliego-css-compiler",
@@ -600,7 +600,7 @@ dependencies = [
 
 [[package]]
 name = "pliego-css-watch"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 dependencies = [
  "inotify",
  "pliego-css-io",
@@ -609,7 +609,7 @@ dependencies = [
 
 [[package]]
 name = "pliego-cssc"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 dependencies = [
  "libc",
  "pliego-css-agent",

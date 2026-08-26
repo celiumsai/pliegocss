@@ -206,8 +206,8 @@ function staticContract() {
     "utf8",
   );
   if (
-    !englishTerms.includes("public-preview software") ||
-    !spanishTerms.includes("software en vista previa pública") ||
+    !englishTerms.includes("public-preview candidate software") ||
+    !spanishTerms.includes("software candidato de vista previa pública") ||
     !spanishTerms.includes('<html lang="es"')
   ) {
     fail("legal language or public-preview status drifted");

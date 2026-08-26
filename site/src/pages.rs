@@ -632,7 +632,7 @@ fn home() -> View {
                 .child(
                     el("p")
                         .class("hero-preview-label")
-                        .child("PLIEGOCSS / 0.1.0-RC.2 / PUBLIC PREVIEW"),
+                        .child("PLIEGOCSS / 0.1.0-RC.3 / CANDIDATE"),
                 )
                 .child(brand_picture(
                     "cascade-chamber",
@@ -1114,7 +1114,7 @@ fn playground_page() -> View {
                     el("div")
                         .class("lab-hero-facts")
                         .child(metric("Recipes", "144 exact combinations"))
-                        .child(metric("Compiler", "pliego-cssc 0.1.0-rc.2"))
+                        .child(metric("Compiler", "pliego-cssc 0.1.0-rc.3"))
                         .child(metric("Boundary", "build-time corpus")),
                 ),
         )
@@ -2030,7 +2030,7 @@ fn brand() -> View {
 fn changelog() -> View {
     el("div")
         .class("changelog-page page-shell")
-        .child(page_intro("CHANGELOG", "Release truth, not launch theater.", "The 0.1.0-rc.2 compatibility unit is published on crates.io and replayed with Rust 1.85. Final 0.1.0 remains separately blocked by the readiness record."))
+        .child(page_intro("CHANGELOG", "Release truth, not launch theater.", "The 0.1.0-rc.3 compatibility unit is under exact-source verification. Publication and final 0.1.0 remain blocked by the readiness record."))
         .child(
             el("article")
                 .class("release-entry")
@@ -2157,7 +2157,7 @@ fn legal_document(slug: &str) -> View {
                 (
                     "01",
                     "Current status",
-                    "PliegoCSS 0.1.0-rc.2 is public-preview software published as an exact-version crates.io compatibility unit and replayed with Rust 1.85. APIs may change before 1.0, and the release-readiness record remains the authority for promotion.",
+                    "PliegoCSS 0.1.0-rc.3 is public-preview candidate software under exact-source verification. Publication is not implied, APIs may change before 1.0, and the release-readiness record remains the authority for promotion.",
                 ),
                 (
                     "02",

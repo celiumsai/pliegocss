@@ -56,7 +56,7 @@ fn valid_standard_css_emits_deterministic_inventory_evidence() {
     assert_eq!(metric("maximum-specificity"), "1,1,0");
     assert_eq!(
         sha256_hex(json.as_bytes()),
-        "82d0c41ecff10f8a79263df5b064b09132444ae0b054a23f0d0d2acee0f60ff5"
+        "e639a6c1901c6a8e90f9e61b9847cceb1ee4a5f637cc218810dc95f4626d2f14"
     );
 }
 

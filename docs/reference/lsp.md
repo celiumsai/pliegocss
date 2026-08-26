@@ -11,7 +11,7 @@ emission come from the shared in-process `AnalysisHost`.
 Install `pliego-css-lsp` from the same PliegoCSS compatibility unit used by the project:
 
 ```console
-cargo install pliego-css-lsp --version '=0.1.0-rc.2' --locked
+cargo install pliego-css-lsp --version '=0.1.0-rc.3' --locked
 pliego-css-lsp --seed
 ```
 

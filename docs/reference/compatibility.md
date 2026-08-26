@@ -1,6 +1,6 @@
 # Compatibility candidate contract
 
-Status: **machine-enforced prerelease vectors at `0.1.0-rc.2`; final `0.1.0` promotion remains open**
+Status: **machine-enforced prerelease vectors at `0.1.0-rc.3`; final `0.1.0` promotion remains open**
 
 PliegoCSS already persists identities and artifacts across the macro, build-script bridge, CLI, SSR,
 and CSS boundary. Those bytes cannot be allowed to drift accidentally while the broader 0.1 API is
@@ -16,7 +16,7 @@ class identity, theme artifact, or manifest that another component does not unde
 
 Cargo manifests use local paths plus exact internal version requirements for this reason.
 Packaging removes the paths and retains the exact requirements. Public-preview consumers
-must pin every direct PliegoCSS dependency to exact version `0.1.0-rc.2`.
+must pin every direct PliegoCSS dependency to exact version `0.1.0-rc.3`.
 
 ## Enforced vectors
 
@@ -173,9 +173,10 @@ For subsequent release candidates and the eventual `0.1.x` line:
 - Rust 1.85 remains the MSRV throughout `0.1.x`; raising it requires at least `0.2.0` and migration
   notes.
 
-This policy governs the published `0.1.0-rc.2` prerelease. It does not claim the
-separate final `0.1.0` promotion has occurred. The supported application/build
-subset is selected and compile-checked through a registry-only Rust 1.85 consumer.
+This policy governs the `0.1.0-rc.3` candidate. It does not claim publication,
+registry replay, or separate final `0.1.0` promotion has occurred. The supported
+application/build subset is selected and compile-checked through a Rust 1.85
+consumer shaped like the registry package graph.
 
 The intended RC surface includes `pc!`, `pcx!` (including Cargo facade dependency renames),
 `Style`/`StyleId` class interoperability, the

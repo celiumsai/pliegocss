@@ -1,6 +1,6 @@
 # Public API candidate
 
-Status: **application, build-macro, and adapter surfaces published at `0.1.0-rc.2`; the
+Status: **application, build-macro, and adapter surfaces prepared for `0.1.0-rc.3`; the
 Cargo DTCG, ownership, usage-sidecar, and application-topology collector bridges are covered by the
 Rust 1.85 downstream smoke; this remains a prerelease contract**
 

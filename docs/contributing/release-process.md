@@ -1,6 +1,7 @@
 # Release process
 
-Status: **`0.1.0-rc.2` is the active public-preview candidate;
+Status: **the workspace prepares `0.1.0-rc.3`; its exact-source candidate
+identity is not established and final
 final `0.1.0` promotion remains blocked by the machine readiness record**
 
 This process covers the nineteen publishable crates in one version-locked
@@ -42,7 +43,7 @@ verified GitHub Release asset and installed with pnpm; npmjs publication is forb
 
 Before changing a version:
 
-- decide whether the result is another candidate, such as `0.1.0-rc.2`, or the final `0.1.0`;
+- decide whether the result is another candidate, such as `0.1.0-rc.3`, or the final `0.1.0`;
 - close or explicitly defer every item in the release-blocker section below;
 - move the release's user-visible changes and migrations from **Unreleased** into a dated, exact
   version section in `CHANGELOG.md`, leaving a new empty **Unreleased** section above it;
@@ -397,20 +398,20 @@ immutable public distribution.
 
 ## Current blockers
 
-The schema-3 authority currently binds candidate `0.1.0-rc.2` to commit
-`064dcbce96a3a5cc97a940d07566c008bb5e2d3e` and Git tree
-`010a64f5d0bbd142a1d015fda4ccf573cc6e4133`. Exact-candidate CI and CodeQL are
-passed; they do not clear these remaining gates:
+The schema-3 authority still records the immutable RC.2 source and its expired
+evidence. It must not be relabeled as RC.3. After this version-preparation
+change becomes a clean reviewed commit, a newly named candidate can bind its
+exact commit and tree and run CI, CodeQL, browser, distribution, and registry
+evidence. The remaining gates are:
 
-- G0 corrections are not part of the exact RC.2 candidate and require a newly named candidate plus
-  hosted replay before they can become release evidence;
-- all required hosted browser lanes remain `not-configured` for the exact RC.2 candidate; the G4
-  workflow can certify later source identities but cannot retroactively promote RC.2;
+- G0 corrections are present in the RC.3 source but require exact-candidate hosted replay before they
+  become release evidence;
+- all required hosted browser lanes remain `not-configured` for the exact RC.3 candidate;
 - the crates.io replay and production edge/browser replay need fresh, unexpired, artifact-hashed
   evidence;
-- RC.2 predates G5 and therefore has no exact-source repository native archives, checksums,
-  CycloneDX SBOMs, GitHub/Sigstore attestations, immutable GitHub Release, or verified pnpm package;
-  npmjs publication is forbidden and later-source G5 evidence cannot be inherited by RC.2;
+- RC.3 requires exact-source repository native archives, checksums, CycloneDX SBOMs,
+  GitHub/Sigstore attestations, an immutable GitHub Release, and verified pnpm package;
+  npmjs publication remains forbidden;
 - external interviews, real incidents, and pilots are not yet recorded as reviewed adoption
   evidence;
 - final `0.1.0` publication is not authorized for this exact commit and tree.

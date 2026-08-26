@@ -4,7 +4,7 @@
   "documents": [
     {
       "sourcePath": "docs/site/getting-started.md",
-      "sourceSha256": "sha256:759274aa8cd671310039549403f44456199a2ebd624e89f56e375aa875c66ded",
+      "sourceSha256": "sha256:c6dc6f90c559b7ecb0a8202f6f6cdd20b2865cc42b122074623555ad96f64962",
       "route": "/docs/getting-started/",
       "title": "Start with the CSS you already have.",
       "category": "Start",
@@ -15,8 +15,8 @@
         {
           "id": "install",
           "title": "Install the release candidate",
-          "body": "The complete 0.1.0-rc.2 compatibility unit is published on crates.io and replayed from the registry with Rust 1.85.",
-          "code": "cargo install pliego-cssc --version '=0.1.0-rc.2' --locked"
+          "body": "The 0.1.0-rc.3 compatibility unit is under exact-source verification. Use this command after all nineteen crates are published and replayed with Rust 1.85.",
+          "code": "cargo install pliego-cssc --version '=0.1.0-rc.3' --locked"
         },
         {
           "id": "audit",
@@ -184,7 +184,7 @@
     },
     {
       "sourcePath": "docs/site/installation.md",
-      "sourceSha256": "sha256:2459d3c1c9082a6107df25e9dbc5b461623c182f064b623216dc509a17aa23ec",
+      "sourceSha256": "sha256:c5150bb64061e203667b655a155dd3054b48e3b88a2ea6d3ec760978a7ec5796",
       "route": "/docs/installation/",
       "title": "Choose an adoption surface.",
       "category": "Start",
@@ -196,13 +196,13 @@
           "id": "cli",
           "title": "CLI-only adoption",
           "body": "The command-line compiler can audit, transform, explain, bundle, and migrate standard CSS without adding a runtime dependency to the application.",
-          "code": "cargo install pliego-cssc --version '=0.1.0-rc.2' --locked\npliego-cssc --version"
+          "code": "cargo install pliego-cssc --version '=0.1.0-rc.3' --locked\npliego-cssc --version"
         },
         {
           "id": "rust",
           "title": "Typed Rust authoring",
           "body": "Add pliego-css and its macro crate to applications that want compile-time style identities. The emitted result remains ordinary CSS.",
-          "code": "[dependencies]\npliego-css = \"=0.1.0-rc.2\""
+          "code": "[dependencies]\npliego-css = \"=0.1.0-rc.3\""
         },
         {
           "id": "pin",

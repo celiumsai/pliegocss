@@ -52,6 +52,13 @@ assert(integration.gates.some((gate) => gate.id === "plain-html"));
 assert(integration.gates.some((gate) => gate.id === "getting-started"));
 assert(integration.gates.some((gate) => gate.id === "pliegors-browser"));
 assert(integration.gates.some((gate) => gate.id === "benchmark-authority-smoke"));
+for (const id of ["lsp", "vscode-host", "neovim"]) {
+  assert.equal(
+    integration.gates.find((gate) => gate.id === id)?.rustToolchain,
+    "1.85.0",
+    `${id} must share the MSRV target namespace with its LSP fixture`,
+  );
+}
 
 const release = list("release");
 assert.deepEqual(release.includes, ["fast", "integration", "release"]);

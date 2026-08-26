@@ -47,7 +47,7 @@ cargo run -p pliego-cssc -- compile --source src/lib.rs --theme --output pliego.
 Install the public-preview binary from crates.io and invoke it from an application workspace:
 
 ```console
-cargo install pliego-cssc --version '=0.1.0-rc.2' --locked
+cargo install pliego-cssc --version '=0.1.0-rc.3' --locked
 pliego-cssc --version
 pliego-cssc check --source src
 ```
@@ -1203,9 +1203,9 @@ multi-file transactional or crash-atomic replacement.
 - Theme CSS currently emits the registry token kinds supported by the emitter's custom-property
   contract; `--prune-unreachable` does not filter that block. Other tokens still affect lowering and
   identity.
-- Identity and class formats are explicitly versioned. The `0.1.0-rc.2` vectors are a
+- Identity and class formats are explicitly versioned. The `0.1.0-rc.3` vectors are a
   published prerelease contract rather than a final `0.1.0` stability promise. See the
   [StyleId format-2 reference](./style-id-format-v2.md).
-- The CLI may be installed from exact crates.io version `0.1.0-rc.2` or from an
+- After publication, the CLI may be installed from exact crates.io version `0.1.0-rc.3` or from an
   exact checkout revision. Once installed, `pliego-cssc` is standalone and can run from an application directory; it does not
   require that application to belong to the PliegoCSS Cargo workspace.

@@ -1,8 +1,8 @@
 # Installation
 
-PliegoCSS `0.1.0-rc.2` is a public-preview, exact-version compatibility unit.
-The nineteen crates are published together and must not be mixed across
-PliegoCSS versions.
+PliegoCSS `0.1.0-rc.3` is the next public-preview, exact-version compatibility
+unit. The nineteen crates must be published together and must not be mixed
+across PliegoCSS versions.
 
 ## Requirements
 
@@ -22,16 +22,16 @@ Registry consumers should use exact versions for the compatibility unit:
 
 ```toml
 [dependencies]
-pliego-css = "=0.1.0-rc.2"
+pliego-css = "=0.1.0-rc.3"
 
 [build-dependencies]
-pliego-css-build = "=0.1.0-rc.2"
+pliego-css-build = "=0.1.0-rc.3"
 ```
 
 Install the CLI with the same exact candidate:
 
 ```console
-cargo install pliego-cssc --version '=0.1.0-rc.2' --locked
+cargo install pliego-cssc --version '=0.1.0-rc.3' --locked
 ```
 
 ## Repository-hosted pnpm package
@@ -40,9 +40,10 @@ The G5 Node distribution is an npm-format package, but PliegoCSS does **not** pu
 It is built as one universal `.tgz` containing the declared native CLI/LSP binaries and is attached
 only to an immutable GitHub Release. The package has zero dependencies and no lifecycle scripts.
 
-`0.1.0-rc.2` predates this contract and does not carry that asset. For a later candidate whose
-release page contains the G5 bundle, download and verify the exact asset before asking pnpm to install
-the local file:
+`0.1.0-rc.2` predates this contract and does not carry that asset. RC.3 must
+publish the G5 bundle before this installation path becomes available. Once
+the release page contains it, download and verify the exact asset before asking
+pnpm to install the local file:
 
 ```console
 gh release download <tag> --repo celiumsai/pliegocss --pattern 'pliegocss-pnpm-*.tgz'
@@ -93,7 +94,7 @@ Add the public facade to the application:
 
 ```toml
 [dependencies]
-pliego-css = "=0.1.0-rc.2"
+pliego-css = "=0.1.0-rc.3"
 ```
 
 Use a visible string literal so the macro can validate it during compilation:
@@ -127,10 +128,10 @@ Add the build bridge when the package has a custom `pliego.theme.toml` or DTCG R
 
 ```toml
 [dependencies]
-pliego-css = "=0.1.0-rc.2"
+pliego-css = "=0.1.0-rc.3"
 
 [build-dependencies]
-pliego-css-build = "=0.1.0-rc.2"
+pliego-css-build = "=0.1.0-rc.3"
 ```
 
 Create `build.rs`:

@@ -8,6 +8,11 @@ pre-1.0 compatibility policy.
 
 ## [Unreleased]
 
+## [0.1.0-rc.3] - TBD
+
+Candidate contents are prepared below. The date remains unset until the exact
+source commit passes the required hosted gates and publication is authorized.
+
 ### Added
 
 - Add the G5 repository-only native distribution pipeline: Windows x64, Linux
@@ -47,6 +52,9 @@ pre-1.0 compatibility policy.
 - Reject empty reversible migration projects with a typed public error instead
   of indexing an empty inventory, and audit every current Lightning CSS rule
   variant without a silent wildcard.
+- Keep release-readiness honest after RC.2 evidence expiration, preserve the
+  intentional removal of the superseded execution plan, and support native
+  pnpm executables in the VS Code packaging gate.
 
 ## [0.1.0-rc.2] - 2026-07-21
 

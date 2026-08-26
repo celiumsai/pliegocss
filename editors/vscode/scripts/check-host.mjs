@@ -1,13 +1,34 @@
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
-import { resolve, sep } from "node:path";
+import { isAbsolute, join, resolve, sep } from "node:path";
 import { runTests } from "@vscode/test-electron";
 
 const EXTENSION = resolve(import.meta.dirname, "..");
 const ROOT = resolve(EXTENSION, "..", "..");
-const target = process.env.CARGO_TARGET_DIR
-  ? resolve(ROOT, process.env.CARGO_TARGET_DIR)
+const configuredBase = process.env.PLIEGOCSS_TARGET_BASE ?? process.env.CARGO_TARGET_DIR;
+const targetBase = configuredBase
+  ? (isAbsolute(configuredBase) ? configuredBase : resolve(ROOT, configuredBase))
   : resolve(ROOT, "target");
+const rustc = spawnSync("rustup", ["run", "1.85.0", "rustc", "-Vv"], {
+  encoding: "utf8",
+  windowsHide: true,
+});
+if (rustc.error || rustc.status !== 0) {
+  throw new Error(`cannot identify Rust 1.85.0: ${rustc.error?.message ?? rustc.stderr}`);
+}
+const identity = rustc.stdout.replaceAll("\r\n", "\n").trim();
+const release = identity.match(/^release:\s*(.+)$/mu)?.[1] ?? "unknown";
+const host = identity.match(/^host:\s*(.+)$/mu)?.[1] ?? `${process.platform}-${process.arch}`;
+/** @param {string} value */
+const safeSegment = (value) =>
+  value.toLowerCase().replaceAll(/[^a-z0-9._-]+/gu, "-").replaceAll(/^-+|-+$/gu, "");
+const targetSegment = `${safeSegment(host)}-rustc-${safeSegment(release)}-${createHash("sha256").update(identity).digest("hex").slice(0, 16)}`;
+const target = process.env.PLIEGOCSS_ISOLATED_TARGET === "1" && process.env.CARGO_TARGET_DIR
+  ? (isAbsolute(process.env.CARGO_TARGET_DIR)
+      ? process.env.CARGO_TARGET_DIR
+      : resolve(ROOT, process.env.CARGO_TARGET_DIR))
+  : join(targetBase, "toolchains", targetSegment);
 const workspace = resolve(target, "lsp-integration-workspace");
 const executable = process.platform === "win32" ? ".exe" : "";
 const lsp = resolve(target, "debug", `pliego-css-lsp${executable}`);
@@ -21,7 +42,13 @@ if (!workspace.startsWith(`${target}${sep}`)) fail("unsafe VS Code host fixture 
 const fixture = spawnSync(process.execPath, [resolve(ROOT, "scripts", "check-lsp-integration.mjs")], {
   cwd: ROOT,
   encoding: "utf8",
-  env: { ...process.env, PLIEGOCSS_KEEP_LSP_FIXTURE: "1" },
+  env: {
+    ...process.env,
+    CARGO_TARGET_DIR: target,
+    PLIEGOCSS_ISOLATED_TARGET: "1",
+    PLIEGOCSS_KEEP_LSP_FIXTURE: "1",
+    PLIEGOCSS_TARGET_BASE: targetBase,
+  },
   stdio: ["ignore", "pipe", "pipe"],
 });
 if (fixture.error) fail(`cannot prepare VS Code host fixture: ${fixture.error.message}`);

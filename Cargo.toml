@@ -25,7 +25,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 edition = "2024"
 rust-version = "1.85"
 license = "Apache-2.0"
@@ -38,24 +38,24 @@ keywords = ["css", "rust", "static-analysis", "pliegors", "web"]
 categories = ["compilers", "development-tools", "web-programming"]
 
 [workspace.dependencies]
-pliego-css = { path = "crates/pliego-css", version = "=0.1.0-rc.2" }
-pliego-css-agent = { path = "crates/pliego-css-agent", version = "=0.1.0-rc.2" }
-pliego-css-build = { path = "crates/pliego-css-build", version = "=0.1.0-rc.2" }
-pliego-css-cascade = { path = "crates/pliego-css-cascade", version = "=0.1.0-rc.2" }
-pliego-css-compiler = { path = "crates/pliego-css-compiler", version = "=0.1.0-rc.2" }
-pliego-css-config = { path = "crates/pliego-css-config", version = "=0.1.0-rc.2" }
-pliego-css-control = { path = "crates/pliego-css-control", version = "=0.1.0-rc.2" }
-pliego-css-ir = { path = "crates/pliego-css-ir", version = "=0.1.0-rc.2" }
-pliego-css-io = { path = "crates/pliego-css-io", version = "=0.1.0-rc.2" }
-pliego-css-lsp = { path = "crates/pliego-css-lsp", version = "=0.1.0-rc.2" }
-pliego-css-macros = { path = "crates/pliego-css-macros", version = "=0.1.0-rc.2" }
-pliego-css-ownership = { path = "crates/pliego-css-ownership", version = "=0.1.0-rc.2" }
-pliego-css-publication = { path = "crates/pliego-css-publication", version = "=0.1.0-rc.2" }
-pliego-css-parser = { path = "crates/pliego-css-parser", version = "=0.1.0-rc.2" }
-pliego-css-source = { path = "crates/pliego-css-source", version = "=0.1.0-rc.2" }
-pliego-css-theme = { path = "crates/pliego-css-theme", version = "=0.1.0-rc.2" }
-pliego-css-usage = { path = "crates/pliego-css-usage", version = "=0.1.0-rc.2" }
-pliego-css-watch = { path = "crates/pliego-css-watch", version = "=0.1.0-rc.2" }
+pliego-css = { path = "crates/pliego-css", version = "=0.1.0-rc.3" }
+pliego-css-agent = { path = "crates/pliego-css-agent", version = "=0.1.0-rc.3" }
+pliego-css-build = { path = "crates/pliego-css-build", version = "=0.1.0-rc.3" }
+pliego-css-cascade = { path = "crates/pliego-css-cascade", version = "=0.1.0-rc.3" }
+pliego-css-compiler = { path = "crates/pliego-css-compiler", version = "=0.1.0-rc.3" }
+pliego-css-config = { path = "crates/pliego-css-config", version = "=0.1.0-rc.3" }
+pliego-css-control = { path = "crates/pliego-css-control", version = "=0.1.0-rc.3" }
+pliego-css-ir = { path = "crates/pliego-css-ir", version = "=0.1.0-rc.3" }
+pliego-css-io = { path = "crates/pliego-css-io", version = "=0.1.0-rc.3" }
+pliego-css-lsp = { path = "crates/pliego-css-lsp", version = "=0.1.0-rc.3" }
+pliego-css-macros = { path = "crates/pliego-css-macros", version = "=0.1.0-rc.3" }
+pliego-css-ownership = { path = "crates/pliego-css-ownership", version = "=0.1.0-rc.3" }
+pliego-css-publication = { path = "crates/pliego-css-publication", version = "=0.1.0-rc.3" }
+pliego-css-parser = { path = "crates/pliego-css-parser", version = "=0.1.0-rc.3" }
+pliego-css-source = { path = "crates/pliego-css-source", version = "=0.1.0-rc.3" }
+pliego-css-theme = { path = "crates/pliego-css-theme", version = "=0.1.0-rc.3" }
+pliego-css-usage = { path = "crates/pliego-css-usage", version = "=0.1.0-rc.3" }
+pliego-css-watch = { path = "crates/pliego-css-watch", version = "=0.1.0-rc.3" }
 
 [workspace.lints.rust]
 missing_docs = "warn"

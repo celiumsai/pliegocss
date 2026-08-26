@@ -23,7 +23,7 @@ pc_<semantic-id>
 Equivalent normalized input therefore targets the same class. Source order and source spans are not
 part of semantic identity. Class-name format 1 is CSS-safe and unchanged; StyleId format 2 supplies
 its input through an explicit tagged binary stream and SHA-256 truncation. The current vectors are
-machine-enforced prerelease contracts at `0.1.0-rc.2`, not a final `0.1.0`
+machine-enforced prerelease contracts at `0.1.0-rc.3`, not a final `0.1.0`
 stability guarantee. Moving from
 the earlier format-1 candidate changes the class even though the base-36 algorithm remains format 1.
 

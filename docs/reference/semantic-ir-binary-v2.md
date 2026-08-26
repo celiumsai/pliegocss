@@ -1,6 +1,6 @@
 # Semantic IR binary format 2
 
-Status: **machine-enforced prerelease contract at `0.1.0-rc.2`**
+Status: **machine-enforced prerelease contract at `0.1.0-rc.3`**
 
 Format 2 is the current persisted, provenance-bearing semantic IR envelope exposed by
 `pliego-css-compiler`. It is distinct from [StyleId format 2](./style-id-format-v2.md): StyleId is a
