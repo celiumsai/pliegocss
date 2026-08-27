@@ -11,20 +11,20 @@
     "buildTarget": "default"
   },
   "pliegocss": {
-    "revision": "65d2e60a5ea1ea25070d603aadefb6e7d9f9a881",
+    "revision": "2dbed04d39496ab076050eefaee565284ed398e2",
     "dirtyAtStart": false
   },
   "pliegors": {
-    "revision": "ca9708cdf2e6ff2c56605baf21046792407c5326",
-    "sourceSha256": "f0e1856d563a96061cbf97c80ec7b9baeeceedb2f2869e00286072bf958f5668"
+    "revision": "abb8653e75da4a5cb4dd9b51200114fbb1e760c7",
+    "sourceSha256": "2ba965b8d72831e3f452d91a5ba98d7297638fac661bcf1a2f7edb8ca1da68fa"
   },
   "sampleCount": 20,
   "percentileMethod": "nearest-rank",
   "samples": [
     {
       "probe": "p-6",
-      "editToCssMs": 230.416,
-      "editToSiteSseMs": 1546.961,
+      "editToCssMs": 228.719,
+      "editToSiteSseMs": 1546.854,
       "generationBefore": 0,
       "generationAfter": 1,
       "sseGeneration": 1,
@@ -36,8 +36,8 @@
     },
     {
       "probe": "p-4",
-      "editToCssMs": 228.15,
-      "editToSiteSseMs": 1696.833,
+      "editToCssMs": 228.929,
+      "editToSiteSseMs": 1544.807,
       "generationBefore": 1,
       "generationAfter": 2,
       "sseGeneration": 2,
@@ -49,8 +49,8 @@
     },
     {
       "probe": "p-6",
-      "editToCssMs": 226.951,
-      "editToSiteSseMs": 1696.013,
+      "editToCssMs": 229.629,
+      "editToSiteSseMs": 1695.053,
       "generationBefore": 2,
       "generationAfter": 3,
       "sseGeneration": 3,
@@ -62,8 +62,8 @@
     },
     {
       "probe": "p-4",
-      "editToCssMs": 229.408,
-      "editToSiteSseMs": 1696.984,
+      "editToCssMs": 229.175,
+      "editToSiteSseMs": 1547.044,
       "generationBefore": 3,
       "generationAfter": 4,
       "sseGeneration": 4,
@@ -75,8 +75,8 @@
     },
     {
       "probe": "p-6",
-      "editToCssMs": 127.437,
-      "editToSiteSseMs": 1696.358,
+      "editToCssMs": 228.825,
+      "editToSiteSseMs": 1695.879,
       "generationBefore": 4,
       "generationAfter": 5,
       "sseGeneration": 5,
@@ -88,8 +88,8 @@
     },
     {
       "probe": "p-4",
-      "editToCssMs": 227.974,
-      "editToSiteSseMs": 1545.859,
+      "editToCssMs": 229.395,
+      "editToSiteSseMs": 1696.023,
       "generationBefore": 5,
       "generationAfter": 6,
       "sseGeneration": 6,
@@ -101,8 +101,8 @@
     },
     {
       "probe": "p-6",
-      "editToCssMs": 227.746,
-      "editToSiteSseMs": 1696.96,
+      "editToCssMs": 228.736,
+      "editToSiteSseMs": 1695.921,
       "generationBefore": 6,
       "generationAfter": 7,
       "sseGeneration": 7,
@@ -114,8 +114,8 @@
     },
     {
       "probe": "p-4",
-      "editToCssMs": 228.507,
-      "editToSiteSseMs": 1695.945,
+      "editToCssMs": 229.294,
+      "editToSiteSseMs": 1697.309,
       "generationBefore": 7,
       "generationAfter": 8,
       "sseGeneration": 8,
@@ -127,8 +127,8 @@
     },
     {
       "probe": "p-6",
-      "editToCssMs": 229.407,
-      "editToSiteSseMs": 1547.649,
+      "editToCssMs": 228.341,
+      "editToSiteSseMs": 1546.359,
       "generationBefore": 8,
       "generationAfter": 9,
       "sseGeneration": 9,
@@ -140,8 +140,8 @@
     },
     {
       "probe": "p-4",
-      "editToCssMs": 228.3,
-      "editToSiteSseMs": 1546.889,
+      "editToCssMs": 227.864,
+      "editToSiteSseMs": 1546.115,
       "generationBefore": 9,
       "generationAfter": 10,
       "sseGeneration": 10,
@@ -153,8 +153,8 @@
     },
     {
       "probe": "p-6",
-      "editToCssMs": 228.009,
-      "editToSiteSseMs": 1697.041,
+      "editToCssMs": 229.103,
+      "editToSiteSseMs": 1696.979,
       "generationBefore": 10,
       "generationAfter": 11,
       "sseGeneration": 11,
@@ -166,8 +166,8 @@
     },
     {
       "probe": "p-4",
-      "editToCssMs": 228.573,
-      "editToSiteSseMs": 1544.919,
+      "editToCssMs": 227.966,
+      "editToSiteSseMs": 1696.103,
       "generationBefore": 11,
       "generationAfter": 12,
       "sseGeneration": 12,
@@ -179,8 +179,8 @@
     },
     {
       "probe": "p-6",
-      "editToCssMs": 229.265,
-      "editToSiteSseMs": 1697.408,
+      "editToCssMs": 229.013,
+      "editToSiteSseMs": 1695.965,
       "generationBefore": 12,
       "generationAfter": 13,
       "sseGeneration": 13,
@@ -192,8 +192,8 @@
     },
     {
       "probe": "p-4",
-      "editToCssMs": 229.076,
-      "editToSiteSseMs": 1695.859,
+      "editToCssMs": 229.377,
+      "editToSiteSseMs": 1845.819,
       "generationBefore": 13,
       "generationAfter": 14,
       "sseGeneration": 14,
@@ -205,8 +205,8 @@
     },
     {
       "probe": "p-6",
-      "editToCssMs": 126.92,
-      "editToSiteSseMs": 1696.93,
+      "editToCssMs": 228.755,
+      "editToSiteSseMs": 1696.852,
       "generationBefore": 14,
       "generationAfter": 15,
       "sseGeneration": 15,
@@ -218,8 +218,8 @@
     },
     {
       "probe": "p-4",
-      "editToCssMs": 227.89,
-      "editToSiteSseMs": 1695.911,
+      "editToCssMs": 228.521,
+      "editToSiteSseMs": 1697.97,
       "generationBefore": 15,
       "generationAfter": 16,
       "sseGeneration": 16,
@@ -231,8 +231,8 @@
     },
     {
       "probe": "p-6",
-      "editToCssMs": 229.045,
-      "editToSiteSseMs": 1694.943,
+      "editToCssMs": 230.823,
+      "editToSiteSseMs": 1697.674,
       "generationBefore": 16,
       "generationAfter": 17,
       "sseGeneration": 17,
@@ -244,8 +244,8 @@
     },
     {
       "probe": "p-4",
-      "editToCssMs": 253.54,
-      "editToSiteSseMs": 1544.976,
+      "editToCssMs": 227.174,
+      "editToSiteSseMs": 1696.684,
       "generationBefore": 17,
       "generationAfter": 18,
       "sseGeneration": 18,
@@ -257,8 +257,8 @@
     },
     {
       "probe": "p-6",
-      "editToCssMs": 226.676,
-      "editToSiteSseMs": 1695.049,
+      "editToCssMs": 228.533,
+      "editToSiteSseMs": 1546.274,
       "generationBefore": 18,
       "generationAfter": 19,
       "sseGeneration": 19,
@@ -270,8 +270,8 @@
     },
     {
       "probe": "p-4",
-      "editToCssMs": 228.586,
-      "editToSiteSseMs": 1694.908,
+      "editToCssMs": 228.146,
+      "editToSiteSseMs": 1545.333,
       "generationBefore": 19,
       "generationAfter": 20,
       "sseGeneration": 20,
@@ -284,16 +284,16 @@
   ],
   "latencyMs": {
     "editToCss": {
-      "p50": 228.3,
-      "p95": 230.416,
-      "min": 126.92,
-      "max": 253.54
+      "p50": 228.755,
+      "p95": 229.629,
+      "min": 227.174,
+      "max": 230.823
     },
     "editToSiteSse": {
-      "p50": 1695.859,
-      "p95": 1697.041,
-      "min": 1544.919,
-      "max": 1697.408
+      "p50": 1695.921,
+      "p95": 1697.97,
+      "min": 1544.807,
+      "max": 1845.819
     }
   },
   "invalid": {
@@ -301,7 +301,7 @@
     "retainedProbe": "p-4",
     "retainedClassName": "pc_3dmp8zmu88mgsuo1wmhgaxv9a",
     "cssSha256": "dfd1b9f1c15da294fe8424e71ae2a5bc89435e1924ed02874cc788c9b238228f",
-    "manifestSha256": "1a6a9dd8b8c5b57a199d49c04ad9215c39cde153b201108d8a20f9a38adf7050",
+    "manifestSha256": "68c798141641fb7815f51684b5857d53d6bc277440df8b904b84ab20c582d051",
     "publicationMtimePreserved": true,
     "diagnosticStatus": 500,
     "quietWindowMs": 2000
@@ -318,7 +318,7 @@
   "equivalent": {
     "generation": 22,
     "cssSha256": "0b93b1e1672bf3dfd2be03457c44e8ea3b9741b025ab2231d1e16584f73d01f1",
-    "manifestSha256": "7aefdd073b159d43a35c323b4995aeb712501bf63b34653e27dc7c66dd1ae09e",
+    "manifestSha256": "18c9c6ce0004f4fc9f1a2b700ec0674b52df260a441717dd82842dcebeb3d163",
     "publicationMtimePreserved": true,
     "quietWindowMs": 2000
   },

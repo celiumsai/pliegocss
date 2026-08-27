@@ -47,9 +47,7 @@ PLIEGO_DEV_TARGET_DIR="$HOME/.cache/pliegocss-dev-target" \
 
 The current local replay passed on native Linux x64 with Node.js 22.13.0,
 Rust 1.86, PliegoRS `abb8653e75da4a5cb4dd9b51200114fbb1e760c7`, and
-20 valid edit generations plus failure/recovery/no-op checks. The checked
-schema-2 evidence below remains historical until a clean coordinated commit is
-recorded.
+20 valid edit generations plus failure/recovery/no-op checks.
 
 On a clean PliegoCSS commit, `--record-evidence` writes the same validated schema-2 report to
 `docs/benchmarks/data/pliegors-dev-loop.local.json`. It refuses a dirty starting tree.
@@ -76,14 +74,14 @@ matches.
 ## Local result
 
 Twenty alternating valid edits produced in the clean recorded run for PliegoCSS
-`65d2e60a5ea1ea25070d603aadefb6e7d9f9a881` and PliegoRS
-`ca9708cdf2e6ff2c56605baf21046792407c5326`. The complete schema-2 artifact is
+`2dbed04d39496ab076050eefaee565284ed398e2` and PliegoRS
+`abb8653e75da4a5cb4dd9b51200114fbb1e760c7`. The complete schema-2 artifact is
 [`data/pliegors-dev-loop.local.json`](./data/pliegors-dev-loop.local.json).
 
 | Boundary | p50 | p95 | Min | Max |
 |---|---:|---:|---:|---:|
-| Edit → changed CSS bytes | 228.300 ms | 230.416 ms | 126.920 ms | 253.540 ms |
-| Edit → matching HTML/CSS and one stable SSE generation | 1,695.859 ms | 1,697.041 ms | 1,544.919 ms | 1,697.408 ms |
+| Edit → changed CSS bytes | 228.755 ms | 229.629 ms | 227.174 ms | 230.823 ms |
+| Edit → matching HTML/CSS and one stable SSE generation | 1,695.921 ms | 1,697.970 ms | 1,544.807 ms | 1,845.819 ms |
 
 Percentiles use nearest-rank over 20 samples. Every sample ended with the expected generated class
 and semantic padding, no stale class from the previous edit, exact SHA-256 equality between served
