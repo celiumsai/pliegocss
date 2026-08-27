@@ -1,7 +1,7 @@
 # PliegoRS + PliegoCSS from an empty project
 
 Status: implemented source-pinned workflow for PliegoRS
-`5e68e902da4f952a8a96f56b878a3dabedd3bb1d` and PliegoCSS `0.1.0-rc.3`
+`ca9708cdf2e6ff2c56605baf21046792407c5326` and PliegoCSS `0.1.0-rc.3`
 
 This guide starts with `pliego new` and ends with deterministic SSR/SSG output that can contain
 PliegoCSS classes, route and island CSS partitions, resumable state, and ordinary external CSS.
@@ -27,7 +27,7 @@ registry-backed starter:
 
 ```console
 git clone https://github.com/celiumsai/pliegors.git ../pliegors
-git -C ../pliegors checkout 5e68e902da4f952a8a96f56b878a3dabedd3bb1d
+git -C ../pliegors checkout ca9708cdf2e6ff2c56605baf21046792407c5326
 cargo +1.86.0 install --path ../pliegors/crates/pliego-cli --locked
 pliego new my-site
 cd my-site

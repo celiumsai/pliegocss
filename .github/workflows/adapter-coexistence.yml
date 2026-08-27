@@ -67,7 +67,7 @@ jobs:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           repository: celiumsai/pliegors
-          ref: 5e68e902da4f952a8a96f56b878a3dabedd3bb1d
+          ref: ca9708cdf2e6ff2c56605baf21046792407c5326
           path: pliegors
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:

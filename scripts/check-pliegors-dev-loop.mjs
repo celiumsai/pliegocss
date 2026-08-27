@@ -319,6 +319,11 @@ async function fetchText(url) {
   return response.text();
 }
 
+async function fetchResponseText(url) {
+  const response = await fetch(url, { cache: "no-store" });
+  return { status: response.status, text: await response.text() };
+}
+
 async function fetchBytes(url) {
   const response = await fetch(url, { cache: "no-store" });
   if (!response.ok) fail(`${url} returned HTTP ${response.status}`);
@@ -359,7 +364,9 @@ async function pageState(url, cssPath) {
     before.className !== after.className ||
     before.generation !== after.generation
   ) {
-    fail("PliegoRS page changed while capturing one HTML/CSS state");
+    fail(
+      `PliegoRS page changed while capturing one HTML/CSS state: ${JSON.stringify({ before, after })}`,
+    );
   }
   const css = new TextDecoder().decode(cssBytes);
   const cssSha256 = sha256(cssBytes);
@@ -540,41 +547,57 @@ async function proveInvalidRetainsLastValid(context) {
   writeFileSync(context.paths.source, sourceFor("invalid"));
   await Promise.all([
     waitForLog(context.cssWatch, watchOffset, "compile failed; keeping the last valid artifact"),
-    waitForLog(context.pliegoDev, devOffset, "PLIEGO dev: rebuild failed"),
+    waitForLog(context.pliegoDev, devOffset, "PLIEGO[PLG-BLD-001] dev rebuild failed"),
   ]);
   await delay(QUIET_WINDOW_MS);
-  const after = await pageState(context.url, context.paths.css);
+  const diagnostic = await fetchResponseText(context.url);
   if (
-    !samePageState(after, before) ||
+    diagnostic.status !== 500 ||
+    !diagnostic.text.includes("PLG-BLD-001") ||
+    !diagnostic.text.includes(`connect(${before.generation + 1})`)
+  ) {
+    fail("invalid edit did not publish the bounded PliegoRS build diagnostic");
+  }
+  if (
     fileSha256(context.paths.css) !== cssDigest ||
     fileSha256(context.paths.manifest) !== manifestDigest ||
     statSync(context.paths.css).mtimeMs !== cssModified ||
     statSync(context.paths.manifest).mtimeMs !== manifestModified
   ) {
-    fail("invalid edit changed the last valid publication group, page, or reload generation");
+    fail("invalid edit changed the last valid PliegoCSS publication group");
   }
   return {
-    generation: after.generation,
-    retainedProbe: after.probe,
-    retainedClassName: after.className,
+    generation: before.generation + 1,
+    retainedProbe: before.probe,
+    retainedClassName: before.className,
     cssSha256: cssDigest,
     manifestSha256: manifestDigest,
     publicationMtimePreserved: true,
+    diagnosticStatus: diagnostic.status,
     quietWindowMs: QUIET_WINDOW_MS,
   };
 }
 
 async function restoreLastValid(context, probe = "p-6") {
   const processes = [context.cssWatch, context.pliegoDev];
-  const before = await stablePageState(context, processes);
+  const diagnostic = await fetchResponseText(context.url);
+  if (diagnostic.status !== 500) {
+    fail("valid restoration requires the preceding PliegoRS build diagnostic");
+  }
+  const generationBefore = Number(
+    /\bconnect\((\d+)\)\}\)\(\)<\/script>/u.exec(diagnostic.text)?.[1],
+  );
+  if (!Number.isSafeInteger(generationBefore)) {
+    fail("PliegoRS build diagnostic is missing its reload generation");
+  }
   const devOffset = context.pliegoDev.output.length;
-  const reload = waitForReload(context.url, before.generation, processes);
+  const reload = waitForReload(context.url, generationBefore, processes);
   writeFileSync(context.paths.source, sourceFor(probe));
   await waitForLog(context.pliegoDev, devOffset, "PLIEGO dev: rebuilt");
   const sseGeneration = await reload;
-  if (sseGeneration !== before.generation + 1) {
+  if (sseGeneration !== generationBefore + 1) {
     fail(
-      `valid restoration advanced SSE from ${before.generation} to ${sseGeneration}; exactly one rebuild is required`,
+      `valid restoration advanced SSE from ${generationBefore} to ${sseGeneration}; exactly one rebuild is required`,
     );
   }
   const after = await waitUntil(
@@ -588,7 +611,7 @@ async function restoreLastValid(context, probe = "p-6") {
   );
   await assertPageStateFor(context, after, RELOAD_SETTLE_MS, processes);
   return {
-    generationBefore: before.generation,
+    generationBefore,
     generationAfter: after.generation,
     sseGeneration,
     probe,
@@ -839,12 +862,12 @@ function assertGenerationChain(samples, invalid, restored, equivalent) {
   }
   const lastGeneration = samples.at(-1)?.generationAfter;
   if (
-    invalid.generation !== lastGeneration ||
+    invalid.generation !== lastGeneration + 1 ||
     restored.generationBefore !== invalid.generation ||
     equivalent.generation !== restored.generationAfter
   ) {
     fail(
-      `reload generation advanced outside an accepted build: ${JSON.stringify({ lastGeneration, invalid: invalid.generation, restored, equivalent: equivalent.generation })}`,
+      `reload generation drifted outside the expected valid/failure/restoration chain: ${JSON.stringify({ lastGeneration, invalid: invalid.generation, restored, equivalent: equivalent.generation })}`,
     );
   }
 }
