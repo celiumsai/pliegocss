@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
-  "revision": "ca9708cdf2e6ff2c56605baf21046792407c5326",
-  "sourceSha256": "f0e1856d563a96061cbf97c80ec7b9baeeceedb2f2869e00286072bf958f5668",
+  "revision": "780ea41973908766211fa0e4e382f1b654d4ab40",
+  "sourceSha256": "2ba965b8d72831e3f452d91a5ba98d7297638fac661bcf1a2f7edb8ca1da68fa",
   "surfaces": [
     "Cargo.toml",
     "Cargo.lock",
