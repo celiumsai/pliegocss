@@ -76,14 +76,14 @@ matches.
 ## Local result
 
 Twenty alternating valid edits produced in the clean recorded run for PliegoCSS
-`24870f168bd5269b6e622fe20dbd50025a7f7807` and PliegoRS
-`baf7ad718a4964a08c940aaa423805cc7b8de830`. The complete schema-2 artifact is
+`65d2e60a5ea1ea25070d603aadefb6e7d9f9a881` and PliegoRS
+`ca9708cdf2e6ff2c56605baf21046792407c5326`. The complete schema-2 artifact is
 [`data/pliegors-dev-loop.local.json`](./data/pliegors-dev-loop.local.json).
 
 | Boundary | p50 | p95 | Min | Max |
 |---|---:|---:|---:|---:|
-| Edit → changed CSS bytes | 232.415 ms | 284.474 ms | 201.460 ms | 284.945 ms |
-| Edit → matching HTML/CSS and one stable SSE generation | 2,008.265 ms | 2,457.537 ms | 1,991.347 ms | 2,597.553 ms |
+| Edit → changed CSS bytes | 228.300 ms | 230.416 ms | 126.920 ms | 253.540 ms |
+| Edit → matching HTML/CSS and one stable SSE generation | 1,695.859 ms | 1,697.041 ms | 1,544.919 ms | 1,697.408 ms |
 
 Percentiles use nearest-rank over 20 samples. Every sample ended with the expected generated class
 and semantic padding, no stale class from the previous edit, exact SHA-256 equality between served

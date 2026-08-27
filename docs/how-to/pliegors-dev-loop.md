@@ -39,9 +39,9 @@ verifies 20 alternating `pc!` edits plus invalid and unchanged-output negative c
 pnpm integration:pliegors-dev
 ```
 
-On Debian WSL2 with native Linux binaries and target directory, changed CSS reached disk at 232.4 ms
-p50 / 284.5 ms p95. Matching HTML/CSS and exactly one stable SSE generation converged at 2.008 s
-p50 / 2.458 s p95. These are server/site convergence measurements. A controlled local Chromium
+On native Linux x64, changed CSS reached disk at 228.3 ms p50 / 230.4 ms p95.
+Matching HTML/CSS and exactly one stable SSE generation converged at 1.696 s
+p50 / 1.697 s p95. These are server/site convergence measurements. A controlled local Chromium
 replay separately observed `p-4`/16 px become `p-6`/24 px in the same tab without manual navigation.
 See the [development-loop evidence](../benchmarks/pliegors-dev-loop.md).
 
