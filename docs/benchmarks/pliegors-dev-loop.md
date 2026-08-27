@@ -46,7 +46,7 @@ PLIEGO_DEV_TARGET_DIR="$HOME/.cache/pliegocss-dev-target" \
 ```
 
 The current local replay passed on native Linux x64 with Node.js 22.13.0,
-Rust 1.86, PliegoRS `780ea41973908766211fa0e4e382f1b654d4ab40`, and
+Rust 1.86, PliegoRS `abb8653e75da4a5cb4dd9b51200114fbb1e760c7`, and
 20 valid edit generations plus failure/recovery/no-op checks. The checked
 schema-2 evidence below remains historical until a clean coordinated commit is
 recorded.
