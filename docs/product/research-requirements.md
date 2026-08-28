@@ -92,22 +92,23 @@ The following claims remain release blockers even when their underlying syntax e
 
 The dependency order is deliberate:
 
-1. Freeze the diagnostic and unified manifest/receipt schemas, then build the Phase 0 interview and
-   real-incident corpus defined by the strategic contract.
-2. Reuse the existing source, Project Index, compatibility, and deterministic-output foundations to
+1. Freeze the diagnostic and unified manifest/receipt schemas, then reuse the existing source,
+   Project Index, compatibility, and deterministic-output foundations to
    implement standard-CSS `audit` and the complete R0 guard surface.
-3. Close budgets, token graph, basic accessibility policies, equivalent human/JSON/SARIF reports,
+2. Close budgets, token graph, basic accessibility policies, equivalent human/JSON/SARIF reports,
    and cross-OS evidence before public `0.1.0`.
-4. Build Sass/Tailwind/CSS Modules analyzers as read-only inventory before reviewed migrations (A10).
-5. Finish verification of the implemented Cargo Resolver selection, then close declared token-policy
+3. Build Sass/Tailwind/CSS Modules analyzers as read-only inventory before reviewed migrations (A10).
+4. Finish verification of the implemented Cargo Resolver selection, then close declared token-policy
    relationships without making the external DTCG format the internal IR (A7).
-6. Extend the implemented bounded single-stylesheet `explain-cascade` schema 1 to full cascade
+5. Extend the implemented bounded single-stylesheet `explain-cascade` schema 1 to full cascade
    explanation, then extend the implemented authorized plan/fix/change-receipt and first built-in
    verification boundary with remaining check/evidence kinds; add a typed Vite/Astro adapter and LSP on the same
    Project Index (A6/A9/A11); keep Cargo source completeness synchronized with every supported
    PliegoRS feature/target permutation.
-7. Add real-browser responsive/focus/interaction evidence, then a restricted plugin/policy ecosystem.
-8. Scale the corpus and reproduce all release evidence on clean hosted machines (A12/A4/A5).
+6. Add real-browser responsive/focus/interaction evidence, then a restricted plugin/policy ecosystem.
+7. Scale the engineering corpus and reproduce release evidence on clean hosted machines (A12/A4/A5).
+8. Incorporate interviews and real-incident research when organic usage provides meaningful inputs;
+   use it to guide priorities and claims rather than as a prerequisite for preceding work.
 
 `0.1.0` remains blocked by the R0 contract even when an A-row was previously scoped as alpha-complete.
 Every row must be **Verified** or explicitly moved through a reviewed scope decision. Missing work

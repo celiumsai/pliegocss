@@ -4,7 +4,7 @@
 
 Status: **blocked**
 
-This page is a deterministic projection of the schema-3
+This page is a deterministic projection of the schema-4
 [`release-readiness-0.1.0.json`](./release-readiness-0.1.0.json) machine authority.
 Historical reports and release notes do not change this state.
 
@@ -26,7 +26,6 @@ Historical reports and release notes do not change this state.
 | --- | --- |
 | Technical | no |
 | Operational | no |
-| Adoption | no |
 | Authorized | no |
 | Promotion | no |
 
@@ -39,10 +38,10 @@ Historical reports and release notes do not change this state.
 | `g0-corrections-on-candidate` | technical | **pending** | pending | 0/4 | none |
 | `browser-release-matrix` | technical | **blocked** | pending | 0/5 | none |
 | `adapter-coexistence-matrix` | technical | **blocked** | pending | 0/13 | none |
+| `standard-css-classification` | technical | **blocked** | pending | 0/4 | none |
 | `registry-replay-refresh` | technical | **pending** | inherited | 0/4 | none |
 | `production-deployment-refresh` | operational | **pending** | inherited | 0/4 | none |
 | `signed-binary-distribution` | operational | **blocked** | pending | 0/10 | none |
-| `external-adoption-evidence` | adoption | **pending** | pending | 0/6 | none |
 | `final-promotion-authorization` | authorization | **not-authorized** | pending | 0/1 | none |
 
 ## Evidence and blockers
@@ -107,9 +106,21 @@ RC.2 predates the G6 adapter authority. It has no clean exact-source 21-project 
 - References:
   - [adapter-coexistence-workflow](https://github.com/celiumsai/pliegocss/actions/workflows/adapter-coexistence.yml)
 
+### standard-css-classification
+
+The bounded classifier corpus is green, but complete supported declaration, value, selector, and at-rule coverage remains unfinished for the broad standard-CSS claim.
+
+- Source: `064dcbce96a3a5cc97a940d07566c008bb5e2d3e` / tree `010a64f5d0bbd142a1d015fda4ccf573cc6e4133`
+- Validity: `2026-07-22T14:10:00Z` → `2026-07-29T14:10:00Z`
+- Required coverage: `declaration-values`, `selectors`, `at-rules`, `representative-applications`
+- Covered: none
+- Hashed artifacts: none
+- References:
+  - [maturity-map](https://github.com/celiumsai/pliegocss/blob/main/docs/product/maturity-map.json)
+
 ### registry-replay-refresh
 
-RC.2 was previously replayed from crates.io, but schema 3 requires a fresh, unexpired, artifact-hashed replay for the exact promotion candidate.
+RC.2 was previously replayed from crates.io, but schema 4 requires a fresh, unexpired, artifact-hashed replay for the exact promotion candidate.
 
 - Source: `064dcbce96a3a5cc97a940d07566c008bb5e2d3e` / tree `010a64f5d0bbd142a1d015fda4ccf573cc6e4133`
 - Validity: `2026-07-22T14:10:00Z` → `2026-07-29T14:10:00Z`
@@ -141,16 +152,6 @@ RC.2 predates the repository-only G5 distribution contract. It has no exact-sour
 - Covered: none
 - Hashed artifacts: none
 
-### external-adoption-evidence
-
-RC.2 predates the G7 authority. Recruitment is open, but the required external interviews, real incidents, and pilots have not been recorded as consented, redacted, reviewed, hash-bound evidence.
-
-- Source: `064dcbce96a3a5cc97a940d07566c008bb5e2d3e` / tree `010a64f5d0bbd142a1d015fda4ccf573cc6e4133`
-- Validity: `2026-07-22T14:10:00Z` → `2026-07-29T14:10:00Z`
-- Required coverage: `ten-to-fifteen-interviews`, `twenty-incidents`, `three-to-five-pilots`, `three-independent-projects`, `three-independent-organizations`, `frozen-adapter-support-policy`
-- Covered: none
-- Hashed artifacts: none
-
 ### final-promotion-authorization
 
 Mario has not explicitly authorized publishing final 0.1.0 for this exact source commit and Git tree.
@@ -163,6 +164,6 @@ Mario has not explicitly authorized publishing final 0.1.0 for this exact source
 
 ## Promotion rule
 
-Promotion requires every required check to pass on this exact source commit and Git tree with unexpired complete coverage, hashed artifacts, no implicit waiver, all four readiness dimensions true, and explicit owner authorization.
+Promotion requires every required technical, operational, and authorization check to pass on this exact source commit and Git tree with unexpired complete coverage, hashed artifacts, no implicit waiver, and explicit owner authorization. Product research may inform later work but is not a promotion prerequisite.
 
 Archived snapshots are indexed under [`../archive/`](../archive/README.md).

@@ -144,10 +144,9 @@ the post-workflow run uses fewer assistant turns and does not increase remaining
 violations. Time and token counts are secondary diagnostics, not substitutes for the turn and
 violation gate.
 
-Real incidents additionally require provenance, consent/redaction status, expected diagnosis,
-allowed ambiguity, and stable content hashes. Synthetic conformance cases cannot be counted toward
-the required 20 incidents or diagnostic precision/recall. Admission to that count is governed by
-the [G7 external adoption authority](../product/external-adoption-g7.md).
+Future real-incident research requires appropriate provenance, privacy handling, expected diagnosis,
+allowed ambiguity, and stable content hashes. Synthetic conformance cases cannot establish
+real-world diagnostic precision or recall, but no incident quota blocks the engineering corpus.
 
 ## Environment and reproducibility
 

@@ -28,5 +28,4 @@ ADRs record decisions that constrain implementation or public behavior.
 - [ADR-0024: Certify browser output against Tailwind](./0024-certify-browser-output-against-tailwind.md)
 - [ADR-0025: Distribute the Node launcher from immutable repository releases](./0025-distribute-node-launcher-from-immutable-repository-releases.md)
 - [ADR-0026: Certify static adapter coexistence before migration promotion](./0026-certify-adapter-coexistence.md)
-- [ADR-0027: Govern G7 with redacted, hash-bound external evidence](./0027-govern-external-adoption-evidence.md)
 - [ADR-0028: Consume framework-owned product topology](./0028-consume-framework-product-topology.md)

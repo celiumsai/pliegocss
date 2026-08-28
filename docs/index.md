@@ -102,7 +102,6 @@ owned route bundles. `pliego-cssc watch` only regenerates artifacts; composed wi
 - [Strategic CSS/Rust/AI product contract and R0-R3 gates](./product/strategic-product-contract-2026.md)
 - [Product maturity map](./product/maturity-map.md)
 - [Representative applications and selected gaps](./product/representative-applications-gap-map.md)
-- [G7 external adoption evidence](./product/external-adoption-g7.md)
 - [R0 unified manifest and receipt design](./product/r0-manifest-receipt-design.md)
 - [Typed IR](./concepts/typed-ir.md)
 - [Conflict model](./concepts/conflict-model.md)
@@ -113,7 +112,7 @@ owned route bundles. `pliego-cssc watch` only regenerates artifacts; composed wi
 ## Status and evidence
 
 - [0.1.0 release readiness — current generated view](./product/release-readiness-0.1.0.md)
-- [0.1.0 release readiness — schema-3 machine authority](./product/release-readiness-0.1.0.json)
+- [0.1.0 release readiness — schema-4 machine authority](./product/release-readiness-0.1.0.json)
 - [0.1.0-rc.2 hardening report — historical](./archive/releases/0.1.0-rc.2-hardening-report.md)
 - [0.1.0-rc.3 candidate release notes](./releases/0.1.0-rc.3.md)
 - [Historical evidence archive](./archive/README.md)
@@ -149,7 +148,6 @@ owned route bundles. `pliego-cssc watch` only regenerates artifacts; composed wi
 - [Hosted browser/OS evidence matrix](./benchmarks/hosted-browser-matrix.json)
 - [PliegoRS development-loop latency and browser reload](./benchmarks/pliegors-dev-loop.md)
 - [Migration inventory and plan adoption latency](./benchmarks/migration-adoption-latency.md)
-- [External adoption intake and evidence custody](./contributing/external-adoption-intake.md)
 - [WASM runtime overhead](./benchmarks/wasm-overhead.md)
 
 ## Contributing and releases

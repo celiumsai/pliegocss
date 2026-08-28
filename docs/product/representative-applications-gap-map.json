@@ -7,14 +7,14 @@
       "gate": "integration:representative:plain-html-audit",
       "status": "passed",
       "proven": ["ordinary CSS adoption", "budgets", "static accessibility", "audit control receipt"],
-      "gaps": ["complete CSS classification", "external adoption evidence"]
+      "gaps": ["complete CSS classification"]
     },
     {
       "id": "vite-tailwind-inventory-first",
       "gate": "integration:representative:vite-tailwind",
       "status": "passed",
       "proven": ["bounded directory discovery", "Tailwind source/template inventory", "Preflight reliance", "static Tailwind v3/v4 coexistence", "exact rollback", "browser DOM/ARIA/style equivalence"],
-      "gaps": ["dynamic template migration", "arbitrary plugin/config execution", "external adoption evidence"]
+      "gaps": ["dynamic template migration", "arbitrary plugin/config execution"]
     },
     {
       "id": "css-modules-consumer",
@@ -34,17 +34,17 @@
       "id": "framework-neutral-multiroute",
       "gate": "integration:representative:framework-routes",
       "status": "passed",
-      "proven": ["route/island Asset Plan", "Project Index", "schema-5 physical trace", "controlled bundle group", "pinned PliegoRS SSG/browser replay"],
-      "gaps": ["multiple external PliegoRS applications", "published adapter compatibility contract"]
+      "proven": ["route/island Asset Plan", "Project Index", "schema-5 physical trace", "controlled bundle group"],
+      "gaps": ["configured PliegoRS SSG/browser replay", "published adapter compatibility contract"]
     }
   ],
   "priorities": [
     {
       "rank": 1,
-      "id": "external-pilot-evidence",
+      "id": "classification-corpus",
       "releaseImpact": "blocking",
-      "exposedBy": ["plain-html-audit-first", "vite-tailwind-inventory-first", "framework-neutral-multiroute"],
-      "reason": "The schema-1 G7 authority and 0.1.x adapter policy are frozen and recruitment is open in GitHub issue #7, but the reviewed ledgers contain zero external records. LTS promotion still needs independent projects and maintainers to validate adoption, rollback, and integration behavior."
+      "exposedBy": ["plain-html-audit-first", "vite-tailwind-inventory-first"],
+      "reason": "The compatibility coverage warning remains honest and still prevents a complete supported-CSS claim."
     },
     {
       "rank": 2,
@@ -55,25 +55,18 @@
     },
     {
       "rank": 3,
-      "id": "classification-corpus",
-      "releaseImpact": "blocking",
-      "exposedBy": ["plain-html-audit-first", "vite-tailwind-inventory-first"],
-      "reason": "The compatibility coverage warning remains honest and still prevents a complete supported-CSS claim."
-    },
-    {
-      "rank": 4,
       "id": "dynamic-tailwind-seams",
       "releaseImpact": "should",
       "exposedBy": ["vite-tailwind-inventory-first"],
       "reason": "G6 intentionally rejects dynamic class construction and arbitrary plugin/config execution; any broader adapter must remain a separate fail-closed versioned contract."
     },
     {
-      "rank": 5,
+      "rank": 4,
       "id": "css-modules-reversible-migration",
       "releaseImpact": "should",
       "exposedBy": ["css-modules-consumer"],
       "reason": "CSS Modules inventory is exact, but G6 promotes only the bounded Tailwind coexistence slice; module export and bundler semantics still need their own reversible protocol."
     }
   ],
-  "selectedNext": "external-pilot-evidence"
+  "selectedNext": "classification-corpus"
 }

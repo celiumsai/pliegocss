@@ -169,7 +169,7 @@ export function validateReleaseReadiness(value, { root, now = Date.now(), verify
     "readiness",
   );
   if (
-    value.schemaVersion !== 3 ||
+    value.schemaVersion !== 4 ||
     value.kind !== "pliegocss-release-readiness" ||
     value.state !== "current" ||
     value.targetVersion !== "0.1.0" ||
@@ -184,7 +184,7 @@ export function validateReleaseReadiness(value, { root, now = Date.now(), verify
   validWindow(value.observedAt, value.expiresAt, "readiness", now);
   exactKeys(
     value.dimensions,
-    ["technicalReady", "operationallyReady", "adoptionReady", "authorized", "promotionReady"],
+    ["technicalReady", "operationallyReady", "authorized", "promotionReady"],
     "readiness.dimensions",
   );
   if (!Array.isArray(value.checks)) fail("readiness.checks must be an array");
@@ -194,10 +194,10 @@ export function validateReleaseReadiness(value, { root, now = Date.now(), verify
     "g0-corrections-on-candidate",
     "browser-release-matrix",
     "adapter-coexistence-matrix",
+    "standard-css-classification",
     "registry-replay-refresh",
     "production-deployment-refresh",
     "signed-binary-distribution",
-    "external-adoption-evidence",
     "final-promotion-authorization",
   ]);
   const ids = value.checks.map((check) => check.id);
@@ -205,7 +205,7 @@ export function validateReleaseReadiness(value, { root, now = Date.now(), verify
   if (ids.length !== requiredIds.size || ids.some((id) => !requiredIds.has(id))) {
     fail("readiness check inventory drifted");
   }
-  const allowedDimensions = new Set(["technical", "operational", "adoption", "authorization"]);
+  const allowedDimensions = new Set(["technical", "operational", "authorization"]);
   const allowedStatuses = new Set(["passed", "pending", "blocked", "not-authorized", "not-applicable"]);
   const allowedEvidence = new Set(["measured", "inherited", "pending", "uncertain"]);
   for (const check of value.checks) {
@@ -234,7 +234,7 @@ export function validateReleaseReadiness(value, { root, now = Date.now(), verify
     if (!allowedDimensions.has(check.dimension)) fail(`${role}.dimension is invalid`);
     if (!allowedStatuses.has(check.status)) fail(`${role}.status is invalid`);
     if (!allowedEvidence.has(check.evidenceClass)) fail(`${role}.evidenceClass is invalid`);
-    if (typeof check.requiredForPromotion !== "boolean") fail(`${role}.requiredForPromotion must be boolean`);
+    if (check.requiredForPromotion !== true) fail(`${role}.requiredForPromotion must be true`);
     if (typeof check.summary !== "string" || !check.summary) fail(`${role}.summary is missing`);
     const checkSource = source(check.source, `${role}.source`);
     if (!sourceEquals(checkSource, rootSource)) fail(`${role} is not bound to the candidate source`);
@@ -263,7 +263,6 @@ export function validateReleaseReadiness(value, { root, now = Date.now(), verify
   const derived = {
     technicalReady: dimension("technical"),
     operationallyReady: dimension("operational"),
-    adoptionReady: dimension("adoption"),
     authorized: dimension("authorization"),
   };
   derived.promotionReady = Object.values(derived).every(Boolean);

@@ -8,6 +8,14 @@ pre-1.0 compatibility policy.
 
 ## [Unreleased]
 
+### Changed
+
+- Remove the premature adoption-research quota, recruitment workflow, and promotion gate.
+  Interviews, incidents, and pilots may inform future work as usage grows, but they are not a
+  prerequisite for current development or release readiness.
+- Move release readiness to schema 4 and retain complete standard-CSS classification as an explicit
+  technical blocker instead of coupling it to adoption research.
+
 ## [0.1.0-rc.3] - TBD
 
 Candidate contents are prepared below. The date remains unset until the exact
@@ -30,7 +38,7 @@ source commit passes the required hosted gates and publication is authorized.
 - Re-pin the fail-closed PliegoRS integration contract to current `main` after
   the G1 native runtime entered the workspace, and replay the complete SSG,
   route/island bundle, manifest, and browser-payload gate against that revision.
-- Make release-readiness schema 3 the single current promotion authority,
+- Make release-readiness schema 4 the single current promotion authority,
   fail closed on unconfigured hosted browser lanes, archive superseded status
   reports, and generate the public documentation catalog from hash-bound
   Markdown instead of duplicated Rust page data.

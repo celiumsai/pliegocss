@@ -14,6 +14,13 @@ function fail(message) {
   throw new Error(`adapter coexistence authority: ${message}`);
 }
 
+export function uniqueMap(values, role) {
+  if (!Array.isArray(values)) fail(`${role} must be an array`);
+  const entries = new Map(values.map((value) => [value.id, value]));
+  if (entries.size !== values.length) fail(`${role} contains duplicate IDs`);
+  return entries;
+}
+
 const { authority, corpus } = loadContract();
 exactKeys(
   authority,
@@ -47,6 +54,196 @@ if (!Array.isArray(corpus.projects) || corpus.projects.length < authority.corpus
   fail(`requires at least ${authority.corpus.minimumProjects} projects`);
 }
 if (authority.corpus.minimumProjects < 20) fail("minimum project floor cannot be below 20");
+
+export function validateSupportPolicy(supportPolicy, authority, pliegorsManifest, pliegorsContract) {
+  exactKeys(
+    supportPolicy,
+    [
+      "schemaVersion",
+      "kind",
+      "status",
+      "releaseLine",
+      "frozenAt",
+      "protocol",
+      "supportedTailwindProfiles",
+      "supportedAdapters",
+      "migration",
+      "verification",
+      "supportTiers",
+      "claimBoundary",
+    ],
+    "adapter support policy",
+  );
+  if (
+    supportPolicy.schemaVersion !== 1 ||
+    supportPolicy.kind !== "pliegocss-adapter-support-policy" ||
+    supportPolicy.status !== "frozen-for-0.1-promotion" ||
+    supportPolicy.releaseLine !== "0.1.x" ||
+    !/^\d{4}-\d{2}-\d{2}$/u.test(supportPolicy.frozenAt)
+  ) {
+    fail("adapter support policy header drifted");
+  }
+  exactKeys(
+    supportPolicy.protocol,
+    ["name", "authoritySchema", "migrationInventorySchema"],
+    "adapter support policy protocol",
+  );
+  if (
+    supportPolicy.protocol.name !== "static-complete-class-group-coexistence" ||
+    supportPolicy.protocol.authoritySchema !== 1 ||
+    supportPolicy.protocol.migrationInventorySchema !== 1
+  ) {
+    fail("adapter support policy protocol drifted");
+  }
+
+  if (supportPolicy.supportedTailwindProfiles.length !== authority.tailwindProfiles.length) {
+    fail("adapter support policy profile inventory drifted");
+  }
+  for (const [index, profile] of supportPolicy.supportedTailwindProfiles.entries()) {
+    exactKeys(
+      profile,
+      ["id", "certifiedVersion", "sourceContract"],
+      `adapter support policy profile ${index}`,
+    );
+  }
+  const policyProfiles = uniqueMap(
+    supportPolicy.supportedTailwindProfiles,
+    "adapter support policy profiles",
+  );
+  if (
+    policyProfiles.size !== authority.tailwindProfiles.length ||
+    authority.tailwindProfiles.some((profile) => {
+      const policy = policyProfiles.get(profile.id);
+      return (
+        policy?.certifiedVersion !== profile.version ||
+        policy?.sourceContract !== profile.sourceContract
+      );
+    })
+  ) {
+    fail("adapter support policy profiles do not match the coexistence authority");
+  }
+
+  if (supportPolicy.supportedAdapters.length !== authority.adapters.length) {
+    fail("adapter support policy adapter inventory drifted");
+  }
+  for (const [index, adapter] of supportPolicy.supportedAdapters.entries()) {
+    exactKeys(
+      adapter,
+      ["id", "supportTier", "inputContract", "version"],
+      `adapter support policy adapter ${index}`,
+    );
+    if (adapter.supportTier !== "certified") fail(`${adapter.id} is not certified`);
+  }
+  const policyAdapters = uniqueMap(
+    supportPolicy.supportedAdapters,
+    "adapter support policy adapters",
+  );
+  if (
+    policyAdapters.size !== authority.adapters.length ||
+    policyAdapters.get("html")?.version !== null ||
+    policyAdapters.get("html")?.inputContract !== "complete-static-html-document" ||
+    policyAdapters.get("vite")?.version !==
+      authority.adapters.find((adapter) => adapter.id === "vite")?.version ||
+    policyAdapters.get("vite")?.inputContract !== "vite-production-build" ||
+    policyAdapters.get("pliegors")?.version !==
+      "source-revision=abb8653e75da4a5cb4dd9b51200114fbb1e760c7;pliego-dom=0.4.0-beta.1;pliego-ssg=0.4.0-beta.1" ||
+    policyAdapters.get("pliegors")?.inputContract !==
+      "rendered-static-html-plus-pinned-framework-browser-replay"
+  ) {
+    fail("adapter support policy adapters drifted");
+  }
+
+  exactKeys(
+    supportPolicy.migration,
+    [
+      "mode",
+      "tailwindRuntimeRetained",
+      "applyUnit",
+      "rollback",
+      "dynamicClasses",
+      "arbitraryConfigOrPluginExecution",
+      "tailwindRemoval",
+    ],
+    "adapter support policy migration",
+  );
+  if (
+    supportPolicy.migration.mode !== "coexistence" ||
+    supportPolicy.migration.tailwindRuntimeRetained !==
+      authority.migration.tailwindRuntimeRetained ||
+    supportPolicy.migration.applyUnit !== "complete-literal-class-group" ||
+    supportPolicy.migration.rollback !== "exact-source-bytes" ||
+    supportPolicy.migration.dynamicClasses !== "unsupported-fail-closed" ||
+    supportPolicy.migration.arbitraryConfigOrPluginExecution !== "unsupported-fail-closed" ||
+    supportPolicy.migration.tailwindRemoval !== "not-certified" ||
+    authority.migration.dynamicClassPolicy !== "reject" ||
+    authority.migration.rollback !== "restore-exact-source-bytes"
+  ) {
+    fail("adapter support policy migration boundary drifted");
+  }
+
+  exactKeys(
+    supportPolicy.verification,
+    ["requiredHosts", "requiredComparisons", "maximumLayoutGeometryDeltaCssPx"],
+    "adapter support policy verification",
+  );
+  if (
+    JSON.stringify(supportPolicy.verification.requiredHosts) !==
+      JSON.stringify(authority.hosts.map((host) => host.id)) ||
+    JSON.stringify(supportPolicy.verification.requiredComparisons) !==
+      JSON.stringify(["dom", "aria", "computed-style", "layout-geometry", "exact-rollback"]) ||
+    supportPolicy.verification.maximumLayoutGeometryDeltaCssPx !==
+      authority.comparison.maximumLayoutGeometryDeltaCssPx
+  ) {
+    fail("adapter support policy verification matrix drifted");
+  }
+  exactKeys(
+    supportPolicy.supportTiers,
+    ["certified", "best-effort", "unsupported"],
+    "adapter support policy tiers",
+  );
+  if (
+    Object.values(supportPolicy.supportTiers).some(
+      (description) => typeof description !== "string" || description.trim() === "",
+    ) ||
+    typeof supportPolicy.claimBoundary !== "string" ||
+    supportPolicy.claimBoundary.trim() === ""
+  ) {
+    fail("adapter support policy descriptions are incomplete");
+  }
+  for (const dependency of ["pliego-dom", "pliego-ssg"]) {
+    if (
+      !new RegExp(`^${dependency} = \\{ version = "=0\\.4\\.0-beta\\.1",`, "mu").test(
+        pliegorsManifest,
+      )
+    ) {
+      fail(`adapter support policy PliegoRS pin drifted from ${dependency}`);
+    }
+  }
+  if (pliegorsContract.revision !== "abb8653e75da4a5cb4dd9b51200114fbb1e760c7") {
+    fail("adapter support policy PliegoRS source revision drifted");
+  }
+  if (
+    supportPolicy.claimBoundary !==
+    "The 0.1.x promoted adapter claim covers only literal complete class groups in static HTML, Vite 8.1.5 production builds, and pinned PliegoRS rendered output, coexisting with Tailwind CSS 3.4.19 or 4.3.3 without Preflight. It does not certify dynamic class construction, arbitrary Tailwind configuration or plugin execution, unsupported utilities, Tailwind removal, or other framework versions."
+  ) {
+    fail("adapter support policy claim boundary drifted");
+  }
+}
+
+const supportPolicy = JSON.parse(
+  readFileSync(resolve(repositoryRoot, "docs", "product", "adapter-support-policy-0.1.x.json"), "utf8"),
+);
+const pliegorsManifest = readFileSync(
+  resolve(repositoryRoot, "integration-tests", "pliegors-smoke", "Cargo.toml"),
+  "utf8",
+);
+const pliegorsContract = JSON.parse(
+  readFileSync(
+    resolve(repositoryRoot, "integration-tests", "pliegors-smoke", "pliegors-contract.json"),
+    "utf8",
+  ),
+);
+validateSupportPolicy(supportPolicy, authority, pliegorsManifest, pliegorsContract);
 
 const ids = new Set();
 const documentHashes = new Set();

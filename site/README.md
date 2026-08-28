@@ -8,7 +8,7 @@ the PliegoRS SSG. Public documentation prose lives in `docs/site/**/*.md`;
 tracked `site/src/docs.generated.json` projection with the exact source path
 and SHA-256 for every page. Rust consumes that projection and does not carry a
 second hand-maintained document catalog. The release-readiness page is itself
-generated from the schema-3 machine authority.
+generated from the schema-4 machine authority.
 
 PliegoCSS `pc!` literals provide real compile-time style identities and the
 same Rust source is compiled into the shipped utility bundle.

@@ -50,7 +50,7 @@ promise:
 - LSP/editor clients;
 - migration inventory plus bounded static Tailwind v3/v4 coexistence across 21 HTML, Vite, and
   PliegoRS project snapshots with browser equivalence and exact rollback. Its 0.1.x adapter policy
-  is frozen, while the separate G7 authority remains honestly blocked at zero external records;
+  is frozen and validated against the same technical authority;
 - watch mode;
 - PliegoRS SSR/SSG/resumability integration;
 - exact-version crates.io distribution for the Rust workspace plus repository-hosted native CLI/LSP

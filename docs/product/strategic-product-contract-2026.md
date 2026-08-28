@@ -72,13 +72,14 @@ always requires explicit authorization; the earlier steps are read-only and dete
 | S9 | P1 | Migration and lock-in | Layered `audit-only -> CI guard -> compile -> tokens -> typed source manifests`; reversible codemods, classified gaps, and visual tests; no perfect-migration claim. | **Missing:** Tailwind is currently only a benchmark fixture. |
 | S10 | P2 | Preprocessor logic | Add only limited typed abstractions that compile to stable CSS and have measured value; do not center the MVP on a new dialect. | **Partial and intentionally bounded:** typed macros/recipes exist; further syntax expansion is frozen behind R0 evidence. |
 
-## Phase 0 evidence gate
+## Ongoing product research
 
-The report treats market evidence as engineering input, not launch copy. Before the product category
-is considered validated, PliegoCSS must have:
+The report treats market evidence as engineering input, not launch copy. Interviews, observed
+incidents, and audit-only trials remain useful research inputs as real usage grows, but they are not
+current development or release quotas. Future research may include:
 
-- 10-15 interviews across design-system teams, platform teams, agencies, and AI-heavy teams;
-- 20 anonymized real CSS incidents spanning compatibility, cascade, tokens, responsive behavior,
+- interviews across design-system teams, platform teams, agencies, and AI-heavy teams;
+- anonymized real CSS incidents spanning compatibility, cascade, tokens, responsive behavior,
   accessibility, and bloat;
 - a diagnostic corpus built before the final UI or broad automatic-fix surface;
 - audit-only trials that measure which findings lead to action;
@@ -86,9 +87,10 @@ is considered validated, PliegoCSS must have:
 - a reproducible competitive baseline against direct Lightning CSS work, Tailwind, UnoCSS, PostCSS,
   Sass output, CSS Modules, and the current PliegoCSS pipeline.
 
-Provider benchmarks are context only. The corpus must record provenance, consent/redaction status,
-expected diagnosis, allowed ambiguity, and stable content hashes. Public release claims remain
-blocked until a reviewed evidence report exists.
+Provider benchmarks are context only. Any future research corpus must record appropriate provenance,
+consent/redaction status, expected diagnosis, allowed ambiguity, and stable content hashes. Claims
+based on that research require reviewed evidence, but its absence does not block unrelated product
+development or release readiness.
 
 ## R0 / `0.1.0` release contract
 
@@ -102,7 +104,7 @@ foundation but cannot substitute for an unchecked item.
 | R0.3 Compatibility policy | Stable diagnostic codes and reproducible preserved/transformed/fallback/degraded/blocked decisions based on versioned official data. | **Expanded bounded slice:** exact official web-features 3.32.0 data drives eight rule families, five declaration/value features (`user-select`, `aspect-ratio`, `color()`, Oklab/OkLCh, `color-mix()`), the separately rejected variadic `color-mix()` feature, and five selector features (`:focus-visible`, `:has()`, `:is()`, `:where()`, selector-list `:not()`). The partial-coverage finding remains mandatory because the complete CSS value/selector surfaces and browser/fallback evidence remain open. |
 | R0.4 Budgets | Bytes, rules, selectors, specificity, and semantic duplication, with route/package/layer attribution and regression deltas. | **Locally verified bounded slice:** schema 1 closes exact artifacts plus verified Asset Plan file/layer aggregation and ownership-backed package/composed-route aggregation with cross-bundle fingerprints. Usage analysis schemas 1/2 retain generated StyleId evidence. Generic CSS audit now emits context/selector/importance/declaration-bound identities; `generic-css-usage` joins only positive observations, keeps absence `unknown`, and can publish report/findings/manifest/receipt as a rollback-capable group. Route views remain outside Control Manifest partitions; generic declaration evidence does not prove deadness; hosted evidence and final release replay remain open. |
 | R0.5 Token graph | Aliases, cycle rejection, themes, coverage, hashes, and typed provenance. | **Partial:** the canonical graph, DTCG format/Resolver bridges, aliases, derived values, deprecation provenance, cycle rejection, validated theme permutations, graph hashes, transitive coverage, integrity-bound control artifact, direct CLI selection, bundle-plan schema-2 selection, and Cargo build-macro selection are implemented. Canonical Token Usage now projects retained StyleId consumers, transitive dependencies, unused active tokens, and actual custom-property emission with a read-only query CLI. Local gates are green; hosted evidence remains missing. |
-| R0.6 Basic accessibility guards | Declared contrast pairs and configurable motion/focus policies with verified/unverified/manual coverage. | **Locally verified bounded slice:** direct CSS and verified Asset Plans evaluate the closed schema-1 policy for contrast, motion, focus visibility, forced colors, and input modality; policy and optional TokenGraph bytes are integrity-bound, findings preserve verified/unverified/manual-required states and exceptions, and control token measurements record declared pair count. The machine quality corpus records 4 TP, 4 TN, 0 FP, 0 FN for decidable literal-sRGB contrast, four correct dynamic abstentions, and eight exact-code static guard cases; it is part of `verify:fast`. Browser/manual validation, hosted runners, native macOS/ARM64 evidence, and real-incident quality evidence remain open, so no WCAG certification or broad accuracy claim is made. |
+| R0.6 Basic accessibility guards | Declared contrast pairs and configurable motion/focus policies with verified/unverified/manual coverage. | **Locally verified bounded slice:** direct CSS and verified Asset Plans evaluate the closed schema-1 policy for contrast, motion, focus visibility, forced colors, and input modality; policy and optional TokenGraph bytes are integrity-bound, findings preserve verified/unverified/manual-required states and exceptions, and control token measurements record declared pair count. The machine quality corpus records 4 TP, 4 TN, 0 FP, 0 FN for decidable literal-sRGB contrast, four correct dynamic abstentions, and eight exact-code static guard cases; it is part of `verify:fast`. Browser/manual validation, hosted runners, and native macOS/ARM64 evidence remain open. Future real-incident research may support broader accuracy claims but is not required for the bounded 0.1.0 contract; no WCAG certification is claimed. |
 | R0.7 Equivalent reports | Human, JSON, and SARIF outputs express the same findings and severity, with exact spans and stable schemas. | **Verified for `audit`:** human, canonical JSON, and SARIF 2.1.0 project the same schema-1 findings; SARIF embeds each complete finding and maps exact locations/fingerprints. Legacy process diagnostics outside `audit` remain a separate schema, not omitted audit findings. |
 | R0.8 Audit bridges | At least read-only inventory for Sass, Tailwind, and CSS Modules, including unsupported/dynamic constructs and Preflight reliance. | **Partial — bounded project inventory with public evidence:** schema 1 binds exact source/consumer/auxiliary bytes and observations, the CLI accepts a declaration or bounded directory discovery, and the authored corpus plus three pinned MIT projects replay without executing original toolchains. The public role corpus reviews 119 files and measures 104 TP, 0 FP, and 0 FN for emitted file-role tuples; all 144 Bootstrap Sass edges resolve through closed relative file/partial/index/import-only rules. Configured load paths/importers, broader syntax, migration outcomes, reversible codemods, and representative scale remain open; the metric is not semantic migration accuracy. |
 | R0.9 Determinism/performance | Byte identity on Windows/Linux/macOS; cold, incremental-change, no-op, peak memory, binary/package size, and supported-corpus precision/recall evidence. | **Partial:** strong local gates and CI matrix exist; hosted cross-OS and diagnostic-quality evidence are missing. |

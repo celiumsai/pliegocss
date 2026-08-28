@@ -8,7 +8,7 @@ This process covers the nineteen publishable crates in one version-locked
 compatibility unit. It does not authorize an upload. Publishing to crates.io,
 promoting a final release, changing repository visibility, or changing
 production infrastructure requires explicit owner approval at the moment of
-the action. Current status is maintained only in the schema-3
+the action. Current status is maintained only in the schema-4
 [machine readiness record](../product/release-readiness-0.1.0.json); the adjacent
 [Markdown page](../product/release-readiness-0.1.0.md) is generated from it.
 
@@ -110,8 +110,6 @@ pnpm check:benchmark-oracle
 pnpm check:evidence
 pnpm check:repair-corpus
 pnpm check:migration-corpus
-pnpm check:external-adoption-authority
-pnpm check:external-adoption
 PLIEGOCSS_RUN_NETWORK_CORPUS=1 pnpm check:migration-real-corpus
 pnpm check:attribution
 pnpm check:portability
@@ -274,7 +272,7 @@ cargo package --list -p pliego-cssc --locked
 cargo package --list -p pliego-css --locked
 ```
 
-## 4. Close hosted and external gates
+## 4. Close hosted gates
 
 All of these must be evidenced for the exact release commit:
 
@@ -398,7 +396,7 @@ immutable public distribution.
 
 ## Current blockers
 
-The schema-3 authority still records the immutable RC.2 source and its expired
+The schema-4 authority still records the immutable RC.2 source and its expired
 evidence. It must not be relabeled as RC.3. After this version-preparation
 change becomes a clean reviewed commit, a newly named candidate can bind its
 exact commit and tree and run CI, CodeQL, browser, distribution, and registry
@@ -407,13 +405,13 @@ evidence. The remaining gates are:
 - G0 corrections are present in the RC.3 source but require exact-candidate hosted replay before they
   become release evidence;
 - all required hosted browser lanes remain `not-configured` for the exact RC.3 candidate;
+- complete supported standard-CSS declaration, value, selector, and at-rule classification remains
+  open for the broad compiler claim;
 - the crates.io replay and production edge/browser replay need fresh, unexpired, artifact-hashed
   evidence;
 - RC.3 requires exact-source repository native archives, checksums, CycloneDX SBOMs,
   GitHub/Sigstore attestations, an immutable GitHub Release, and verified pnpm package;
   npmjs publication remains forbidden;
-- external interviews, real incidents, and pilots are not yet recorded as reviewed adoption
-  evidence;
 - final `0.1.0` publication is not authorized for this exact commit and tree.
 
 `pnpm verify:release` must therefore fail closed. A local pass, historical report, deployment URL,

@@ -55,10 +55,10 @@ Changing a case, expectation, provenance field, or claim boundary changes the tr
 and requires review. The harness deliberately does not accept free-form commands, generated cases,
 or an external expected-result override.
 
-## Evidence still required
+## Evidence boundary
 
 R1 remains open until the same fixed model/agent is evaluated against a reviewed frozen corpus and
 the result demonstrates fewer turns without increasing post-repair violations. The strategic R0
-research gate separately requires 20 anonymized real CSS incidents with provenance,
-consent/redaction state, expected diagnosis, allowed ambiguity, and stable hashes. Those datasets
-must not be synthesized or inferred from this conformance suite.
+research direction may later include anonymized real CSS incidents with appropriate provenance and
+privacy handling. Such datasets must not be synthesized or inferred from this conformance suite,
+but they are not a quota blocking current development.

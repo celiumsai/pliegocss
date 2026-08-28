@@ -13,6 +13,51 @@ const fixedNow = Date.parse("2026-07-22T15:00:00Z");
 const readiness = JSON.parse(
   readFileSync(resolve(root, "docs/product/release-readiness-0.1.0.json"), "utf8"),
 );
+assert(!Object.hasOwn(readiness.dimensions, "adoptionReady"));
+assert(!readiness.checks.some((check) => check.dimension === "adoption"));
+const readyCandidate = structuredClone(readiness);
+for (const check of readyCandidate.checks) {
+  check.status = "passed";
+  check.evidenceClass = "measured";
+  check.coveredCoverage = check.requiredCoverage;
+  check.waiverAdr = null;
+  check.artifacts = [
+    {
+      path: "docs/product/evidence/v0.1.0-rc.2-source.json",
+      url: "https://github.com/celiumsai/pliegocss/blob/main/docs/product/evidence/v0.1.0-rc.2-source.json",
+      sha256: "sha256:51afb97c3b86fbd34ad7d827e7fc5347f1e8d85e5dd1456e44d0c9389a82fecb",
+    },
+  ];
+  check.references = [
+    {
+      kind: "contract-test",
+      url: "https://github.com/celiumsai/pliegocss",
+    },
+  ];
+}
+Object.assign(readyCandidate.dimensions, {
+  technicalReady: true,
+  operationallyReady: true,
+  authorized: true,
+  promotionReady: true,
+});
+readyCandidate.result = "ready";
+assert.equal(
+  validateReleaseReadiness(readyCandidate, { root, now: fixedNow, verifyGit: false }).result,
+  "ready",
+);
+const optionalBlocker = structuredClone(readiness);
+optionalBlocker.checks[0].requiredForPromotion = false;
+assert.throws(
+  () => validateReleaseReadiness(optionalBlocker, { root, now: fixedNow, verifyGit: false }),
+  (error) => error instanceof AuthorityError && /requiredForPromotion must be true/u.test(error.message),
+);
+const oldSchema = structuredClone(readiness);
+oldSchema.schemaVersion = 3;
+assert.throws(
+  () => validateReleaseReadiness(oldSchema, { root, now: fixedNow, verifyGit: false }),
+  (error) => error instanceof AuthorityError && /header drifted/u.test(error.message),
+);
 const browser = JSON.parse(
   readFileSync(resolve(root, "docs/benchmarks/hosted-browser-matrix.json"), "utf8"),
 );
