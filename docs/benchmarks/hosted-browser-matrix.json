@@ -1,57 +1,270 @@
 {
-  "schemaVersion": 1,
-  "statusDate": "2026-07-19",
+  "schemaVersion": 2,
+  "kind": "pliegocss-hosted-browser-matrix",
+  "state": "current",
+  "source": {
+    "tag": "v0.1.0-rc.2",
+    "commit": "064dcbce96a3a5cc97a940d07566c008bb5e2d3e",
+    "gitTree": "010a64f5d0bbd142a1d015fda4ccf573cc6e4133"
+  },
+  "observedAt": "2026-07-22T14:10:00Z",
+  "expiresAt": "2026-07-29T14:10:00Z",
+  "profiles": {
+    "release": {
+      "requiredHosts": [
+        "windows-x64-chromium",
+        "windows-x64-firefox",
+        "windows-x64-webkit",
+        "linux-x64-chromium",
+        "linux-x64-firefox",
+        "linux-x64-webkit",
+        "macos-arm64-chromium",
+        "macos-arm64-firefox",
+        "macos-arm64-webkit"
+      ],
+      "allowNotConfigured": false,
+      "allowStale": false,
+      "allowWaivers": false
+    }
+  },
   "hosts": [
     {
-      "id": "windows-chrome",
+      "id": "windows-x64-chromium",
       "os": "windows",
-      "browser": "chrome",
-      "status": "passed",
-      "executable": "C:/Program Files/Google/Chrome/Application/chrome.exe",
-      "automation": "passed",
-      "claim": "local-computed-style-smoke"
-    },
-    {
-      "id": "windows-edge",
-      "os": "windows",
-      "browser": "edge",
-      "status": "passed",
-      "executable": "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe",
-      "automation": "passed",
-      "claim": "local-computed-style-smoke"
-    },
-    {
-      "id": "windows-firefox",
-      "os": "windows",
-      "browser": "firefox",
-      "status": "not-configured",
-      "executable": null,
-      "automation": "not-configured",
-      "claim": "none"
-    },
-    {
-      "id": "wsl-chromium",
-      "os": "debian-wsl2",
+      "arch": "x64",
       "browser": "chromium",
+      "browserVersion": null,
       "status": "not-configured",
-      "executable": null,
+      "sourceCommit": "064dcbce96a3a5cc97a940d07566c008bb5e2d3e",
+      "gitTree": "010a64f5d0bbd142a1d015fda4ccf573cc6e4133",
+      "observedAt": null,
+      "expiresAt": null,
       "automation": "not-configured",
-      "claim": "none"
+      "requiredCoverage": [
+        "computed-style",
+        "layout-geometry",
+        "responsive",
+        "interactive-state",
+        "reset-explicit",
+        "screenshot-bounded",
+        "tailwind-latest"
+      ],
+      "coveredCoverage": [],
+      "waiverAdr": null,
+      "artifacts": []
     },
     {
-      "id": "macos-safari",
-      "os": "macos",
-      "browser": "safari",
+      "id": "windows-x64-firefox",
+      "os": "windows",
+      "arch": "x64",
+      "browser": "firefox",
+      "browserVersion": null,
       "status": "not-configured",
-      "executable": null,
+      "sourceCommit": "064dcbce96a3a5cc97a940d07566c008bb5e2d3e",
+      "gitTree": "010a64f5d0bbd142a1d015fda4ccf573cc6e4133",
+      "observedAt": null,
+      "expiresAt": null,
       "automation": "not-configured",
-      "claim": "none"
+      "requiredCoverage": [
+        "computed-style",
+        "layout-geometry",
+        "responsive",
+        "interactive-state",
+        "reset-explicit",
+        "screenshot-bounded",
+        "tailwind-latest"
+      ],
+      "coveredCoverage": [],
+      "waiverAdr": null,
+      "artifacts": []
+    },
+    {
+      "id": "windows-x64-webkit",
+      "os": "windows",
+      "arch": "x64",
+      "browser": "webkit",
+      "browserVersion": null,
+      "status": "not-configured",
+      "sourceCommit": "064dcbce96a3a5cc97a940d07566c008bb5e2d3e",
+      "gitTree": "010a64f5d0bbd142a1d015fda4ccf573cc6e4133",
+      "observedAt": null,
+      "expiresAt": null,
+      "automation": "not-configured",
+      "requiredCoverage": [
+        "computed-style",
+        "layout-geometry",
+        "responsive",
+        "interactive-state",
+        "reset-explicit",
+        "screenshot-bounded",
+        "tailwind-latest"
+      ],
+      "coveredCoverage": [],
+      "waiverAdr": null,
+      "artifacts": []
+    },
+    {
+      "id": "linux-x64-chromium",
+      "os": "linux",
+      "arch": "x64",
+      "browser": "chromium",
+      "browserVersion": null,
+      "status": "not-configured",
+      "sourceCommit": "064dcbce96a3a5cc97a940d07566c008bb5e2d3e",
+      "gitTree": "010a64f5d0bbd142a1d015fda4ccf573cc6e4133",
+      "observedAt": null,
+      "expiresAt": null,
+      "automation": "not-configured",
+      "requiredCoverage": [
+        "computed-style",
+        "layout-geometry",
+        "responsive",
+        "interactive-state",
+        "reset-explicit",
+        "screenshot-bounded",
+        "tailwind-latest"
+      ],
+      "coveredCoverage": [],
+      "waiverAdr": null,
+      "artifacts": []
+    },
+    {
+      "id": "linux-x64-firefox",
+      "os": "linux",
+      "arch": "x64",
+      "browser": "firefox",
+      "browserVersion": null,
+      "status": "not-configured",
+      "sourceCommit": "064dcbce96a3a5cc97a940d07566c008bb5e2d3e",
+      "gitTree": "010a64f5d0bbd142a1d015fda4ccf573cc6e4133",
+      "observedAt": null,
+      "expiresAt": null,
+      "automation": "not-configured",
+      "requiredCoverage": [
+        "computed-style",
+        "layout-geometry",
+        "responsive",
+        "interactive-state",
+        "reset-explicit",
+        "screenshot-bounded",
+        "tailwind-latest"
+      ],
+      "coveredCoverage": [],
+      "waiverAdr": null,
+      "artifacts": []
+    },
+    {
+      "id": "linux-x64-webkit",
+      "os": "linux",
+      "arch": "x64",
+      "browser": "webkit",
+      "browserVersion": null,
+      "status": "not-configured",
+      "sourceCommit": "064dcbce96a3a5cc97a940d07566c008bb5e2d3e",
+      "gitTree": "010a64f5d0bbd142a1d015fda4ccf573cc6e4133",
+      "observedAt": null,
+      "expiresAt": null,
+      "automation": "not-configured",
+      "requiredCoverage": [
+        "computed-style",
+        "layout-geometry",
+        "responsive",
+        "interactive-state",
+        "reset-explicit",
+        "screenshot-bounded",
+        "tailwind-latest"
+      ],
+      "coveredCoverage": [],
+      "waiverAdr": null,
+      "artifacts": []
+    },
+    {
+      "id": "macos-arm64-chromium",
+      "os": "macos",
+      "arch": "arm64",
+      "browser": "chromium",
+      "browserVersion": null,
+      "status": "not-configured",
+      "sourceCommit": "064dcbce96a3a5cc97a940d07566c008bb5e2d3e",
+      "gitTree": "010a64f5d0bbd142a1d015fda4ccf573cc6e4133",
+      "observedAt": null,
+      "expiresAt": null,
+      "automation": "not-configured",
+      "requiredCoverage": [
+        "computed-style",
+        "layout-geometry",
+        "responsive",
+        "interactive-state",
+        "reset-explicit",
+        "screenshot-bounded",
+        "tailwind-latest"
+      ],
+      "coveredCoverage": [],
+      "waiverAdr": null,
+      "artifacts": []
+    },
+    {
+      "id": "macos-arm64-firefox",
+      "os": "macos",
+      "arch": "arm64",
+      "browser": "firefox",
+      "browserVersion": null,
+      "status": "not-configured",
+      "sourceCommit": "064dcbce96a3a5cc97a940d07566c008bb5e2d3e",
+      "gitTree": "010a64f5d0bbd142a1d015fda4ccf573cc6e4133",
+      "observedAt": null,
+      "expiresAt": null,
+      "automation": "not-configured",
+      "requiredCoverage": [
+        "computed-style",
+        "layout-geometry",
+        "responsive",
+        "interactive-state",
+        "reset-explicit",
+        "screenshot-bounded",
+        "tailwind-latest"
+      ],
+      "coveredCoverage": [],
+      "waiverAdr": null,
+      "artifacts": []
+    },
+    {
+      "id": "macos-arm64-webkit",
+      "os": "macos",
+      "arch": "arm64",
+      "browser": "webkit",
+      "browserVersion": null,
+      "status": "not-configured",
+      "sourceCommit": "064dcbce96a3a5cc97a940d07566c008bb5e2d3e",
+      "gitTree": "010a64f5d0bbd142a1d015fda4ccf573cc6e4133",
+      "observedAt": null,
+      "expiresAt": null,
+      "automation": "not-configured",
+      "requiredCoverage": [
+        "computed-style",
+        "layout-geometry",
+        "responsive",
+        "interactive-state",
+        "reset-explicit",
+        "screenshot-bounded",
+        "tailwind-latest"
+      ],
+      "coveredCoverage": [],
+      "waiverAdr": null,
+      "artifacts": []
     }
   ],
-  "historicalEvidence": {
-    "chromiumComputedStyleSmoke": "docs/benchmarks/browser-validation.md",
-    "status": "historical-manual",
-    "ciReplay": "not-configured"
-  },
-  "releaseBoundary": "Executable discovery is not behavioral certification. Only automated or recorded computed-style replay may change a host to passed."
+  "result": "blocked",
+  "missingRequiredHosts": [
+    "windows-x64-chromium",
+    "windows-x64-firefox",
+    "windows-x64-webkit",
+    "linux-x64-chromium",
+    "linux-x64-firefox",
+    "linux-x64-webkit",
+    "macos-arm64-chromium",
+    "macos-arm64-firefox",
+    "macos-arm64-webkit"
+  ],
+  "releaseBoundary": "Discovery and local uncommitted browser runs are not release evidence. Browser/output certification v1 defines the required automation, but a host passes only with unexpired automated evidence bound to this exact source commit and Git tree, complete required coverage, and hashed artifacts; otherwise release remains blocked."
 }

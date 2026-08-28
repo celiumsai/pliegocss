@@ -1,0 +1,942 @@
+{
+  "schemaVersion": 1,
+  "kind": "pliegocss-site-markdown",
+  "documents": [
+    {
+      "sourcePath": "docs/site/getting-started.md",
+      "sourceSha256": "sha256:c6dc6f90c559b7ecb0a8202f6f6cdd20b2865cc42b122074623555ad96f64962",
+      "route": "/docs/getting-started/",
+      "title": "Start with the CSS you already have.",
+      "category": "Start",
+      "eyebrow": "Getting started",
+      "summary": "Audit first, compile when it adds value, and keep the browser contract ordinary.",
+      "order": 1,
+      "sections": [
+        {
+          "id": "install",
+          "title": "Install the release candidate",
+          "body": "The 0.1.0-rc.3 compatibility unit is under exact-source verification. Use this command after all nineteen crates are published and replayed with Rust 1.85.",
+          "code": "cargo install pliego-cssc --version '=0.1.0-rc.3' --locked"
+        },
+        {
+          "id": "audit",
+          "title": "Audit ordinary CSS",
+          "body": "Start without changing authoring. The analyzer emits human, canonical JSON, or SARIF findings and fails closed on unknown surfaces.",
+          "code": "pliego-cssc audit --input app.css \\\n  --targets baseline-widely --format human"
+        },
+        {
+          "id": "compile",
+          "title": "Add typed identities selectively",
+          "body": "Rust literals are validated at compile time and compile to static standards-compliant CSS. There is no styling runtime.",
+          "code": "use pliego_css::{pc, Style};\n\nconst BUTTON: Style = pc!(\n  \"inline-flex gap-2 rounded-lg bg-accent px-4 py-2\"\n);"
+        }
+      ]
+    },
+    {
+      "sourcePath": "docs/site/typed-styles.md",
+      "sourceSha256": "sha256:69cc2ec5e262871914e68e7f49a0f5502b748d6872c3401ac7147f350a06223a",
+      "route": "/docs/typed-styles/",
+      "title": "Types at author time. CSS at run time.",
+      "category": "Core",
+      "eyebrow": "Typed styles",
+      "summary": "Stable 128-bit identities connect Rust source, emitted classes, manifests, and physical declarations.",
+      "order": 2,
+      "sections": [
+        {
+          "id": "pc",
+          "title": "One literal, one stable identity",
+          "body": "pc! accepts one visible string literal. The macro parses semantics, rejects conflicting slots, and returns a sealed Style.",
+          "code": "const CARD: Style = pc!(\n  \"grid gap-4 rounded-xl border border-line p-6 shadow-md\"\n);"
+        },
+        {
+          "id": "pcx",
+          "title": "Visible state spaces",
+          "body": "pcx! compiles every visible branch combination and selects one identity at runtime. Independent clauses that can collide are rejected.",
+          "code": "let style = pcx!(\n  \"block\",\n  if active { \"opacity-100\" } else { \"opacity-50\" }\n);"
+        },
+        {
+          "id": "lineage",
+          "title": "Follow the physical effect",
+          "body": "Manifest schema 5 joins semantic declarations to final rules, conditions, byte ranges, and synthesized effects such as box-shadow.",
+          "code": null
+        }
+      ]
+    },
+    {
+      "sourcePath": "docs/site/audit-and-transform.md",
+      "sourceSha256": "sha256:1ae15b85458272dbdf5bf697ec4d5161c5d995961bc39f3c9c08c72c79b29b84",
+      "route": "/docs/audit-and-transform/",
+      "title": "Standards-first, not framework-first.",
+      "category": "Standard CSS",
+      "eyebrow": "Audit and transform",
+      "summary": "Analyze standard CSS, enforce policy, and transform output without claiming ownership of authored source.",
+      "order": 3,
+      "sections": [
+        {
+          "id": "classifier",
+          "title": "Bounded classification",
+          "body": "The classifier recognizes deliberate standard-CSS surfaces and reports unsupported constructs instead of guessing. A versioned corpus controls the claim.",
+          "code": null
+        },
+        {
+          "id": "transform",
+          "title": "Deterministic transformation",
+          "body": "Target browsers, minify, and check output drift. Add --check in CI to remain read-only.",
+          "code": "pliego-cssc transform-css --input app.css \\\n  --output dist/app.css --targets modern --format minified"
+        },
+        {
+          "id": "policy",
+          "title": "Compatibility, accessibility, and budgets",
+          "body": "Policy documents bind findings to explicit targets and limits. The same canonical findings feed terminals, JSON automation, and SARIF.",
+          "code": null
+        }
+      ]
+    },
+    {
+      "sourcePath": "docs/site/evidence.md",
+      "sourceSha256": "sha256:3deb73bd0b795902d702ca0cf877a560e6db99c35817c21423466a571f6e48ef",
+      "route": "/docs/evidence/",
+      "title": "A green build should explain itself.",
+      "category": "Evidence",
+      "eyebrow": "Evidence and provenance",
+      "summary": "Artifacts carry hashes, source lineage, graphs, findings, and receipts designed for replay.",
+      "order": 4,
+      "sections": [
+        {
+          "id": "manifest",
+          "title": "Canonical manifests",
+          "body": "Style identity, class identity, theme identity, origins, conditions, physical declarations, and final CSS hashes live in a deterministic document.",
+          "code": "pliego-cssc compile --source src --seed --theme \\\n  --output dist/app.css --manifest dist/app.manifest.json"
+        },
+        {
+          "id": "receipts",
+          "title": "Receipt-last publication",
+          "body": "Controlled operations stage output, lock the destination, verify inputs, publish artifacts, and write the receipt last.",
+          "code": null
+        },
+        {
+          "id": "benchmarks",
+          "title": "Measured, inherited, pending, uncertain",
+          "body": "Release readiness preserves the evidence class. Old hosted evidence never silently passes changed source.",
+          "code": null
+        }
+      ]
+    },
+    {
+      "sourcePath": "docs/site/migration.md",
+      "sourceSha256": "sha256:6d3b48362eb1ef99e432a923ce2ede72ae231b9272199571827f56e6801ed6b3",
+      "route": "/docs/migration/",
+      "title": "Adopt without surrendering the exit.",
+      "category": "Migration",
+      "eyebrow": "Controlled migration",
+      "summary": "Inventory first, generate bounded plans, preserve originals, and detect drift immediately before publication.",
+      "order": 5,
+      "sections": [
+        {
+          "id": "inventory",
+          "title": "Read-only discovery",
+          "body": "Tailwind, Sass, CSS Modules, and standard CSS can be inventoried before any replacement plan exists.",
+          "code": "pliego-cssc migration-project-plan ./migration-declaration.json"
+        },
+        {
+          "id": "reversible",
+          "title": "Reversible replacements",
+          "body": "Plans bind source and destination hashes. Apply and rollback use adjacent locks, pre-publication revalidation, backups, and group compensation.",
+          "code": null
+        },
+        {
+          "id": "limits",
+          "title": "No speculative codemods",
+          "body": "Unsupported or context-dependent constructs stay in the inventory. The migration layer does not infer framework semantics it cannot prove.",
+          "code": null
+        }
+      ]
+    },
+    {
+      "sourcePath": "docs/site/integrations/pliegors.md",
+      "sourceSha256": "sha256:dbfe2999c765e1ec3bd1e8868e474fac69bb735cef042596a6f5322b81b7fd29",
+      "route": "/docs/integrations/pliegors/",
+      "title": "Native together. Independent by contract.",
+      "category": "Integrations",
+      "eyebrow": "PliegoRS integration",
+      "summary": "PliegoRS is the first native consumer, not the only target. It supplies topology; PliegoCSS supplies style identity and artifacts.",
+      "order": 6,
+      "sections": [
+        {
+          "id": "boundary",
+          "title": "Explicit ownership",
+          "body": "PliegoRS owns routes, pages, assets, and browser lifecycle. PliegoCSS owns parsing, semantic conflicts, CSS, manifests, and policy findings.",
+          "code": null
+        },
+        {
+          "id": "bundles",
+          "title": "Route and island bundles",
+          "body": "A reachability sidecar projects application-owned topology into selected CSS bundles without PliegoCSS pretending to understand the framework.",
+          "code": null
+        },
+        {
+          "id": "proof",
+          "title": "Replayed from published crates",
+          "body": "The maintained fixture locks PliegoRS 0.0.2 registry packages and verifies the remote-reachable framework revision separately.",
+          "code": "PLIEGORS_ROOT=/path/to/pliegors pnpm integration:pliegors"
+        }
+      ]
+    },
+    {
+      "sourcePath": "docs/site/installation.md",
+      "sourceSha256": "sha256:c5150bb64061e203667b655a155dd3054b48e3b88a2ea6d3ec760978a7ec5796",
+      "route": "/docs/installation/",
+      "title": "Choose an adoption surface.",
+      "category": "Start",
+      "eyebrow": "Installation",
+      "summary": "Install the CLI for any project, add the Rust crates only when typed authoring belongs in the application.",
+      "order": 7,
+      "sections": [
+        {
+          "id": "cli",
+          "title": "CLI-only adoption",
+          "body": "The command-line compiler can audit, transform, explain, bundle, and migrate standard CSS without adding a runtime dependency to the application.",
+          "code": "cargo install pliego-cssc --version '=0.1.0-rc.3' --locked\npliego-cssc --version"
+        },
+        {
+          "id": "rust",
+          "title": "Typed Rust authoring",
+          "body": "Add pliego-css and its macro crate to applications that want compile-time style identities. The emitted result remains ordinary CSS.",
+          "code": "[dependencies]\npliego-css = \"=0.1.0-rc.3\""
+        },
+        {
+          "id": "pin",
+          "title": "Pin the exact release identity",
+          "body": "Before the public release, use the signed project tag plus Cargo.lock. Do not track a moving branch in a production build.",
+          "code": null
+        }
+      ]
+    },
+    {
+      "sourcePath": "docs/site/first-audit.md",
+      "sourceSha256": "sha256:d6476ad1b40afd7211cb9adbbc542384baeba1f15265c62a0e056641f9e3cfa7",
+      "route": "/docs/first-audit/",
+      "title": "Learn before changing.",
+      "category": "Start",
+      "eyebrow": "First audit",
+      "summary": "Run a read-only CSS audit, inspect canonical findings, then decide whether transformation or policy is justified.",
+      "order": 8,
+      "sections": [
+        {
+          "id": "human",
+          "title": "Read the first report",
+          "body": "Human output is optimized for local diagnosis. Every finding carries a stable code and source location rather than an opaque score.",
+          "code": "pliego-cssc audit --input app.css \\\n  --targets baseline-widely --format human"
+        },
+        {
+          "id": "automation",
+          "title": "Feed automation safely",
+          "body": "Canonical JSON and SARIF preserve the same finding model for CI, code scanning, and archival evidence.",
+          "code": "pliego-cssc audit --input app.css --targets modern --format sarif > findings.sarif"
+        },
+        {
+          "id": "unknown",
+          "title": "Unknown means unknown",
+          "body": "The standard-CSS classifier is bounded. Unsupported selectors, properties, or values fail closed under compatibility policy rather than being treated as safe.",
+          "code": null
+        }
+      ]
+    },
+    {
+      "sourcePath": "docs/site/editor-setup.md",
+      "sourceSha256": "sha256:6c222319c97d9648c1146dbb5c5ea6911531a39283aff12b1bc64444a3daca54",
+      "route": "/docs/editor-setup/",
+      "title": "Put the compiler engine in the feedback loop.",
+      "category": "Start",
+      "eyebrow": "Editor setup",
+      "summary": "Use `pliego-css-lsp` for diagnostics, completion, hover evidence, and catalog-aware authoring without launching the build CLI.",
+      "order": 9,
+      "sections": [
+        {
+          "id": "vscode",
+          "title": "VS Code extension",
+          "body": "The maintained extension launches `pliego-css-lsp`, discovers the project theme, and renders diagnostics in Rust source.",
+          "code": "pnpm --filter pliegocss-vscode package"
+        },
+        {
+          "id": "generic",
+          "title": "Any LSP client",
+          "body": "Launch the server over stdio from the same workspace used by CI. The protocol stays editor-neutral.",
+          "code": "pliego-css-lsp --seed"
+        },
+        {
+          "id": "safety",
+          "title": "Bound in-process work",
+          "body": "Document versions debounce for 150 ms, stale results are suppressed, semantic caches are bounded, and each document stops at 256 checks with `PCL002`.",
+          "code": null
+        }
+      ]
+    },
+    {
+      "sourcePath": "docs/site/syntax.md",
+      "sourceSha256": "sha256:eca84634a88f97e387815fd73ae183b7c0b8c76218f4961056cc5f07e908846f",
+      "route": "/docs/syntax/",
+      "title": "A finite language with visible edges.",
+      "category": "Core",
+      "eyebrow": "Utility syntax",
+      "summary": "Utilities lower into semantic slots, conditions, and typed values before any CSS serialization occurs.",
+      "order": 10,
+      "sections": [
+        {
+          "id": "shape",
+          "title": "Utility plus typed value",
+          "body": "Spacing, color, typography, layout, effects, and interactivity draw from one validated theme registry. Arbitrary escape hatches remain policy-visible.",
+          "code": "flex items-center gap-4 rounded-lg bg-surface px-4 py-2 text-sm"
+        },
+        {
+          "id": "conditions",
+          "title": "Conditions are structure",
+          "body": "Responsive, state, attribute, container, layer, and media variants become normalized condition paths. Their order is not incidental string decoration.",
+          "code": "md:grid-cols-2 hover:bg-accent-strong aria-[expanded=true]:ring-2"
+        },
+        {
+          "id": "important",
+          "title": "Importance follows the physical effect",
+          "body": "A trailing exclamation mark marks the semantic contribution important. Synthesized effects such as the composed box-shadow preserve that authority in final CSS and lineage.",
+          "code": "ring-2! shadow-md!"
+        }
+      ]
+    },
+    {
+      "sourcePath": "docs/site/composition.md",
+      "sourceSha256": "sha256:bfa71645825196c5da9b03a52df6d01ddead2fb93d1afd900d10bbeb17cdf25e",
+      "route": "/docs/composition/",
+      "title": "Compose by meaning, not source order.",
+      "category": "Core",
+      "eyebrow": "Composition",
+      "summary": "Compatible slots commute. Conflicting slots require an explicit branch-over-base operation.",
+      "order": 11,
+      "sections": [
+        {
+          "id": "commute",
+          "title": "Equivalent input, equivalent identity",
+          "body": "Utilities that occupy independent semantic slots canonicalize to the same identity even when authored in a different order.",
+          "code": "flex gap-4 p-6\np-6 flex gap-4"
+        },
+        {
+          "id": "conflict",
+          "title": "Ambiguous lists are rejected",
+          "body": "p-4 p-6 does not mean last one wins. Both declarations claim the same slot under the same condition, so compilation stops.",
+          "code": "pliego-cssc check --style \"p-4 p-6\" --seed"
+        },
+        {
+          "id": "override",
+          "title": "Overrides are explicit operations",
+          "body": "When an application intentionally replaces one semantic assignment with another, use composition so the override relationship remains visible and inspectable.",
+          "code": "pliego-cssc compile --compose \"p-4\" \"p-6\" --seed"
+        }
+      ]
+    },
+    {
+      "sourcePath": "docs/site/variants.md",
+      "sourceSha256": "sha256:65640a6e4ecbb21cdb5a8a7e5d10aeeffeafac33491291365b7f1036f8c55b3c",
+      "route": "/docs/variants/",
+      "title": "Conditions without string-order folklore.",
+      "category": "Core",
+      "eyebrow": "Variants and conditions",
+      "summary": "Every variant joins a typed condition path with deterministic normalization and specificity behavior.",
+      "order": 12,
+      "sections": [
+        {
+          "id": "responsive",
+          "title": "Responsive paths",
+          "body": "Theme breakpoints are validated once and emitted as ordered media conditions. Assignments at different breakpoints do not conflict.",
+          "code": "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+        },
+        {
+          "id": "state",
+          "title": "State and attributes",
+          "body": "Pseudo-class and bounded attribute variants stay in semantic IR so policy and physical lineage can explain their selectors.",
+          "code": "hover:bg-accent focus-visible:ring-2 data-[state=open]:opacity-100"
+        },
+        {
+          "id": "layers",
+          "title": "Cascade layers",
+          "body": "Fixed layer variants model author-controlled precedence without allowing arbitrary source-order dependence to leak into identity.",
+          "code": "layer-components:bg-surface layer-utilities:p-4"
+        }
+      ]
+    },
+    {
+      "sourcePath": "docs/site/themes.md",
+      "sourceSha256": "sha256:6a0abef1d4f797432dc0e8a0337993c324e212165133186a5cbe6591de30e224",
+      "route": "/docs/themes/",
+      "title": "Resolve tokens before styles.",
+      "category": "Core",
+      "eyebrow": "Themes and tokens",
+      "summary": "TOML themes and DTCG Resolver documents feed the same typed registry, identity, graph, and emitted variables.",
+      "order": 13,
+      "sections": [
+        {
+          "id": "toml",
+          "title": "Extend the seed",
+          "body": "A project theme can override or add typed colors, spacing, radii, typography, and breakpoints without changing utility grammar.",
+          "code": "schema = 1\nextends = \"seed\"\n\n[tokens.color]\nbrand = \"oklch(62% 0.18 250)\""
+        },
+        {
+          "id": "dtcg",
+          "title": "Select DTCG contexts explicitly",
+          "body": "Resolver inputs are never auto-discovered. Modifier selections participate in configuration identity even when two contexts resolve to equal values.",
+          "code": "pliego-cssc compile --tokens product.resolver.json \\\n  --token-input appearance=dark --style \"bg-brand\""
+        },
+        {
+          "id": "graph",
+          "title": "Publish the complete Token Graph",
+          "body": "Controlled output binds selected CSS to canonical token provenance, aliases, permutations, and reachability-aware usage evidence.",
+          "code": null
+        }
+      ]
+    },
+    {
+      "sourcePath": "docs/site/standard-css/policies.md",
+      "sourceSha256": "sha256:4e7ad817de6b1f1a9192d4c069fad466ed83087e23ed3cdca16bc373935682bc",
+      "route": "/docs/standard-css/policies/",
+      "title": "Make browser support and budgets executable.",
+      "category": "Standard CSS",
+      "eyebrow": "Policies",
+      "summary": "Compatibility, accessibility, payload, package, route, and ownership policies turn expectations into reviewable inputs.",
+      "order": 14,
+      "sections": [
+        {
+          "id": "compatibility",
+          "title": "Version the target",
+          "body": "baseline-widely and modern are frozen policy profiles with explicit browser and source-data identities. They do not drift silently with a dependency update.",
+          "code": "pliego-cssc compatibility --targets baseline-widely"
+        },
+        {
+          "id": "budgets",
+          "title": "Bind budgets to owners",
+          "body": "Direct files can name budget subjects manually. Asset Plans use an ownership sidecar to aggregate package and composed-route costs without guessing responsibility.",
+          "code": "pliego-cssc audit --asset-plan dist/pliego.assets.json \\\n  --ownership pliego.ownership.json --budget-policy budgets.json"
+        },
+        {
+          "id": "accessibility",
+          "title": "Audit static accessibility contracts",
+          "body": "Contrast and interaction guards use explicit policy plus token evidence. Dynamic visual behavior still requires browser and assistive-technology testing.",
+          "code": null
+        }
+      ]
+    },
+    {
+      "sourcePath": "docs/site/cascade.md",
+      "sourceSha256": "sha256:1ace78c08d0ff1f6c0f441f5e1ebae5be60dc1feb04fbeef54956f96fae5be57",
+      "route": "/docs/cascade/",
+      "title": "Explain the winning declaration.",
+      "category": "Standard CSS",
+      "eyebrow": "Cascade inspection",
+      "summary": "Inspect authored CSS by element and longhand to see matching selectors, precedence, and the final winner.",
+      "order": 15,
+      "sections": [
+        {
+          "id": "query",
+          "title": "Ask one precise question",
+          "body": "Provide a CSS file, a bounded element description, and one longhand. The command reports candidates instead of simulating an entire browser.",
+          "code": "pliego-cssc explain-cascade --input app.css \\\n  --element 'button#save.action' --property background-color"
+        },
+        {
+          "id": "winner",
+          "title": "See why it won",
+          "body": "Origin, importance, layer, specificity, and source position are surfaced in comparison order with a stable machine-readable form.",
+          "code": null
+        },
+        {
+          "id": "boundary",
+          "title": "Keep the model honest",
+          "body": "This is a static bounded inspector. Runtime DOM state, animation interpolation, adopted sheets, and script mutation remain browser responsibilities.",
+          "code": null
+        }
+      ]
+    },
+    {
+      "sourcePath": "docs/site/manifests.md",
+      "sourceSha256": "sha256:b301fa80c8b248fb5a91e2c3f26fbcc448c1cf68540cffe39752ec364755d036",
+      "route": "/docs/manifests/",
+      "title": "Trace source intent into emitted bytes.",
+      "category": "Evidence",
+      "eyebrow": "Style manifests",
+      "summary": "Manifest schema 5 connects source origins, semantic assignments, final selectors, physical declarations, and CSS ranges.",
+      "order": 16,
+      "sections": [
+        {
+          "id": "identity",
+          "title": "Identity chain",
+          "body": "StyleId identifies canonical semantics. Class identity, theme identity, configuration, and final CSS hash bind that style into one build.",
+          "code": "pliego-cssc compile --source src --manifest dist/app.manifest.json \\\n  --manifest-version 5 --output dist/app.css"
+        },
+        {
+          "id": "physical",
+          "title": "Physical lineage",
+          "body": "Generated custom properties and synthesized declarations retain contributors, importance, conditions, selector, property, value, and output byte range.",
+          "code": null
+        },
+        {
+          "id": "versions",
+          "title": "Request the schema you consume",
+          "body": "Schema 3 supports style manifests, schema 4 adds reachability ownership, and schema 5 adds closed physical tracing. Consumers must pin their contract.",
+          "code": null
+        }
+      ]
+    },
+    {
+      "sourcePath": "docs/site/control-artifacts.md",
+      "sourceSha256": "sha256:f80f80557d42574c8281bfcf6bb72ecd3884527f69ca1c81eb36d889a12a0e2d",
+      "route": "/docs/control-artifacts/",
+      "title": "Publish the receipt last.",
+      "category": "Evidence",
+      "eyebrow": "Control artifacts",
+      "summary": "Controlled builds stage related outputs, lock the destination, verify hashes, compensate failures, and expose one completed receipt.",
+      "order": 17,
+      "sections": [
+        {
+          "id": "group",
+          "title": "One rollback-capable group",
+          "body": "CSS, source map, style manifest, Token Graph, findings, control manifest, and receipt are generated from one exact input snapshot.",
+          "code": "pliego-cssc compile --source src --output dist/app.css \\\n  --manifest dist/app.manifest.json --control-dir dist"
+        },
+        {
+          "id": "check",
+          "title": "Check without writing",
+          "body": "The same command with --check recomputes every artifact and fails on byte drift without taking publication locks or replacing files.",
+          "code": "pliego-cssc compile --source src --output dist/app.css \\\n  --manifest dist/app.manifest.json --control-dir dist --check"
+        },
+        {
+          "id": "receipt",
+          "title": "Completion is explicit",
+          "body": "Consumers treat the fixed receipt as the publication boundary. Its absence means the group is incomplete, even if individual files are present.",
+          "code": null
+        }
+      ]
+    },
+    {
+      "sourcePath": "docs/site/critical-css.md",
+      "sourceSha256": "sha256:85e43a1f36e743a2fc84328847e4e72ff42ce97f8b048d5233f43c3394dd3f1e",
+      "route": "/docs/critical-css/",
+      "title": "Prove what rendered above the fold.",
+      "category": "Evidence",
+      "eyebrow": "Critical style evidence",
+      "summary": "Join observed browser behavior to project topology and retained style identity without letting an observation silently authorize removal.",
+      "order": 18,
+      "sections": [
+        {
+          "id": "observe",
+          "title": "Observe a real route",
+          "body": "Capture viewport, route, interaction state, loaded assets, matched styles, and source identities from a browser run against the built application.",
+          "code": null
+        },
+        {
+          "id": "join",
+          "title": "Join exact universes",
+          "body": "Evidence is accepted only when its project index, asset plan, reachability, and CSS identities match the build under review.",
+          "code": null
+        },
+        {
+          "id": "authority",
+          "title": "Observation does not equal deletion",
+          "body": "A style unseen in one scope remains unknown outside that scope. Explicit retention and reachability policies control removal authority.",
+          "code": null
+        }
+      ]
+    },
+    {
+      "sourcePath": "docs/site/migration/tailwind.md",
+      "sourceSha256": "sha256:f4aad2c2b31b7062736566d4c09690378354676239c5c039b6743794f8a42cf9",
+      "route": "/docs/migration/tailwind/",
+      "title": "Inventory Tailwind before translating it.",
+      "category": "Migration",
+      "eyebrow": "Tailwind migration",
+      "summary": "Recover the real utility surface, classify supported roles, and keep unsupported framework behavior visible.",
+      "order": 19,
+      "sections": [
+        {
+          "id": "inventory",
+          "title": "Scan without replacement",
+          "body": "The inventory recognizes bounded class-bearing surfaces and reports candidates with source ranges. It does not rewrite template semantics during discovery.",
+          "code": "pliego-cssc migration-inventory tailwind src/App.tsx"
+        },
+        {
+          "id": "plan",
+          "title": "Generate a hash-bound project plan",
+          "body": "A declaration selects roots and destinations. The plan records exact source and output hashes before any replacement can be applied.",
+          "code": "pliego-cssc migration-project-plan migration.json"
+        },
+        {
+          "id": "gaps",
+          "title": "Preserve unsupported behavior",
+          "body": "Plugins, generated variants, arbitrary selectors, and runtime class construction remain explicit migration findings unless a project-owned adapter proves them.",
+          "code": null
+        }
+      ]
+    },
+    {
+      "sourcePath": "docs/site/migration/sass.md",
+      "sourceSha256": "sha256:e12a4888068eed66e73fdc900c47b10d2587a0c2a451f3c67e0312ae7a68b80a",
+      "route": "/docs/migration/sass/",
+      "title": "Separate syntax conversion from semantic adoption.",
+      "category": "Migration",
+      "eyebrow": "Sass migration",
+      "summary": "Inventory variables, nesting, mixins, imports, and generated surfaces without pretending every Sass abstraction is a utility.",
+      "order": 20,
+      "sections": [
+        {
+          "id": "inventory",
+          "title": "Map the source surface",
+          "body": "The inventory records statically visible Sass roles and unresolved dynamic behavior so the team can choose what stays authored CSS.",
+          "code": "pliego-cssc migration-inventory sass styles/main.scss"
+        },
+        {
+          "id": "css-first",
+          "title": "Ordinary CSS is a valid destination",
+          "body": "Use the standard-CSS transformer for syntax and compatibility work. Adopt typed PliegoCSS styles only where identity and provenance pay for themselves.",
+          "code": null
+        },
+        {
+          "id": "rollback",
+          "title": "Keep originals and rollback evidence",
+          "body": "Applied replacements preserve source backups and hash-bound rollback records. A changed destination aborts rather than overwriting concurrent edits.",
+          "code": null
+        }
+      ]
+    },
+    {
+      "sourcePath": "docs/site/migration/css-modules.md",
+      "sourceSha256": "sha256:977a2a6184768213586d26b6ecd5da3b47ccc10ef0e88e96e26702a19af73752",
+      "route": "/docs/migration/css-modules/",
+      "title": "Preserve component ownership.",
+      "category": "Migration",
+      "eyebrow": "CSS Modules migration",
+      "summary": "Discover module exports and usage while keeping application-owned component topology separate from CSS semantics.",
+      "order": 21,
+      "sections": [
+        {
+          "id": "inventory",
+          "title": "Inventory exported classes",
+          "body": "The scanner identifies bounded module class definitions and their source locations without assuming a particular bundler naming strategy.",
+          "code": "pliego-cssc migration-inventory css-modules src/Card.module.css"
+        },
+        {
+          "id": "ownership",
+          "title": "Let the application own reachability",
+          "body": "Route and component reachability comes from the framework or product index, not from filename heuristics inside the CSS compiler.",
+          "code": null
+        },
+        {
+          "id": "mixed",
+          "title": "Mixed adoption is first-class",
+          "body": "A project can retain modules for component styles, audit their emitted CSS, and introduce typed identities only for new or shared surfaces.",
+          "code": null
+        }
+      ]
+    },
+    {
+      "sourcePath": "docs/site/tooling/cli.md",
+      "sourceSha256": "sha256:e123d55383efc625fef6e59f9c9252514abf3277ba1ec8bf5aa72f7113b61509",
+      "route": "/docs/tooling/cli/",
+      "title": "One CLI, explicit modes.",
+      "category": "Tooling",
+      "eyebrow": "Command-line reference",
+      "summary": "Compile, inspect, audit, transform, explain, bundle, watch, migrate, format, plan, and verify with strict argument contracts.",
+      "order": 22,
+      "sections": [
+        {
+          "id": "discover",
+          "title": "Discover the real command surface",
+          "body": "Root and command help are generated from the maintained command synopsis. Unknown options, duplicate single-value options, and missing values fail.",
+          "code": "pliego-cssc --help\npliego-cssc compile --help"
+        },
+        {
+          "id": "diagnostics",
+          "title": "Select diagnostic transport globally",
+          "body": "Human and JSON diagnostics can be requested before or after the command without stealing option values that happen to resemble flags.",
+          "code": "pliego-cssc --diagnostic-format json check --style \"p-4 p-6\" --seed"
+        },
+        {
+          "id": "determinism",
+          "title": "Use --check in CI",
+          "body": "Commands that publish controlled or generated artifacts expose a read-only comparison path. CI should verify the checked-in or staged output, not regenerate it silently.",
+          "code": null
+        }
+      ]
+    },
+    {
+      "sourcePath": "docs/site/tooling/lsp.md",
+      "sourceSha256": "sha256:22dbe9698cf617c210186f2edab5f0a6d2dcb061ffce39e6bac1a944743bda5e",
+      "route": "/docs/tooling/lsp/",
+      "title": "Compiler feedback without editor subprocesses.",
+      "category": "Tooling",
+      "eyebrow": "Language server",
+      "summary": "The LSP uses the same in-process `AnalysisHost` as CLI and watch without launching `pliego-cssc` or writing synthetic source files.",
+      "order": 23,
+      "sections": [
+        {
+          "id": "features",
+          "title": "Diagnostics, completion, and hover",
+          "body": "Visible `pc!` and `pcx!` literals receive shared diagnostics, catalog-backed completion, and compiler-emitted hover CSS under the exact active theme.",
+          "code": null
+        },
+        {
+          "id": "cancellation",
+          "title": "Suppress stale document work",
+          "body": "Document versions are debounced for 150 ms, and version checks around bounded in-process analysis prevent obsolete results from being published.",
+          "code": null
+        },
+        {
+          "id": "limits",
+          "title": "Bound analysis",
+          "body": "Each document is capped at 256 semantic checks, the shared cache is bounded and theme-invalidated, and excessive input emits `PCL002`.",
+          "code": null
+        }
+      ]
+    },
+    {
+      "sourcePath": "docs/site/tooling/watch.md",
+      "sourceSha256": "sha256:3aabe8443539de2801d0270c155a0d47bea439203f73ce3fcbc5166765158cf2",
+      "route": "/docs/tooling/watch/",
+      "title": "Keep the last complete truth.",
+      "category": "Tooling",
+      "eyebrow": "Watch mode",
+      "summary": "Poll coherent snapshots, republish only valid groups, and retain the last valid output across transient edits.",
+      "order": 24,
+      "sections": [
+        {
+          "id": "run",
+          "title": "Watch inputs and output",
+          "body": "The watcher accepts the same source, theme, target, format, manifest, reachability, and controlled-output options as compile.",
+          "code": "pliego-cssc watch --source src --theme \\\n  --output dist/app.css --manifest dist/app.manifest.json"
+        },
+        {
+          "id": "snapshot",
+          "title": "Confirm one coherent snapshot",
+          "body": "Inputs are observed twice before compilation so an editor save sequence does not publish a mixture of old and new files.",
+          "code": null
+        },
+        {
+          "id": "last-valid",
+          "title": "Never replace validity with a partial edit",
+          "body": "A parser error, invalid token document, or failed group publication leaves the previous complete artifact set in place.",
+          "code": null
+        }
+      ]
+    },
+    {
+      "sourcePath": "docs/site/tooling/repair.md",
+      "sourceSha256": "sha256:e948e434445108c4360c04904234d048339e2153d149ec3964e5def5f2d7d5cf",
+      "route": "/docs/tooling/repair/",
+      "title": "Plan first. Authorize exact bytes.",
+      "category": "Tooling",
+      "eyebrow": "Repair agent",
+      "summary": "Generate bounded repair proposals, bind authorization to source hashes, verify in staging, then publish receipts.",
+      "order": 25,
+      "sections": [
+        {
+          "id": "plan",
+          "title": "Join findings to a proposal",
+          "body": "Repair plans name exact finding codes, files, byte ranges, replacements, expected hashes, and verification commands.",
+          "code": "pliego-cssc plan --findings findings.json \\\n  --proposal proposal.json --source-root ."
+        },
+        {
+          "id": "dry-run",
+          "title": "Verify before mutation",
+          "body": "Dry-run applies the authorized patch inside a staging copy and executes bounded Rust or browser checks without replacing the source tree.",
+          "code": "pliego-cssc fix --plan plan.json --findings findings.json \\\n  --source-root . --dry-run"
+        },
+        {
+          "id": "resource",
+          "title": "Time and output are part of safety",
+          "body": "Test, browser, toolchain, and version subprocesses use explicit deadlines and output limits while the repair lock is held.",
+          "code": null
+        }
+      ]
+    },
+    {
+      "sourcePath": "docs/site/integrations/plain-html.md",
+      "sourceSha256": "sha256:9d84a07aad9047d542211be34d2f33f0b6a63d5dbe3358b7b817a338b6c4baf4",
+      "route": "/docs/integrations/plain-html/",
+      "title": "Audit and transform without a framework.",
+      "category": "Integrations",
+      "eyebrow": "Plain HTML",
+      "summary": "Use PliegoCSS as a standards control layer around an ordinary stylesheet and static HTML build.",
+      "order": 26,
+      "sections": [
+        {
+          "id": "audit",
+          "title": "Start with emitted CSS",
+          "body": "No adapter is required. Audit the exact stylesheet the browser loads and archive canonical findings beside the build.",
+          "code": "pliego-cssc audit --input public/app.css --targets baseline-widely"
+        },
+        {
+          "id": "transform",
+          "title": "Transform explicitly",
+          "body": "Compatibility transformation and minification are separate from analysis so a read-only audit never rewrites authored output.",
+          "code": "pliego-cssc transform-css --input src/app.css \\\n  --output public/app.css --targets modern --format minified"
+        },
+        {
+          "id": "typed",
+          "title": "Typed authoring is optional",
+          "body": "Rust applications can compile typed styles into the same static site, but plain HTML consumers only need the final CSS asset.",
+          "code": null
+        }
+      ]
+    },
+    {
+      "sourcePath": "docs/site/integrations/build-tools.md",
+      "sourceSha256": "sha256:3b684781f55390e9e981032107b208eb12470e0c789ca8a97d35419d862d0d60",
+      "route": "/docs/integrations/build-tools/",
+      "title": "Integrate through files, not hidden hooks.",
+      "category": "Integrations",
+      "eyebrow": "Generic build tools",
+      "summary": "Vite, webpack, esbuild, CI systems, and custom pipelines consume explicit CSS, manifests, findings, maps, and asset plans.",
+      "order": 27,
+      "sections": [
+        {
+          "id": "producer",
+          "title": "Run PliegoCSS as a producer",
+          "body": "Invoke compile or transform before the application bundler and pass its ordinary CSS output through the normal asset graph.",
+          "code": "\"scripts\": {\n  \"css\": \"pliego-cssc compile --source src --output dist/pliego.css\",\n  \"build\": \"npm run css && vite build\"\n}"
+        },
+        {
+          "id": "consumer",
+          "title": "Consume stable sidecars",
+          "body": "Use the numbered JSON schemas for manifests, Token Graphs, findings, reachability, project indexes, and Asset Plans instead of scraping terminal text.",
+          "code": null
+        },
+        {
+          "id": "ownership",
+          "title": "Keep topology in its owner",
+          "body": "A framework adapter may export route and component reachability. PliegoCSS validates and projects that sidecar but does not crawl application internals.",
+          "code": null
+        }
+      ]
+    },
+    {
+      "sourcePath": "docs/site/reference/configuration.md",
+      "sourceSha256": "sha256:005f4656fdba04c614e19deb8addbe7628b287f2a609f11c8e01e7b1b73493ab",
+      "route": "/docs/reference/configuration/",
+      "title": "Configuration is part of identity.",
+      "category": "Reference",
+      "eyebrow": "Configuration",
+      "summary": "Theme, target, format, manifests, reachability, pruning, and token selections are explicit, validated, and hash-bound.",
+      "order": 28,
+      "sections": [
+        {
+          "id": "discovery",
+          "title": "Conventional TOML discovery only",
+          "body": "Without --config, --tokens, or --seed, the CLI searches for pliego.theme.toml from the workspace and input package roots. Ambiguous candidates fail.",
+          "code": null
+        },
+        {
+          "id": "exclusive",
+          "title": "Selectors are mutually exclusive",
+          "body": "--config, --tokens, and --seed cannot be combined. JSON token documents are never discovered implicitly.",
+          "code": null
+        },
+        {
+          "id": "hash",
+          "title": "Bind the complete choice",
+          "body": "Targets, format, emission settings, manifest version, pruning, theme bytes, resolver selections, and reachability bytes participate in the control configuration hash.",
+          "code": null
+        }
+      ]
+    },
+    {
+      "sourcePath": "docs/site/reference/diagnostics.md",
+      "sourceSha256": "sha256:25661884b0cc22c67c23e9e53ed8ac92faf156e460356a9a20d6583148342c95",
+      "route": "/docs/reference/diagnostics/",
+      "title": "Stable codes, precise ranges.",
+      "category": "Reference",
+      "eyebrow": "Diagnostics",
+      "summary": "Parser, source scanner, composition, policy, invocation, migration, and formatter failures share a canonical transport.",
+      "order": 29,
+      "sections": [
+        {
+          "id": "human",
+          "title": "Human diagnostics",
+          "body": "Terminal output favors the next corrective action while retaining the stable code, severity, file, line, column, and byte range.",
+          "code": null
+        },
+        {
+          "id": "json",
+          "title": "Canonical JSON",
+          "body": "JSON mode writes one schema-1 document to stderr on failure and leaves stdout empty. Consumers should branch on codes, not localized prose.",
+          "code": "pliego-cssc --diagnostic-format json check --style \"p-4 p-6\" --seed"
+        },
+        {
+          "id": "sarif",
+          "title": "SARIF for code scanning",
+          "body": "Audit findings can be serialized as SARIF while preserving canonical rule identity and source regions for hosted review systems.",
+          "code": null
+        }
+      ]
+    },
+    {
+      "sourcePath": "docs/site/release-readiness.md",
+      "sourceSha256": "sha256:c76cf2b2f691ede1b58d55c2ef9480c6a58b718e80d7d069074ff7222a968d29",
+      "route": "/docs/release-readiness/",
+      "title": "Release truth bound to one exact candidate.",
+      "category": "Evidence",
+      "eyebrow": "Release readiness",
+      "summary": "The current 1.0 promotion state is blocked; no historical report can override these source-bound gates.",
+      "order": 30,
+      "sections": [
+        {
+          "id": "candidate",
+          "title": "Candidate identity",
+          "body": "Target 0.1.0; candidate 0.1.0-rc.2; tag v0.1.0-rc.2; commit 064dcbce96a3a5cc97a940d07566c008bb5e2d3e; Git tree 010a64f5d0bbd142a1d015fda4ccf573cc6e4133; observed 2026-07-22T14:10:00Z; expires 2026-07-29T14:10:00Z.",
+          "code": null
+        },
+        {
+          "id": "dimensions",
+          "title": "Readiness dimensions",
+          "body": "Technical: blocked; Operational: blocked; Adoption: blocked; Authorized: blocked; Promotion: blocked.",
+          "code": null
+        },
+        {
+          "id": "blockers",
+          "title": "Current blockers",
+          "body": "exact-candidate-ci (pending): GitHub Actions run 29864046865 passed the exact RC.2 commit across Ubuntu, Windows, and macOS with Rust 1.85 and 1.96 plus the listed release jobs, but its promotion window has expired and requires a fresh candidate replay. exact-candidate-codeql (pending): CodeQL run 29864046876 passed Actions, JavaScript/TypeScript, and Rust analysis on the exact RC.2 commit, but its promotion window has expired and requires a fresh candidate replay. g0-corrections-on-candidate (pending): G0 corrections are not part of the exact RC.2 candidate. They require a newly named candidate plus hosted replay before they can become release evidence. browser-release-matrix (blocked): Every required hosted browser lane is not configured for the exact candidate source; local or historical browser runs have no promotion authority. adapter-coexistence-matrix (blocked): RC.2 predates the G6 adapter authority. It has no clean exact-source 21-project HTML/Vite/PliegoRS matrix, Tailwind v3/v4 source/output audit, DOM/ARIA/style equivalence, exact rollback, or pinned PliegoRS framework replay. registry-replay-refresh (pending): RC.2 was previously replayed from crates.io, but schema 3 requires a fresh, unexpired, artifact-hashed replay for the exact promotion candidate. production-deployment-refresh (pending): The production site has historical deployment evidence, but a current exact-source edge and browser replay with hashed artifacts is missing. signed-binary-distribution (blocked): RC.2 predates the repository-only G5 distribution contract. It has no exact-source native archives, checksums, CycloneDX SBOMs, GitHub/Sigstore attestations, immutable GitHub Release, or verified pnpm package asset; npmjs publication is forbidden. external-adoption-evidence (pending): RC.2 predates the G7 authority. Recruitment is open, but the required external interviews, real incidents, and pilots have not been recorded as consented, redacted, reviewed, hash-bound evidence. final-promotion-authorization (not-authorized): Mario has not explicitly authorized publishing final 0.1.0 for this exact source commit and Git tree.",
+          "code": null
+        }
+      ]
+    },
+    {
+      "sourcePath": "docs/site/external-adoption.md",
+      "sourceSha256": "sha256:48066f009e353b7b7a4983d82d9ac1a518d430260be4d824128f1f7d5af4e408",
+      "route": "/docs/external-adoption/",
+      "title": "External adoption is a measured gate.",
+      "category": "Evidence",
+      "eyebrow": "G7 adoption",
+      "summary": "G7 is currently blocked. Owned fixtures and synthetic incidents cannot satisfy it.",
+      "order": 31,
+      "sections": [
+        {
+          "id": "status",
+          "title": "Qualified evidence",
+          "body": "Interviews: 0/10. Real incidents: 0/20. Completed pilots: 0/3. Independent projects: 0/3. Independent organizations: 0/3.",
+          "code": null
+        },
+        {
+          "id": "apply",
+          "title": "Applications are open",
+          "body": "Read the [public cohort notice](https://github.com/celiumsai/pliegocss/issues/7) or apply privately at [hello@pliegocss.dev](mailto:hello@pliegocss.dev?subject=G7%20external%20adoption). Do not post names, email addresses, credentials, private repository URLs, proprietary source, transcripts, or incident material on GitHub. A public application is not consent and is not evidence.",
+          "code": null
+        },
+        {
+          "id": "boundary",
+          "title": "Admission boundary",
+          "body": "Only consented, redacted, reviewed external records bound to private source evidence by SHA-256 count. Projects owned by Celiums Solutions, PliegoCSS, or celiumsai do not count.",
+          "code": null
+        },
+        {
+          "id": "support",
+          "title": "Certified adapter scope",
+          "body": "The frozen 0.1.x policy covers complete literal class groups in static HTML, Vite 8.1.5, and pinned PliegoRS rendered output against Tailwind CSS 3.4.19 or 4.3.3. Tailwind stays loaded during coexistence. Dynamic classes, arbitrary config/plugin execution, and Tailwind removal are excluded.",
+          "code": null
+        }
+      ]
+    }
+  ]
+}

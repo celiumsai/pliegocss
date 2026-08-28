@@ -2897,6 +2897,16 @@ pre {
   font-size: 9px;
 }
 
+.doc-source {
+  padding: 20px 0;
+  border-top: 1px solid var(--line-light);
+  color: var(--carbon-500);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
 /* Supporting pages */
 
 .benchmark-hero {

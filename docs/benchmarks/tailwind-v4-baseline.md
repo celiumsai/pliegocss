@@ -1,6 +1,6 @@
 # Tailwind CSS v4 baseline
 
-Status: exploratory F0 measurement
+Status: **historical F0 measurement; superseded for current comparison by [Benchmark Authority v2](./tailwind-benchmark-authority-v2.md)**
 
 ## Frozen inputs
 

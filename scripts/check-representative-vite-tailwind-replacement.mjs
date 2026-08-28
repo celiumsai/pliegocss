@@ -2,11 +2,12 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { cargoTargetRoot } from "./rust-target.mjs";
 
 const root = resolve(import.meta.dirname, "..");
 const source = resolve(root, "integration-tests/representative/vite-tailwind-inventory");
 const stage = resolve(root, "target/tests/vite-tailwind-plan-replacement");
-const binary = resolve(root, process.platform === "win32" ? "target/debug/pliego-cssc.exe" : "target/debug/pliego-cssc");
+const binary = resolve(cargoTargetRoot(root), "debug", process.platform === "win32" ? "pliego-cssc.exe" : "pliego-cssc");
 const run = (args, cwd = stage) => {
   const result = spawnSync(binary, args, { cwd, encoding: "utf8" });
   if (result.status !== 0) throw new Error(`${args.join(" ")} failed:\n${result.stderr}`);

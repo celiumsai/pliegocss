@@ -1,6 +1,6 @@
 # Public API candidate
 
-Status: **application, build-macro, and adapter surfaces published at `0.1.0-rc.2`; the
+Status: **application, build-macro, and adapter surfaces prepared for `0.1.0-rc.3`; the
 Cargo DTCG, ownership, usage-sidecar, and application-topology collector bridges are covered by the
 Rust 1.85 downstream smoke; this remains a prerelease contract**
 
@@ -215,6 +215,13 @@ attests only the declared roots and graph: it does not discover the product Carg
 registry, infer identities from paths, or derive bundle partitions. Scanner DTOs and standalone
 scanner functions remain advanced tooling rather than promoted adapter API.
 
+Frameworks that publish `pliegors-product-topology/1` can instead use the
+closed `ProductTopology::from_json` decoder and `collect_css_inputs`. The
+returned `ProductCssInputs` exposes canonical reachability, a deterministic
+bundle plan, and read-only `ProductBundle` IDs, source partitions, and theme
+ownership. This wire consumer does not link PliegoRS types or move styling into
+runtime code.
+
 ## Migration-inventory tooling bridge
 
 Exact-version audit and migration tooling may use the selected `pliego-css-source` inventory
@@ -345,6 +352,10 @@ They expose `pub` items because sibling packages need them. Their mutable IR, pa
 catalog model, binary encoder/decoder, scanner DTOs/functions, and composition helpers are not
 covered by the minimal `0.1.x` application promise unless a later RC document explicitly promotes
 an item.
+The G2 `CompileRequest`, `CompileResult`, `AnalysisHost`, `PhysicalRulePlanner`, and `PcxRequest`
+surfaces are likewise exact-version advanced APIs shared by the packaged CLI, watch, macro, scanner,
+and LSP adapters. Their architectural role is documented and tested; they are not yet a stable
+third-party library promise. See [Shared compiler engine](./engine-api.md).
 Persisted bytes and schemas named above remain versioned regardless of this Rust-API classification.
 
 ## Change policy

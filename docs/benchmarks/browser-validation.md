@@ -2,7 +2,12 @@
 
 Date: 2026-07-13
 
-Status: Chromium smoke contract passed
+Status: **historical Chromium smoke; superseded for release claims by Browser/output certification v1**
+
+The current release contract is [Browser/output certification v1](./browser-output-certification-v1.md),
+which compares PliegoCSS with the fresh Tailwind lane across Chromium, Firefox, and WebKit on the
+Windows x64, Linux x64, and macOS ARM64 host matrix. This page retains the earlier smoke evidence;
+it cannot satisfy the current 9/9 gate.
 
 The StyleId format-2 migration was revalidated against manifest schema 3 and the complete CSS
 artifact `11f632e3e4321ab93a2c8df77e7ad1ce6034f912cbec48e62b92654f01a700fe`.
@@ -43,10 +48,9 @@ The full five-fixture artifact was checked at the three frozen methodology viewp
 - A dedicated `[data-theme="dark"]` fixture changed surface background to seed ink and foreground to
   white.
 
-## Remaining browser work
+## Historical boundary
 
-This is a real computed-style smoke test, not the final compatibility matrix. Hover, reduced-motion,
-contrast preferences, prefix behavior, Firefox/WebKit, visual screenshots, and automated regression
-execution in CI remain open. The CLI already freezes explicit `modern` Lightning CSS targets for
-Chrome/Edge 111, Firefox 128, and Safari 16.4; those configured targets still require this behavioral
-certification.
+This was a real computed-style smoke test, not the final compatibility matrix. The v1 certification
+now implements hover/focus, responsive computed-style comparison, reset/no-reset modes, screenshots,
+and CI automation. Broader reduced-motion, contrast, prefix, accessibility, and full supported-CSS
+coverage remain outside that frozen fixture and need separate evidence.

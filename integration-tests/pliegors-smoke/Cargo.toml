@@ -28,10 +28,10 @@ path = "src/bin/collector.rs"
 [dependencies]
 pliego-css = { path = "../../crates/pliego-css" }
 pliego-css-source = { path = "../../crates/pliego-css-source" }
-pliego-dom = "=0.0.2"
-pliego-macros = "=0.0.2"
-pliego-resume = "=0.0.2"
-pliego-ssg = "=0.0.2"
+pliego-dom = { version = "=0.4.0-beta.1", path = "../../../pliegors/crates/pliego-dom" }
+pliego-macros = { version = "=0.4.0-beta.1", path = "../../../pliegors/crates/pliego-macros" }
+pliego-resume = { version = "=0.4.0-beta.1", path = "../../../pliegors/crates/pliego-resume" }
+pliego-ssg = { version = "=0.4.0-beta.1", path = "../../../pliegors/crates/pliego-ssg" }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
 sha2 = "0.10"

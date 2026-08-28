@@ -2,11 +2,14 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node
 import { dirname, join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { cargoTargetRoot, isolatedCargoEnvironment } from "./rust-target.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const targetDir = process.env.CARGO_TARGET_DIR
-  ? resolve(root, process.env.CARGO_TARGET_DIR)
-  : join(root, "target");
+const cargoEnvironment = isolatedCargoEnvironment(root, {
+  env: process.env,
+  toolchain: "1.85.0",
+});
+const targetDir = cargoTargetRoot(root, cargoEnvironment);
 const runtime = join(targetDir, "compatibility-policy", `run-${process.pid}-${Date.now()}`);
 const expected = readFileSync(
   join(root, "integration-tests", "compatibility-policy", "expected.baseline-widely.json"),
@@ -24,7 +27,7 @@ function run(program, args, { cwd = runtime, expectedStatus = 0, timeout = 30_00
   const result = spawnSync(program, args, {
     cwd,
     encoding: "utf8",
-    env: { ...process.env, CARGO_TARGET_DIR: targetDir },
+    env: cargoEnvironment,
     timeout,
     windowsHide: true,
   });
@@ -45,7 +48,7 @@ function resolveExecutable() {
     return configured;
   }
 
-  run("cargo", ["+1.85", "build", "--locked", "-p", "pliego-cssc"], {
+  run("cargo", ["+1.85.0", "build", "--locked", "-p", "pliego-cssc"], {
     cwd: root,
     timeout: 300_000,
   });

@@ -29,6 +29,7 @@ struct TokenInspection {
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct BreakpointInspection {
+    cascade_rank: u16,
     name: String,
     min_width: String,
 }
@@ -65,6 +66,7 @@ fn inspect_theme(theme: &ThemeRegistry) -> ThemeInspection {
             .breakpoints()
             .iter()
             .map(|breakpoint| BreakpointInspection {
+                cascade_rank: breakpoint.cascade_rank,
                 name: breakpoint.name.clone(),
                 min_width: breakpoint.min_width.clone(),
             })

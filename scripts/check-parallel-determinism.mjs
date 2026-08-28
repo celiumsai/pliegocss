@@ -11,8 +11,15 @@ import {
 } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { cargoTargetRoot, isolatedCargoEnvironment } from "./rust-target.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const rustToolchain = process.env.PLIEGOCSS_RUST_TOOLCHAIN ?? "1.85.0";
+const cargoEnvironment = isolatedCargoEnvironment(root, {
+  env: process.env,
+  toolchain: rustToolchain,
+});
+const cargoTarget = cargoTargetRoot(root, cargoEnvironment);
 const runtime = join(root, "target", "parallel-determinism", `run-${process.pid}-${Date.now()}`);
 const project = join(runtime, "project");
 const workers = 8;
@@ -42,7 +49,7 @@ function run(program, args, options = {}) {
   const result = spawnSync(program, args, {
     cwd: root,
     encoding: "utf8",
-    env: { ...process.env },
+    env: cargoEnvironment,
     maxBuffer: 16 * 1024 * 1024,
     timeout: 180_000,
     windowsHide: true,
@@ -62,7 +69,7 @@ function runAsync(program, args, options = {}) {
   return new Promise((resolvePromise, reject) => {
     const child = spawn(program, args, {
       cwd: project,
-      env: { ...process.env },
+      env: cargoEnvironment,
       stdio: ["ignore", "pipe", "pipe"],
       windowsHide: true,
       ...options,
@@ -97,10 +104,9 @@ function resolveExecutable() {
     assert(existsSync(configured), `PLIEGO_CSSC does not exist: ${configured}`);
     return configured;
   }
-  run("cargo", ["+1.85.0", "build", "--locked", "-p", "pliego-cssc"]);
+  run("cargo", [`+${rustToolchain}`, "build", "--locked", "-p", "pliego-cssc"]);
   const executable = join(
-    root,
-    "target",
+    cargoTarget,
     "debug",
     process.platform === "win32" ? "pliego-cssc.exe" : "pliego-cssc",
   );
@@ -115,17 +121,14 @@ function resolveLockHolder() {
     return configured;
   }
   run("cargo", [
-    "+1.85.0",
+    `+${rustToolchain}`,
     "build",
     "--locked",
     "--manifest-path",
     "integration-tests/publication-lock-holder/Cargo.toml",
-    "--target-dir",
-    "target",
   ]);
   const executable = join(
-    root,
-    "target",
+    cargoTarget,
     "debug",
     process.platform === "win32"
       ? "pliego-publication-lock-holder.exe"
@@ -462,6 +465,7 @@ async function main() {
     JSON.stringify(
       {
         schemaVersion: 1,
+        rustToolchain,
         workersPerCohort: workers,
         maximumConcurrentCompilerProcesses: workers,
         referenceProcesses: profiles.length,

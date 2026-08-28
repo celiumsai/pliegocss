@@ -13,16 +13,25 @@ import {
 import { dirname, join, resolve } from "node:path";
 import { spawn, spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { cargoTargetRoot, isolatedCargoEnvironment } from "./rust-target.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const fixture = join(root, "integration-tests", "manifest-graph");
 const runtime = join(root, "target", "manifest-graph", `run-${process.pid}-${Date.now()}`);
 const project = join(runtime, "project");
-const targetDir = join(root, "target");
+const cargoEnvironment = isolatedCargoEnvironment(root, {
+  env: process.env,
+  toolchain: "1.85.0",
+});
+const targetDir = cargoTargetRoot(root, cargoEnvironment);
 const expectedCss = readFileSync(join(fixture, "expected.css"));
 const expectedManifest = readFileSync(join(fixture, "expected.manifest.json"));
 const reachabilityName = "pliego.reachability.json";
 const updateGoldens = process.env.PLIEGOCSS_UPDATE_GOLDENS === "1";
+const cargoBuildTimeout = Number.parseInt(
+  process.env.PLIEGOCSS_CARGO_BUILD_TIMEOUT_MS ?? "600000",
+  10,
+);
 
 function fail(message) {
   throw new Error(message);
@@ -46,7 +55,7 @@ function run(program, args, { cwd = root, expectedStatus = 0, timeout = 30_000 }
   const result = spawnSync(program, args, {
     cwd,
     encoding: "utf8",
-    env: { ...process.env, CARGO_TARGET_DIR: targetDir },
+    env: cargoEnvironment,
     timeout,
     windowsHide: true,
   });
@@ -67,8 +76,8 @@ function resolveExecutable() {
     return configured;
   }
 
-  run("cargo", ["+1.85", "build", "--locked", "-p", "pliego-cssc"], {
-    timeout: 120_000,
+  run("cargo", ["+1.85.0", "build", "--locked", "-p", "pliego-cssc"], {
+    timeout: cargoBuildTimeout,
   });
   const executable = join(
     targetDir,
@@ -251,7 +260,7 @@ async function assertWatchContract(executable) {
     ],
     {
       cwd: project,
-      env: { ...process.env, CARGO_TARGET_DIR: targetDir },
+      env: cargoEnvironment,
       stdio: ["ignore", "pipe", "pipe"],
       windowsHide: true,
     },
@@ -368,7 +377,7 @@ function assertManifestIntegrity(manifest, css, schemaVersion) {
   assert(manifest.schemaVersion === schemaVersion, `expected manifest schema ${schemaVersion}`);
   assert(manifest.styleIdFormatVersion === 2, "StyleId format version drifted");
   assert(manifest.classNameFormatVersion === 1, "class-name format version drifted");
-  assert(manifest.themeIdFormatVersion === 2, "theme ID format version drifted");
+  assert(manifest.themeIdFormatVersion === 3, "theme ID format version drifted");
   assert(manifest.targets === "modern", "target contract drifted");
   assert(manifest.format === "minified", "format contract drifted");
   assert(manifest.cssBytes === css.byteLength, "manifest CSS byte length is stale");

@@ -47,7 +47,7 @@ cargo run -p pliego-cssc -- compile --source src/lib.rs --theme --output pliego.
 Install the public-preview binary from crates.io and invoke it from an application workspace:
 
 ```console
-cargo install pliego-cssc --version '=0.1.0-rc.2' --locked
+cargo install pliego-cssc --version '=0.1.0-rc.3' --locked
 pliego-cssc --version
 pliego-cssc check --source src
 ```
@@ -364,8 +364,8 @@ integrity mismatches.
 
 Every successful JSON document that exposes identity carries three required top-level fields:
 `styleIdFormatVersion`, `classNameFormatVersion`, and `themeIdFormatVersion`. Their current values
-are 2, 1, and 1 respectively. They appear in manifest schemas 3, 4, and 5, inspection schema 2, catalog
-schema 3, and explain schema 2. A consumer must check them before interpreting a `styleId`, class, or theme
+are 2, 1, and 3 respectively. They appear in manifest schemas 3, 4, and 5, inspection schema 3, catalog
+schema 4, and explain schema 2. A consumer must check them before interpreting a `styleId`, class, or theme
 identity. The schema-1 diagnostic envelope is unchanged and does not claim that identity resolution
 completed.
 
@@ -1084,7 +1084,7 @@ pliego.manifest.json` writes pretty JSON with one trailing newline:
   "schemaVersion": 3,
   "styleIdFormatVersion": 2,
   "classNameFormatVersion": 1,
-  "themeIdFormatVersion": 2,
+  "themeIdFormatVersion": 3,
   "themeId": "b3d5ad77175995c2b8f51ef7c0d41991",
   "targets": "modern",
   "format": "minified",
@@ -1203,9 +1203,9 @@ multi-file transactional or crash-atomic replacement.
 - Theme CSS currently emits the registry token kinds supported by the emitter's custom-property
   contract; `--prune-unreachable` does not filter that block. Other tokens still affect lowering and
   identity.
-- Identity and class formats are explicitly versioned. The `0.1.0-rc.2` vectors are a
+- Identity and class formats are explicitly versioned. The `0.1.0-rc.3` vectors are a
   published prerelease contract rather than a final `0.1.0` stability promise. See the
   [StyleId format-2 reference](./style-id-format-v2.md).
-- The CLI may be installed from exact crates.io version `0.1.0-rc.2` or from an
+- After publication, the CLI may be installed from exact crates.io version `0.1.0-rc.3` or from an
   exact checkout revision. Once installed, `pliego-cssc` is standalone and can run from an application directory; it does not
   require that application to belong to the PliegoCSS Cargo workspace.

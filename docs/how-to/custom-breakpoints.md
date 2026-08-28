@@ -38,7 +38,13 @@ content-wide = "72rem"
 
 `md` keeps its seed breakpoint ID and receives a new minimum width. `tablet` and `content-wide` are
 new named variants. Accepted units are `px`, `rem`, `em`, `ch`, and `vw`; each value must be finite
-and greater than zero.
+and greater than zero. Use one unit across the complete active set. Mixed units fail closed instead
+of letting a name or stable ID accidentally decide responsive precedence.
+
+Breakpoint IDs remain stable lookup identity. PliegoCSS separately derives a narrow-to-wide cascade
+rank from the numeric widths, so `tablet = "52rem"` is emitted before
+`content-wide = "72rem"` even though canonical name ordering assigns `content-wide` the earlier ID.
+The same rank controls viewport media queries and container queries.
 
 ## 3. Use the variants in visible literals
 
@@ -76,3 +82,11 @@ Cargo reachability analysis.
 
 For the programmatic emission path, see [How token values reach CSS](../learn/themes-and-tokens.md#how-token-values-reach-css).
 For the complete validation rules, see the [theme schema](../reference/theme-schema.md).
+
+The repository freezes this exact 52/72rem regression with 2,048 ID/name/input permutations and
+real computed-style checks in both Chrome and Edge:
+
+```console
+pnpm integration:browser:breakpoints:chrome
+pnpm integration:browser:breakpoints:edge
+```

@@ -1,14 +1,16 @@
 import { spawn, spawnSync } from "node:child_process";
 import {
   existsSync,
+  mkdirSync,
   mkdtempSync,
   readFileSync,
   rmSync,
   statSync,
+  writeFileSync,
 } from "node:fs";
 import { createServer } from "node:http";
 import { tmpdir } from "node:os";
-import { basename, extname, isAbsolute, join, relative, resolve } from "node:path";
+import { basename, dirname, extname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
@@ -34,10 +36,39 @@ const expected = Object.freeze({
 const skipBuild = process.env.PLIEGOCSS_SKIP_PLIEGORS_BUILD === "1";
 const keepSite = process.env.PLIEGOCSS_KEEP_PLIEGORS_SITE === "1";
 const agentReport = process.env.PLIEGOCSS_AGENT_REPORT === "1";
+const evidencePath = process.env.PLIEGOCSS_PLIEGORS_BROWSER_EVIDENCE
+  ? resolve(root, process.env.PLIEGOCSS_PLIEGORS_BROWSER_EVIDENCE)
+  : null;
 
 function fail(message, details = undefined) {
   const suffix = details === undefined ? "" : `\n${JSON.stringify(details, null, 2)}`;
   throw new Error(`${message}${suffix}`);
+}
+
+function gitOutput(arguments_) {
+  const result = spawnSync("git", arguments_, {
+    cwd: root,
+    encoding: "utf8",
+    windowsHide: true,
+  });
+  if (result.error) throw result.error;
+  if (result.status !== 0) {
+    fail(`git ${arguments_.join(" ")} failed`, {
+      exitCode: result.status,
+      stdout: result.stdout,
+      stderr: result.stderr,
+    });
+  }
+  return result.stdout;
+}
+
+function pliegocssSourceIdentity() {
+  const status = gitOutput(["status", "--porcelain=v1", "-z", "--untracked-files=all"]);
+  return {
+    commit: gitOutput(["rev-parse", "HEAD"]).trim(),
+    gitTree: gitOutput(["rev-parse", "HEAD^{tree}"]).trim(),
+    dirty: status.length !== 0,
+  };
 }
 
 function sleep(milliseconds) {
@@ -614,6 +645,10 @@ try {
   const report = {
     schema: "pliegocss/pliegors-browser-gate/2",
     passed,
+    pliegocssSource: pliegocssSourceIdentity(),
+    pliegorsContract: JSON.parse(
+      readFileSync(join(root, "integration-tests", "pliegors-smoke", "pliegors-contract.json"), "utf8"),
+    ),
     browser: {
       executable: basename(chromePath),
       jsVersion: browserVersion.jsVersion,
@@ -629,6 +664,20 @@ try {
     serverErrors: site.errors,
     serverRequests,
   };
+  if (evidencePath) {
+    const child = relative(root, evidencePath);
+    if (
+      !child ||
+      child === ".." ||
+      child.startsWith(`..${sep}`) ||
+      isAbsolute(child) ||
+      !evidencePath.endsWith(".json")
+    ) {
+      fail("PLIEGOCSS_PLIEGORS_BROWSER_EVIDENCE must be a JSON path inside the repository");
+    }
+    mkdirSync(dirname(evidencePath), { recursive: true });
+    writeFileSync(evidencePath, `${JSON.stringify(report, null, 2)}\n`);
+  }
   const compactReport = {
     schemaVersion: "1.0.0",
     passed,

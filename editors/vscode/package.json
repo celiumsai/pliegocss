@@ -57,9 +57,10 @@
         },
         "pliegocss.compiler.path": {
           "type": "string",
-          "default": "pliego-cssc",
+          "default": "",
           "scope": "machine-overridable",
-          "description": "Exact path or executable name for the same-version pliego-cssc used by completion and hover."
+          "description": "Deprecated compatibility setting. Editor analysis is in-process inside pliego-css-lsp.",
+          "deprecationMessage": "No longer used. Remove this setting; pliego-css-lsp does not launch pliego-cssc."
         },
         "pliegocss.projectIndex.path": {
           "type": "string",

@@ -62,4 +62,12 @@ mod tests {
                 && component.source_units()[0].starts_with("src/styles/")
         }));
     }
+
+    #[test]
+    fn product_registry_emits_the_native_topology_seam() {
+        let bytes = application_registry().to_topology_json().unwrap();
+        let value: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+        assert_eq!(value["schema"], "pliegors-product-topology/1");
+        assert_eq!(value["routes"][1]["islands"][0], VISIT_COUNTER_ID);
+    }
 }

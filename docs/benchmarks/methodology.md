@@ -3,6 +3,36 @@
 PliegoCSS comparisons freeze DOM, content, accessibility attributes, theme values, and browser
 targets. Only the styling authoring and compilation surface may change.
 
+## Current competitor authority
+
+[Benchmark Authority v2](./tailwind-benchmark-authority-v2.md) is the only current Tailwind
+comparison contract. It maintains three exact lanes: the live npm `latest`, the upstream npm
+`v3-lts` tag, and one frozen release for historical regression. The oracle expires after seven days;
+offline validation checks its age and package/lock integrity, while the release gate verifies the
+dist-tags and SRI values against the live registry.
+
+Every lane runs against micro, medium, and large corpora with alternating Pliego/Tailwind process
+order. Reports retain all paired samples, direct-child peak working set, raw/gzip/Brotli CSS and
+HTML, separate-stream transfer, candidate coverage, deterministic hashes, and a post-sample fresh
+output check. Legacy Gate A/B evidence remains historically valid but cannot supply current
+competitor, memory, Brotli, or corpus-scale claims.
+
+## Browser/output certification
+
+[Browser/output certification v1](./browser-output-certification-v1.md) reuses the exact current
+Tailwind lane and the frozen medium fixture, but measures behavior rather than compiler performance.
+Within each host it compares 52 computed properties, 1/64-pixel box/text-line geometry bounded to
+0.1 CSS px, and bounded PNG differences for three responsive viewports plus hover and focus, under
+explicit no-reset and shared-reset modes. Evidence retains the maximum geometry delta per scenario;
+the aggregator independently recomputes the host maximum and fails on invalid or inconsistent
+values. The complete gate is
+Chromium, Firefox, and WebKit on Windows x64, Linux x64, and macOS ARM64.
+
+Local runs may diagnose output drift but cannot become release evidence. Aggregation accepts only
+all nine clean-tree host documents bound to one commit/tree, within the seven-day evidence window,
+with every original/diff PNG present and hash-valid. The shared commit/tree must equal the
+aggregator checkout, preventing a stale but internally consistent matrix from passing.
+
 ## Fixtures
 
 | Fixture | Contract |
@@ -116,7 +146,8 @@ violation gate.
 
 Real incidents additionally require provenance, consent/redaction status, expected diagnosis,
 allowed ambiguity, and stable content hashes. Synthetic conformance cases cannot be counted toward
-the required 20 incidents or diagnostic precision/recall.
+the required 20 incidents or diagnostic precision/recall. Admission to that count is governed by
+the [G7 external adoption authority](../product/external-adoption-g7.md).
 
 ## Environment and reproducibility
 

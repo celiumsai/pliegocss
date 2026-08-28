@@ -106,12 +106,17 @@ tablet = "52rem"   # adds a new responsive variant
 
 Accepted units are `px`, `rem`, `em`, `ch`, and `vw`. Units are lowercase and a value must be a
 finite number greater than zero. Percentages, unitless values, media-query expressions, and values
-such as `0rem` are rejected.
+such as `0rem` are rejected. Every active breakpoint must use the same unit. Mixed units are rejected
+because their runtime order depends on font, container, or viewport state and cannot produce one
+deterministic narrow-to-wide cascade.
 
 New breakpoint IDs are assigned deterministically after the seed IDs. Duplicate names or IDs are
 fatal registry errors. A custom breakpoint cannot use a built-in condition name such as `hover`,
 `focus`, `dark`, `motion-safe`, or `placeholder`; configuration rejects the collision instead of
-changing the meaning of that variant. Seed breakpoint names such as `sm` may be overridden.
+changing the meaning of that variant. Seed breakpoint names such as `sm` may be overridden. Stable
+IDs are lookup identity only. A separate, unique `cascade_rank` is derived from the numeric minimum
+width and controls media/container emission from narrowest to widest; equal widths use canonical
+name/ID tie-breaking. Catalog schema 4 and inspection schema 3 expose this rank explicitly.
 
 ## Build artifact and identity
 
@@ -122,12 +127,13 @@ lowercase `ThemeId`, so a format migration cannot alias an older artifact. The b
 magic header, format version, size limits, UTF-8 validation, registry validation, and a stored-ID
 check when decoded.
 
-ThemeId format 2 hashes an explicitly domain-separated and length-framed canonical stream with
+ThemeId format 3 hashes an explicitly domain-separated and length-framed canonical stream with
 SHA-256. The first 16 digest bytes, interpreted big-endian, form the `ThemeId` (with all-zero remapped
 to one). Token and breakpoint records include explicit section/record tags, counts, fixed-width IDs,
-and UTF-8 byte lengths. Input definitions are sorted before encoding, so order does not affect the
-stream; any canonical value change does. Because the stored identity semantics changed, the current
-theme binary is format 2. Format-1 binaries are rejected explicitly and must be regenerated.
+breakpoint cascade ranks, and UTF-8 byte lengths. Input definitions are sorted before encoding, so
+order does not affect the stream; any canonical value change does. Because breakpoint order is now
+part of stored identity, the current theme binary is format 3. Older binaries are rejected
+explicitly and must be regenerated.
 
 The decoder rejects artifacts larger than 16 MiB, more than 65,536 entries in either the token or
 breakpoint list, and names or values larger than 1 MiB each. It also rejects truncation, unknown

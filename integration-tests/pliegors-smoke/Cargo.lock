@@ -43,9 +43,9 @@ dependencies = [
 
 [[package]]
 name = "cap-primitives"
-version = "4.0.2"
+version = "4.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cdadbd7c002d3a484b35243669abdae85a0ebaded5a61117169dc3400f9a7ff0"
+checksum = "8b5f74729fd2f44701d1a8eb47e906cdb3ccd9ec0f02baad85a744b791940b18"
 dependencies = [
  "ambient-authority",
  "fs-set-times",
@@ -150,21 +150,21 @@ dependencies = [
 
 [[package]]
 name = "futures-core"
-version = "0.3.33"
+version = "0.3.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2cd50c473c80f6d7c3670a752354b8e569b1a7cbfdc0419ec88e5edad85e0dc7"
+checksum = "92d699e522242e69e3003b94ecc1f960f3a5e015aa7c5d7486e65ad01dd94f5e"
 
 [[package]]
 name = "futures-task"
-version = "0.3.33"
+version = "0.3.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b231ed28831efb4a61a08580c4bc233ec56bc009f4cd8f52da2c3cb97df0c109"
+checksum = "cd417de3d1d015fc3bfd2b1ea46dfc7bab72ef86f1cc7cc9c78e728b34a6d1fd"
 
 [[package]]
 name = "futures-util"
-version = "0.3.33"
+version = "0.3.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a77a90a256fce34da66415271e30f94ee91c57b04b8a2c042d9cf3220179deaa"
+checksum = "0d50a92467f8ba5dd6e3ee5d4bd04d73ab2e4e1c44474a0674821dfce14b79bc"
 dependencies = [
  "futures-core",
  "futures-task",
@@ -206,9 +206,9 @@ checksum = "2f0fb0570afe1fed943c5c3d4102d5358592d8625fda6a0007fdbe65a92fba96"
 
 [[package]]
 name = "ipnet"
-version = "2.12.0"
+version = "2.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d98f6fed1fde3f8c21bc40a1abb88dd75e67924f9cffc3ef95607bad8017f8e2"
+checksum = "6a756c3fac73139e83f14c2d742155dd2b78d3ee56597b419a0579b7bdd6dd78"
 
 [[package]]
 name = "itoa"
@@ -229,9 +229,9 @@ dependencies = [
 
 [[package]]
 name = "libc"
-version = "0.2.186"
+version = "0.2.189"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "68ab91017fe16c622486840e4c83c9a37afeff978bd239b5293d61ece587de66"
+checksum = "3eaf3ede3fee6db1a4c2ee091bf8a8b4dccdc6d17f656fb07896ee72867612f2"
 
 [[package]]
 name = "linux-raw-sys"
@@ -265,9 +265,7 @@ checksum = "a89322df9ebe1c1578d689c92318e070967d1042b512afbe49518723f4e6d5cd"
 
 [[package]]
 name = "pliego-artifact"
-version = "0.0.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2e2e2ab68b4e274215ef7b31819189d17f42b41c0c93f158380952abdd857451"
+version = "0.4.0-beta.1"
 dependencies = [
  "cap-fs-ext",
  "cap-std",
@@ -280,7 +278,7 @@ dependencies = [
 
 [[package]]
 name = "pliego-css"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 dependencies = [
  "pliego-css-ir",
  "pliego-css-macros",
@@ -288,7 +286,7 @@ dependencies = [
 
 [[package]]
 name = "pliego-css-compiler"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 dependencies = [
  "pliego-css-ir",
  "pliego-css-parser",
@@ -298,18 +296,18 @@ dependencies = [
 
 [[package]]
 name = "pliego-css-io"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 dependencies = [
  "libc",
 ]
 
 [[package]]
 name = "pliego-css-ir"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 
 [[package]]
 name = "pliego-css-macros"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 dependencies = [
  "pliego-css-compiler",
  "pliego-css-ir",
@@ -322,14 +320,14 @@ dependencies = [
 
 [[package]]
 name = "pliego-css-parser"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 dependencies = [
  "pliego-css-ir",
 ]
 
 [[package]]
 name = "pliego-css-source"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 dependencies = [
  "libc",
  "pliego-css-io",
@@ -342,7 +340,7 @@ dependencies = [
 
 [[package]]
 name = "pliego-css-theme"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 dependencies = [
  "pliego-css-ir",
  "sha2",
@@ -350,9 +348,7 @@ dependencies = [
 
 [[package]]
 name = "pliego-dom"
-version = "0.0.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bf311f3addadbfed7653dbb2ab5360987f55d9e42d3f76f0a0bb0c85db53d7ef"
+version = "0.4.0-beta.1"
 dependencies = [
  "js-sys",
  "pliego-reactive",
@@ -362,9 +358,7 @@ dependencies = [
 
 [[package]]
 name = "pliego-macros"
-version = "0.0.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a9aa6e1c4e1fc0a45f4d19e0397bea933723b4328e7c977bb0d9ea3413136c9b"
+version = "0.4.0-beta.1"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -374,15 +368,11 @@ dependencies = [
 
 [[package]]
 name = "pliego-reactive"
-version = "0.0.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "97562ecb0ec7d6165178d1a2a5403dcb084060d9252b1ca62b251d4fa75dc62d"
+version = "0.4.0-beta.1"
 
 [[package]]
 name = "pliego-resume"
-version = "0.0.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4ae3bbaae6a955fc8a763eb75b07d8a43b0a4533533e7c50842657d8be80f07b"
+version = "0.4.0-beta.1"
 dependencies = [
  "pliego-dom",
  "serde_json",
@@ -390,15 +380,14 @@ dependencies = [
 
 [[package]]
 name = "pliego-ssg"
-version = "0.0.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0358ddefc33312fed302f92d78c8ccf2b0e5384c7eadf5ef0b88964ae0856f06"
+version = "0.4.0-beta.1"
 dependencies = [
  "cap-fs-ext",
  "cap-std",
  "fs2",
  "pliego-artifact",
  "pliego-dom",
+ "serde",
  "serde_json",
 ]
 
@@ -548,7 +537,7 @@ checksum = "e7a5d71263a5a7d47b41f6b3f06ba276f10cc18b0931f1799f710578e2309348"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 3.0.2",
+ "syn 3.0.4",
 ]
 
 [[package]]
@@ -594,9 +583,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "3.0.2"
+version = "3.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a207d6d6a2b7fc470b80443726053f18a2481b7e1eee970597051596567987a3"
+checksum = "e6275cddf4610d1775e6d1fe9469b2e77d0f39fd98fb7450901b821e0c53649f"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -617,22 +606,22 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "2.0.19"
+version = "2.0.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "09a43598840e33d5b0331f38c5e30d13bb11c11210a4b58f0d9b18a5a5eefcd9"
+checksum = "ec86235f5fcc2a73650310756d2ac5b138a5780bbbdfae3eeccec992c435ba4f"
 dependencies = [
  "thiserror-impl",
 ]
 
 [[package]]
 name = "thiserror-impl"
-version = "2.0.19"
+version = "2.0.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "43cbfe0cf76104d42a574802844187e84a305e531ed54455f11fbde0f10541cd"
+checksum = "bc04cd3e1236dd4a98afca4569f2deb3f120e5422a4023be2cb683f8486292af"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 3.0.2",
+ "syn 3.0.4",
 ]
 
 [[package]]

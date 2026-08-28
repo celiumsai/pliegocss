@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
-  "revision": "f3f4eb9be7ba2abfb7ed952675bba062d375e1fe",
-  "sourceSha256": "a11ca98bf64a93486da1d0a3478cf73920b7105608c55d215d4e3e5d0c817373",
+  "revision": "abb8653e75da4a5cb4dd9b51200114fbb1e760c7",
+  "sourceSha256": "2ba965b8d72831e3f452d91a5ba98d7297638fac661bcf1a2f7edb8ca1da68fa",
   "surfaces": [
     "Cargo.toml",
     "Cargo.lock",
@@ -11,6 +11,7 @@
     "crates/pliego-resume/**",
     "crates/pliego-ssg/**",
     "crates/pliego-starters/**",
-    "crates/pliego-cli/**"
+    "crates/pliego-cli/**",
+    "schemas/pliego.product-topology.schema.json"
   ]
 }

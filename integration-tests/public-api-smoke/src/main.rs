@@ -32,8 +32,8 @@ use pliego_css_source::{
     MigrationDependencyKind, MigrationDependencyResolution, MigrationDisposition,
     MigrationInventory, MigrationInventoryError, MigrationPreflightReliance, MigrationProject,
     MigrationProjectAuxiliary, MigrationProjectConsumer, MigrationProjectInventory,
-    MigrationProjectSource, MigrationSourceKind, discover_migration_project,
-    inspect_utility_format, scan_source_named,
+    MigrationProjectSource, MigrationSourceKind, PRODUCT_TOPOLOGY_SCHEMA, ProductBundle,
+    ProductTopology, discover_migration_project, inspect_utility_format, scan_source_named,
     inventory_migration_auxiliary_file,
     inventory_migration_auxiliary_source, inventory_migration_consumer_file,
     inventory_migration_consumer_source, inventory_migration_file, inventory_migration_source,
@@ -59,7 +59,7 @@ const OWNERSHIP_ASSET_PLAN: &[u8] = br#"{
   "applicationCoverage": "adapter-attested-complete",
   "styleIdFormatVersion": 2,
   "classNameFormatVersion": 1,
-  "themeIdFormatVersion": 2,
+  "themeIdFormatVersion": 3,
   "themeId": "00000000000000000000000000000000",
   "targets": "none",
   "format": "minified",
@@ -461,6 +461,31 @@ fn exercise_application_collector_surface() {
     }));
 }
 
+fn exercise_product_topology_surface() {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+    let document = format!(
+        r#"{{"schema":"{PRODUCT_TOPOLOGY_SCHEMA}","components":[{{"id":"public-api-smoke::main","sourceUnits":["src/main.rs"]}}],"routes":[{{"id":"home","path":"/","components":["public-api-smoke::main"],"islands":[]}}],"islands":[]}}"#,
+    );
+    let topology = ProductTopology::from_json(document.as_bytes())
+        .expect("public product topology must decode");
+    let generated = topology
+        .collect_css_inputs(root, None)
+        .expect("public product topology must collect");
+    assert!(generated.reachability().as_bytes().ends_with(b"\n"));
+    assert!(generated.bundle_plan().ends_with(b"\n"));
+    assert_eq!(
+        generated
+            .bundles()
+            .iter()
+            .map(ProductBundle::id)
+            .collect::<Vec<_>>(),
+        ["shared"]
+    );
+    assert!(generated.bundles()[0].emits_theme());
+    assert_eq!(generated.bundles()[0].sources(), ["src/main.rs"]);
+    let _parts = generated.into_parts();
+}
+
 fn exercise_source_formatting_surface() {
     let inspection = inspect_utility_format(&[], |value| Ok::<_, String>(value.to_owned()))
         .expect("empty source-format inspection");
@@ -483,6 +508,7 @@ fn main() {
     exercise_ownership_adapter_surface();
     exercise_usage_adapter_surface();
     exercise_application_collector_surface();
+    exercise_product_topology_surface();
     exercise_source_formatting_surface();
     exercise_typed_parse_diagnostic_surface();
     require_style_traits::<Style>();

@@ -1,0 +1,254 @@
+name: Repository distribution
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      attest:
+        description: Generate GitHub/Sigstore attestations for this exact source
+        required: true
+        type: boolean
+        default: false
+
+concurrency:
+  group: repository-distribution-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref_type != 'tag' }}
+
+permissions:
+  contents: read
+
+jobs:
+  native:
+    name: Native ${{ matrix.target }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-pc-windows-msvc
+            runner: windows-latest
+            extension: .exe
+          - target: x86_64-unknown-linux-gnu
+            runner: ubuntu-24.04
+            extension: ""
+          - target: aarch64-apple-darwin
+            runner: macos-15
+            extension: ""
+    env:
+      CARGO_TARGET_DIR: target/distribution-build/${{ matrix.target }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22.13.0
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+        with:
+          version: 11.7.0
+          run_install: false
+      - name: Install pinned Rust and SBOM tooling
+        run: |
+          rustup toolchain install 1.96.0 --profile minimal --target ${{ matrix.target }}
+          cargo +1.96.0 install cargo-cyclonedx --version '=0.5.9' --locked
+      - name: Build native CLI and LSP
+        run: cargo +1.96.0 build --release --locked --target ${{ matrix.target }} -p pliego-cssc -p pliego-css-lsp
+      - name: Generate target-specific CycloneDX SBOMs
+        run: cargo cyclonedx --format json --target ${{ matrix.target }} --all-features --spec-version 1.5
+      - name: Stage exact-source native payload
+        id: stage
+        shell: bash
+        run: |
+          set -euo pipefail
+          tree="$(git show -s --format=%T HEAD)"
+          args=(
+            "--target=${{ matrix.target }}"
+            "--binary-dir=target/distribution-build/${{ matrix.target }}/${{ matrix.target }}/release"
+            "--cli-sbom=crates/pliego-cssc/pliego-cssc.cdx.json"
+            "--lsp-sbom=crates/pliego-css-lsp/pliego-css-lsp.cdx.json"
+            "--output=target/distribution-native/${{ matrix.target }}"
+            "--source-commit=${GITHUB_SHA}"
+            "--git-tree=${tree}"
+          )
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            args+=("--tag=${GITHUB_REF_NAME}")
+          fi
+          node scripts/prepare-native-distribution.mjs "${args[@]}"
+          "target/distribution-native/${{ matrix.target }}/pliego-cssc${{ matrix.extension }}" --version
+          "target/distribution-native/${{ matrix.target }}/pliego-css-lsp${{ matrix.extension }}" --version
+      - name: Attest CLI binary and SBOM
+        if: ${{ github.ref_type == 'tag' || (github.event_name == 'workflow_dispatch' && inputs.attest) }}
+        uses: actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6 # v4.2.0
+        with:
+          subject-path: target/distribution-native/${{ matrix.target }}/pliego-cssc${{ matrix.extension }}
+          sbom-path: target/distribution-native/${{ matrix.target }}/pliego-cssc.cdx.json
+      - name: Attest LSP binary and SBOM
+        if: ${{ github.ref_type == 'tag' || (github.event_name == 'workflow_dispatch' && inputs.attest) }}
+        uses: actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6 # v4.2.0
+        with:
+          subject-path: target/distribution-native/${{ matrix.target }}/pliego-css-lsp${{ matrix.extension }}
+          sbom-path: target/distribution-native/${{ matrix.target }}/pliego-css-lsp.cdx.json
+      - name: Upload native payload
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: native-${{ matrix.target }}
+          path: target/distribution-native/${{ matrix.target }}
+          if-no-files-found: error
+          retention-days: 30
+
+  assemble:
+    name: Assemble repository assets
+    needs: native
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22.13.0
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+        with:
+          version: 11.7.0
+          run_install: false
+      - name: Verify pinned pnpm
+        run: test "$(pnpm --version)" = "11.7.0"
+      - name: Install locked repository dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Validate repository distribution source contract
+        run: pnpm check:repository-distribution
+      - name: Download all native payloads
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: native-*
+          path: target/distribution-incoming
+          merge-multiple: false
+      - name: Assemble and validate release assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          tree="$(git show -s --format=%T HEAD)"
+          args=(
+            "--input=target/distribution-incoming"
+            "--output=target/distribution"
+            "--source-commit=${GITHUB_SHA}"
+            "--git-tree=${tree}"
+          )
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            args+=("--tag=${GITHUB_REF_NAME}")
+          fi
+          node scripts/build-repository-distribution.mjs "${args[@]}"
+          pnpm check:distribution-bundle -- --root=target/distribution/release-assets
+      - name: Upload complete repository distribution
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: repository-distribution-${{ github.sha }}
+          path: target/distribution/release-assets
+          if-no-files-found: error
+          retention-days: 30
+
+  install:
+    name: pnpm install ${{ matrix.host }}
+    needs: assemble
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - host: windows-x64
+            runner: windows-latest
+          - host: linux-x64
+            runner: ubuntu-24.04
+          - host: macos-arm64
+            runner: macos-15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22.13.0
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+        with:
+          version: 11.7.0
+          run_install: false
+      - name: Verify pinned pnpm
+        shell: bash
+        run: test "$(pnpm --version)" = "11.7.0"
+      - name: Download complete repository distribution
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: repository-distribution-${{ github.sha }}
+          path: target/distribution/release-assets
+      - name: Install verified local asset with pnpm and execute both binaries
+        shell: bash
+        run: |
+          version="$(node -p "require('./packages/cli/package.json').version")"
+          node scripts/check-installed-repository-package.mjs \
+            "--tarball=target/distribution/release-assets/pliegocss-pnpm-${version}.tgz"
+
+  attest-release-assets:
+    name: Attest release assets
+    if: ${{ github.ref_type == 'tag' || (github.event_name == 'workflow_dispatch' && inputs.attest) }}
+    needs: install
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: repository-distribution-${{ github.sha }}
+          path: target/distribution/release-assets
+      - name: Generate GitHub/Sigstore provenance for every release asset
+        uses: actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6 # v4.2.0
+        with:
+          subject-path: target/distribution/release-assets/*
+
+  draft-release:
+    name: Create draft GitHub Release
+    if: ${{ github.ref_type == 'tag' }}
+    needs: attest-release-assets
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Require immutable releases before creating a draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/${GITHUB_REPOSITORY}/immutable-releases" \
+            -H "X-GitHub-Api-Version: 2026-03-10" \
+            --jq 'select(.enabled == true) | .enabled' | grep -qx true
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: repository-distribution-${{ github.sha }}
+          path: target/distribution/release-assets
+      - name: Create draft release with complete assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=(
+            "${GITHUB_REF_NAME}"
+            target/distribution/release-assets/*
+            --repo "${GITHUB_REPOSITORY}"
+            --draft
+            --verify-tag
+            --title "PliegoCSS ${GITHUB_REF_NAME}"
+            --generate-notes
+          )
+          if [[ "${GITHUB_REF_NAME}" == *-* ]]; then
+            args+=(--prerelease)
+          fi
+          gh release create "${args[@]}"

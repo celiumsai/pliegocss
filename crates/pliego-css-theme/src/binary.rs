@@ -12,7 +12,7 @@ use super::{
 pub const THEME_BINARY_MAGIC: [u8; 8] = *b"PLGCTHM\0";
 
 /// Current canonical theme artifact format version.
-pub const THEME_BINARY_FORMAT_VERSION: u16 = 2;
+pub const THEME_BINARY_FORMAT_VERSION: u16 = 3;
 
 /// Maximum accepted size of one encoded theme artifact (16 MiB).
 pub const MAX_THEME_BINARY_BYTES: usize = 16 * 1024 * 1024;
@@ -197,6 +197,7 @@ pub(super) fn encode(registry: &ThemeRegistry) -> Result<Vec<u8>, ThemeBinaryErr
     push_count(&mut output, registry.breakpoints().len());
     for breakpoint in registry.breakpoints() {
         output.extend_from_slice(&breakpoint.id.get().to_be_bytes());
+        output.extend_from_slice(&breakpoint.cascade_rank.to_be_bytes());
         push_text(&mut output, "breakpoint name length", &breakpoint.name)?;
         push_text(
             &mut output,
@@ -249,9 +250,10 @@ pub(super) fn decode(bytes: &[u8]) -> Result<ThemeRegistry, ThemeBinaryError> {
     let mut breakpoints = Vec::with_capacity(breakpoint_count);
     for _ in 0..breakpoint_count {
         let id = BreakpointId::new(u16::from_be_bytes(reader.read_array()?));
+        let cascade_rank = u16::from_be_bytes(reader.read_array()?);
         let name = reader.read_text("breakpoint name")?;
         let min_width = reader.read_text("breakpoint minimum width")?;
-        breakpoints.push(BreakpointDefinition::new(id, name, min_width));
+        breakpoints.push(BreakpointDefinition::new(id, cascade_rank, name, min_width));
     }
 
     if reader.remaining() != 0 {
@@ -289,7 +291,7 @@ fn encoded_size(registry: &ThemeRegistry) -> Result<usize, ThemeBinaryError> {
             "breakpoint minimum width length",
             breakpoint.min_width.len(),
         )?;
-        size = checked_size_add(size, 2 + 4 + 4)?;
+        size = checked_size_add(size, 2 + 2 + 4 + 4)?;
         size = checked_size_add(size, breakpoint.name.len())?;
         size = checked_size_add(size, breakpoint.min_width.len())?;
     }
@@ -434,8 +436,8 @@ mod tests {
             TokenDefinition::new(TokenKind::Spacing, "gutter", "1.5rem"),
         ];
         let mut breakpoints = vec![
-            BreakpointDefinition::new(BreakpointId::new(4), "wide", "80rem"),
-            BreakpointDefinition::new(BreakpointId::new(3), "tablet", "52rem"),
+            BreakpointDefinition::new(BreakpointId::new(4), 4, "wide", "80rem"),
+            BreakpointDefinition::new(BreakpointId::new(3), 3, "tablet", "52rem"),
         ];
         if reverse {
             tokens.reverse();

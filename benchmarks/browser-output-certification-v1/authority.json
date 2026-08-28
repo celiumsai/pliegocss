@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "status": "active-contract",
+  "kind": "pliegocss-browser-output-certification",
+  "competitorAuthority": "benchmarks/benchmark-authority-v2/oracle.json",
+  "competitorLane": "tailwind-latest",
+  "maximumEvidenceAgeHours": 168,
+  "fixture": {
+    "path": "benchmarks/tailwind-v4/fixtures.html",
+    "sha256": "338eb480327e54fe7e56e81b42c67324464afaa8c65d606e5d57c1c45690e86c"
+  },
+  "reset": {
+    "path": "benchmarks/browser-output-certification-v1/shared-reset.css",
+    "sha256": "5d190d599bf4b966fd76cf1c456b5904c8135506c9a6a4e4853ac4fc6cac6f38"
+  },
+  "resetModes": [
+    {
+      "id": "no-reset",
+      "contract": "Neither PliegoCSS nor Tailwind receives Preflight or any external reset."
+    },
+    {
+      "id": "shared-reset",
+      "contract": "The exact tracked shared reset bytes are prepended to both outputs."
+    }
+  ],
+  "browsers": ["chromium", "firefox", "webkit"],
+  "hosts": [
+    { "id": "windows-x64-chromium", "runner": "windows-latest", "os": "win32", "arch": "x64", "browser": "chromium" },
+    { "id": "windows-x64-firefox", "runner": "windows-latest", "os": "win32", "arch": "x64", "browser": "firefox" },
+    { "id": "windows-x64-webkit", "runner": "windows-latest", "os": "win32", "arch": "x64", "browser": "webkit" },
+    { "id": "linux-x64-chromium", "runner": "ubuntu-24.04", "os": "linux", "arch": "x64", "browser": "chromium" },
+    { "id": "linux-x64-firefox", "runner": "ubuntu-24.04", "os": "linux", "arch": "x64", "browser": "firefox" },
+    { "id": "linux-x64-webkit", "runner": "ubuntu-24.04", "os": "linux", "arch": "x64", "browser": "webkit" },
+    { "id": "macos-arm64-chromium", "runner": "macos-15", "os": "darwin", "arch": "arm64", "browser": "chromium" },
+    { "id": "macos-arm64-firefox", "runner": "macos-15", "os": "darwin", "arch": "arm64", "browser": "firefox" },
+    { "id": "macos-arm64-webkit", "runner": "macos-15", "os": "darwin", "arch": "arm64", "browser": "webkit" }
+  ],
+  "computedProperties": [
+    "display",
+    "position",
+    "box-sizing",
+    "width",
+    "height",
+    "min-width",
+    "min-height",
+    "max-width",
+    "max-height",
+    "margin-top",
+    "margin-right",
+    "margin-bottom",
+    "margin-left",
+    "padding-top",
+    "padding-right",
+    "padding-bottom",
+    "padding-left",
+    "row-gap",
+    "column-gap",
+    "align-items",
+    "justify-content",
+    "justify-self",
+    "flex-direction",
+    "flex-wrap",
+    "flex-grow",
+    "flex-shrink",
+    "grid-template-columns",
+    "grid-column-start",
+    "grid-column-end",
+    "color",
+    "background-color",
+    "border-top-width",
+    "border-right-width",
+    "border-bottom-width",
+    "border-left-width",
+    "border-top-style",
+    "border-top-color",
+    "border-radius",
+    "outline-width",
+    "outline-style",
+    "outline-color",
+    "outline-offset",
+    "font-family",
+    "font-size",
+    "font-weight",
+    "line-height",
+    "letter-spacing",
+    "text-transform",
+    "text-rendering",
+    "opacity",
+    "cursor",
+    "resize"
+  ],
+  "scenarios": [
+    { "id": "base-mobile", "width": 375, "height": 812, "action": "none" },
+    { "id": "base-tablet", "width": 768, "height": 1024, "action": "none" },
+    { "id": "base-desktop", "width": 1440, "height": 900, "action": "none" },
+    { "id": "hover-primary", "width": 1440, "height": 900, "action": "hover", "selector": "[data-fixture=button] button:first-of-type" },
+    { "id": "focus-input", "width": 1440, "height": 900, "action": "focus", "selector": "input" }
+  ],
+  "requiredCoverage": [
+    "computed-style",
+    "layout-geometry",
+    "responsive",
+    "interactive-state",
+    "reset-explicit",
+    "screenshot-bounded",
+    "tailwind-latest"
+  ],
+  "comparison": {
+    "computedStyle": "Equality for every frozen property after 8-bit sRGB color normalization, flex-end alias normalization, and quarter-CSS-pixel layout quantization within one browser host.",
+    "computedLengthQuantumCssPx": 0.25,
+    "layoutGeometry": "Every styled node border box, client/scroll extent, and direct non-whitespace text-node client rect is captured at 1/64 CSS px; corresponding numeric values may differ by at most 0.1 CSS px within one browser host.",
+    "layoutGeometryResolutionCssPx": 0.015625,
+    "maximumLayoutGeometryDeltaCssPx": 0.1,
+    "screenshotPixelThreshold": 0.2,
+    "maximumScreenshotMismatchRatio": 0.005,
+    "screenshots": "Perceptual PNG comparison with antialias classification, threshold 0.2, and at most 0.5% mismatched CSS pixels within one browser host and scenario after computed style and geometry pass; original PNG hashes remain retained.",
+    "claimBoundary": "Passing proves the frozen shared utility intent in the named browser/OS/architecture host. It is not general Tailwind compatibility or cross-browser pixel identity."
+  }
+}

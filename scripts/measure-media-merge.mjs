@@ -25,28 +25,28 @@ const expected = {
   profiles: {
     utilitiesOnly: {
       control: {
-        sha256: "acfe0a07ca05336b89504bc4c919d09afaf26f3a07c2cabb53fd7be3af2f7f7c",
-        rawBytes: 1_447,
-        gzipBytes: 648,
+        sha256: "efee258d711879f4e7c89e134c88c9c797d65e524727878a72e474894f17d2c2",
+        rawBytes: 1_449,
+        gzipBytes: 649,
         mediaWrappers: 20,
       },
       candidate: {
-        sha256: "3eb3494eb3b128ab1ce84b1546cc08d17c179b2710175016e25e331d10070287",
-        rawBytes: 1_010,
-        gzipBytes: 638,
+        sha256: "ac316f5581edfef5562ade30dc758815ab724665cade8b42ea748349d293c5f1",
+        rawBytes: 1_012,
+        gzipBytes: 637,
         mediaWrappers: 1,
       },
     },
     themeAndUtilities: {
       control: {
-        sha256: "4e241be64c52679bfbe5b2966fccf8b00307fdd0bd06c3af8675c95b8a0d0eb3",
-        rawBytes: 1_818,
-        gzipBytes: 822,
+        sha256: "908dbf7df76c4598f89bf9bcf9c6b3b91918ca964275a6e1536d11419d31d608",
+        rawBytes: 1_820,
+        gzipBytes: 821,
         mediaWrappers: 20,
       },
       candidate: {
-        sha256: "5697d5c24f2a2441519754cb6e3bae0ae8e46e34636964a0c3118be97cbd625b",
-        rawBytes: 1_381,
+        sha256: "05b254d481de13dd11d235308e5d8bf3dc977829dec3e71f1fc042b2f7793f45",
+        rawBytes: 1_383,
         gzipBytes: 809,
         mediaWrappers: 1,
       },
@@ -54,15 +54,15 @@ const expected = {
   },
   neutralFixtures: {
     gateA: {
-      sha256: "12b6d497962ec8ae30d1c9343ca180f65a81f628161d038a653ac7be32fd6688",
+      sha256: "1d879683af938faba7a7e44a0ad330e9f2f6a5f6b363b0f1556cc56711cd6f5b",
       rawBytes: 6_548,
-      gzipBytes: 1_594,
+      gzipBytes: 1_596,
       mediaWrappers: 0,
     },
     gateB: {
-      sha256: "d873a432d1174af4715f7cb33359c6ad2781f611f9712e3a72b5630aa6f1bffc",
-      rawBytes: 10_468,
-      gzipBytes: 2_047,
+      sha256: "757e259d072723eb06ea5517627ac3422e73c16f5eb36b6ecc57c8aa104c126d",
+      rawBytes: 10_461,
+      gzipBytes: 2_046,
       mediaWrappers: 12,
     },
   },

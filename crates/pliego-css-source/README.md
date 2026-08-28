@@ -45,6 +45,14 @@ std::fs::write("target/pliego.reachability.json", reachability.as_bytes())?;
 # Ok::<(), Box<dyn std::error::Error>>(())
 ```
 
+Frameworks with a versioned wire seam can avoid reconstructing that graph. For
+PliegoRS, parse the canonical `pliegors-product-topology/1` bytes with
+`ProductTopology::from_json` and call `collect_css_inputs` with the closed Cargo
+source inventory. This yields reachability bytes and the deterministic bundle
+plan without linking PliegoRS crates. The convenience plan uses seed theme,
+modern targets, and minified output; applications with other compiler policy
+should apply the returned partitions through their normal bundle plan.
+
 The collector recursively inventories bounded `.rs` inputs with portable paths, parses every unit
 with the existing Rust scanner, rejects malformed or unowned `pc!`/`pcx!` calls, and fails on stale
 exact-site declarations. `source_unit` is an explicit adapter attestation that every discovered

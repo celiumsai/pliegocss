@@ -5,15 +5,16 @@ The current clients deliberately fail closed; they do not search the network or 
 
 ## The server does not start
 
-1. Run both configured executables directly with `--version`.
-2. Confirm they come from the same checkout revision and lockfile.
-3. Use absolute paths. Neovim requires readable executable files; VS Code resolves its process from
+1. Run the configured `pliego-css-lsp` executable directly with `--version`.
+2. Confirm it comes from the same compatibility unit as the project's PliegoCSS packages.
+3. Use an absolute path. Neovim requires a readable executable; VS Code resolves its process from
    the first local workspace folder.
 4. Confirm the buffer is a saved Rust file. Untitled/virtual buffers are unsupported.
 5. Restart the client after changing executable paths.
 
-An unavailable compiler produces `PCL001`; it is not converted into a guessed style diagnostic.
-Capture the complete message before replacing paths or theme settings.
+The legacy compiler-path setting is ignored. A missing or invalid theme can produce `PCL001`; it is
+not converted into a guessed style diagnostic. Capture the complete message before changing theme
+settings.
 
 ## Diagnostics disagree with the CLI
 
@@ -25,8 +26,8 @@ pliego-cssc --diagnostic-format json check --source src --seed
 
 Replace `--seed` with the exact configured TOML or DTCG selection when appropriate. Current corpus
 schema 2 requires CLI/LSP equality for code, message, range, severity, category, suggestion, and
-typed replacement across PCS, PSC, PCR001, FMT001, and PCX003. `PCL001` and `PCL002` are operational
-fallbacks tested through fault injection.
+typed replacement across PCS, PSC, PCR001, FMT001, and PCX003. `PCL001` and `PCL002` remain
+operational configuration and bounded-analysis findings rather than authoring corpus cases.
 
 If only an escaped cooked Rust literal has a wider range, that is intentional: decoded offsets
 cannot always be mapped safely through escapes, so the server selects the complete literal token.
@@ -55,16 +56,16 @@ mixed snapshot and must continue to fail.
 
 ## Diagnostics arrive twice or appear stale
 
-Local parser/scanner/format diagnostics publish immediately; compiler-backed diagnostics arrive
-after the 150 ms debounce. A newer full-document version cancels the stale direct compiler child and
-its result is neither cached nor published. If an editor plugin sends incremental changes instead of
+Local parser/scanner/format diagnostics publish immediately; theme-aware semantic diagnostics arrive
+after the 150 ms debounce. A newer full-document version supersedes pending work, and version checks
+around in-process analysis prevent stale publication. If an editor plugin sends incremental changes instead of
 the negotiated full-document synchronization, the server rejects that request.
 
 ## A large file reports PCL002
 
 One document is capped at 256 semantic utility-literal checks. `PCL002` with
-`semantic diagnostic literal limit exceeded` means the server stopped before launching an unbounded
-number of compiler processes. Split generated or unusually large Rust source units; do not suppress
+`semantic diagnostic literal limit exceeded` means the server stopped before performing unbounded
+semantic work. Split generated or unusually large Rust source units; do not suppress
 the finding and assume the remaining literals were validated.
 
 ## Collect reproducible evidence
@@ -77,6 +78,6 @@ pnpm integration:vscode-host
 pnpm integration:neovim
 ```
 
-Report the editor version, OS, exact PliegoCSS commit, both binary paths/versions, theme mode, and
+Report the editor version, OS, exact PliegoCSS commit, server path/version, theme mode, and
 whether Project Index navigation was enabled. Do not attach proprietary source or theme documents
 without redaction and authorization.

@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "kind": "pliegocss-repository-distribution-policy",
+  "repository": "https://github.com/celiumsai/pliegocss",
+  "releaseAssetBase": "https://github.com/celiumsai/pliegocss/releases/download",
+  "package": {
+    "name": "@pliegocss/cli",
+    "format": "npm-tarball",
+    "registryPublication": "forbidden",
+    "distributionChannel": "github-release-asset",
+    "packageManager": "pnpm",
+    "packageManagerVersion": "11.7.0",
+    "lifecycleScripts": "forbidden",
+    "dependencies": "forbidden"
+  },
+  "release": {
+    "draftFirst": true,
+    "immutableRequiredBeforePublication": true,
+    "checksums": "sha256",
+    "sbom": "cyclonedx-json-1.5",
+    "sbomTool": "cargo-cyclonedx",
+    "sbomToolVersion": "0.5.9",
+    "provenance": "github-sigstore-attestation"
+  },
+  "binaries": [
+    "pliego-cssc",
+    "pliego-css-lsp"
+  ],
+  "targets": [
+    {
+      "id": "x86_64-pc-windows-msvc",
+      "os": "win32",
+      "arch": "x64",
+      "runner": "windows-latest",
+      "extension": ".exe",
+      "format": "pe"
+    },
+    {
+      "id": "x86_64-unknown-linux-gnu",
+      "os": "linux",
+      "arch": "x64",
+      "runner": "ubuntu-24.04",
+      "extension": "",
+      "format": "elf"
+    },
+    {
+      "id": "aarch64-apple-darwin",
+      "os": "darwin",
+      "arch": "arm64",
+      "runner": "macos-15",
+      "extension": "",
+      "format": "mach-o"
+    }
+  ],
+  "claimBoundary": "Repository artifacts provide exact-source native CLI and LSP binaries, a no-lifecycle universal pnpm package, SHA-256 checksums, CycloneDX SBOMs, and GitHub/Sigstore provenance. They do not claim npmjs publication, Authenticode signing, Apple notarization, or support for undeclared hosts."
+}

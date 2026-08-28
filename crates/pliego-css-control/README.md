@@ -9,4 +9,4 @@ SARIF, and bounded accessibility analysis. Schema-only consumers leave it disabl
 
 ## Stability
 
-Published as exact-version public-preview tooling in `0.1.0-rc.2`; final `0.1.0` is not published.
+Prepared as exact-version public-preview tooling for `0.1.0-rc.3`; final `0.1.0` is not published.

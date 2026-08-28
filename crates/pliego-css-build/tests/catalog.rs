@@ -13,11 +13,11 @@ fn seed_catalog_bytes_match_the_existing_cli_contract() {
 
     assert_eq!(
         sha256_hex(json.as_bytes()),
-        "b5a2092fdfd079e2b586ac9bd850ead20599e4d9176cc358cc8bd1f10ea6273c"
+        "6ac31ef2bb0c1051829e2eaa6bfda389937a0e55f1489f4ad3f00d9d46e7fe93"
     );
     assert_eq!(
         sha256_hex(markdown.as_bytes()),
-        "2efd4bf3cc25162de2996ae364876f61e4c8c98626006782bd0648ee149d335e"
+        "e0ebf303c80937697d09723d890487aaa2ed8db6059a766f61b3be71765ba1da"
     );
     assert!(json.ends_with('\n'));
     assert!(markdown.ends_with('\n'));
@@ -43,7 +43,7 @@ fn json_catalog_is_closed_over_the_frozen_top_level_shape() {
             "utilities",
         ]
     );
-    assert_eq!(document["schemaVersion"], 3);
+    assert_eq!(document["schemaVersion"], 4);
     assert!(
         document["utilities"]
             .as_array()

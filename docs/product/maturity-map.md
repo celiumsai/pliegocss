@@ -30,6 +30,9 @@ experimental because its intended product scope is explicitly broader than its s
 These claims are deliberately narrower than “all public Rust types,” “complete CSS,” or “published
 packages.” Their exact boundaries are enforced by the public API, compatibility, determinism,
 packaging, and portability gates named in the JSON map.
+The pure `CompileRequest → CompileResult` engine, shared `PcxRequest` frontend, and
+semantic/physical planner separation are implementation architecture inside that exact-version
+unit; they do not expand the stable application API.
 
 ## Beta surface
 
@@ -41,11 +44,17 @@ promise:
 - budgets, ownership, usage evidence, retention, and pruning;
 - static accessibility policy;
 - bounded agent repair and verification receipts;
+- paired Tailwind Benchmark Authority v2 (latest, v3-LTS, and frozen regression lanes);
+- computed and bounded visual browser-output certification against Tailwind across the declared
+  3×3 host matrix;
 - LSP/editor clients;
-- migration inventory;
+- migration inventory plus bounded static Tailwind v3/v4 coexistence across 21 HTML, Vite, and
+  PliegoRS project snapshots with browser equivalence and exact rollback. Its 0.1.x adapter policy
+  is frozen, while the separate G7 authority remains honestly blocked at zero external records;
 - watch mode;
 - PliegoRS SSR/SSG/resumability integration;
-- exact-version registry distribution for the published Rust workspace and CLI/LSP binaries.
+- exact-version crates.io distribution for the Rust workspace plus repository-hosted native CLI/LSP
+  archives and a no-lifecycle pnpm package. The npm-format package is never published to npmjs.
 
 Each row in the machine map names the owning paths, persisted schemas, current gates, graduation
 criteria, and claim limits. A beta capability cannot graduate solely because its tests pass locally;

@@ -21,7 +21,7 @@ pub use binary::{
 };
 
 /// Version of the canonical byte stream used to derive [`ThemeId`].
-pub const THEME_ID_FORMAT_VERSION: u16 = 2;
+pub const THEME_ID_FORMAT_VERSION: u16 = 3;
 
 const THEME_ID_STREAM_DOMAIN: &[u8; 16] = b"pliego-theme-id\0";
 const THEME_ID_TOKENS: u8 = 0x01;
@@ -104,6 +104,11 @@ impl TokenDefinition {
 pub struct BreakpointDefinition {
     /// Stable breakpoint identifier.
     pub id: BreakpointId,
+    /// Total cascade order, from narrowest to widest.
+    ///
+    /// This is intentionally independent from [`Self::id`]: stable lookup
+    /// identity must not determine responsive precedence.
+    pub cascade_rank: u16,
     /// Human-readable variant name.
     pub name: String,
     /// Canonical CSS minimum width.
@@ -112,9 +117,15 @@ pub struct BreakpointDefinition {
 
 impl BreakpointDefinition {
     /// Defines a responsive breakpoint.
-    pub fn new(id: BreakpointId, name: impl Into<String>, min_width: impl Into<String>) -> Self {
+    pub fn new(
+        id: BreakpointId,
+        cascade_rank: u16,
+        name: impl Into<String>,
+        min_width: impl Into<String>,
+    ) -> Self {
         Self {
             id,
+            cascade_rank,
             name: name.into(),
             min_width: min_width.into(),
         }
@@ -157,6 +168,15 @@ pub enum ThemeError {
         /// Lexicographically second name assigned to the ID.
         second: String,
     },
+    /// A cascade rank is assigned to two breakpoints.
+    DuplicateBreakpointCascadeRank {
+        /// Repeated cascade rank.
+        rank: u16,
+        /// Lexicographically first name assigned to the rank.
+        first: String,
+        /// Lexicographically second name assigned to the rank.
+        second: String,
+    },
     /// A breakpoint attempts to shadow a built-in non-responsive condition.
     ReservedBreakpointName {
         /// Reserved condition name.
@@ -194,6 +214,14 @@ impl fmt::Display for ThemeError {
                 formatter,
                 "duplicate breakpoint ID {} assigned to `{first}` and `{second}`",
                 id.get()
+            ),
+            Self::DuplicateBreakpointCascadeRank {
+                rank,
+                first,
+                second,
+            } => write!(
+                formatter,
+                "duplicate breakpoint cascade rank {rank} assigned to `{first}` and `{second}`"
             ),
             Self::ReservedBreakpointName { name } => write!(
                 formatter,
@@ -270,6 +298,7 @@ impl ThemeRegistry {
 
         let mut breakpoint_names = BTreeMap::new();
         let mut breakpoint_ids = BTreeMap::new();
+        let mut breakpoint_ranks = BTreeMap::new();
         for (index, breakpoint) in breakpoints.iter().enumerate() {
             if is_reserved_condition_variant(&breakpoint.name) {
                 return Err(ThemeError::ReservedBreakpointName {
@@ -287,6 +316,13 @@ impl ThemeRegistry {
             if let Some(previous) = breakpoint_ids.insert(breakpoint.id, index) {
                 return Err(ThemeError::DuplicateBreakpointId {
                     id: breakpoint.id,
+                    first: breakpoints[previous].name.clone(),
+                    second: breakpoint.name.clone(),
+                });
+            }
+            if let Some(previous) = breakpoint_ranks.insert(breakpoint.cascade_rank, index) {
+                return Err(ThemeError::DuplicateBreakpointCascadeRank {
+                    rank: breakpoint.cascade_rank,
                     first: breakpoints[previous].name.clone(),
                     second: breakpoint.name.clone(),
                 });
@@ -724,6 +760,7 @@ fn encode_theme_identity(
     for breakpoint in breakpoints {
         stream.push(THEME_ID_BREAKPOINT);
         stream.extend_from_slice(&breakpoint.id.get().to_be_bytes());
+        stream.extend_from_slice(&breakpoint.cascade_rank.to_be_bytes());
         push_identity_text(&mut stream, &breakpoint.name);
         push_identity_text(&mut stream, &breakpoint.min_width);
     }
@@ -872,9 +909,9 @@ fn extend_tokens(output: &mut Vec<TokenDefinition>, kind: TokenKind, definitions
 
 fn seed_breakpoints() -> Vec<BreakpointDefinition> {
     vec![
-        BreakpointDefinition::new(BreakpointId::new(0), "sm", "40rem"),
-        BreakpointDefinition::new(BreakpointId::new(1), "md", "48rem"),
-        BreakpointDefinition::new(BreakpointId::new(2), "lg", "64rem"),
+        BreakpointDefinition::new(BreakpointId::new(0), 0, "sm", "40rem"),
+        BreakpointDefinition::new(BreakpointId::new(1), 1, "md", "48rem"),
+        BreakpointDefinition::new(BreakpointId::new(2), 2, "lg", "64rem"),
     ]
 }
 
@@ -893,6 +930,7 @@ mod tests {
             ],
             vec![BreakpointDefinition::new(
                 BreakpointId::new(0),
+                0,
                 "sm",
                 "40rem",
             )],
@@ -978,8 +1016,8 @@ mod tests {
         let duplicate_name = ThemeRegistry::from_definitions(
             [],
             [
-                BreakpointDefinition::new(BreakpointId::new(0), "sm", "40rem"),
-                BreakpointDefinition::new(BreakpointId::new(1), "sm", "41rem"),
+                BreakpointDefinition::new(BreakpointId::new(0), 0, "sm", "40rem"),
+                BreakpointDefinition::new(BreakpointId::new(1), 1, "sm", "41rem"),
             ],
         )
         .unwrap_err();
@@ -991,8 +1029,8 @@ mod tests {
         let duplicate_id = ThemeRegistry::from_definitions(
             [],
             [
-                BreakpointDefinition::new(BreakpointId::new(0), "small", "40rem"),
-                BreakpointDefinition::new(BreakpointId::new(0), "wide", "80rem"),
+                BreakpointDefinition::new(BreakpointId::new(0), 0, "small", "40rem"),
+                BreakpointDefinition::new(BreakpointId::new(0), 1, "wide", "80rem"),
             ],
         )
         .unwrap_err();
@@ -1000,6 +1038,23 @@ mod tests {
             duplicate_id,
             ThemeError::DuplicateBreakpointId {
                 id: BreakpointId::new(0),
+                first: "small".into(),
+                second: "wide".into(),
+            }
+        );
+
+        let duplicate_rank = ThemeRegistry::from_definitions(
+            [],
+            [
+                BreakpointDefinition::new(BreakpointId::new(0), 0, "small", "40rem"),
+                BreakpointDefinition::new(BreakpointId::new(1), 0, "wide", "80rem"),
+            ],
+        )
+        .unwrap_err();
+        assert_eq!(
+            duplicate_rank,
+            ThemeError::DuplicateBreakpointCascadeRank {
+                rank: 0,
                 first: "small".into(),
                 second: "wide".into(),
             }
@@ -1013,6 +1068,7 @@ mod tests {
                 [],
                 [BreakpointDefinition::new(
                     BreakpointId::new(7),
+                    0,
                     name,
                     "50rem",
                 )],
@@ -1071,6 +1127,7 @@ mod tests {
             [],
             [BreakpointDefinition::new(
                 BreakpointId::new(7),
+                0,
                 "print",
                 "40rem), print",
             )],
@@ -1092,6 +1149,7 @@ mod tests {
             ],
             [BreakpointDefinition::new(
                 BreakpointId::new(7),
+                0,
                 "compact",
                 ".5rem",
             )],
@@ -1129,7 +1187,7 @@ mod tests {
     }
 
     #[test]
-    fn v2_theme_identity_stream_digest_and_id_are_frozen() {
+    fn v3_theme_identity_stream_digest_and_id_are_frozen() {
         let registry = ThemeRegistry::from_definitions(
             [
                 TokenDefinition::new(TokenKind::Color, "brand", "#36f"),
@@ -1137,6 +1195,7 @@ mod tests {
             ],
             [BreakpointDefinition::new(
                 BreakpointId::new(7),
+                0,
                 "tablet",
                 "52rem",
             )],
@@ -1146,38 +1205,38 @@ mod tests {
         let digest = Sha256::digest(&stream);
         let bytes = registry.to_bytes().expect("encode compatibility registry");
 
-        assert_eq!(THEME_ID_FORMAT_VERSION, 2);
-        assert_eq!(THEME_BINARY_FORMAT_VERSION, 2);
+        assert_eq!(THEME_ID_FORMAT_VERSION, 3);
+        assert_eq!(THEME_BINARY_FORMAT_VERSION, 3);
         assert_eq!(THEME_BINARY_MAGIC, *b"PLGCTHM\0");
         assert_eq!(
             stream,
             decode_hex(
-                "706c6965676f2d7468656d652d69640000020100000002020022aecc820000000667757474657200000006312e3572656d02019b21fbf6000000056272616e6400000004233336660300000001040007000000067461626c657400000005353272656d"
+                "706c6965676f2d7468656d652d69640000030100000002020022aecc820000000667757474657200000006312e3572656d02019b21fbf6000000056272616e64000000042333366603000000010400070000000000067461626c657400000005353272656d"
             )
         );
         assert_eq!(
             format!("{digest:x}"),
-            "cf5c4c0674fd1c7e5121da0d27222ae07de616ffdc3ef8f9a388bdd100946824"
+            "eda25b5ed8fa8ce973662d4f18a46bdce3850281287e24d934a701503b526b9c"
         );
         assert_eq!(
             format!("{:032x}", registry.id().get()),
-            "cf5c4c0674fd1c7e5121da0d27222ae0"
+            "eda25b5ed8fa8ce973662d4f18a46bdc"
         );
         assert_eq!(
             registry.id().to_string(),
-            "cf5c4c0674fd1c7e5121da0d27222ae0"
+            "eda25b5ed8fa8ce973662d4f18a46bdc"
         );
         assert_eq!(
             bytes.len(),
-            102,
+            104,
             "theme binary length must be updated intentionally"
         );
         assert_eq!(
             format!("{:x}", Sha256::digest(&bytes)),
-            "19ee963bb9476a70732eaf338497e977eaa6abcffaddcd35c9ebbbeeac615bc3",
+            "d2ce5bd919ba720e3b108fe1479e52c70b0441af708ddd5c7025e16fb2a0f4e0",
             "theme binary hash must be updated intentionally"
         );
-        let decoded = ThemeRegistry::from_bytes(&bytes).expect("decode frozen v2 fixture");
+        let decoded = ThemeRegistry::from_bytes(&bytes).expect("decode frozen v3 fixture");
         assert_eq!(decoded.id(), registry.id());
         assert_eq!(decoded.tokens(), registry.tokens());
         assert_eq!(decoded.breakpoints(), registry.breakpoints());
@@ -1190,7 +1249,7 @@ mod tests {
             ThemeRegistry::from_bytes(&fixture),
             Err(ThemeBinaryError::UnsupportedVersion {
                 found: 1,
-                expected: 2,
+                expected: 3,
             })
         ));
     }

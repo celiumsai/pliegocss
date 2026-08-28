@@ -1,220 +1,104 @@
 # Portability contract
 
-Updated: 2026-07-15
+Updated: 2026-07-22
 
-Status: **executable contract implemented; hosted matrix evidence and Cloudflare remain open**
+Status: **executable contract and hosted CI matrix implemented; release-candidate binding remains
+open**
 
-## Configured matrix
+## Authority
 
-The Rust CI matrix targets:
+`.github/workflows/ci.yml` runs the same portability contract on Ubuntu, Windows, and macOS with
+Rust 1.85.0 and 1.96.0. Node.js 22.13.0 executes the byte-level vector on every Rust/OS lane. A run
+is evidence only for its exact `head_sha`; a green branch run does not certify an older tag and does
+not promote `0.1.0-rc.2`.
 
-- Ubuntu, Windows, and macOS;
-- Rust 1.85.0 (MSRV) and 1.96.0 (current pinned toolchain);
-- workspace tests and Clippy with warnings denied;
-- Node.js 22.13.0 executing the same portability contract on every host. This matches the minimum
-  engine required by the pinned pnpm 11.7.0 toolchain.
+The separate browser-output workflow owns the G4 Windows/Linux/macOS × Chromium/Firefox/WebKit
+matrix. Portability proves compiler and artifact identity; browser output proves rendered behavior.
+Neither substitutes for a named release-candidate replay.
 
-The WASM job also checks `pliego-css` with Rust 1.85.0 for
-`wasm32-unknown-unknown` before running the existing Rust 1.96 zero-overhead micro-fixture. This is
-not a claim of WASI, `no_std`, every WASM target, or a deployed Cloudflare Workers build.
-
-The repository currently has no configured Git remote, so this document distinguishes the checked-in
-matrix from hosted green-run evidence. The current canonical-token-graph vector has passed locally on
-Windows x64 with the checkout's default Rust toolchain and Node.js 24.16.0, and on Debian WSL2 Linux
-x64 with the same graph-bearing hashes under Node.js 20.19.2. The Linux Node version is extra local
-evidence and does not lower the supported Node.js 22.13.0 floor. The earlier Rust 1.85,
-Node.js 22.13.0, and MSRV WASM observations predate `pliego.tokens.json`; they remain superseded for
-this vector until rerun.
+The WASM job additionally checks the public crate with Rust 1.85.0 for
+`wasm32-unknown-unknown`. This is not a WASI, `no_std`, every-WASM-target, or deployed Cloudflare
+Workers claim.
 
 ## Frozen executable vector
 
-`node scripts/check-portability.mjs` creates an isolated bundle-plan project and verifies:
+`node scripts/check-portability.mjs` builds an isolated project and fails closed unless all of these
+properties hold:
 
-- identical CSS and schema-3 manifest bytes when invoked with the same absolute plan/output arguments
-  from two unrelated process directories;
-- plan, source, output, and process-directory paths nested below a directory containing a space;
-- a UTF-8 path with an accented character and astral content before the scanned macro;
-- CRLF Rust source input whose manifest range selects the exact macro bytes, with `/` manifest paths;
-- manifest byte count and SHA-256 binding to the adjacent CSS;
-- a successful `--check` leaves existing artifact bytes, size, modification time, inode identity, and
-  the output tree unchanged, while a missing-output check fails with an empty final directory and no
-  persistent locks;
-- a drift failure is read-only;
-- source and theme paths cannot escape through an intermediate Unix symlink or Windows junction;
-- a linked output directory fails before publication;
-- explicit `.` path segments fail closed;
-- ASCII case-insensitive config/output aliases fail before any mutation on every host, so Linux
-  validation models the collision boundary of a later Windows replay.
-- direct-CSS audit control artifacts have frozen byte hashes, and `--check` verifies the complete
-  findings/manifest/receipt group without changing it.
-- a manifest-5 `bundle --control` vector binds exact reachability, CSS/source-map/style-manifest,
-  Asset Plan, Project Index, canonical TokenGraph, findings, control manifest, and receipt bytes; its
-  `--check` is also read-only and rejects token-graph drift without repairing it.
-- a separate `audit --asset-plan` invocation reopens the on-disk plan and adjacent CSS/manifest pair,
-  proves canonical regeneration, freezes its own control group, and verifies read-only `--check`.
-- exact-snapshot compile and watch each freeze CSS, Source Map v3, style manifest, canonical
-  TokenGraph, findings, control manifest, and receipt: seven artifacts per vector. Compile `--check`
-  proves the finite group is read-only and rejects token-graph drift without repairing it. Each vector
-  verifies compact canonical fields, non-empty mappings, logical Unicode source identity, and exact
-  manifest byte/hash cross-references while proving CSS has no injected discovery comment.
-- every generated TokenGraph parses as compact canonical JSON, declares
-  `pliegocss-token-graph/1`, matches `tokens.graphHash`, and is reciprocally related to the generated
-  CSS and style manifest in the control manifest.
+- identical CSS and manifest bytes from unrelated process directories;
+- a path containing a space, UTF-8 `src/café.rs`, an astral character, and CRLF source bytes;
+- exact logical provenance and macro byte ranges with forward-slash paths;
+- CSS byte count and SHA-256 bound by the adjacent style manifest;
+- read-only `--check`, including missing-output and drift failures;
+- rejection of symlink/junction escape, linked output/theme paths, dot segments, and
+  ASCII-case aliases before publication;
+- exact direct-audit, bundle-control, Asset Plan, compile, watch, and DTCG control groups;
+- compact canonical `pliegocss-token-graph/1` bytes, reciprocal artifact relationships, and receipt
+  checks;
+- complete Resolver 2025.10 projection: 12 sources, four canonical selections, 53 tokens per theme,
+  one alias, one deprecation, and `{ "color": 3 }` DTCG inventory;
+- selection identity in `configHash` even when the resulting ThemeId and artifact bytes converge.
 
-The separate `pnpm check:manifest` fixture uses only plan-relative logical paths and freezes
-schema-4 graph bytes across the same host-independent source/ThemeId boundary. The established
-portability vector remains default schema 3, so opt-in graph metadata cannot silently change its
-bundle bytes.
+The current shared-engine vector freezes:
 
-`pnpm check:trace` adds a separate host-independent schema-5 golden with exact UTF-8 CSS ranges and
-proves that schema 5 projects to the frozen schema-4 graph without changing the CSS artifact.
-
-The vector freezes these bytes for both supported Rust toolchains:
-
-| Artifact | Contract |
+| Artifact | Frozen value |
 |---|---:|
 | CSS bytes | 424 |
-| CSS SHA-256 | `d208d2960bd28fb29354b1a89c74c106686c8a8a2d71a9cc7cc9971eb2e97070` |
-| Manifest SHA-256 | `3a89e04856d5ff8244c29e91325271d6a57e33eec99242b121308c477facd169` |
+| CSS SHA-256 | `65dbbcff74b6886fdd749b1c7c0587eaff06b4f4720405e10716c2b0dfee9bbc` |
+| Style manifest SHA-256 | `453f708c9c4edbd388eda1ee9c883212cd5d31421077d123cb1d32bc0b28d4bb` |
+| Seed TokenGraph SHA-256 | `3298873e66ade310459593530c86419c05a973d2404b71882c2d0ae430030a28` |
 | Provenance path | `src/café.rs` |
 
-The direct-CSS audit vector additionally freezes:
+The generation/control groups freeze these identities in addition to their complete per-file maps
+inside `scripts/check-portability.mjs`:
 
-| Control artifact | SHA-256 |
+| Group | CSS or primary artifact | Control manifest | Receipt |
+|---|---|---|---|
+| Direct CSS audit | `79e4817107cbb7a20b5c0be1a8a881b11ebfc3f9e94f83a93f9d318f74059cf9` findings | `711c183edb566062d3feec8e7a7e42117a8b6b6b0d05d237afc0469abd09d78b` | `1162d5743e2ccd7d03614605a700cd55099bde9380c19df5d95d9cfb65875479` |
+| Bundle control | `65dbbcff74b6886fdd749b1c7c0587eaff06b4f4720405e10716c2b0dfee9bbc` CSS | `cf7e29c1a78cc63120b53a0b88b7c9395edd51f9322a0c6c2b565a8a03458475` | `da835752a54b00ec3d7922ec1394958c4c1465c728c86f21f6474540242e1d7c` |
+| Reopened Asset Plan | `e036dcb3587507db07e39a55cca5404dd074b4ede3abb70e487005e18ab478b7` findings | `a4e31d7f69c2ed88447eaf984c0bfdf6e85180a2ea80990234a51cb5141cc9ba` | `43d2297a39dd74dacd71a49ffee43febee1ba9e83d80bf0a55e1435eb9944fb8` |
+| Compile control | `65dbbcff74b6886fdd749b1c7c0587eaff06b4f4720405e10716c2b0dfee9bbc` CSS | `92e17db715bef4de971f75da73c790b68c2cc1b017edae91b4df283d5d9b6277` | `4a4321f4142bfe0a06ebb419223fce693b82966ed2e72d4230cba71d52beaf3c` |
+| Watch control | `65dbbcff74b6886fdd749b1c7c0587eaff06b4f4720405e10716c2b0dfee9bbc` CSS | `8fc31e3d221d70fe99931fcb8c1a2e414ed4a6e78145a667a179d7c3ada03543` | `3f43fa1238c25ed4f17942c4b6ef42d2c1610fe6ffdc80e4153397066c2335c1` |
+| Direct DTCG | `9a349f5059ffb3ace6c985dfe1fadcd9cb9ac45668b5cd0c00e26625e5a6c6c3` CSS | `8758c9d6b69e42f5adc48ba7d84f4fb026618af8737fea690185bb53dd7f1994` | `aafe05a73d83a00aaa3be700bc554624389c60fb351e2f7a1c8d2cd6f0cae5aa` |
+
+The direct DTCG vector freezes `examples/product.resolver.json` at
+`5965f868707ad92b0164788b5a7b8b8a2234ce03d7e6c71e1df66d612801b876`, the complete graph at
+`8659f9c443cb5c77c399fd741a27d476ec18887742c5459002fa6b82c22e864a`, and these selection hashes:
+
+| Selection | `configHash` |
 |---|---|
-| `pliego.css.findings.json` | `75015787cd20bd52e4c1d504943b675785f55d7376a583a103cad4ab5c7de464` |
-| `pliego.css.manifest.json` | `bac4099153b23cfd990fc2e70506153d08b725ca27661ad102934f45df721ac1` |
-| `pliego.css.receipt.json` | `cb680d32a41321b089cf2fd98b7f60501fa8ba306f408d5f448a11551598b9b1` |
+| `appearance=dark,channel=light` | `sha256:e6ce8e2578b2bbb68c0b533495dab2a781e5c7a32665d4c4a4845146f014ba3e` |
+| `appearance=dark,channel=dark` | `sha256:5bab41c2b1a8d06d05fbaae1517d425a35b0bb8143fcdaeaee3c5faf48d9469e` |
 
-The manifest-5 bundle-build vector freezes the complete nine-artifact group:
+## StyleId format-2 refresh audit
 
-| Bundle artifact | SHA-256 |
-|---|---|
-| `app.css` | `d208d2960bd28fb29354b1a89c74c106686c8a8a2d71a9cc7cc9971eb2e97070` |
-| `app.css.map` | `39a03b016583b0827ec8bc92a2a1677dcb4d151324dcdd9c77d303af29b1dddf` |
-| `app.manifest.json` | `0b04b7cf34339e598aeb256c5667a808461dfd02e90ce18aaec0a60de501eb9a` |
-| `pliego.assets.json` | `b004fd1b8c28a13b1af0f80c105fc71a7615bab45ea3a1619f7f65084d1b343e` |
-| `pliego.css.findings.json` | `e03d275890f0db3ccceaddfb6dc5b43acd0f0f731b99c77bd0b9bd9b6bf61d40` |
-| `pliego.css.manifest.json` | `19bbb01d407c958d0938ae536c4c08889d1084fd86f6ee246bae0d0326a98db3` |
-| `pliego.css.receipt.json` | `2bac654c6060a50f4a1fa21ea22baa1ef5d87c7f741aa37c41a5068dba1bf52d` |
-| `pliego.index.json` | `6d60bcce6f91e4dc71ca98d921e9ce8bb267cb4d027d51d664b4e87477313dec` |
-| `pliego.tokens.json` | `bb525a903714688d1ada713bff7a0c831631ee1c08b10434d1d03c79d742d204` |
+The shared pure compilation engine intentionally moved the portable output from the RC.2 identity
+stream to StyleId format 2. Before updating the current goldens, a detached `v0.1.0-rc.2` worktree at
+`064dcbce96a3a5cc97a940d07566c008bb5e2d3e` was built with Rust 1.85.0 and replayed with Node.js
+22.13.0. It reproduced the legacy CSS hash
+`acdb0bfee613ddb3fdae0feb9a8e5118dc5f74d385ed53eb610ff4eefd05d454`, manifest hash
+`8c1dc690c2cbb8102b6935a970e60938bbda7e50a0c0bf766c5c800305cce598`, and every legacy control
+hash byte for byte.
 
-The independently reopened Asset Plan audit vector freezes:
+The current checkout then reproduced the new complete vector with Node.js 22.13.0 and 24.16.0.
+CSS remains 424 bytes; source bytes, Resolver hash, graph cardinalities, canonical selections,
+read-only checks, and rejection cases are unchanged. Only identities and artifacts derived from the
+new identity stream were refreshed. The temporary audit worktree and Docker volume were removed
+after verification.
 
-| Asset Plan audit artifact | SHA-256 |
-|---|---|
-| `pliego.css.findings.json` | `67e1d24a75adc042312286ade5572379ec706df1ad177031b9160862d27c5e59` |
-| `pliego.css.manifest.json` | `004d39320c6aab32a6293896db98bbef21a040ec457afc2114e82fc67e7ab795` |
-| `pliego.css.receipt.json` | `d392124440e0295760fb5e8629fb5e4d07271c1f5fcffc03b628bdfbdbab65ce` |
-
-The exact-snapshot direct compile vector freezes:
-
-| Compile artifact | SHA-256 |
-|---|---|
-| `app.css` | `d208d2960bd28fb29354b1a89c74c106686c8a8a2d71a9cc7cc9971eb2e97070` |
-| `app.css.map` | `39a03b016583b0827ec8bc92a2a1677dcb4d151324dcdd9c77d303af29b1dddf` |
-| `app.manifest.json` | `3a89e04856d5ff8244c29e91325271d6a57e33eec99242b121308c477facd169` |
-| `pliego.css.findings.json` | `b59823b27e3f045625bcc9a8ecc3842de039ae1d70d2c98348bd0444550abe04` |
-| `pliego.css.manifest.json` | `51bd81698f58ea3c4ab66c6f5c111135523b62e0177f970a6ae40229ac96d247` |
-| `pliego.css.receipt.json` | `f94939da3e2c04c8d373b2fe881e9234b5abcee8bbb81b6b0d7e1a9c3fdb4fce` |
-| `pliego.tokens.json` | `bb525a903714688d1ada713bff7a0c831631ee1c08b10434d1d03c79d742d204` |
-
-The exact-snapshot watch vector freezes:
-
-| Watch artifact | SHA-256 |
-|---|---|
-| `app.css` | `d208d2960bd28fb29354b1a89c74c106686c8a8a2d71a9cc7cc9971eb2e97070` |
-| `app.css.map` | `39a03b016583b0827ec8bc92a2a1677dcb4d151324dcdd9c77d303af29b1dddf` |
-| `app.manifest.json` | `3a89e04856d5ff8244c29e91325271d6a57e33eec99242b121308c477facd169` |
-| `pliego.css.findings.json` | `3df2586a1041d39a0e3e66db4e6674df39479157b3ac413c0fea8b7f85ad23bd` |
-| `pliego.css.manifest.json` | `b0713b0a3957f267e960ec026088441f4a4e3d476e52becd30c1cfe08af0aa64` |
-| `pliego.css.receipt.json` | `fe5633bfa90a7edb953e390e5185597fd909d5f9b696059f36dd1e2c0ed6d2e9` |
-| `pliego.tokens.json` | `bb525a903714688d1ada713bff7a0c831631ee1c08b10434d1d03c79d742d204` |
-
-The direct DTCG Resolver vector selects `appearance=dark,channel=light`, freezes the exact
-`examples/product.resolver.json` input at
-`5965f868707ad92b0164788b5a7b8b8a2234ce03d7e6c71e1df66d612801b876`, and freezes:
-
-| Direct DTCG artifact | SHA-256 |
-|---|---|
-| `app.css` | `cec35891bc4d167bb359b57cf5fcda10a06e2b0665398424ff63b8e01c8b4850` |
-| `app.css.map` | `ce30a183a990c8dca861721b4c5ea953884fd4fb4898220023192e20abc62c3c` |
-| `app.manifest.json` | `88597038d0aab327fc11d11a4371b03e1aa53b44199cc137eb84729f3eddd00a` |
-| `pliego.css.findings.json` | `2135fdb346d08d7e25516006a9d7829780d155b8e1e2374f19ddd7a08a7916c9` |
-| `pliego.css.manifest.json` | `9fb936c7c415af5c78a3edd298e31e6a4d750a84374e830961b2472117ac3e97` |
-| `pliego.css.receipt.json` | `b24d23b286df8c35711684c585962a2b25d84bf1c6de84b7c618c08101738183` |
-| `pliego.tokens.json` | `7a0862dcd2cd8152cface3ea82fbccf1877e75c6f505efa8a3032f8652f354f0` |
-
-The vector also freezes `configHash` as
-`sha256:e06966ae5f001ba6b1b29bfa4d52a3c3d26f9c4ba588d8ff558bd820c23767a9`.
-Changing only `channel=dark` retains the same `ThemeId`, CSS, style manifest, and complete graph but
-changes `configHash` to
-`sha256:d0ab9d7cdc46d564adc14142be10d15b14dee36066966a29f4857e22a0f3616c`.
-This proves that canonical selections remain identity-bound independently of the compiled registry.
-
-The generated bundle/compile/watch manifest hashes include each exact Source Map v3 reference, the
-canonical `pliegocss-token-graph/1` artifact and identity, reciprocal graph relationships, and
-distinct referenced-token coverage. Direct CSS and reopened Asset Plan audit remain unchanged because
-they do not own generation and their token state is explicitly unavailable.
-
-On 2026-07-14 the complete updated script passed all six exact control groups on local Windows x64
-using Node.js 24.16.0 and again on Debian WSL2 Linux x64 using Node.js 20.19.2 with its runtime on the
-native Linux filesystem. The Linux replay used the graph-bearing bundle/compile/watch and direct
-DTCG vectors shown above, including canonical graph parsing, exact Resolver-ledger identity,
-case/order convergence, reciprocal relationships, exact receipt evidence, drift rejection, and
-read-only checks. All frozen direct DTCG hashes matched Windows byte for byte. No
-hosted-runner, macOS, Rust 1.85 graph-bearing, supported-floor Node.js 22.13, or Cloudflare
-portability claim is made.
-
-Bundle-plan schema 2 also passed its three DTCG E2E cases on local Windows x64 and on Debian WSL2
-Linux x64 with a native Linux target directory. Those cases validate schema-1 compatibility,
-default/dark contexts, exact `token-resolver` evidence, the complete graph, same-ThemeId selection
-identity, read-only `--check`, and preservation of the last valid group. This is cross-OS execution
-evidence, not a new frozen byte vector: the temporary plan path and exact plan bytes intentionally
-participate in bundle `configHash`.
-
-On 2026-07-15 the Cargo build-macro DTCG bridge passed the complete Debian WSL2 Linux x64 workspace
-with a native Linux target directory, Clippy with warnings denied, the locked Rust 1.85 workspace
-check, and the Rust 1.85 downstream public-API identity smoke. That smoke froze
-`StyleId=1b052ee4ca1192db2e1ef91594166f70`,
-`ThemeId=aeba2dade1fb8ef54e6db50494167fbd`, 722 CSS bytes, and CSS SHA-256
-`25a0aa84e0ba5256c21ecd5740d9e6094632aeb2fc5600992f9d4f16013efd2d`; it also proved TOML registry
-convergence and direct DTCG macro/CLI identity. Linux executed an actual file-symlink rejection.
-
-The post-change Windows x64 dirty package gate compiled every archive and ran separate extracted
-Rust 1.85 DTCG and legacy-TOML build-script consumers with byte-identical selected-registry output.
-The Windows file-symlink test is conditional: this checkout could not create the link because the OS
-returned error 1314, so this milestone does not claim an observed Windows reparse-point rejection.
-The code still fails closed on reparse metadata and opens with `FILE_FLAG_OPEN_REPARSE_POINT`, but
-that is an implemented contract rather than executed evidence here. Native macOS, native ARM64,
-and hosted runners remain open. Commit `9714b09` passed the complete clean Debian WSL2 package gate:
-all eleven archives compiled, and the extracted Rust 1.85 DTCG and legacy-TOML consumers produced
-byte-identical output.
-
-Changing one of these values requires an intentional compatibility review, not a silent fixture
-update.
-
-## Line-ending contract
-
-`.gitattributes` fixes LF for source, configuration, documentation, workflow, fixture, CSS, HTML, and
-diagnostic snapshot files. Binary media and WASM remain binary. The explicit CRLF source inside the
-portability vector proves that scanner offsets still describe the exact supplied bytes; it does not
-make checked-in line endings host-dependent.
+Changing any frozen value still requires an intentional compatibility review. Update mode prints
+witness values but does not bypass semantic assertions.
 
 ## Boundaries still open
 
+- A new named release candidate must bind its tag, source commit, tree, portability run, browser
+  matrix, registry replay, production replay, signed distribution, and final authorization. RC.2
+  cannot inherit this branch's evidence.
 - Normal compile/watch without `--control-dir` preserves author-supplied provenance and is not
-  promised byte-identical across hosts. Controlled compile/watch and bundle-plan provenance use
-  portable logical paths and are the cross-OS contracts.
-- The hosted matrix must run green after a remote repository exists.
-- The canonical-token-graph vector still needs macOS, Rust 1.85.0, and supported-floor Node.js
-  22.13.0 evidence; local Linux x64 is now covered but is not hosted evidence.
-- Hosted runner labels and action major tags are intentionally not release-pinned yet; supply-chain
-  SHA pinning and recording the runner image belong to the release gate.
-- PliegoRS integration still depends on a dirty sibling checkout and is not a clean-clone CI job.
-- Filesystem locks are advisory and are not certified for NFS/SMB or non-PliegoCSS writers.
-- Grouped publication is rollback-capable for handled failures, not gap-free, crash-atomic, or durable
-  against power loss. A stale compiler process can still publish after a newer compilation.
-- Browser behavior still lacks a Chromium/Firefox/WebKit matrix.
-- Cloudflare Workers deployment and an application-level WASM/SSR gate remain separate work.
+  promised byte-identical across hosts.
+- Filesystem locks are not certified for NFS/SMB or non-PliegoCSS writers; grouped publication is
+  rollback-capable for handled failures, not durable crash atomicity.
+- The WASM check is a library/target gate. Cloudflare Workers execution and application-level SSR
+  remain separate release evidence.
+- Native ARM64 binaries and signed distribution artifacts remain publication work even though the
+  hosted macOS runner contributes compiler and browser evidence.

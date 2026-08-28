@@ -1,6 +1,6 @@
 # StyleId binary format 2
 
-Status: **implemented and protected by exact prerelease vectors at `0.1.0-rc.2`**
+Status: **implemented and protected by exact prerelease vectors at `0.1.0-rc.3`**
 
 This document specifies the canonical byte stream used by
 `STYLE_ID_FORMAT_VERSION = 2`, the derivation of the 128-bit `StyleId`, and its relationship to a
@@ -45,7 +45,7 @@ their raw bytes, and removes exact duplicate records. The resulting order and co
 Authoring order, assignment-table order, and duplicate provenance therefore do not affect identity.
 
 The explicit theme-format field prevents the same 128 theme bits from being interpreted under an
-unreported ThemeId contract. The current stream embeds `THEME_ID_FORMAT_VERSION = 2` and the
+unreported ThemeId contract. The current stream embeds `THEME_ID_FORMAT_VERSION = 3` and the
 theme binary format.
 
 ## Assignment record
@@ -208,9 +208,9 @@ Current frozen examples are:
 
 | Theme/style | StyleId | Class |
 |---|---|---|
-| Seed theme, `flex gap-4` | `70cb04ef9bf9621f5826351f1778f68e` | `pc_6oe73ec16rbb7ublcoa3bpzf2` |
-| Minimal compatibility theme, `flex gap-gutter tablet:grid` | `e0b572e3fdfbf091d9a2ddb126278634` | `pc_dax2y1pql4op1rjk97yv9e88k` |
-| Seed theme, `container-inline cq-sm:grid` | `11893074aaaf88f7b356ad6d53a913e2` | `pc_11dgqogrs5aq1d9ocwyulg6w2` |
+| Seed theme, `flex gap-4` | `fe3a92576be2bb53e3240249bc45b829` | `pc_f1u1l7d58kemkdqdjie56hdex` |
+| Minimal compatibility theme, `flex gap-gutter tablet:grid` | `b742ceb589d4f412c6ba77e81f632f53` | `pc_aukxxmkm8bmauj8duf8zpjdcj` |
+| Seed theme, `container-inline cq-sm:grid` | `78f8ca7e9a1d8b7737ee243d87faf881` | `pc_75tq511l3l9q0mx595ykqafsx` |
 
 ## Document versions
 
@@ -220,14 +220,14 @@ Artifacts that expose identity now report all three related versions at the top 
 {
   "styleIdFormatVersion": 2,
   "classNameFormatVersion": 1,
-  "themeIdFormatVersion": 2
+  "themeIdFormatVersion": 3
 }
 ```
 
-These fields are required in CSS manifest schemas 3, 4, and 5, inspection schema 2, catalog schema 3,
+These fields are required in CSS manifest schemas 3, 4, and 5, inspection schema 3, catalog schema 4,
 and explain schema 2. They let a consumer reject mixed identity contracts before interpreting a
 `styleId` or class. Structured diagnostics remain schema 1, the theme configuration remains schema
-1, the theme identity and binary remain format 1, declarative bundle plans use schemas 1/2,
+1, the theme identity and binary use format 3, declarative bundle plans use schemas 1/2,
 the reachability sidecar is schema 1, nested manifest graphs are schemas 1/2, and the PliegoRS
 source-surface contract remains schema 2.
 

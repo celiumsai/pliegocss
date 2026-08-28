@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 1,
+  "status": "active-contract",
+  "kind": "pliegocss-adapter-coexistence-certification",
+  "corpus": {
+    "path": "benchmarks/adapter-coexistence-v1/corpus.json",
+    "sha256": "2d569964591d4a03981c2762cdeda3daa99a5323f1fe97460b74afa85e878a8c",
+    "minimumProjects": 20
+  },
+  "sharedReset": {
+    "path": "benchmarks/browser-output-certification-v1/shared-reset.css",
+    "sha256": "5d190d599bf4b966fd76cf1c456b5904c8135506c9a6a4e4853ac4fc6cac6f38"
+  },
+  "tailwindProfiles": [
+    {
+      "id": "tailwind-v3-lts",
+      "packageAlias": "tailwindcss-v3-lts",
+      "packageName": "tailwindcss",
+      "version": "3.4.19",
+      "sourceContract": "v3-directives-no-preflight"
+    },
+    {
+      "id": "tailwind-v4-current",
+      "packageAlias": "tailwindcss",
+      "cliPackageAlias": "@tailwindcss/cli",
+      "packageName": "tailwindcss",
+      "version": "4.3.3",
+      "sourceContract": "v4-import-no-preflight"
+    }
+  ],
+  "adapters": [
+    {
+      "id": "html",
+      "minimumProjects": 7,
+      "execution": "direct-document"
+    },
+    {
+      "id": "vite",
+      "minimumProjects": 7,
+      "execution": "vite-production-build",
+      "package": "vite",
+      "version": "8.1.5"
+    },
+    {
+      "id": "pliegors",
+      "minimumProjects": 7,
+      "execution": "rendered-output-contract",
+      "upstreamGate": "integration:pliegors-browser"
+    }
+  ],
+  "hosts": [
+    {
+      "id": "windows-x64-chromium",
+      "runner": "windows-latest",
+      "os": "win32",
+      "arch": "x64",
+      "browser": "chromium"
+    },
+    {
+      "id": "linux-x64-chromium",
+      "runner": "ubuntu-24.04",
+      "os": "linux",
+      "arch": "x64",
+      "browser": "chromium"
+    },
+    {
+      "id": "macos-arm64-chromium",
+      "runner": "macos-15",
+      "os": "darwin",
+      "arch": "arm64",
+      "browser": "chromium"
+    }
+  ],
+  "migration": {
+    "mode": "static-complete-class-group",
+    "applyCommand": "migration-group-apply",
+    "rollbackCommand": "migration-group-rollback",
+    "tailwindRuntimeRetained": true,
+    "dynamicClassPolicy": "reject",
+    "unsupportedUtilityPolicy": "reject",
+    "rollback": "restore-exact-source-bytes"
+  },
+  "comparison": {
+    "dom": "Body element/text tree and every non-class attribute must be identical.",
+    "aria": "Playwright body ARIA snapshot must be byte-identical.",
+    "computedStyle": "Every frozen property on each migrated class-bearing node must be equal after color and browser alias normalization.",
+    "layoutGeometry": "Each migrated node border box may differ by at most 0.1 CSS px.",
+    "maximumLayoutGeometryDeltaCssPx": 0.1,
+    "computedProperties": [
+      "display",
+      "position",
+      "box-sizing",
+      "width",
+      "height",
+      "min-width",
+      "min-height",
+      "max-width",
+      "max-height",
+      "margin-top",
+      "margin-right",
+      "margin-bottom",
+      "margin-left",
+      "padding-top",
+      "padding-right",
+      "padding-bottom",
+      "padding-left",
+      "row-gap",
+      "column-gap",
+      "align-items",
+      "justify-content",
+      "flex-direction",
+      "flex-wrap",
+      "flex-grow",
+      "flex-shrink",
+      "grid-template-columns",
+      "color",
+      "background-color",
+      "border-top-width",
+      "border-right-width",
+      "border-bottom-width",
+      "border-left-width",
+      "border-top-style",
+      "border-top-color",
+      "border-radius",
+      "outline-width",
+      "outline-style",
+      "outline-color",
+      "outline-offset",
+      "font-family",
+      "font-size",
+      "font-weight",
+      "line-height",
+      "letter-spacing",
+      "text-transform",
+      "opacity",
+      "cursor",
+      "resize"
+    ]
+  },
+  "requiredCoverage": [
+    "at-least-20-projects",
+    "html",
+    "vite-production-build",
+    "pliegors-rendered-output",
+    "pinned-pliegors-framework-browser",
+    "tailwind-v3-lts",
+    "tailwind-v4-current",
+    "tailwind-source-inventory",
+    "tailwind-output-audit",
+    "reversible-group-apply",
+    "exact-byte-rollback",
+    "dom-equivalence",
+    "aria-equivalence",
+    "computed-style-equivalence",
+    "layout-geometry-equivalence"
+  ],
+  "claimBoundary": "Passing proves the bounded, static complete-class-group migration protocol for the tracked corpus and named hosts. Tailwind remains loaded during coexistence. Dynamic class construction, arbitrary plugin execution, general Tailwind compatibility, and untracked PliegoRS applications are outside this claim."
+}

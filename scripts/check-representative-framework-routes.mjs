@@ -3,11 +3,12 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { cargoTargetRoot } from "./rust-target.mjs";
 
 const root = resolve(import.meta.dirname, "..");
 const fixture = join(root, "integration-tests", "representative", "framework-neutral-routes");
 const reachabilityPath = join(fixture, ".reachability.generated.json");
-const cli = join(root, "target", "debug", process.platform === "win32" ? "pliego-cssc.exe" : "pliego-cssc");
+const cli = join(cargoTargetRoot(root), "debug", process.platform === "win32" ? "pliego-cssc.exe" : "pliego-cssc");
 function fail(message, detail) { throw new Error(detail === undefined ? message : `${message}\n${JSON.stringify(detail, null, 2)}`); }
 function run(command, args, cwd = root) {
   const result = spawnSync(command, args, { cwd, encoding: "utf8", windowsHide: true });

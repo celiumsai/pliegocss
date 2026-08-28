@@ -71,7 +71,7 @@ checksum = "a7743783ea728ef5c31194c6590797eed286449b4a4e87d626d8a51f0a94e732"
 
 [[package]]
 name = "pliego-css"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 dependencies = [
  "pliego-css-ir",
  "pliego-css-macros",
@@ -79,7 +79,7 @@ dependencies = [
 
 [[package]]
 name = "pliego-css-compiler"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 dependencies = [
  "pliego-css-ir",
  "pliego-css-parser",
@@ -89,11 +89,11 @@ dependencies = [
 
 [[package]]
 name = "pliego-css-ir"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 
 [[package]]
 name = "pliego-css-macros"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 dependencies = [
  "pliego-css-compiler",
  "pliego-css-ir",
@@ -106,14 +106,14 @@ dependencies = [
 
 [[package]]
 name = "pliego-css-parser"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 dependencies = [
  "pliego-css-ir",
 ]
 
 [[package]]
 name = "pliego-css-theme"
-version = "0.1.0-rc.2"
+version = "0.1.0-rc.3"
 dependencies = [
  "pliego-css-ir",
  "sha2",

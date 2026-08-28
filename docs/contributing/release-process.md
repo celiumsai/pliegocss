@@ -1,14 +1,16 @@
 # Release process
 
-Status: **`0.1.0-rc.2` is the active public-preview candidate;
+Status: **the workspace prepares `0.1.0-rc.3`; its exact-source candidate
+identity is not established and final
 final `0.1.0` promotion remains blocked by the machine readiness record**
 
 This process covers the nineteen publishable crates in one version-locked
 compatibility unit. It does not authorize an upload. Publishing to crates.io,
 promoting a final release, changing repository visibility, or changing
 production infrastructure requires explicit owner approval at the moment of
-the action. Current status is maintained in the
-[machine readiness record](../product/release-readiness-0.1.0.md).
+the action. Current status is maintained only in the schema-3
+[machine readiness record](../product/release-readiness-0.1.0.json); the adjacent
+[Markdown page](../product/release-readiness-0.1.0.md) is generated from it.
 
 ## Publishable boundary
 
@@ -34,13 +36,14 @@ Rust 1.85 is the library MSRV. Release packaging is a contributor operation and 
 pinned Cargo 1.96 exactly because the package gate verifies an unpublished interdependent workspace
 by extracting the current archives into an isolated temporary workspace and patching every internal
 crates.io name to those extracted contents. Node.js 22.13 or newer runs the metadata checks; Node is
-not a crate or application dependency.
+not a crate dependency. The optional Node launcher is an npm-format package distributed only as a
+verified GitHub Release asset and installed with pnpm; npmjs publication is forbidden.
 
 ## 1. Choose the release
 
 Before changing a version:
 
-- decide whether the result is another candidate, such as `0.1.0-rc.2`, or the final `0.1.0`;
+- decide whether the result is another candidate, such as `0.1.0-rc.3`, or the final `0.1.0`;
 - close or explicitly defer every item in the release-blocker section below;
 - move the release's user-visible changes and migrations from **Unreleased** into a dated, exact
   version section in `CHANGELOG.md`, leaving a new empty **Unreleased** section above it;
@@ -48,11 +51,11 @@ Before changing a version:
 - confirm that the selected [public API candidate](../reference/public-api.md) is unchanged and
   decide explicitly whether this release activates it as a SemVer promise;
 - confirm `STYLE_ID_FORMAT_VERSION = 2`, `CLASS_NAME_FORMAT_VERSION = 1`,
-  `THEME_ID_FORMAT_VERSION = 2`, and `IR_BINARY_FORMAT_VERSION = 2`, plus default manifest 3,
+  `THEME_ID_FORMAT_VERSION = 3`, and `IR_BINARY_FORMAT_VERSION = 2`, plus default manifest 3,
   opt-in manifests 4/5, graphs 1/2, declaration and physical ID formats 1, reachability 1,
   observation/retention sidecars 1, usage analysis 1/2, Asset Plan and Project Index 1/2,
   ownership 1, migration inventory 1, inspect/catalog/utility-explain/cascade-explain schemas
-  2/3/2/1, repair
+  3/4/2/1, repair
   proposal/plan/dry-run/Change Receipt schemas 1.0.0, receipt result `checks-pending`, and byte-edit
   patch format 1, plus repair check-policy/Verification Receipt schemas 1.4.0 with canonical
   1.0.0/1.1.0/1.2.0/1.3.0 read support and `passed|failed|blocked` derivation, including
@@ -102,12 +105,18 @@ pnpm check:trace
 pnpm check:media
 pnpm check:pruning
 pnpm check:fuzz
+pnpm check:benchmark-authority
+pnpm check:benchmark-oracle
 pnpm check:evidence
 pnpm check:repair-corpus
 pnpm check:migration-corpus
+pnpm check:external-adoption-authority
+pnpm check:external-adoption
 PLIEGOCSS_RUN_NETWORK_CORPUS=1 pnpm check:migration-real-corpus
 pnpm check:attribution
 pnpm check:portability
+pnpm check:release-authority
+pnpm check:site-docs
 pnpm integration:pliegors
 pnpm integration:pliegors-dev
 pnpm integration:lsp
@@ -211,6 +220,12 @@ A new immutable snapshot must also be added to the explicit filename/SHA-256 all
 Do not squash or rebase a recorded source commit after approval: the verifier deliberately resolves
 that exact historical blob. A history rewrite must supersede and regenerate the affected evidence.
 
+`pnpm check:benchmark-authority` validates the seven-day schema-2 oracle, all three installed/locked
+Tailwind lanes, deterministic corpus materialization, generated documentation, and the paired runner
+contract. `pnpm check:benchmark-oracle` additionally compares npm `latest`/`v3-lts` dist-tags and
+registry SRI live; release fails closed when the oracle is stale or the registry cannot be verified.
+Historical Gate A/B evidence remains valid only for its recorded version and cannot satisfy this gate.
+
 Also regenerate and check the generated catalog, benchmark evidence, and every snippet gate. A local
 success does not substitute for the hosted OS matrix, browser matrix, Cloudflare build, or developer
 onboarding.
@@ -271,7 +286,18 @@ All of these must be evidenced for the exact release commit:
   rule;
 - PliegoRS integration passes from clean, revision-pinned checkouts;
 - documentation onboarding is completed by developers without prior project context;
-- the final benchmark is reproduced and compared with the pinned Tailwind baseline.
+- the final benchmark is reproduced with the live Benchmark Authority v2 oracle and reviewed
+  clean-tree schema-2 evidence; the frozen Tailwind lane is regression context only.
+
+Browser behavior is certified by `pnpm check:browser-output-authority` plus the dedicated
+`browser-output-certification.yml` workflow. The workflow must produce all nine clean lanes:
+Chromium, Firefox, and WebKit on Windows x64, Linux x64, and macOS ARM64. Each lane executes five
+responsive/state scenarios under both `no-reset` and `shared-reset`, compares the frozen computed
+property set, 1/64-pixel box/text-line geometry bounded to 0.1 CSS px, and bounded PNG output against `tailwind-latest`,
+and uploads hash-bound JSON/PNG
+artifacts. `pnpm check:browser-output-matrix` fails unless all nine documents are current, clean,
+bound to the aggregator checkout's exact commit/tree, and complete. A stale internally consistent
+matrix, local pass, or single OS cannot substitute for this gate.
 
 Name availability, repository reachability, owners, credentials, and hosted runs are time-sensitive;
 verify them again immediately before publication.
@@ -316,8 +342,8 @@ pliego-cssc --version
 Create a minimal application using exact `pliego-css` and, when needed, `pliego-css-build` versions.
 Compile seed and custom-theme examples, run the CLI against the application source, and compare the
 class/manifest identities with the release evidence. Verify that default manifest schema 3 and
-opt-in schemas 4/5, inspection schema 2, catalog schema 3, and utility-explain schema 2 report
-StyleId/class/ThemeId formats 2/1/2. Separately verify cascade-explain schema 1 statuses, candidates,
+opt-in schemas 4/5, inspection schema 3, catalog schema 4, and utility-explain schema 2 report
+StyleId/class/ThemeId formats 2/1/3. Separately verify cascade-explain schema 1 statuses, candidates,
 blockers, and exact declaration spans. Also verify graph schemas 1/2, declaration and physical ID
 formats 1, exact graph-1 projection, CSS identity across manifest versions, and reachability schema
 1 with the installed binary. Run `bundle --asset-plan` with manifest 4 or 5 and reachability, verify
@@ -336,24 +362,62 @@ the release commit that produced the uploaded archives. After registry installat
 that exact unchanged commit and publish release notes from its changelog section. Do not amend the
 release commit after upload; any correction requires a new package version.
 
+## 8. Build repository-hosted native and pnpm assets
+
+The normative policy is [`distribution/repository-distribution-v1.json`](../../distribution/repository-distribution-v1.json).
+The `Repository distribution` workflow builds `pliego-cssc` and `pliego-css-lsp` for Windows x64,
+Linux x64 GNU, and macOS arm64; emits target archives and CycloneDX 1.5 SBOMs; assembles one universal
+`@pliegocss/cli` `.tgz`; generates `SHA256SUMS`; and installs the local tarball with pnpm on all three
+hosts. The package is `private`, has zero dependencies, has no lifecycle scripts, and never fetches a
+binary.
+
+For branch certification, run the workflow normally and retain the exact-SHA artifact. For the one
+reviewed candidate that needs signed evidence, dispatch it with `attest=true`. GitHub/Sigstore
+attestations then bind each binary, its SBOM, and every assembled release asset to the workflow and
+source identity. This is cryptographic provenance, not Windows Authenticode signing or Apple
+notarization.
+
+A release tag may create only a **draft** GitHub Release, and only after the repository-level
+immutable-release setting is enabled. Attach every asset before publishing the draft. Publishing the
+release locks its tag and assets and generates the release attestation. Verify a candidate consumer
+path before publication:
+
+```console
+gh release download <tag> --repo celiumsai/pliegocss --pattern 'pliegocss-*'
+gh release verify <tag> --repo celiumsai/pliegocss
+gh release verify-asset <tag> ./pliegocss-pnpm-<version>.tgz --repo celiumsai/pliegocss
+gh attestation verify ./pliegocss-pnpm-<version>.tgz --repo celiumsai/pliegocss
+pnpm add --save-dev --save-exact ./pliegocss-pnpm-<version>.tgz
+pnpm exec pliego-cssc --version
+pnpm exec pliego-css-lsp --version
+```
+
+Never run `npm publish`, `pnpm publish`, or install the package by its npmjs name. Never promote a
+workflow artifact directly: only the reviewed, complete draft Release asset set may become the
+immutable public distribution.
+
 ## Current blockers
 
-The following remain open as of the `0.0.0` candidate:
+The schema-3 authority still records the immutable RC.2 source and its expired
+evidence. It must not be relabeled as RC.3. After this version-preparation
+change becomes a clean reviewed commit, a newly named candidate can bind its
+exact commit and tree and run CI, CodeQL, browser, distribution, and registry
+evidence. The remaining gates are:
 
-- the minimal public API candidate is selected and machine-checked locally, but no approved RC has
-  activated its SemVer promise and the final RC/version has not been chosen;
-- the configured hosted CI matrix has no recorded green run because this checkout has no remote;
-- browser, Cloudflare, clean-clone PliegoRS, and onboarding evidence remain incomplete;
-- the strategic R0 contract is not closed: direct CLI and bundle-plan schema-2 DTCG Resolver and
-  canonical graph gates are green locally; Cargo build-macro DTCG selection passes the full Debian
-  WSL2 workspace/MSRV/API gates, the Windows dirty-package consumer gate, and the clean package gate
-  at commit `9714b09`. Complete attribution, accessibility policy checks, hosted cross-OS proof, and
-  the diagnostic-quality real-incident corpus and same-model turn-reduction evidence remain open;
-  the 16-case synthetic repair authority corpus is only a local conformance gate;
-- the PliegoRS development stabilization revision is local-only until its `codex/` branch is reviewed
-  and published/merged upstream;
-- the repository URL and registry ownership must be established and rechecked;
-- the full documentation and final benchmark gates remain open.
+- G0 corrections are present in the RC.3 source but require exact-candidate hosted replay before they
+  become release evidence;
+- all required hosted browser lanes remain `not-configured` for the exact RC.3 candidate;
+- the crates.io replay and production edge/browser replay need fresh, unexpired, artifact-hashed
+  evidence;
+- RC.3 requires exact-source repository native archives, checksums, CycloneDX SBOMs,
+  GitHub/Sigstore attestations, an immutable GitHub Release, and verified pnpm package;
+  npmjs publication remains forbidden;
+- external interviews, real incidents, and pilots are not yet recorded as reviewed adoption
+  evidence;
+- final `0.1.0` publication is not authorized for this exact commit and tree.
+
+`pnpm verify:release` must therefore fail closed. A local pass, historical report, deployment URL,
+or owner approval for another source identity cannot change the machine result.
 
 See the [compatibility contract](../reference/compatibility.md),
 [strategic product contract](../product/strategic-product-contract-2026.md),

@@ -3,15 +3,17 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
+import { cargoTargetRoot, isolatedCargoEnvironment } from "./rust-target.mjs";
 
 const ROOT = resolve(import.meta.dirname, "..");
 const executable = process.platform === "win32" ? ".exe" : "";
-const target = process.env.CARGO_TARGET_DIR
-  ? resolve(ROOT, process.env.CARGO_TARGET_DIR)
-  : resolve(ROOT, "target");
+const cargoEnvironment = isolatedCargoEnvironment(ROOT, {
+  env: process.env,
+  toolchain: "1.85.0",
+});
+const target = cargoTargetRoot(ROOT, cargoEnvironment);
 const lsp = resolve(target, "debug", `pliego-css-lsp${executable}`);
 const compiler = resolve(target, "debug", `pliego-cssc${executable}`);
-const cancellationProxy = resolve(target, `lsp-cancellation-proxy${executable}`);
 const diagnosticCorpus = JSON.parse(
   readFileSync(resolve(ROOT, "integration-tests", "lsp-diagnostics", "corpus.json"), "utf8"),
 );
@@ -22,25 +24,12 @@ function fail(message) {
 
 const build = spawnSync(
   "cargo",
-  ["+1.85", "build", "--locked", "-p", "pliego-css-lsp", "-p", "pliego-cssc"],
-  { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
+  ["+1.85.0", "build", "--locked", "-p", "pliego-css-lsp", "-p", "pliego-cssc"],
+  { cwd: ROOT, env: cargoEnvironment, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
 );
 if (build.error) fail(`cannot build LSP gate: ${build.error.message}`);
 if (build.status !== 0) fail(`${build.stdout}${build.stderr}`.trim());
 if (!existsSync(lsp) || !existsSync(compiler)) fail("LSP gate binaries are missing");
-const proxyBuild = spawnSync(
-  "rustc",
-  [
-    "+1.85",
-    resolve(ROOT, "integration-tests", "lsp-diagnostics", "cancellation-proxy.rs"),
-    "-o",
-    cancellationProxy,
-  ],
-  { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
-);
-if (proxyBuild.error) fail(`cannot build cancellation proxy: ${proxyBuild.error.message}`);
-if (proxyBuild.status !== 0) fail(`${proxyBuild.stdout}${proxyBuild.stderr}`.trim());
-if (!existsSync(cancellationProxy)) fail("LSP cancellation proxy is missing");
 if (
   diagnosticCorpus.kind !== "pliegocss-lsp-diagnostic-corpus" ||
   diagnosticCorpus.schemaVersion !== 2 ||
@@ -113,7 +102,7 @@ const index = {
   physicalCoverage: "compiler-verified-complete",
   styleIdFormatVersion: 2,
   classNameFormatVersion: 1,
-  themeIdFormatVersion: 2,
+  themeIdFormatVersion: 3,
   themeId: "seed",
   targets: "modern",
   format: "minified",
@@ -198,7 +187,10 @@ for (const item of diagnosticCorpus.cases) {
     stdio: ["ignore", "pipe", "pipe"],
   });
   if (checked.error || checked.status === 0) {
-    fail(`CLI diagnostic corpus case ${item.id} did not fail as required`);
+    fail(
+      `CLI diagnostic corpus case ${item.id} did not fail as required ` +
+        `(status=${checked.status}, error=${checked.error?.message ?? "none"}, stdout=${checked.stdout}, stderr=${checked.stderr})`,
+    );
   }
   const document = JSON.parse(checked.stderr);
   if (document.schemaVersion !== 1 || document.diagnostics?.length !== 1) {
@@ -219,15 +211,17 @@ for (const item of diagnosticCorpus.cases) {
 
 const child = spawn(
   lsp,
-  ["--pliego-cssc", cancellationProxy, "--seed", "--project-index", "out/pliego.index.json"],
+  [
+    "--pliego-cssc",
+    resolve(workspace, `must-not-execute-pliego-cssc${executable}`),
+    "--seed",
+    "--project-index",
+    "out/pliego.index.json",
+  ],
   {
     cwd: workspace,
     stdio: ["pipe", "pipe", "pipe"],
-    env: {
-      ...process.env,
-      PLIEGOCSS_REAL_COMPILER: compiler,
-      PLIEGOCSS_CANCELLATION_MARKER: resolve(workspace, "cancellation.pid"),
-    },
+    env: process.env,
   },
 );
 const output = [];
@@ -248,25 +242,6 @@ async function waitForOutput(fragment, offset = 0, timeoutMs = 5000) {
     await new Promise((resolveDelay) => setTimeout(resolveDelay, 25));
   }
   fail(`LSP did not emit ${JSON.stringify(fragment)} within ${timeoutMs} ms`);
-}
-
-async function waitForFile(path, timeoutMs = 5000) {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    if (existsSync(path)) return;
-    await new Promise((resolveDelay) => setTimeout(resolveDelay, 10));
-  }
-  fail(`LSP cancellation child did not create ${path} within ${timeoutMs} ms`);
-}
-
-function processIsAlive(pid) {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch (error) {
-    if (error?.code === "ESRCH") return false;
-    throw error;
-  }
 }
 
 const uri = pathToFileURL(resolve(workspace, "src", "view.rs")).href;
@@ -331,7 +306,6 @@ send({
   params: { textDocument: { uri }, options: { tabSize: 4, insertSpaces: true } },
 });
 await waitForOutput("unknown utility `unknown-thing`");
-const cancellationMarker = resolve(workspace, "cancellation.pid");
 const cancellationVersion = 11;
 send({
   jsonrpc: "2.0",
@@ -341,11 +315,6 @@ send({
     contentChanges: [{ text: 'fn view(){let _=pc!("cancel-me");}' }],
   },
 });
-await waitForFile(cancellationMarker);
-const cancelledPid = Number(readFileSync(cancellationMarker, "utf8").trim());
-if (!Number.isSafeInteger(cancelledPid) || cancelledPid <= 0) {
-  fail("cancellation proxy wrote an invalid process id");
-}
 const recoveryVersion = 12;
 const recoveryText = 'fn view(){let _=pc!("unknown-after-cancel");}';
 const recoveryOffset = Buffer.concat(output).length;
@@ -360,11 +329,6 @@ send({
 });
 await waitForOutput("unknown utility `unknown-after-cancel`", recoveryOffset, 5000);
 const cancellationLatencyMs = Date.now() - cancellationStarted;
-const processDeadline = Date.now() + 2000;
-while (Date.now() < processDeadline && processIsAlive(cancelledPid)) {
-  await new Promise((resolveDelay) => setTimeout(resolveDelay, 10));
-}
-if (processIsAlive(cancelledPid)) fail("stale semantic compiler child remained alive");
 
 const pcxVersion = 13;
 const pcxText =
@@ -408,19 +372,7 @@ for (const item of diagnosticCorpus.cases) {
   corpusRuns.push({ item, sourceText, version: corpusVersion });
   corpusVersion += 1;
 }
-const toolFailureVersion = corpusVersion;
-const toolFailureOffset = Buffer.concat(output).length;
-send({
-  jsonrpc: "2.0",
-  method: "textDocument/didChange",
-  params: {
-    textDocument: { uri, version: toolFailureVersion },
-    contentChanges: [{ text: 'fn view(){let _=pc!("proxy-invalid-json");}' }],
-  },
-});
-await waitForOutput('"code":"PCL001"', toolFailureOffset);
-
-const literalLimitVersion = toolFailureVersion + 1;
+const literalLimitVersion = corpusVersion;
 const literalLimitText = `fn view(){${'let _=pc!("flex");'.repeat(257)}}`;
 const literalLimitOffset = Buffer.concat(output).length;
 send({
@@ -542,19 +494,17 @@ if (
 const cancelledVersionMessages = published.filter(
   (message) =>
     message.params?.version === cancellationVersion &&
-    message.params?.diagnostics?.some((diagnostic) => diagnostic.code === "PCL001"),
+    message.params?.diagnostics?.some((diagnostic) => diagnostic.code === "PCS001"),
 );
 if (cancelledVersionMessages.length !== 0) {
-  fail("cancelled semantic process leaked a tooling diagnostic");
+  fail("superseded in-process semantic analysis leaked a stale diagnostic");
 }
 const recoveryMessages = published.filter(
   (message) =>
     message.params?.version === recoveryVersion &&
     message.params?.diagnostics?.some((diagnostic) => diagnostic.code === "PCS001"),
 );
-if (recoveryMessages.length !== 1) {
-  fail("semantic worker did not recover after forceful cancellation");
-}
+if (recoveryMessages.length !== 1) fail("semantic worker did not publish the current version");
 for (const run of corpusRuns) {
   const diagnostics = published
     .filter((message) => message.params?.version === run.version)
@@ -590,17 +540,6 @@ for (const run of corpusRuns) {
   ) {
     fail(`LSP diagnostic corpus range ${run.item.id} drifted`);
   }
-}
-const toolFailureDiagnostics = published
-  .filter((message) => message.params?.version === toolFailureVersion)
-  .flatMap((message) => message.params?.diagnostics ?? []);
-const toolFailure = toolFailureDiagnostics.find((diagnostic) => diagnostic.code === "PCL001");
-if (
-  toolFailure?.severity !== 1 ||
-  toolFailure?.data?.category !== "tool" ||
-  !toolFailure.message.includes("invalid pliego-cssc diagnostic JSON")
-) {
-  fail("PCL001 fault-injection contract drifted");
 }
 const literalLimitDiagnostics = published
   .filter((message) => message.params?.version === literalLimitVersion)
@@ -657,9 +596,10 @@ process.stdout.write(
     semanticVersion: semanticMessages[0].params.version,
     staleSemanticResults: 0,
     protocolResponsiveDuringDebounce: true,
-    forcefulCancellation: true,
-    cancelledCompilerPid: cancelledPid,
-    cancellationRecoveryMs: cancellationLatencyMs,
+    inProcessAnalysis: true,
+    compilerProcesses: 0,
+    supersededAnalysisSuppressed: true,
+    currentVersionLatencyMs: cancellationLatencyMs,
     pcxDiagnostic: pcxDiagnostic.code,
     pcxVersion: pcxMessages[0].params.version,
     pcxRange: pcxDiagnostic.range,
@@ -667,7 +607,7 @@ process.stdout.write(
     diagnosticCorpusCases: corpusRuns.length,
     diagnosticCorpusEquality: "code-message-range-severity-suggestion-replacement",
     typedDiagnosticCodes: [...expectedCorpusCodes, "PCX003"],
-    operationalFallbacks: [toolFailure.code, literalLimit.code],
+    operationalGuards: [literalLimit.code],
     formattingEdits: byId.get(2).result.length,
     completion: item.label,
     completionRange: item.textEdit.range,

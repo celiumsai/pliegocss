@@ -6,3 +6,6 @@ contact_links:
   - name: Security report
     url: https://github.com/celiumsai/pliegocss/security/advisories/new
     about: Report vulnerabilities privately. Do not open a public issue.
+  - name: G7 external adoption cohort
+    url: https://github.com/celiumsai/pliegocss/issues/7
+    about: Read the cohort boundary and apply without posting private evidence.

@@ -25,9 +25,12 @@ Every fixture file is hashed before and after to prove the command is read-only.
 - 46 static and zero dynamic template candidates.
 - Zero unresolved dependencies.
 
-This evidence is intentionally narrower than migration success. It does not prove generated CSS
-parity, semantic class conversion, reversible codemods, or visual equivalence. Those remain the gap
-exposed by this application.
+This gate remains intentionally narrower than migration success: its command is still read-only and
+does not execute Vite or Tailwind. G6 closes a separate bounded slice through the schema-1
+[adapter coexistence certification](./adapter-coexistence-v1.md): seven Vite production builds,
+literal complete-class-group conversion, Tailwind v3/v4 output audit, browser DOM/ARIA/style
+equivalence, and exact rollback. Dynamic templates, arbitrary plugins/config execution, and general
+codemod claims remain outside both gates.
 
 ## Reproduction
 

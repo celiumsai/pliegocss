@@ -27,10 +27,10 @@ The root has exactly `schemaVersion` (`1`) and `sources`. Every source has exact
 | `kind` | `software`, `dataset`, or `specification`. |
 | `version` | Exact numeric or SemVer-like version; no ranges or moving tags. |
 | `status` | Exact publication/package status. |
-| `license` | Reviewed license identifier. |
+| `license` | Reviewed license identifier, including Apache-2.0, ISC, MIT, MPL-2.0, and the named W3C licenses. |
 | `url` | Canonical, credential-free HTTPS source; unique. |
-| `relationship` | Why PliegoCSS records the source. |
-| `usage` | `build-time`, `frozen-data`, `implemented-contract`, `audit-reference`, or `benchmark-only`. |
+| `relationship` | Why PliegoCSS records the source, including the isolated browser-certification toolchain. |
+| `usage` | `build-time`, `frozen-data`, `implemented-contract`, `audit-reference`, `benchmark-only`, or `test-only`. |
 | `evidence[]` | Existing repository-relative files that prove the relationship. |
 | `integrity[]` | Unique subject plus reviewed npm SRI, SHA-256 metadata, or Cargo checksum; empty only for versioned specifications. |
 
@@ -49,7 +49,10 @@ benchmark artifact.
 | WCAG | `2.2` Recommendation | Authoritative accessibility reference; a static PliegoCSS pass is not a WCAG conformance claim. |
 | CSS Color Adjustment | Level 1 Candidate Recommendation Snapshot | Forced-colors reference. |
 | Media Queries | Level 5 Working Draft | User-preference media-query reference; draft status is explicit. |
-| Tailwind CSS and CLI | `4.3.2`, MIT | Performance/ergonomics baseline only; package SRI plus the full transitive pnpm lock SHA-256 are frozen. It is not a PliegoCSS runtime or backend dependency. |
+| Tailwind CSS and CLI | current `4.3.3`, upstream `v3-lts` `3.4.19`, frozen `4.3.2`; MIT | Benchmark Authority v2 lanes only; package SRI plus the full transitive pnpm lock SHA-256 are frozen. They are not PliegoCSS runtime or backend dependencies. |
+| Playwright | `1.61.1`, Apache-2.0 | Test-only Chromium, Firefox, and WebKit orchestration for Browser/output certification v1; `playwright-core` is pinned too. |
+| pixelmatch | `7.2.0`, ISC | Test-only bounded perceptual PNG comparison; the original artifact hashes are retained. |
+| pngjs | `7.0.0`, MIT | Test-only PNG decoding and diff encoding for certification evidence. |
 
 The DTCG status comes from the official [Format](https://www.w3.org/community/reports/design-tokens/CG-FINAL-format-20251028/),
 [Color](https://www.w3.org/community/reports/design-tokens/CG-FINAL-color-20251028/), and

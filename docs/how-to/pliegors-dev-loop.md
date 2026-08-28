@@ -1,6 +1,6 @@
 # PliegoRS development reload loop
 
-Status: automated local two-process/SSE contract certified; controlled Chromium replay observed
+Status: source-pinned local two-process/SSE gate green; controlled Chromium replay observed
 
 PliegoCSS does not need its own HTTP or WebSocket server. The current PliegoRS development server
 already owns browser reload through its loopback-only `pliego dev` server and `/_pliego/reload` SSE
@@ -32,16 +32,16 @@ Rust/theme edit
 → the browser's existing EventSource triggers a full-page reload
 ```
 
-The cross-repository gate pins the PliegoRS CLI source, runs both processes with Rust 1.85, and
+The cross-repository gate pins the PliegoRS CLI source, runs both processes with Rust 1.86, and
 verifies 20 alternating `pc!` edits plus invalid and unchanged-output negative cases. Run it with:
 
 ```console
 pnpm integration:pliegors-dev
 ```
 
-On Debian WSL2 with native Linux binaries and target directory, changed CSS reached disk at 232.4 ms
-p50 / 284.5 ms p95. Matching HTML/CSS and exactly one stable SSE generation converged at 2.008 s
-p50 / 2.458 s p95. These are server/site convergence measurements. A controlled local Chromium
+On native Linux x64, changed CSS reached disk at 228.755 ms p50 / 229.629 ms p95.
+Matching HTML/CSS and exactly one stable SSE generation converged at 1.696 s
+p50 / 1.698 s p95. These are server/site convergence measurements. A controlled local Chromium
 replay separately observed `p-4`/16 px become `p-6`/24 px in the same tab without manual navigation.
 See the [development-loop evidence](../benchmarks/pliegors-dev-loop.md).
 
@@ -50,13 +50,17 @@ replaced, so its modification time does not cause a redundant PliegoRS rebuild. 
 changes, the manifest may be replaced while the CSS asset remains untouched. The negative gate uses
 an external-input no-op for which both CSS and manifest remain exact, including modification times.
 Invalid PliegoCSS input keeps the complete last valid publication group.
+PliegoRS exposes its bounded build diagnostic at HTTP 500 for that failed
+generation, then recovers through the same SSE channel after valid source is
+restored.
 
 The adjacent `.pliego.lock`, `.tmp`, and `.bak` files are a reserved publication-coordination
 namespace, not application assets. The pinned PliegoRS watcher ignores them so a held advisory lock
 cannot trigger a scan failure or rebuild; it still observes every changed final CSS/manifest file.
-Before rebuilding, `pliego dev` requires one 500 ms quiet snapshot and restarts that window whenever
-the source/publication group changes. This coalesces a Rust edit and its generated assets into one
-successful SSE generation.
+`pliego dev` filters access-only notifications before they can starve real
+filesystem changes and does not publish another generation for a no-op build
+with no changed artifacts. This coalesces a Rust edit and its generated assets
+into one successful SSE generation.
 
 Native Windows/Linux filesystem events schedule source captures; exact snapshots are confirmed across two
 captures separated by up to 100 ms before compilation. A 2 s fallback capture covers missed events,

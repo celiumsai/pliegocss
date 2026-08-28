@@ -1,6 +1,6 @@
 # Adjacent media-query merging
 
-Date: 2026-07-13
+Date: 2026-07-22
 
 Status: adopted for exactly equal adjacent `@media` siblings
 
@@ -38,8 +38,8 @@ compilers. A local report records the exact Node, zlib, and compiler-binary hash
 
 | Profile | Control raw | Merged raw | Raw saved | Control gzip | Merged gzip | Gzip saved |
 |---|---:|---:|---:|---:|---:|---:|
-| Utilities only | 1,449 B | 1,012 B | 437 B (30.159%) | 652 B | 639 B | 13 B (1.994%) |
-| Seed theme + utilities | 1,820 B | 1,383 B | 437 B (24.011%) | 822 B | 809 B | 13 B (1.582%) |
+| Utilities only | 1,449 B | 1,012 B | 437 B (30.159%) | 649 B | 637 B | 12 B (1.849%) |
+| Seed theme + utilities | 1,820 B | 1,383 B | 437 B (24.011%) | 821 B | 809 B | 12 B (1.462%) |
 
 The adoption gate requires an exact rule sequence, 20 wrappers reduced to one, a raw reduction, and
 at least 8 bytes and 1% gzip reduction in the theme profile. These are deterministic size and hash
@@ -51,6 +51,13 @@ media wrappers but no equal wrappers that are physically adjacent, so this pass 
 both comparison fixtures. It
 is useful for responsive-only style runs; it is not evidence that every application becomes 1.582%
 smaller.
+
+The 2026-07-22 refresh preserves the fixture bytes, exact rule-sequence assertion, and wrapper
+counts while accepting StyleId-format-2 output from the shared compiler engine. Gate A is 6,548 raw
+bytes / 1,596 gzip bytes with CSS SHA-256
+`1d879683af938faba7a7e44a0ad330e9f2f6a5f6b363b0f1556cc56711cd6f5b`; Gate B is 10,461 raw
+bytes / 2,046 gzip bytes with CSS SHA-256
+`757e259d072723eb06ea5517627ac3422e73c16f5eb36b6ecc57c8aa104c126d`.
 
 Run the machine check without writing a result:
 

@@ -1212,6 +1212,7 @@ fn outcome(
     })
 }
 
+#[allow(clippy::too_many_lines)]
 fn inventory_rules(
     rules: &CssRuleList<'_>,
     metrics: &mut Metrics,
@@ -1221,7 +1222,46 @@ fn inventory_rules(
     for rule in &rules.0 {
         metrics.rules += 1;
         match rule {
+            CssRule::Import(rule) => {
+                observe_unclassified(unclassified, "@import", "@import", rule.loc);
+            }
             CssRule::Style(rule) => inventory_style(rule, metrics, features, unclassified),
+            CssRule::Keyframes(rule) => {
+                observe_unclassified(unclassified, "@keyframes", "@keyframes", rule.loc);
+            }
+            CssRule::FontFace(rule) => {
+                observe_unclassified(unclassified, "@font-face", "@font-face", rule.loc);
+            }
+            CssRule::FontPaletteValues(rule) => observe_unclassified(
+                unclassified,
+                "@font-palette-values",
+                "@font-palette-values",
+                rule.loc,
+            ),
+            CssRule::FontFeatureValues(rule) => observe_unclassified(
+                unclassified,
+                "@font-feature-values",
+                "@font-feature-values",
+                rule.loc,
+            ),
+            CssRule::Page(rule) => {
+                observe_unclassified(unclassified, "@page", "@page", rule.loc);
+            }
+            CssRule::Media(rule) => {
+                inventory_rules(&rule.rules, metrics, features, unclassified);
+            }
+            CssRule::Supports(rule) => {
+                inventory_rules(&rule.rules, metrics, features, unclassified);
+            }
+            CssRule::CounterStyle(rule) => {
+                observe_unclassified(unclassified, "@counter-style", "@counter-style", rule.loc);
+            }
+            CssRule::Namespace(rule) => {
+                observe_unclassified(unclassified, "@namespace", "@namespace", rule.loc);
+            }
+            CssRule::MozDocument(rule) => {
+                inventory_rules(&rule.rules, metrics, features, unclassified);
+            }
             CssRule::Nesting(rule) => {
                 observe_feature(
                     features,
@@ -1236,14 +1276,11 @@ fn inventory_rules(
                     + rule.declarations.important_declarations.len();
                 metrics.important_declarations += rule.declarations.important_declarations.len();
             }
-            CssRule::Media(rule) => {
-                inventory_rules(&rule.rules, metrics, features, unclassified);
+            CssRule::Viewport(rule) => {
+                observe_unclassified(unclassified, "@viewport", "@viewport", rule.loc);
             }
-            CssRule::Supports(rule) => {
-                inventory_rules(&rule.rules, metrics, features, unclassified);
-            }
-            CssRule::MozDocument(rule) => {
-                inventory_rules(&rule.rules, metrics, features, unclassified);
+            CssRule::CustomMedia(rule) => {
+                observe_unclassified(unclassified, "@custom-media", "@custom-media", rule.loc);
             }
             CssRule::LayerStatement(rule) => {
                 observe_feature(
@@ -1262,6 +1299,12 @@ fn inventory_rules(
                 );
                 inventory_rules(&rule.rules, metrics, features, unclassified);
             }
+            CssRule::Property(rule) => observe_feature(
+                features,
+                "registered-custom-properties",
+                rule.loc,
+                SourceMarker::Token("@property".into()),
+            ),
             CssRule::Container(rule) => {
                 if observe_container_condition(features, rule.condition.as_ref(), rule.loc) {
                     observe_unclassified(
@@ -1291,12 +1334,15 @@ fn inventory_rules(
                 );
                 inventory_rules(&rule.rules, metrics, features, unclassified);
             }
-            CssRule::Property(rule) => observe_feature(
-                features,
-                "registered-custom-properties",
+            CssRule::ViewTransition(rule) => observe_unclassified(
+                unclassified,
+                "@view-transition",
+                "@view-transition",
                 rule.loc,
-                SourceMarker::Token("@property".into()),
             ),
+            // Lightning CSS uses this only for syntax it intentionally removed;
+            // there is no remaining authored rule to inventory.
+            CssRule::Ignored => {}
             CssRule::Unknown(rule) => {
                 observe_unclassified(
                     unclassified,
@@ -1305,7 +1351,18 @@ fn inventory_rules(
                     rule.loc,
                 );
             }
-            _ => {}
+            // The default parser cannot construct a custom rule. Keep this arm
+            // visible so a parser change cannot silently bypass the audit.
+            CssRule::Custom(_) => observe_unclassified(
+                unclassified,
+                "custom at-rule",
+                "@",
+                Location {
+                    source_index: 0,
+                    line: 0,
+                    column: 1,
+                },
+            ),
         }
     }
 }

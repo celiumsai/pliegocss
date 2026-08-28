@@ -35,7 +35,7 @@ const FILE_ATTRIBUTE_REPARSE_POINT: u32 = 0x400;
 pub enum MigrationSourceKind {
     /// Sass/SCSS source.
     Sass,
-    /// Tailwind CSS v4 entry CSS.
+    /// Tailwind CSS entry source, including bounded v3 directives and v4 CSS-first syntax.
     Tailwind,
     /// CSS Modules source.
     CssModules,
@@ -86,7 +86,7 @@ pub enum MigrationPreflightReliance {
     NotObserved,
     /// The full Tailwind import implicitly enables Preflight.
     Implicit,
-    /// The dedicated Preflight import was observed.
+    /// The dedicated Preflight import or Tailwind v3 `@tailwind base` directive was observed.
     Explicit,
     /// Both full and dedicated Preflight imports were observed.
     Mixed,
@@ -2046,6 +2046,11 @@ pub fn build_reversible_migration_plan(
     {
         return Err(MigrationInventoryError::new(
             "reversible migration plan inventories must exactly cover declared sources",
+        ));
+    }
+    if sources.is_empty() {
+        return Err(MigrationInventoryError::new(
+            "reversible migration plan requires at least one declared source",
         ));
     }
     let document = ReversibleMigrationPlanDocument {
@@ -4301,9 +4306,25 @@ fn inventory_tailwind(
         MigrationDisposition::Static,
         &mut output,
     )?;
+    scan_marker(
+        source,
+        &masks.code,
+        "@tailwind",
+        "tailwind-layer",
+        MigrationDisposition::Static,
+        &mut output,
+    )?;
     for item in &mut output {
         if item.kind == "tailwind-source" && item.syntax.contains("inline(") {
             item.disposition = MigrationDisposition::Dynamic;
+        }
+        if item.kind == "tailwind-layer"
+            && !matches!(
+                item.syntax.trim(),
+                "@tailwind base;" | "@tailwind components;" | "@tailwind utilities;"
+            )
+        {
+            item.disposition = MigrationDisposition::Unsupported;
         }
     }
     Ok(output)
@@ -4536,9 +4557,10 @@ fn derive_preflight(
             && (item.syntax.contains("\"tailwindcss\"") || item.syntax.contains("'tailwindcss'"))
     });
     let explicit = constructs.iter().any(|item| {
-        item.kind == "tailwind-import"
+        (item.kind == "tailwind-import"
             && (item.syntax.contains("\"tailwindcss/preflight\"")
-                || item.syntax.contains("'tailwindcss/preflight'"))
+                || item.syntax.contains("'tailwindcss/preflight'")))
+            || (item.kind == "tailwind-layer" && item.syntax.trim() == "@tailwind base;")
     });
     match (implicit, explicit) {
         (false, false) => MigrationPreflightReliance::NotObserved,
@@ -4581,6 +4603,46 @@ mod tests {
                 .iter()
                 .all(|item| { source[item.byte_start()..item.byte_end()] == *item.syntax() })
         );
+    }
+
+    #[test]
+    fn inventories_tailwind_v3_layers_and_explicit_base_preflight() {
+        let source =
+            "@tailwind base;\n@tailwind components;\n@tailwind utilities;\n@tailwind variants;\n";
+        let inventory =
+            inventory_migration_source(MigrationSourceKind::Tailwind, "src/tailwind.css", source)
+                .unwrap();
+        assert_eq!(
+            inventory.preflight_reliance(),
+            MigrationPreflightReliance::Explicit
+        );
+        assert_eq!(inventory.constructs().len(), 4);
+        assert_eq!(inventory.dynamic_count(), 0);
+        assert_eq!(inventory.unsupported_count(), 1);
+        assert!(
+            inventory
+                .constructs()
+                .iter()
+                .take(3)
+                .all(|item| item.kind() == "tailwind-layer"
+                    && item.disposition() == MigrationDisposition::Static)
+        );
+        assert_eq!(
+            inventory.constructs()[3].disposition(),
+            MigrationDisposition::Unsupported
+        );
+
+        let utilities_only = inventory_migration_source(
+            MigrationSourceKind::Tailwind,
+            "src/utilities.css",
+            "@tailwind utilities;\n",
+        )
+        .unwrap();
+        assert_eq!(
+            utilities_only.preflight_reliance(),
+            MigrationPreflightReliance::NotObserved
+        );
+        assert_eq!(utilities_only.unsupported_count(), 0);
     }
 
     #[test]

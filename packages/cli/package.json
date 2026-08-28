@@ -1,0 +1,41 @@
+{
+  "name": "@pliegocss/cli",
+  "version": "0.1.0-rc.3",
+  "private": true,
+  "description": "Repository-distributed PliegoCSS CLI and language server launcher",
+  "type": "module",
+  "bin": {
+    "pliego-cssc": "bin/pliego-cssc.mjs",
+    "pliego-css-lsp": "bin/pliego-css-lsp.mjs"
+  },
+  "files": [
+    "bin",
+    "vendor",
+    "SBOM",
+    "LICENSE",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=22.13",
+    "pnpm": ">=11.7.0 <12"
+  },
+  "packageManager": "pnpm@11.7.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/celiumsai/pliegocss.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://pliegocss.dev",
+  "bugs": {
+    "url": "https://github.com/celiumsai/pliegocss/issues"
+  },
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "executableFiles": [
+      "vendor/aarch64-apple-darwin/pliego-cssc",
+      "vendor/aarch64-apple-darwin/pliego-css-lsp",
+      "vendor/x86_64-unknown-linux-gnu/pliego-cssc",
+      "vendor/x86_64-unknown-linux-gnu/pliego-css-lsp"
+    ]
+  }
+}

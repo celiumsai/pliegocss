@@ -3,10 +3,11 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { cargoTargetRoot } from "./rust-target.mjs";
 
 const root = resolve(import.meta.dirname, "..");
 const fixture = join(root, "integration-tests", "representative", "plain-html-audit");
-const cli = join(root, "target", "debug", process.platform === "win32" ? "pliego-cssc.exe" : "pliego-cssc");
+const cli = join(cargoTargetRoot(root), "debug", process.platform === "win32" ? "pliego-cssc.exe" : "pliego-cssc");
 
 function fail(message, detail) {
   throw new Error(detail === undefined ? message : `${message}\n${JSON.stringify(detail, null, 2)}`);

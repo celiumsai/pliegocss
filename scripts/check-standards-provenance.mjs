@@ -7,8 +7,8 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const realRoot = realpathSync(root);
 const attributionCommand = "node ./scripts/check-standards-provenance.mjs";
 const reviewedFileDigests = Object.freeze({
-  "THIRD_PARTY_NOTICES.md": "00c94fd9f07291966d5ffa252c6cf01d86da7a6ebecc8d526c7024f2cd36ce60",
-  "docs/reference/standards-provenance.md": "2a48b22dd41fe7cdc33e2f7f075a1af261fdf5bfdba1f0ef6daa202151bf74fd",
+  "THIRD_PARTY_NOTICES.md": "0062833f236f77ab9cb7386fc575d7e9e9fbc68abe8e3c75590c4de59e5ff09d",
+  "docs/reference/standards-provenance.md": "b3a0b68daaab8af4d832ff71df0e633d14f4f6052cf21961463c90a8645ddbdf",
 });
 const sourceKeys = [
   "id",
@@ -31,7 +31,10 @@ const expectedSources = JSON.parse(`[
   {"id":"dtcg-resolver-2025.10","name":"Design Tokens Resolver Module 2025.10","kind":"specification","version":"2025.10","status":"final-community-group-report","license":"W3C-Community-Final-Specification-Agreement","url":"https://www.w3.org/community/reports/design-tokens/CG-FINAL-resolver-20251028/","relationship":"exchange-specification","usage":"implemented-contract","evidence":["crates/pliego-css-config/src/dtcg_resolver.rs","docs/reference/dtcg-bridge.md"],"integrity":[]},
   {"id":"lightningcss","name":"Lightning CSS","kind":"software","version":"1.0.0-alpha.71","status":"versioned-crate","license":"MPL-2.0","url":"https://github.com/parcel-bundler/lightningcss","relationship":"css-backend","usage":"build-time","evidence":["Cargo.lock"],"integrity":[{"subject":"lightningcss@1.0.0-alpha.71","value":"cargo-checksum:cb6314c2f0590ac93c86099b98bb7ba8abcf759bfd89604ffca906472bb54937"}]},
   {"id":"mediaqueries-5","name":"Media Queries Level 5","kind":"specification","version":"5","status":"w3c-working-draft","license":"W3C-Software-and-Document-License-2023","url":"https://www.w3.org/TR/2026/WD-mediaqueries-5-20260219/","relationship":"css-specification","usage":"audit-reference","evidence":["docs/reference/accessibility-policy.md"],"integrity":[]},
-  {"id":"tailwindcss","name":"Tailwind CSS and CLI","kind":"software","version":"4.3.2","status":"versioned-package","license":"MIT","url":"https://github.com/tailwindlabs/tailwindcss","relationship":"benchmark-baseline","usage":"benchmark-only","evidence":["benchmarks/tailwind-v4/input.css","package.json","pnpm-lock.yaml"],"integrity":[{"subject":"@tailwindcss/cli@4.3.2","value":"sha512-Fzt+HrIZHDlkRYKdLMBeufaroaPvwCBG70sMLdmurdeadNMO/LxbmT8Sbb+P83ep0iAlAImettb7Y+rO+37rXw=="},{"subject":"pnpm-lock.yaml","value":"sha256:333f16de16053c85708ea74473a3008f314e1c3ee45490106e1462df06de93f9"},{"subject":"tailwindcss@4.3.2","value":"sha512-WtctNNSH8A9jlMIqxzuYumOHU5uGZyRv0Q5svQl+oEPy5w84YpBxdb7MdqyiSPQge5jTJ6zFQLq0PFygdccSBA=="}]},
+  {"id":"pixelmatch","name":"pixelmatch","kind":"software","version":"7.2.0","status":"versioned-package","license":"ISC","url":"https://github.com/mapbox/pixelmatch","relationship":"browser-certification","usage":"test-only","evidence":["benchmarks/browser-output-certification-v1/authority.json","package.json","pnpm-lock.yaml","scripts/browser-output-certification.mjs"],"integrity":[{"subject":"pixelmatch@7.2.0","value":"sha512-xhcb4yHu9sM/G7foGzoLtXYcC0zHEaOXXjRKhGup0fw78Nf2Tkiapv4EQyMzrbcmQPsllAI7DbFY2UT7PlI9Pg=="},{"subject":"pnpm-lock.yaml","value":"sha256:e973a4a2f250b37b0b83c994d77223b89ab35e14f4bc4aec984fbe2c9efbfeb5"}]},
+  {"id":"playwright","name":"Playwright","kind":"software","version":"1.61.1","status":"versioned-package","license":"Apache-2.0","url":"https://github.com/microsoft/playwright","relationship":"browser-certification","usage":"test-only","evidence":[".github/workflows/browser-output-certification.yml","benchmarks/browser-output-certification-v1/authority.json","package.json","pnpm-lock.yaml","scripts/browser-output-certification.mjs"],"integrity":[{"subject":"playwright-core@1.61.1","value":"sha512-h7Qlt6m4REp25qvIdvbDtVmD4LqVXfpRxhORv9L0jzETM05p4fuPJ3dKyuSXQxDSbXnmS79HAgi9589lGSpLkg=="},{"subject":"playwright@1.61.1","value":"sha512-DWnY5o3YbLWK4GovuAVwpqL+1VwGNdUGrRr++8j8PtQQzvAVZUIMjKQ90fY689sEJZJBbZVw1rXaOKSTitkzPQ=="},{"subject":"pnpm-lock.yaml","value":"sha256:e973a4a2f250b37b0b83c994d77223b89ab35e14f4bc4aec984fbe2c9efbfeb5"}]},
+  {"id":"pngjs","name":"pngjs","kind":"software","version":"7.0.0","status":"versioned-package","license":"MIT","url":"https://github.com/pngjs/pngjs","relationship":"browser-certification","usage":"test-only","evidence":["benchmarks/browser-output-certification-v1/authority.json","package.json","pnpm-lock.yaml","scripts/browser-output-certification.mjs"],"integrity":[{"subject":"pngjs@7.0.0","value":"sha512-LKWqWJRhstyYo9pGvgor/ivk2w94eSjE3RGVuzLGlr3NmD8bf7RcYGze1mNdEHRP6TRP6rMuDHk5t44hnTRyow=="},{"subject":"pnpm-lock.yaml","value":"sha256:e973a4a2f250b37b0b83c994d77223b89ab35e14f4bc4aec984fbe2c9efbfeb5"}]},
+  {"id":"tailwindcss","name":"Tailwind CSS and CLI","kind":"software","version":"4.3.3","status":"versioned-package","license":"MIT","url":"https://github.com/tailwindlabs/tailwindcss","relationship":"benchmark-baseline","usage":"benchmark-only","evidence":["benchmarks/benchmark-authority-v2/oracle.json","benchmarks/tailwind-v4/input.css","package.json","pnpm-lock.yaml"],"integrity":[{"subject":"@tailwindcss/cli@4.3.2","value":"sha512-Fzt+HrIZHDlkRYKdLMBeufaroaPvwCBG70sMLdmurdeadNMO/LxbmT8Sbb+P83ep0iAlAImettb7Y+rO+37rXw=="},{"subject":"@tailwindcss/cli@4.3.3","value":"sha512-ZvS/n1ZHOBKcVlhkt8l5NNr1EDXk1NboYO5CYDOs6NUmvT9z6bzkwsosaJftY57T/3gWNzWMJzIXLodZC8ssdw=="},{"subject":"pnpm-lock.yaml","value":"sha256:e973a4a2f250b37b0b83c994d77223b89ab35e14f4bc4aec984fbe2c9efbfeb5"},{"subject":"tailwindcss@3.4.19","value":"sha512-3ofp+LL8E+pK/JuPLPggVAIaEuhvIz4qNcf3nA1Xn2o/7fb7s/TYpHhwGDv1ZU3PkBluUVaF8PyCHcm48cKLWQ=="},{"subject":"tailwindcss@4.3.2","value":"sha512-WtctNNSH8A9jlMIqxzuYumOHU5uGZyRv0Q5svQl+oEPy5w84YpBxdb7MdqyiSPQge5jTJ6zFQLq0PFygdccSBA=="},{"subject":"tailwindcss@4.3.3","value":"sha512-gOhV3P7ufE62QDGg1zVaTgCR+EtPv92k2nIhVcVKcLmxT1sUBsQGhnZj175j+MqRt4zLF7ic+sCYjfhxMxj7YQ=="}]},
   {"id":"wcag-2.2","name":"Web Content Accessibility Guidelines (WCAG) 2.2","kind":"specification","version":"2.2","status":"w3c-recommendation","license":"W3C-Document-License-2023","url":"https://www.w3.org/TR/2024/REC-WCAG22-20241212/","relationship":"accessibility-reference","usage":"audit-reference","evidence":["docs/reference/accessibility-policy.md"],"integrity":[]},
   {"id":"web-features","name":"web-features","kind":"dataset","version":"3.32.0","status":"versioned-package","license":"Apache-2.0","url":"https://github.com/web-platform-dx/web-features","relationship":"compatibility-dataset","usage":"frozen-data","evidence":["integration-tests/compatibility-policy/expected.baseline-widely.json"],"integrity":[{"subject":"web-features@3.32.0","value":"sha512-PQBbTofqV8FtMP65oT9tLPjbN4FSB2dRdNxLM0A9j4bNifVpFhEP/ATXSMMJAqPPWb/pgUOh6B+98yzfNEVbNw=="},{"subject":"web-features@3.32.0/data.json","value":"sha256:58bc2056041c93e313c3a58658a8120f857cf4888d0592e6e4a9b0484748441e"}]}
 ]`);
@@ -204,7 +207,7 @@ function validateManifest(manifest) {
       "w3c-candidate-recommendation-snapshot",
       "w3c-working-draft",
     ].includes(source.status), `${label}.status is invalid`);
-    assert(["Apache-2.0", "MIT", "MPL-2.0", "W3C-Document-License-2023", "W3C-Software-and-Document-License-2023", "W3C-Community-Final-Specification-Agreement"].includes(source.license), `${label}.license is invalid`);
+    assert(["Apache-2.0", "ISC", "MIT", "MPL-2.0", "W3C-Document-License-2023", "W3C-Software-and-Document-License-2023", "W3C-Community-Final-Specification-Agreement"].includes(source.license), `${label}.license is invalid`);
     assert([
       "css-backend",
       "compatibility-dataset",
@@ -212,8 +215,9 @@ function validateManifest(manifest) {
       "accessibility-reference",
       "css-specification",
       "benchmark-baseline",
+      "browser-certification",
     ].includes(source.relationship), `${label}.relationship is invalid`);
-    assert(["build-time", "frozen-data", "implemented-contract", "audit-reference", "benchmark-only"].includes(source.usage), `${label}.usage is invalid`);
+    assert(["build-time", "frozen-data", "implemented-contract", "audit-reference", "benchmark-only", "test-only"].includes(source.usage), `${label}.usage is invalid`);
 
     let url;
     try {
@@ -324,8 +328,7 @@ function verifyAttributionScript(packageJson) {
   );
 }
 
-function verifyTailwindLock(lock, source) {
-  const contract = tailwindLockContract(source);
+function verifyTailwindLock(lock, source, authority) {
   assert(lock.startsWith("lockfileVersion: '9.0'\n"), "pnpm lockfile version drifted");
   const importers = lockSection(lock, "importers");
   const packages = sectionEntries(lockSection(lock, "packages"));
@@ -333,28 +336,67 @@ function verifyTailwindLock(lock, source) {
   const importerEntries = sectionEntries(importers);
   const rootImporter = oneEntry(importerEntries, ".", "importers");
 
-  assert(
-    exactCount(rootImporter, contract.cliImporter) === 1 &&
-      exactCount(rootImporter, contract.coreImporter) === 1,
-    "Tailwind root importer drifted",
-  );
-  assert((importers.match(/^\s+'?@tailwindcss\/cli'?:$/gm) ?? []).length === 1, "Tailwind CLI must have exactly one importer edge");
-  assert((importers.match(/^\s+tailwindcss:$/gm) ?? []).length === 1, "tailwindcss must have exactly one importer edge");
-
-  assert(oneEntry(packages, contract.cli, "packages") === contract.cliPackage, "Tailwind CLI package snapshot drifted");
-  assert(oneEntry(packages, contract.core, "packages") === contract.corePackage, "tailwindcss package snapshot drifted");
-  assert(oneEntry(snapshots, contract.cli, "snapshots") === contract.cliSnapshot, "Tailwind CLI dependency graph drifted");
-  assert(oneEntry(snapshots, contract.core, "snapshots") === contract.coreSnapshot, "tailwindcss runtime snapshot drifted");
-
-  for (const [prefix, expected] of [["@tailwindcss/cli@", contract.cli], ["tailwindcss@", contract.core]]) {
-    for (const [section, entries] of [["packages", packages], ["snapshots", snapshots]]) {
-      const versions = entries.filter((entry) => entry.name.startsWith(prefix)).map((entry) => entry.name);
-      assert(versions.length === 1 && versions[0] === expected, `${section} contains orphan or multiple ${prefix} entries`);
+  const pins = new Map();
+  for (const lane of authority.lanes) {
+    for (const [alias, packageName, version, integrity] of [
+      [lane.packageAlias, lane.packageName, lane.version, lane.integrity],
+      [lane.cliPackageAlias, lane.cliPackageName, lane.cliVersion, lane.cliIntegrity],
+    ]) {
+      const key = `${packageName}@${version}`;
+      const existing = pins.get(alias);
+      assert(!existing || existing.key === key, `Tailwind alias ${alias} has conflicting pins`);
+      pins.set(alias, { alias, packageName, version, integrity, key });
+      assert(
+        integrityValue(source, key) === integrity,
+        `standards provenance integrity drifted for ${key}`,
+      );
     }
   }
-  for (const dependency of contract.dependencies) {
-    oneEntry(packages, dependency, "packages");
-    oneEntry(snapshots, dependency, "snapshots");
+  for (const pin of pins.values()) {
+    const aliasKey = pin.alias.startsWith("@") ? `'${pin.alias}'` : pin.alias;
+    const specifier = pin.alias === pin.packageName
+      ? pin.version
+      : `npm:${pin.packageName}@${pin.version}`;
+    const resolvedVersion = pin.alias === pin.packageName
+      ? pin.version
+      : pin.packageName.startsWith("@")
+        ? `'${pin.packageName}@${pin.version}'`
+        : `${pin.packageName}@${pin.version}`;
+    const importer = `      ${aliasKey}:\n        specifier: ${specifier}\n        version: ${resolvedVersion}`;
+    assert(exactCount(rootImporter, importer) === 1, `Tailwind importer pin drifted for ${pin.alias}`);
+  }
+
+  const uniquePackages = new Map([...pins.values()].map((pin) => [pin.key, pin]));
+  for (const pin of uniquePackages.values()) {
+    const packageEntry = oneEntry(packages, pin.key, "packages");
+    assert(
+      packageEntry.includes(`resolution: {integrity: ${pin.integrity}}`),
+      `${pin.key} registry integrity drifted`,
+    );
+    oneEntry(snapshots, pin.key, "snapshots");
+  }
+  for (const lane of authority.lanes.filter((item) => item.cliPackageName === "@tailwindcss/cli")) {
+    const snapshot = oneEntry(
+      snapshots,
+      `${lane.cliPackageName}@${lane.cliVersion}`,
+      "snapshots",
+    );
+    for (const dependency of [
+      `'@tailwindcss/node': ${lane.cliVersion}`,
+      `'@tailwindcss/oxide': ${lane.cliVersion}`,
+      `tailwindcss: ${lane.version}`,
+    ]) {
+      assert(snapshot.includes(dependency), `${lane.id} CLI dependency graph drifted`);
+    }
+  }
+  for (const [prefix, expected] of [
+    ["@tailwindcss/cli@", ["@tailwindcss/cli@4.3.2", "@tailwindcss/cli@4.3.3"]],
+    ["tailwindcss@", ["tailwindcss@3.4.19", "tailwindcss@4.3.2", "tailwindcss@4.3.3"]],
+  ]) {
+    for (const [section, entries] of [["packages", packages], ["snapshots", snapshots]]) {
+      const actual = entries.filter((entry) => entry.name.startsWith(prefix)).map((entry) => entry.name).sort();
+      assert(JSON.stringify(actual) === JSON.stringify(expected), `${section} ${prefix} set drifted`);
+    }
   }
 }
 
@@ -362,13 +404,71 @@ function verifyTailwind(manifest) {
   const source = sourceById(manifest, "tailwindcss");
   assert(source.usage === "benchmark-only", "Tailwind must remain benchmark-only");
   const packageJson = JSON.parse(readFileSync(resolve(root, "package.json"), "utf8"));
+  const authority = JSON.parse(
+    readFileSync(resolve(root, "benchmarks", "benchmark-authority-v2", "oracle.json"), "utf8"),
+  );
+  assert(authority.schemaVersion === 2, "Benchmark Authority must use schema 2");
+  const primary = authority.lanes.find((lane) => lane.id === authority.primaryLane);
+  assert(primary && primary.version === source.version, "Tailwind provenance primary lane drifted");
   verifyAttributionScript(packageJson);
-  assert(packageJson.devDependencies?.tailwindcss === source.version, "tailwindcss package version drifted");
-  assert(packageJson.devDependencies?.["@tailwindcss/cli"] === source.version, "Tailwind CLI package version drifted");
+  for (const lane of authority.lanes) {
+    for (const [alias, packageName, version] of [
+      [lane.packageAlias, lane.packageName, lane.version],
+      [lane.cliPackageAlias, lane.cliPackageName, lane.cliVersion],
+    ]) {
+      const expected = alias === packageName ? version : `npm:${packageName}@${version}`;
+      assert(packageJson.devDependencies?.[alias] === expected, `${alias} package pin drifted`);
+    }
+  }
   const lockBytes = readFileSync(repositoryFile("pnpm-lock.yaml", "pnpm lockfile"));
   verifyPnpmLockIntegrity(lockBytes, source);
   const lock = lockBytes.toString("utf8").replaceAll("\r\n", "\n");
-  verifyTailwindLock(lock, source);
+  verifyTailwindLock(lock, source, authority);
+}
+
+function verifyBrowserCertificationToolchain(manifest) {
+  const packageJson = JSON.parse(readFileSync(resolve(root, "package.json"), "utf8"));
+  const lockBytes = readFileSync(repositoryFile("pnpm-lock.yaml", "pnpm lockfile"));
+  const lock = lockBytes.toString("utf8").replaceAll("\r\n", "\n");
+  const importer = oneEntry(sectionEntries(lockSection(lock, "importers")), ".", "importers");
+  const packages = sectionEntries(lockSection(lock, "packages"));
+  const snapshots = sectionEntries(lockSection(lock, "snapshots"));
+  for (const id of ["pixelmatch", "playwright", "pngjs"]) {
+    const source = sourceById(manifest, id);
+    assert(packageJson.devDependencies?.[id] === source.version, `${id} package pin drifted`);
+    verifyPnpmLockIntegrity(lockBytes, source);
+    assert(
+      importer.includes(`      ${id}:\n        specifier: ${source.version}\n        version: ${source.version}`),
+      `${id} importer pin drifted`,
+    );
+    const key = `${id}@${source.version}`;
+    const packageEntry = oneEntry(packages, key, "packages");
+    assert(
+      packageEntry.includes(`resolution: {integrity: ${integrityValue(source, key)}}`),
+      `${key} registry integrity drifted`,
+    );
+    oneEntry(snapshots, key, "snapshots");
+  }
+  const playwright = sourceById(manifest, "playwright");
+  const coreKey = `playwright-core@${playwright.version}`;
+  assert(
+    oneEntry(packages, coreKey, "packages").includes(
+      `resolution: {integrity: ${integrityValue(playwright, coreKey)}}`,
+    ),
+    `${coreKey} registry integrity drifted`,
+  );
+  oneEntry(snapshots, coreKey, "snapshots");
+  assert(
+    oneEntry(snapshots, `playwright@${playwright.version}`, "snapshots").includes(
+      `playwright-core: ${playwright.version}`,
+    ),
+    "Playwright dependency graph drifted",
+  );
+  assert(
+    oneEntry(snapshots, `pixelmatch@${sourceById(manifest, "pixelmatch").version}`, "snapshots")
+      .includes(`pngjs: ${sourceById(manifest, "pngjs").version}`),
+    "pixelmatch dependency graph drifted",
+  );
 }
 
 function exactCount(value, needle) {
@@ -476,6 +576,9 @@ function verifyNoticeContent(manifest, notices) {
     "dtcg-resolver-2025.10": "## Implemented exchange reports",
     lightningcss: "## Build-time software",
     "mediaqueries-5": "## Accessibility and CSS references",
+    pixelmatch: "## Browser-certification software",
+    playwright: "## Browser-certification software",
+    pngjs: "## Browser-certification software",
     tailwindcss: "## Benchmark-only software",
     "wcag-2.2": "## Accessibility and CSS references",
     "web-features": "## Frozen compatibility data",
@@ -540,22 +643,37 @@ function verifyIntegrationRegressions(manifest) {
   expectRejection("no-op attribution script", "command drifted", () => verifyAttributionScript(noOp));
 
   const source = sourceById(manifest, "tailwindcss");
-  const contract = tailwindLockContract(source);
-  const lock = readFileSync(resolve(root, "pnpm-lock.yaml"), "utf8").replaceAll("\r\n", "\n");
-  const importerDrift = lock.replace("        specifier: 4.3.2", "        specifier: 4.3.1");
-  expectRejection("Tailwind importer drift", "root importer drifted", () => verifyTailwindLock(importerDrift, source));
-
-  const duplicatePackage = lock.replace(contract.cliPackage, `${contract.cliPackage}\n\n${contract.cliPackage}`);
-  expectRejection("duplicate Tailwind package", "exactly one", () => verifyTailwindLock(duplicatePackage, source));
-
-  const orphanSnapshot = lock.replace(`\n${contract.coreSnapshot}\n`, "\n");
-  expectRejection("orphan Tailwind package", "exactly one", () => verifyTailwindLock(orphanSnapshot, source));
-
-  const graphDrift = lock.replace(
-    contract.cliSnapshot,
-    contract.cliSnapshot.replace(`tailwindcss: ${source.version}`, "tailwindcss: 4.3.1"),
+  const authority = JSON.parse(
+    readFileSync(resolve(root, "benchmarks", "benchmark-authority-v2", "oracle.json"), "utf8"),
   );
-  expectRejection("Tailwind dependency graph drift", "dependency graph drifted", () => verifyTailwindLock(graphDrift, source));
+  const lock = readFileSync(resolve(root, "pnpm-lock.yaml"), "utf8").replaceAll("\r\n", "\n");
+  const importerDrift = lock.replace("        specifier: 4.3.3", "        specifier: 4.3.1");
+  expectRejection("Tailwind importer drift", "importer pin drifted", () => {
+    verifyTailwindLock(importerDrift, source, authority);
+  });
+
+  const packageEntries = sectionEntries(lockSection(lock, "packages"));
+  const cliPackage = oneEntry(packageEntries, "@tailwindcss/cli@4.3.3", "packages");
+  const duplicatePackage = lock.replace(cliPackage, `${cliPackage}\n\n${cliPackage}`);
+  expectRejection("duplicate Tailwind package", "exactly one", () => {
+    verifyTailwindLock(duplicatePackage, source, authority);
+  });
+
+  const snapshotEntries = sectionEntries(lockSection(lock, "snapshots"));
+  const coreSnapshot = oneEntry(snapshotEntries, "tailwindcss@4.3.3", "snapshots");
+  const orphanSnapshot = lock.replace(`\n${coreSnapshot}\n`, "\n");
+  expectRejection("orphan Tailwind package", "exactly one", () => {
+    verifyTailwindLock(orphanSnapshot, source, authority);
+  });
+
+  const cliSnapshot = oneEntry(snapshotEntries, "@tailwindcss/cli@4.3.3", "snapshots");
+  const graphDrift = lock.replace(
+    cliSnapshot,
+    cliSnapshot.replace("tailwindcss: 4.3.3", "tailwindcss: 4.3.1"),
+  );
+  expectRejection("Tailwind dependency graph drift", "dependency graph drifted", () => {
+    verifyTailwindLock(graphDrift, source, authority);
+  });
 
   const transitiveDrift = lock.replace("      lightningcss: 1.32.0", "      lightningcss: 1.31.0");
   expectRejection("Tailwind transitive lock drift", "SHA-256 drifted", () => {
@@ -638,6 +756,7 @@ function main() {
   verifyDtcg(manifest);
   verifyAccessibilityReferences(manifest);
   verifyTailwind(manifest);
+  verifyBrowserCertificationToolchain(manifest);
   verifyNotices(manifest);
   verifyRepositoryWiring();
   console.log("standards provenance gate: pass");

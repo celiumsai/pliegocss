@@ -4,19 +4,18 @@
 
 use std::collections::BTreeMap;
 use std::ffi::OsString;
-use std::fmt::Write as _;
-use std::fs::{OpenOptions, remove_file};
-use std::io::{self, BufRead, BufReader, Read, Write};
-#[cfg(unix)]
-use std::os::unix::fs::OpenOptionsExt;
+use std::io::{self, BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
-use std::process::{Command, Output, Stdio};
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::mpsc::{self, Receiver, RecvTimeoutError, Sender};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
 
+use pliego_css_compiler::{
+    AnalysisHost, PcxError, PcxRequest, emit_css_with_theme, utility_catalog,
+    utility_descriptor_for_style_item,
+};
+use pliego_css_ir::Diagnostic;
 use pliego_css_parser::{format_style_list, parse_style_list};
 use pliego_css_source::{InvocationKind, ScanReport, SourceRange, StyleLiteral, scan_source_named};
 use serde_json::{Value, json};
@@ -25,20 +24,15 @@ use sha2::{Digest, Sha256};
 mod project_index;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
-const MAX_SEMANTIC_CACHE_ITEMS: usize = 4_096;
 const MAX_SEMANTIC_CHECKS_PER_DOCUMENT: usize = 256;
 const MAX_CONFIG_FINGERPRINT_BYTES: u64 = 1024 * 1024;
 const MAX_HEADER_BYTES: usize = 64 * 1024;
-const MAX_TOOL_OUTPUT_BYTES: usize = 4 * 1024 * 1024;
 const SEMANTIC_DEBOUNCE: Duration = Duration::from_millis(150);
-const SEMANTIC_PROCESS_POLL: Duration = Duration::from_millis(10);
-const TOOL_PROCESS_TIMEOUT: Duration = Duration::from_secs(30);
-static TEMP_SOURCE_COUNTER: AtomicU64 = AtomicU64::new(0);
 
-/// Exact process and theme selection used by delegated tooling requests.
+/// Exact theme and navigation selection used by in-process analysis.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ServerConfig {
-    /// Exact `pliego-cssc` executable name or path.
+    /// Legacy 0.1 compatibility option. The in-process engine never executes this path.
     pub compiler: OsString,
     /// Use the deterministic seed theme instead of conventional discovery.
     pub seed: bool,
@@ -119,7 +113,8 @@ struct Server {
     config: ServerConfig,
     root: PathBuf,
     documents: BTreeMap<String, Document>,
-    catalog: Option<(String, Vec<Value>)>,
+    catalog: Option<Vec<Value>>,
+    analysis: Option<(String, AnalysisHost)>,
     shutdown: bool,
 }
 
@@ -130,165 +125,94 @@ impl Server {
             root: PathBuf::from("."),
             documents: BTreeMap::new(),
             catalog: None,
+            analysis: None,
             shutdown: false,
         }
     }
 
-    fn tool(&self, command: &str, extra: &[&str]) -> Result<Value, String> {
-        let mut process = Command::new(&self.config.compiler);
-        process.arg(command).args(extra).current_dir(&self.root);
-        if self.config.seed {
-            process.arg("--seed");
-        } else if let Some(config) = &self.config.config {
-            process.arg("--config").arg(config);
+    fn catalog(&mut self) -> &[Value] {
+        if self.catalog.is_none() {
+            self.catalog = Some(
+                utility_catalog()
+                    .iter()
+                    .map(|descriptor| {
+                        json!({
+                            "pattern":descriptor.pattern(),
+                            "matchName":descriptor.match_name(),
+                            "example":descriptor.example(),
+                            "summary":descriptor.summary(),
+                        })
+                    })
+                    .collect(),
+            );
         }
-        process.arg("--format").arg("json");
-        let output = bounded_process_output(
-            &mut process,
-            "pliego-cssc delegated tool",
-            TOOL_PROCESS_TIMEOUT,
-        )?;
-        if !output.status.success() {
-            return Err(String::from_utf8_lossy(&output.stderr).trim().to_owned());
-        }
-        serde_json::from_slice(&output.stdout)
-            .map_err(|error| format!("invalid pliego-cssc JSON: {error}"))
+        self.catalog.as_deref().unwrap_or_default()
     }
 
-    fn catalog(&mut self) -> Result<&[Value], String> {
+    fn analysis(&mut self) -> Result<&mut AnalysisHost, String> {
         let identity = cache_identity(&self.root, &self.config)?;
-        if self.catalog.as_ref().map(|(key, _)| key) != Some(&identity) {
-            let document = self.tool("catalog", &[])?;
-            if document.get("schemaVersion") != Some(&json!(3)) {
-                return Err("unsupported catalog schema".into());
-            }
-            self.catalog = Some((
+        if self.analysis.as_ref().map(|(key, _)| key) != Some(&identity) {
+            self.analysis = Some((
                 identity,
-                document
-                    .get("utilities")
-                    .and_then(Value::as_array)
-                    .ok_or("catalog has no utilities")?
-                    .clone(),
+                AnalysisHost::new(load_theme(&self.root, &self.config)?),
             ));
         }
-        Ok(self.catalog.as_ref().map_or(&[], |(_, values)| values))
+        Ok(&mut self.analysis.as_mut().expect("analysis inserted").1)
     }
 }
 
 struct SemanticEngine {
     config: ServerConfig,
-    cache: BTreeMap<String, Result<Vec<Value>, String>>,
+    identity: Option<String>,
+    host: AnalysisHost,
 }
 
 impl SemanticEngine {
     fn new(config: ServerConfig) -> Self {
         Self {
             config,
-            cache: BTreeMap::new(),
+            identity: None,
+            host: AnalysisHost::default(),
         }
     }
 
-    fn findings(
+    fn ensure_root(&mut self, root: &Path) -> Result<(), String> {
+        let identity = cache_identity(root, &self.config)?;
+        if self.identity.as_ref() != Some(&identity) {
+            self.host.set_theme(load_theme(root, &self.config)?);
+            self.identity = Some(identity);
+        }
+        Ok(())
+    }
+
+    fn analyze_literal(
         &mut self,
         root: &Path,
         style: &str,
         cancellation: &Cancellation,
         job: &SemanticJob,
-    ) -> Result<Option<&[Value]>, String> {
-        let key = format!("{}\0style:{style}", cache_identity(root, &self.config)?);
-        if !self.cache.contains_key(&key) {
-            if self.cache.len() >= MAX_SEMANTIC_CACHE_ITEMS {
-                self.cache.clear();
-            }
-            let Some(result) = self.run_check(root, style, cancellation, job)? else {
-                return Ok(None);
-            };
-            self.cache.insert(key.clone(), result);
+    ) -> Result<Option<Result<(), Diagnostic>>, String> {
+        if !semantic_job_is_current(cancellation, job) {
+            return Ok(None);
         }
-        self.cache
-            .get(&key)
-            .expect("semantic result inserted")
-            .as_deref()
-            .map_err(Clone::clone)
-            .map(Some)
+        self.ensure_root(root)?;
+        let result = self.host.analyze_literal(style).map(|_| ());
+        Ok(semantic_job_is_current(cancellation, job).then_some(result))
     }
 
-    fn pcx_findings(
+    fn analyze_pcx(
         &mut self,
         root: &Path,
-        source: &str,
+        request: &PcxRequest,
         cancellation: &Cancellation,
         job: &SemanticJob,
-    ) -> Result<Option<&[Value]>, String> {
-        let key = format!("{}\0pcx:{source}", cache_identity(root, &self.config)?);
-        if !self.cache.contains_key(&key) {
-            if self.cache.len() >= MAX_SEMANTIC_CACHE_ITEMS {
-                self.cache.clear();
-            }
-            let Some(result) = self.run_source_check(root, source, cancellation, job)? else {
-                return Ok(None);
-            };
-            self.cache.insert(key.clone(), result);
-        }
-        self.cache
-            .get(&key)
-            .expect("pcx semantic result inserted")
-            .as_deref()
-            .map_err(Clone::clone)
-            .map(Some)
-    }
-
-    fn run_check(
-        &self,
-        root: &Path,
-        style: &str,
-        cancellation: &Cancellation,
-        job: &SemanticJob,
-    ) -> Result<Option<Result<Vec<Value>, String>>, String> {
-        let mut process = Command::new(&self.config.compiler);
-        process
-            .arg("--diagnostic-format")
-            .arg("json")
-            .arg("check")
-            .arg("--style")
-            .arg(style)
-            .current_dir(root);
-        if self.config.seed {
-            process.arg("--seed");
-        } else if let Some(config) = &self.config.config {
-            process.arg("--config").arg(config);
-        }
-        let Some(output) = cancellable_output(&mut process, cancellation, job)? else {
+    ) -> Result<Option<Result<(), PcxError>>, String> {
+        if !semantic_job_is_current(cancellation, job) {
             return Ok(None);
-        };
-        Ok(Some(parse_check_output(&output)))
-    }
-
-    fn run_source_check(
-        &self,
-        root: &Path,
-        source: &str,
-        cancellation: &Cancellation,
-        job: &SemanticJob,
-    ) -> Result<Option<Result<Vec<Value>, String>>, String> {
-        let temporary = TemporarySource::create(source)?;
-        let mut process = Command::new(&self.config.compiler);
-        process
-            .arg("--diagnostic-format")
-            .arg("json")
-            .arg("check")
-            .arg("--source")
-            .arg(&temporary.path)
-            .current_dir(root);
-        if self.config.seed {
-            process.arg("--seed");
-        } else if let Some(config) = &self.config.config {
-            process.arg("--config").arg(config);
         }
-        let Some(output) = cancellable_output(&mut process, cancellation, job)? else {
-            return Ok(None);
-        };
-        Ok(Some(parse_check_output(&output)))
+        self.ensure_root(root)?;
+        let result = self.host.analyze_pcx(request).map(|_| ());
+        Ok(semantic_job_is_current(cancellation, job).then_some(result))
     }
 }
 
@@ -298,214 +222,6 @@ fn semantic_job_is_current(cancellation: &Cancellation, job: &SemanticJob) -> bo
     cancellation
         .lock()
         .is_ok_and(|versions| versions.get(&job.uri) == Some(&job.version))
-}
-
-fn cancellable_output(
-    process: &mut Command,
-    cancellation: &Cancellation,
-    job: &SemanticJob,
-) -> Result<Option<Output>, String> {
-    if !semantic_job_is_current(cancellation, job) {
-        return Ok(None);
-    }
-    process.stdout(Stdio::piped()).stderr(Stdio::piped());
-    let mut child = process
-        .spawn()
-        .map_err(|error| format!("cannot run pliego-cssc check: {error}"))?;
-    let mut stdout = child
-        .stdout
-        .take()
-        .ok_or("pliego-cssc stdout is unavailable")?;
-    let mut stderr = child
-        .stderr
-        .take()
-        .ok_or("pliego-cssc stderr is unavailable")?;
-    let stdout_reader =
-        thread::spawn(move || read_bounded(&mut stdout, MAX_TOOL_OUTPUT_BYTES, "stdout"));
-    let stderr_reader =
-        thread::spawn(move || read_bounded(&mut stderr, MAX_TOOL_OUTPUT_BYTES, "stderr"));
-    let deadline = Instant::now() + TOOL_PROCESS_TIMEOUT;
-    loop {
-        if !semantic_job_is_current(cancellation, job) {
-            if child
-                .try_wait()
-                .map_err(|error| format!("cannot poll stale pliego-cssc check: {error}"))?
-                .is_none()
-            {
-                child
-                    .kill()
-                    .map_err(|error| format!("cannot cancel stale pliego-cssc check: {error}"))?;
-            }
-            child
-                .wait()
-                .map_err(|error| format!("cannot reap stale pliego-cssc check: {error}"))?;
-            let _ = join_process_reader(stdout_reader, "stdout");
-            let _ = join_process_reader(stderr_reader, "stderr");
-            return Ok(None);
-        }
-        if Instant::now() >= deadline {
-            if child
-                .try_wait()
-                .map_err(|error| format!("cannot poll timed-out pliego-cssc check: {error}"))?
-                .is_none()
-            {
-                child
-                    .kill()
-                    .map_err(|error| format!("cannot stop timed-out pliego-cssc check: {error}"))?;
-            }
-            child
-                .wait()
-                .map_err(|error| format!("cannot reap timed-out pliego-cssc check: {error}"))?;
-            let _ = join_process_reader(stdout_reader, "stdout");
-            let _ = join_process_reader(stderr_reader, "stderr");
-            return Err("pliego-cssc check exceeded the 30 second deadline".into());
-        }
-        if let Some(status) = child
-            .try_wait()
-            .map_err(|error| format!("cannot poll pliego-cssc check: {error}"))?
-        {
-            let stdout = join_process_reader(stdout_reader, "stdout")?;
-            let stderr = join_process_reader(stderr_reader, "stderr")?;
-            return Ok(Some(Output {
-                status,
-                stdout,
-                stderr,
-            }));
-        }
-        thread::sleep(SEMANTIC_PROCESS_POLL);
-    }
-}
-
-fn bounded_process_output(
-    process: &mut Command,
-    operation: &str,
-    timeout: Duration,
-) -> Result<Output, String> {
-    process.stdout(Stdio::piped()).stderr(Stdio::piped());
-    let mut child = process
-        .spawn()
-        .map_err(|error| format!("cannot run {operation}: {error}"))?;
-    let mut stdout = child
-        .stdout
-        .take()
-        .ok_or_else(|| format!("{operation} stdout is unavailable"))?;
-    let mut stderr = child
-        .stderr
-        .take()
-        .ok_or_else(|| format!("{operation} stderr is unavailable"))?;
-    let stdout_reader =
-        thread::spawn(move || read_bounded(&mut stdout, MAX_TOOL_OUTPUT_BYTES, "stdout"));
-    let stderr_reader =
-        thread::spawn(move || read_bounded(&mut stderr, MAX_TOOL_OUTPUT_BYTES, "stderr"));
-    let deadline = Instant::now() + timeout;
-    loop {
-        if let Some(status) = child
-            .try_wait()
-            .map_err(|error| format!("cannot poll {operation}: {error}"))?
-        {
-            return Ok(Output {
-                status,
-                stdout: join_process_reader(stdout_reader, "stdout")?,
-                stderr: join_process_reader(stderr_reader, "stderr")?,
-            });
-        }
-        if Instant::now() >= deadline {
-            child
-                .kill()
-                .map_err(|error| format!("cannot stop timed-out {operation}: {error}"))?;
-            child
-                .wait()
-                .map_err(|error| format!("cannot reap timed-out {operation}: {error}"))?;
-            let _ = join_process_reader(stdout_reader, "stdout");
-            let _ = join_process_reader(stderr_reader, "stderr");
-            return Err(format!("{operation} exceeded the 30 second deadline"));
-        }
-        thread::sleep(SEMANTIC_PROCESS_POLL);
-    }
-}
-
-fn read_bounded(reader: &mut impl Read, maximum: usize, stream: &str) -> io::Result<Vec<u8>> {
-    let mut bytes = Vec::new();
-    reader.take((maximum + 1) as u64).read_to_end(&mut bytes)?;
-    if bytes.len() > maximum {
-        return Err(io::Error::other(format!(
-            "pliego-cssc {stream} exceeds {maximum} bytes"
-        )));
-    }
-    Ok(bytes)
-}
-
-fn join_process_reader(
-    reader: thread::JoinHandle<Result<Vec<u8>, io::Error>>,
-    stream: &str,
-) -> Result<Vec<u8>, String> {
-    reader
-        .join()
-        .map_err(|_| format!("pliego-cssc {stream} reader panicked"))?
-        .map_err(|error| format!("cannot read pliego-cssc {stream}: {error}"))
-}
-
-fn parse_check_output(output: &Output) -> Result<Vec<Value>, String> {
-    if output.status.success() {
-        if !output.stderr.is_empty() {
-            return Err("successful pliego-cssc check wrote stderr".into());
-        }
-        return Ok(Vec::new());
-    }
-    let document: Value = serde_json::from_slice(&output.stderr)
-        .map_err(|error| format!("invalid pliego-cssc diagnostic JSON: {error}"))?;
-    if document.get("schemaVersion") != Some(&json!(1))
-        || document.get("command") != Some(&json!("check"))
-    {
-        return Err("unsupported pliego-cssc diagnostic schema".into());
-    }
-    let diagnostics = document
-        .get("diagnostics")
-        .and_then(Value::as_array)
-        .ok_or("pliego-cssc diagnostic document has no diagnostics")?;
-    if diagnostics.is_empty() {
-        return Err("failed pliego-cssc check returned no diagnostics".into());
-    }
-    Ok(diagnostics.clone())
-}
-
-struct TemporarySource {
-    path: PathBuf,
-}
-
-impl TemporarySource {
-    fn create(source: &str) -> Result<Self, String> {
-        for _ in 0..16 {
-            let id = TEMP_SOURCE_COUNTER.fetch_add(1, Ordering::Relaxed);
-            let path =
-                std::env::temp_dir().join(format!("pliegocss-lsp-{}-{id}.rs", std::process::id()));
-            let mut options = OpenOptions::new();
-            options.write(true).create_new(true);
-            #[cfg(unix)]
-            options.mode(0o600);
-            match options.open(&path) {
-                Ok(mut file) => {
-                    if let Err(error) = file.write_all(source.as_bytes()) {
-                        drop(file);
-                        let _ = remove_file(&path);
-                        return Err(format!("cannot write temporary Rust source: {error}"));
-                    }
-                    return Ok(Self { path });
-                }
-                Err(error) if error.kind() == io::ErrorKind::AlreadyExists => {}
-                Err(error) => {
-                    return Err(format!("cannot create temporary Rust source: {error}"));
-                }
-            }
-        }
-        Err("cannot allocate a unique temporary Rust source path".into())
-    }
-}
-
-impl Drop for TemporarySource {
-    fn drop(&mut self) {
-        let _ = remove_file(&self.path);
-    }
 }
 
 struct SemanticJob {
@@ -956,179 +672,106 @@ fn semantic_document_diagnostics(
     Some(values)
 }
 
-struct SyntheticPcxSource {
-    source: String,
-    ranges: BTreeMap<(usize, usize), SourceRange>,
-    fallback: SourceRange,
-}
-
-fn synthetic_pcx_source(report: &ScanReport) -> Result<Option<SyntheticPcxSource>, String> {
-    let mut source = String::from("fn __pliegocss_lsp_pcx() {");
-    let mut actual_ranges = Vec::new();
-    let mut fallback = None;
-    for invocation in &report.invocations {
-        let InvocationKind::Pcx(pcx) = &invocation.kind else {
-            continue;
-        };
-        if pcx.clauses.len() < 2 {
-            continue;
-        }
-        fallback.get_or_insert(invocation.range);
-        source.push_str("let _=pcx!(");
-        write!(source, "{:?}", pcx.base.value).expect("writing to String cannot fail");
-        for clause in &pcx.clauses {
-            source.push_str(",match (){");
-            for branch in &clause.branches {
-                source.push_str("_=>");
-                write!(source, "{:?}", branch.style.value).expect("writing to String cannot fail");
-                source.push(',');
-                actual_ranges.push(branch.style.range);
-            }
-            source.push('}');
-        }
-        source.push_str(");");
-    }
-    source.push('}');
-    let Some(fallback) = fallback else {
-        return Ok(None);
-    };
-    let synthetic = scan_source_named("pliegocss-lsp-pcx.rs", &source)
-        .map_err(|error| format!("cannot scan synthetic pcx source: {error}"))?;
-    if !synthetic.diagnostics.is_empty() {
-        return Err("synthetic pcx source produced scanner diagnostics".into());
-    }
-    let mut synthetic_ranges = Vec::new();
-    for invocation in &synthetic.invocations {
-        let InvocationKind::Pcx(pcx) = &invocation.kind else {
-            return Err("synthetic source produced a non-pcx invocation".into());
-        };
-        for clause in &pcx.clauses {
-            synthetic_ranges.extend(clause.branches.iter().map(|branch| branch.style.range));
-        }
-    }
-    if synthetic_ranges.len() != actual_ranges.len() {
-        return Err("synthetic pcx literal mapping is incomplete".into());
-    }
-    let ranges = synthetic_ranges
-        .into_iter()
-        .zip(actual_ranges)
-        .map(|(synthetic, actual)| ((synthetic.start.byte, synthetic.end.byte), actual))
-        .collect();
-    Ok(Some(SyntheticPcxSource {
-        source,
-        ranges,
-        fallback,
-    }))
-}
-
 fn pcx_document_diagnostics(
     engine: &mut SemanticEngine,
     job: &SemanticJob,
     report: &ScanReport,
     cancellation: &Cancellation,
 ) -> Option<Vec<Value>> {
-    let synthetic = match synthetic_pcx_source(report) {
-        Ok(Some(synthetic)) => synthetic,
-        Ok(None) => return Some(Vec::new()),
-        Err(error) => {
-            let mut value = diagnostic(
-                &job.text,
-                report.invocations[0].range,
-                "PCL001",
-                &format!("compiler-backed pcx diagnostics unavailable: {error}"),
-                1,
-            );
-            value["data"] = diagnostic_data("tool", &Value::Null, &Value::Null);
-            return Some(vec![value]);
-        }
-    };
-    let findings = match engine.pcx_findings(&job.root, &synthetic.source, cancellation, job) {
-        Ok(Some(findings)) => findings,
-        Ok(None) => return None,
-        Err(error) => {
-            let mut value = diagnostic(
-                &job.text,
-                synthetic.fallback,
-                "PCL001",
-                &format!("compiler-backed pcx diagnostics unavailable: {error}"),
-                1,
-            );
-            value["data"] = diagnostic_data("tool", &Value::Null, &Value::Null);
-            return Some(vec![value]);
-        }
-    };
     let mut diagnostics = Vec::new();
-    for finding in findings {
-        if finding.get("code") != Some(&json!("PCX003")) {
+    for invocation in &report.invocations {
+        let InvocationKind::Pcx(pcx) = &invocation.kind else {
             continue;
-        }
-        match pcx_diagnostic(&job.text, &synthetic, finding) {
-            Ok(value) => diagnostics.push(value),
+        };
+        let request = PcxRequest::new(
+            pcx.base.value.clone(),
+            pcx.clauses.iter().map(|clause| {
+                clause
+                    .branches
+                    .iter()
+                    .map(|branch| branch.style.value.clone())
+            }),
+        );
+        let result = match engine.analyze_pcx(&job.root, &request, cancellation, job) {
+            Ok(Some(result)) => result,
+            Ok(None) => return None,
             Err(error) => {
                 let mut value = diagnostic(
                     &job.text,
-                    synthetic.fallback,
+                    invocation.range,
                     "PCL001",
-                    &format!("invalid compiler pcx diagnostic: {error}"),
+                    &format!("in-process pcx diagnostics unavailable: {error}"),
                     1,
                 );
                 value["data"] = diagnostic_data("tool", &Value::Null, &Value::Null);
                 return Some(vec![value]);
             }
+        };
+        match result {
+            Ok(()) | Err(PcxError::Base(_) | PcxError::Branch { .. }) => {}
+            Err(PcxError::Conflict(conflict)) => {
+                let literal =
+                    &pcx.clauses[conflict.right_clause].branches[conflict.right_branch].style;
+                let slots = conflict
+                    .slots
+                    .iter()
+                    .map(|slot| format!("{slot:?}"))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                let mut value = diagnostic(
+                    &job.text,
+                    literal.range,
+                    "PCX003",
+                    &format!(
+                        "independent clauses {} and {} can both assign [{slots}] under the same condition",
+                        conflict.left_clause + 1,
+                        conflict.right_clause + 1,
+                    ),
+                    1,
+                );
+                value["data"] = diagnostic_data(
+                    "composition",
+                    &json!("express the combined state space in one `match`"),
+                    &Value::Null,
+                );
+                diagnostics.push(value);
+            }
+            Err(PcxError::ExpansionLimit { maximum }) => {
+                let mut value = diagnostic(
+                    &job.text,
+                    invocation.range,
+                    "PCX004",
+                    &format!("pcx expands to more than {maximum} style combinations"),
+                    1,
+                );
+                value["data"] = diagnostic_data("composition", &Value::Null, &Value::Null);
+                diagnostics.push(value);
+            }
+            Err(PcxError::EmptyClause { clause }) => {
+                let mut value = diagnostic(
+                    &job.text,
+                    invocation.range,
+                    "PCX001",
+                    &format!("pcx clause {} has no visible branches", clause + 1),
+                    1,
+                );
+                value["data"] = diagnostic_data("composition", &Value::Null, &Value::Null);
+                diagnostics.push(value);
+            }
+            Err(error) => {
+                let mut value = diagnostic(
+                    &job.text,
+                    invocation.range,
+                    "PCL001",
+                    &format!("in-process pcx diagnostics unavailable: {error}"),
+                    1,
+                );
+                value["data"] = diagnostic_data("tool", &Value::Null, &Value::Null);
+                diagnostics.push(value);
+            }
         }
     }
     Some(diagnostics)
-}
-
-fn pcx_diagnostic(
-    source: &str,
-    synthetic: &SyntheticPcxSource,
-    finding: &Value,
-) -> Result<Value, String> {
-    let origin = finding
-        .get("origin")
-        .ok_or("missing pcx diagnostic origin")?;
-    if string_field(origin, "kind")? != "rust"
-        || string_field(origin, "label")? != "pcx-cross-clause-conflict"
-    {
-        return Err("pcx diagnostic has an unexpected origin".into());
-    }
-    let range = finding.get("range").ok_or("missing pcx diagnostic range")?;
-    let start = usize::try_from(
-        range
-            .get("byteStart")
-            .and_then(Value::as_u64)
-            .ok_or("missing pcx range start")?,
-    )
-    .map_err(|_| "pcx range start is too large")?;
-    let end = usize::try_from(
-        range
-            .get("byteEnd")
-            .and_then(Value::as_u64)
-            .ok_or("missing pcx range end")?,
-    )
-    .map_err(|_| "pcx range end is too large")?;
-    let actual = synthetic
-        .ranges
-        .get(&(start, end))
-        .ok_or("pcx diagnostic range has no source mapping")?;
-    let severity = match string_field(finding, "severity")? {
-        "error" => 1,
-        "warning" => 2,
-        _ => return Err("unsupported pcx diagnostic severity".into()),
-    };
-    let mut value = lsp_diagnostic(
-        &source_range_to_lsp(source, *actual),
-        string_field(finding, "code")?,
-        string_field(finding, "message")?,
-        severity,
-    );
-    value["data"] = json!({
-        "category":finding.get("category").cloned().unwrap_or(Value::Null),
-        "suggestion":finding.get("suggestion").cloned().unwrap_or(Value::Null),
-        "replacement":Value::Null
-    });
-    Ok(value)
 }
 
 fn semantic_diagnostics(
@@ -1139,88 +782,33 @@ fn semantic_diagnostics(
     cancellation: &Cancellation,
     job: &SemanticJob,
 ) -> Option<Vec<Value>> {
-    let findings = match engine.findings(root, &literal.value, cancellation, job) {
-        Ok(Some(findings)) => findings,
+    let result = match engine.analyze_literal(root, &literal.value, cancellation, job) {
+        Ok(Some(result)) => result,
         Ok(None) => return None,
         Err(error) => {
             let mut value = diagnostic(
                 source,
                 literal.range,
                 "PCL001",
-                &format!("compiler-backed diagnostics unavailable: {error}"),
+                &format!("in-process diagnostics unavailable: {error}"),
                 1,
             );
             value["data"] = diagnostic_data("tool", &Value::Null, &Value::Null);
             return Some(vec![value]);
         }
     };
-    let mut diagnostics = Vec::with_capacity(findings.len());
-    for finding in findings {
-        match semantic_diagnostic(source, literal, finding) {
-            Ok(diagnostic) => diagnostics.push(diagnostic),
-            Err(error) => {
-                let mut value = diagnostic(
-                    source,
-                    literal.range,
-                    "PCL001",
-                    &format!("invalid compiler diagnostic: {error}"),
-                    1,
-                );
-                value["data"] = diagnostic_data("tool", &Value::Null, &Value::Null);
-                return Some(vec![value]);
-            }
-        }
+    match result {
+        Ok(()) => Some(Vec::new()),
+        Err(finding) => Some(vec![semantic_diagnostic(source, literal, &finding)]),
     }
-    Some(diagnostics)
 }
 
-fn semantic_diagnostic(
-    source: &str,
-    literal: &StyleLiteral,
-    finding: &Value,
-) -> Result<Value, String> {
-    let code = string_field(finding, "code")?;
-    let message = string_field(finding, "message")?;
-    let severity = match string_field(finding, "severity")? {
-        "error" => 1,
-        "warning" => 2,
-        "information" => 3,
-        "hint" => 4,
-        _ => return Err("unsupported severity".into()),
-    };
-    let origin = finding.get("origin").ok_or("missing origin")?;
-    if string_field(origin, "kind")? != "cli"
-        || string_field(origin, "label")? != "explicit-style-1"
-    {
-        return Err("semantic diagnostic has an unexpected origin".into());
-    }
-    let range =
-        if let Some(style_range) = finding.get("styleRange").filter(|value| !value.is_null()) {
-            let start = usize::try_from(
-                style_range
-                    .get("byteStart")
-                    .and_then(Value::as_u64)
-                    .ok_or("missing style range start")?,
-            )
-            .map_err(|_| "style range start is too large")?;
-            let end = usize::try_from(
-                style_range
-                    .get("byteEnd")
-                    .and_then(Value::as_u64)
-                    .ok_or("missing style range end")?,
-            )
-            .map_err(|_| "style range end is too large")?;
-            semantic_source_range(source, literal, start, end)?
-        } else {
-            source_range_to_lsp(source, literal.range)
-        };
-    let mut diagnostic = lsp_diagnostic(&range, code, message, severity);
-    diagnostic["data"] = json!({
-        "category":finding.get("category").cloned().unwrap_or(Value::Null),
-        "suggestion":finding.get("suggestion").cloned().unwrap_or(Value::Null),
-        "replacement":finding.get("replacement").cloned().unwrap_or(Value::Null)
-    });
-    Ok(diagnostic)
+fn semantic_diagnostic(source: &str, literal: &StyleLiteral, finding: &Diagnostic) -> Value {
+    let range = semantic_source_range(source, literal, finding.span.start, finding.span.end)
+        .unwrap_or_else(|_| source_range_to_lsp(source, literal.range));
+    let mut value = lsp_diagnostic(&range, finding.code.as_str(), &finding.message, 1);
+    value["data"] = diagnostic_data("style", &json!(finding.suggestion), &Value::Null);
+    value
 }
 
 fn semantic_source_range(
@@ -1269,7 +857,7 @@ fn completion(server: &mut Server, params: &Value) -> Result<Value, String> {
     let needle = &prefix[variant_end..];
     let range = byte_range_to_lsp(&text, context.source_word_start..context.source_word_end);
     let mut items = Vec::new();
-    for item in server.catalog()? {
+    for item in server.catalog() {
         let example = item.get("example").and_then(Value::as_str).unwrap_or("");
         let pattern = item.get("pattern").and_then(Value::as_str).unwrap_or("");
         let match_name = item.get("matchName").and_then(Value::as_str).unwrap_or("");
@@ -1294,32 +882,35 @@ fn completion(server: &mut Server, params: &Value) -> Result<Value, String> {
 
 fn hover(server: &mut Server, params: &Value) -> Result<Value, String> {
     let (uri, line, character) = text_position(params)?;
-    let text = &server
+    let text = server
         .documents
         .get(uri)
         .ok_or("document is not open")?
-        .text;
-    let context =
-        utility_context(uri, text, line, character)?.ok_or("cursor is not in a utility literal")?;
+        .text
+        .clone();
+    let context = utility_context(uri, &text, line, character)?
+        .ok_or("cursor is not in a utility literal")?;
     let utility = &context.value[context.word_start..context.word_end];
     if utility.is_empty() {
         return Ok(Value::Null);
     }
-    let explained = server.tool("explain", &["--style", utility])?;
-    if explained.get("schemaVersion") != Some(&json!(2)) {
-        return Err("unsupported explain schema".into());
-    }
-    let item = explained
-        .get("utilities")
-        .and_then(Value::as_array)
-        .and_then(|items| items.first())
-        .ok_or("explain returned no utility")?;
-    let summary = item.get("summary").and_then(Value::as_str).unwrap_or("");
-    let pattern = item.get("pattern").and_then(Value::as_str).unwrap_or("");
-    let css = explained.get("css").and_then(Value::as_str).unwrap_or("");
+    let syntax = parse_style_list(utility).map_err(|error| error.to_string())?;
+    let item = syntax
+        .items
+        .first()
+        .ok_or("utility parser returned no item")?;
+    let descriptor = utility_descriptor_for_style_item(item)
+        .ok_or("compiler accepted a utility without catalog metadata")?;
+    let host = server.analysis()?;
+    let semantic = host
+        .analyze_literal(utility)
+        .map_err(|error| error.to_string())?;
+    let css = emit_css_with_theme(host.theme(), &semantic).map_err(|error| error.to_string())?;
+    let summary = descriptor.summary();
+    let pattern = descriptor.pattern();
     Ok(json!({
         "contents":{"kind":"markdown","value":format!("**{utility}** — `{pattern}`\n\n{summary}\n\n```css\n{css}\n```")},
-        "range":byte_range_to_lsp(text, context.source_word_start..context.source_word_end)
+        "range":byte_range_to_lsp(&text, context.source_word_start..context.source_word_end)
     }))
 }
 
@@ -1597,14 +1188,12 @@ fn string_field<'a>(value: &'a Value, name: &str) -> Result<&'a str, String> {
 fn cache_identity(root: &Path, config: &ServerConfig) -> Result<String, String> {
     let mut digest = Sha256::new();
     digest.update(root.as_os_str().to_string_lossy().as_bytes());
-    digest.update(b"\0compiler:");
-    digest.update(config.compiler.to_string_lossy().as_bytes());
     if config.seed {
         digest.update(b"\0seed");
-    } else if let Some(path) = &config.config {
+    } else if let Some(path) = resolved_theme_path(root, config) {
         digest.update(b"\0config:");
         digest.update(path.as_os_str().to_string_lossy().as_bytes());
-        let metadata = std::fs::metadata(path)
+        let metadata = std::fs::metadata(&path)
             .map_err(|error| format!("cannot inspect config {}: {error}", path.display()))?;
         if metadata.len() > MAX_CONFIG_FINGERPRINT_BYTES {
             return Err(format!(
@@ -1612,7 +1201,7 @@ fn cache_identity(root: &Path, config: &ServerConfig) -> Result<String, String> 
                 path.display()
             ));
         }
-        let bytes = std::fs::read(path)
+        let bytes = std::fs::read(&path)
             .map_err(|error| format!("cannot read config {}: {error}", path.display()))?;
         digest.update(metadata.len().to_le_bytes());
         digest.update(bytes);
@@ -1620,6 +1209,35 @@ fn cache_identity(root: &Path, config: &ServerConfig) -> Result<String, String> 
         digest.update(b"\0discovery");
     }
     Ok(format!("{:x}", digest.finalize()))
+}
+
+fn resolved_theme_path(root: &Path, config: &ServerConfig) -> Option<PathBuf> {
+    if config.seed {
+        return None;
+    }
+    config.config.as_ref().map_or_else(
+        || {
+            let conventional = root.join("pliego.theme.toml");
+            conventional.is_file().then_some(conventional)
+        },
+        |path| {
+            Some(if path.is_absolute() {
+                path.clone()
+            } else {
+                root.join(path)
+            })
+        },
+    )
+}
+
+fn load_theme(
+    root: &Path,
+    config: &ServerConfig,
+) -> Result<pliego_css_theme::ThemeRegistry, String> {
+    resolved_theme_path(root, config).map_or_else(
+        || Ok(pliego_css_theme::ThemeRegistry::seed()),
+        |path| pliego_css_config::parse_path(&path).map_err(|error| error.to_string()),
+    )
 }
 
 fn file_uri_path(uri: &str) -> Result<PathBuf, String> {
@@ -1732,20 +1350,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn delegated_process_output_is_bounded() {
-        let mut within = io::Cursor::new(vec![b'x'; 8]);
-        assert_eq!(read_bounded(&mut within, 8, "stdout").unwrap().len(), 8);
-
-        let mut excessive = io::Cursor::new(vec![b'x'; 9]);
-        assert!(
-            read_bounded(&mut excessive, 8, "stdout")
-                .unwrap_err()
-                .to_string()
-                .contains("exceeds 8 bytes")
-        );
-    }
-
-    #[test]
     fn utf16_positions_round_trip_astral_scalars() {
         let source = "fn x() { let _ = \"😀 flex\"; }\n";
         let byte = source.find("flex").unwrap();
@@ -1781,19 +1385,19 @@ mod tests {
 
     #[test]
     fn semantic_ranges_are_exact_and_escaped_literals_fail_to_the_whole_token() {
-        let finding = json!({
-            "code":"PCS001","category":"style","severity":"error",
-            "message":"unknown utility `unknown`","suggestion":null,
-            "origin":{"kind":"cli","label":"explicit-style-1"},
-            "range":null,"styleRange":{"byteStart":5,"byteEnd":12},"replacement":null
-        });
+        let finding = Diagnostic {
+            code: pliego_css_ir::DiagnosticCode::UnknownUtility,
+            message: "unknown utility `unknown`".into(),
+            span: pliego_css_ir::SourceSpan::new(5, 12),
+            suggestion: None,
+        };
         let source = "fn x(){let _=pc!(\"flex unknown\");}";
         let report = scan_source_named("x.rs", source).unwrap();
         let literal = match &report.invocations[0].kind {
             InvocationKind::Pc(pc) => &pc.style,
             InvocationKind::Pcx(_) => unreachable!(),
         };
-        let exact = semantic_diagnostic(source, literal, &finding).unwrap();
+        let exact = semantic_diagnostic(source, literal, &finding);
         assert_eq!(
             exact["range"],
             byte_range_to_lsp(
@@ -1808,7 +1412,7 @@ mod tests {
             InvocationKind::Pc(pc) => &pc.style,
             InvocationKind::Pcx(_) => unreachable!(),
         };
-        let whole = semantic_diagnostic(escaped, literal, &finding).unwrap();
+        let whole = semantic_diagnostic(escaped, literal, &finding);
         assert_eq!(whole["range"], source_range_to_lsp(escaped, literal.range));
 
         let empty = "fn x(){let _=pc!(\"bg-[]\");}";
@@ -1823,29 +1427,31 @@ mod tests {
     }
 
     #[test]
-    fn synthetic_pcx_ranges_map_back_to_the_original_branch_token() {
+    fn in_process_pcx_ranges_target_the_original_branch_token() {
         let source = concat!(
             "fn x(){let _=pcx!(\"flex\",",
             "if a { r#\"opacity-50\"# } else { \"block\" },",
             "if b { \"opacity-50\" } else { \"grid\" });}"
         );
         let report = scan_source_named("x.rs", source).unwrap();
-        let synthetic = synthetic_pcx_source(&report).unwrap().unwrap();
         let expected_start = source.rfind("\"opacity-50\"").unwrap();
         let expected_end = expected_start + "\"opacity-50\"".len();
-        let ((start, end), _) = synthetic
-            .ranges
-            .iter()
-            .find(|(_, actual)| actual.start.byte == expected_start)
-            .expect("mapped second-clause branch");
-        let finding = json!({
-            "code":"PCX003","category":"composition","severity":"error",
-            "message":"independent clauses 1 and 2 overlap",
-            "suggestion":"use one match",
-            "origin":{"kind":"rust","label":"pcx-cross-clause-conflict"},
-            "range":{"byteStart":start,"byteEnd":end}
+        let job = SemanticJob {
+            uri: "x.rs".into(),
+            version: 1,
+            text: source.into(),
+            root: PathBuf::from("."),
+        };
+        let cancellation = Arc::new(Mutex::new(BTreeMap::from([("x.rs".into(), 1)])));
+        let mut engine = SemanticEngine::new(ServerConfig {
+            seed: true,
+            ..ServerConfig::default()
         });
-        let value = pcx_diagnostic(source, &synthetic, &finding).unwrap();
+        let values = pcx_document_diagnostics(&mut engine, &job, &report, &cancellation).unwrap();
+        let value = values
+            .iter()
+            .find(|value| value["code"] == "PCX003")
+            .expect("shared pcx frontend reports conflict");
         assert_eq!(
             value["range"],
             byte_range_to_lsp(source, expected_start..expected_end)
@@ -1948,11 +1554,14 @@ mod tests {
     }
 
     #[test]
-    fn cache_identity_tracks_root_config_bytes_and_compiler() {
+    fn cache_identity_tracks_root_and_config_bytes_but_not_legacy_compiler() {
         let directory = std::env::temp_dir().join(format!(
             "pliego-lsp-cache-{}-{}",
             std::process::id(),
-            TEMP_SOURCE_COUNTER.fetch_add(1, Ordering::Relaxed)
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
         ));
         std::fs::create_dir_all(&directory).unwrap();
         let config_path = directory.join("theme.json");
@@ -1968,7 +1577,7 @@ mod tests {
         let second = cache_identity(&directory, &config).unwrap();
         assert_ne!(first, second);
         config.compiler = OsString::from("compiler-b");
-        assert_ne!(second, cache_identity(&directory, &config).unwrap());
+        assert_eq!(second, cache_identity(&directory, &config).unwrap());
         assert_ne!(
             cache_identity(&directory, &config).unwrap(),
             cache_identity(&directory.join("other"), &config).unwrap()
@@ -2008,13 +1617,10 @@ mod tests {
                 version: 1,
             },
         );
-        server.catalog = Some((
-            cache_identity(&server.root, &server.config).unwrap(),
-            vec![json!({
-                "example":"gap-4","pattern":"gap-{space}","matchName":"gap",
-                "summary":"Set gap."
-            })],
-        ));
+        server.catalog = Some(vec![json!({
+            "example":"gap-4","pattern":"gap-{space}","matchName":"gap",
+            "summary":"Set gap."
+        })]);
         let result = completion(
             &mut server,
             &json!({
