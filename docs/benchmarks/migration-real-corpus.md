@@ -50,4 +50,5 @@ codemod output, visual equivalence, developer resolution time, or generalize to 
 This corpus supplies reproducible real-project evidence for R0.8, but R0.8 remains partial while
 configured load paths/importers, broader syntax, migration outcomes, and a larger representative
 sample are open. Diagnostic precision/recall across the complete product and the incident/interview
-requirements also remain open.
+research needed for broader claims may be added as real usage grows; neither is a prerequisite for
+continuing the bounded migration work.

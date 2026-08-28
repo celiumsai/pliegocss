@@ -54,7 +54,8 @@ Linux, and macOS Chromium, for 63 project/host replays, and requires the separat
 framework browser job.
 
 This does not prove arbitrary Tailwind compatibility, plugin execution, safe dynamic codemods,
-Tailwind removal, or external adoption. Those seams fail closed or remain G7 work.
+Tailwind removal, or broad real-world adoption. Unsupported technical seams continue to fail closed;
+usage feedback can expand priorities later without becoming a prerequisite for current development.
 
 ## Commands
 

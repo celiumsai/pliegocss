@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "kind": "pliegocss-release-readiness",
   "state": "current",
   "targetVersion": "0.1.0",
@@ -17,7 +17,6 @@
   "dimensions": {
     "technicalReady": false,
     "operationallyReady": false,
-    "adoptionReady": false,
     "authorized": false,
     "promotionReady": false
   },
@@ -185,12 +184,43 @@
       ]
     },
     {
+      "id": "standard-css-classification",
+      "dimension": "technical",
+      "status": "blocked",
+      "evidenceClass": "pending",
+      "requiredForPromotion": true,
+      "summary": "The bounded classifier corpus is green, but complete supported declaration, value, selector, and at-rule coverage remains unfinished for the broad standard-CSS claim.",
+      "source": {
+        "commit": "064dcbce96a3a5cc97a940d07566c008bb5e2d3e",
+        "gitTree": "010a64f5d0bbd142a1d015fda4ccf573cc6e4133"
+      },
+      "observedAt": "2026-07-22T14:10:00Z",
+      "expiresAt": "2026-07-29T14:10:00Z",
+      "environment": {
+        "os": "pending-hosted-matrix",
+        "arch": "pending",
+        "rust": "1.85.0,1.96.0",
+        "node": "22.13+",
+        "browser": null
+      },
+      "requiredCoverage": ["declaration-values", "selectors", "at-rules", "representative-applications"],
+      "coveredCoverage": [],
+      "waiverAdr": null,
+      "artifacts": [],
+      "references": [
+        {
+          "kind": "maturity-map",
+          "url": "https://github.com/celiumsai/pliegocss/blob/main/docs/product/maturity-map.json"
+        }
+      ]
+    },
+    {
       "id": "registry-replay-refresh",
       "dimension": "technical",
       "status": "pending",
       "evidenceClass": "inherited",
       "requiredForPromotion": true,
-      "summary": "RC.2 was previously replayed from crates.io, but schema 3 requires a fresh, unexpired, artifact-hashed replay for the exact promotion candidate.",
+      "summary": "RC.2 was previously replayed from crates.io, but schema 4 requires a fresh, unexpired, artifact-hashed replay for the exact promotion candidate.",
       "source": {
         "commit": "064dcbce96a3a5cc97a940d07566c008bb5e2d3e",
         "gitTree": "010a64f5d0bbd142a1d015fda4ccf573cc6e4133"
@@ -273,32 +303,6 @@
       "references": []
     },
     {
-      "id": "external-adoption-evidence",
-      "dimension": "adoption",
-      "status": "pending",
-      "evidenceClass": "pending",
-      "requiredForPromotion": true,
-      "summary": "RC.2 predates the G7 authority. Recruitment is open, but the required external interviews, real incidents, and pilots have not been recorded as consented, redacted, reviewed, hash-bound evidence.",
-      "source": {
-        "commit": "064dcbce96a3a5cc97a940d07566c008bb5e2d3e",
-        "gitTree": "010a64f5d0bbd142a1d015fda4ccf573cc6e4133"
-      },
-      "observedAt": "2026-07-22T14:10:00Z",
-      "expiresAt": "2026-07-29T14:10:00Z",
-      "environment": {
-        "os": "external-research",
-        "arch": null,
-        "rust": null,
-        "node": null,
-        "browser": null
-      },
-      "requiredCoverage": ["ten-to-fifteen-interviews", "twenty-incidents", "three-to-five-pilots", "three-independent-projects", "three-independent-organizations", "frozen-adapter-support-policy"],
-      "coveredCoverage": [],
-      "waiverAdr": null,
-      "artifacts": [],
-      "references": []
-    },
-    {
       "id": "final-promotion-authorization",
       "dimension": "authorization",
       "status": "not-authorized",
@@ -325,5 +329,5 @@
       "references": []
     }
   ],
-  "promotionRule": "Promotion requires every required check to pass on this exact source commit and Git tree with unexpired complete coverage, hashed artifacts, no implicit waiver, all four readiness dimensions true, and explicit owner authorization."
+  "promotionRule": "Promotion requires every required technical, operational, and authorization check to pass on this exact source commit and Git tree with unexpired complete coverage, hashed artifacts, no implicit waiver, and explicit owner authorization. Product research may inform later work but is not a promotion prerequisite."
 }

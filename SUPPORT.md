@@ -26,9 +26,5 @@ General Rust or CSS consulting, private-project debugging, and requests without
 a reproduction may be redirected or closed.
 
 Use `hello@pliegocss.dev` for private project correspondence.
-External teams interested in a consented G7 interview or bounded adoption pilot should use the same
-address and review the [evidence intake protocol](docs/contributing/external-adoption-intake.md).
-The public cohort notice is [GitHub issue #7](https://github.com/celiumsai/pliegocss/issues/7);
-public comments are recruitment signals only and must not contain private evidence or personal data.
 Vulnerabilities must follow [SECURITY.md](SECURITY.md). PliegoCSS is provided
 under Apache-2.0 without a support SLA or warranty.

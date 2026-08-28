@@ -189,10 +189,10 @@
       "title": "Migration inventory and static adapter coexistence",
       "maturity": "beta",
       "scope": "Bounded Sass, Tailwind, CSS Modules, consumer, and auxiliary inventory plus literal complete-class-group coexistence across 21 HTML, Vite, and PliegoRS project snapshots with Tailwind v3/v4 output audit, browser equivalence, and exact rollback.",
-      "owners": ["crates/pliego-css-source", "crates/pliego-cssc", "benchmarks/adapter-coexistence-v1", "benchmarks/external-adoption-v1", "scripts/adapter-coexistence-certification.mjs"],
-      "schemas": ["migration inventory schema 1", "migration project inventory schema 1", "adapter coexistence authority schema 1", "adapter coexistence host/matrix evidence schema 1", "external adoption authority schema 1", "adapter support policy schema 1"],
-      "gates": ["check:migration-corpus", "check:migration-real-corpus", "check:adapter-coexistence-authority", "check:adapter-coexistence", "check:adapter-coexistence-matrix", "check:external-adoption-authority", "check:external-adoption", "integration:pliegors-browser"],
-      "graduationCriteria": ["Pass all three clean hosted adapter lanes on the exact promotion source and retain the pinned PliegoRS framework/browser replay.", "Obtain G7 evidence from at least three external projects and freeze the promoted adapter support policy."],
+      "owners": ["crates/pliego-css-source", "crates/pliego-cssc", "benchmarks/adapter-coexistence-v1", "docs/product/adapter-support-policy-0.1.x.json", "scripts/adapter-coexistence-certification.mjs"],
+      "schemas": ["migration inventory schema 1", "migration project inventory schema 1", "adapter coexistence authority schema 1", "adapter coexistence host/matrix evidence schema 1", "adapter support policy schema 1"],
+      "gates": ["check:migration-corpus", "check:migration-real-corpus", "check:adapter-coexistence-authority", "check:adapter-coexistence", "check:adapter-coexistence-matrix", "integration:pliegors-browser"],
+      "graduationCriteria": ["Pass all three clean hosted adapter lanes on the exact promotion source and retain the pinned PliegoRS framework/browser replay.", "Keep the promoted adapter support policy aligned with each versioned expansion of the bounded coexistence protocol."],
       "limitations": ["Dynamic class construction, arbitrary Tailwind plugin/config execution, unsupported utilities, Tailwind removal, and general perfect-migration claims remain outside the bounded protocol."]
     },
     {

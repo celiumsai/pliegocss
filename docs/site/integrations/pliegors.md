@@ -14,9 +14,9 @@ PliegoRS owns routes, pages, assets, and browser lifecycle. PliegoCSS owns parsi
 
 A reachability sidecar projects application-owned topology into selected CSS bundles without PliegoCSS pretending to understand the framework.
 
-## Replayed from published crates {#proof}
+## Source-pinned replay {#proof}
 
-The maintained fixture locks PliegoRS 0.0.2 registry packages and verifies the remote-reachable framework revision separately.
+The maintained fixture pins PliegoRS revision `abb8653e75da4a5cb4dd9b51200114fbb1e760c7` with `pliego-dom` and `pliego-ssg` `0.4.0-beta.1`, then verifies the covered framework source hash before building the SSG and browser replay.
 
 ```console
 PLIEGORS_ROOT=/path/to/pliegors pnpm integration:pliegors

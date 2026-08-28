@@ -24,7 +24,7 @@ export function renderReleaseReadiness(value) {
     "",
     `Status: **${summary.result}**`,
     "",
-    "This page is a deterministic projection of the schema-3",
+    "This page is a deterministic projection of the schema-4",
     "[`release-readiness-0.1.0.json`](./release-readiness-0.1.0.json) machine authority.",
     "Historical reports and release notes do not change this state.",
     "",
@@ -46,7 +46,6 @@ export function renderReleaseReadiness(value) {
     "| --- | --- |",
     `| Technical | ${value.dimensions.technicalReady ? "yes" : "no"} |`,
     `| Operational | ${value.dimensions.operationallyReady ? "yes" : "no"} |`,
-    `| Adoption | ${value.dimensions.adoptionReady ? "yes" : "no"} |`,
     `| Authorized | ${value.dimensions.authorized ? "yes" : "no"} |`,
     `| Promotion | ${value.dimensions.promotionReady ? "yes" : "no"} |`,
     "",
@@ -102,7 +101,6 @@ export function renderSiteReleaseReadiness(value) {
   const dimensions = [
     ["Technical", value.dimensions.technicalReady],
     ["Operational", value.dimensions.operationallyReady],
-    ["Adoption", value.dimensions.adoptionReady],
     ["Authorized", value.dimensions.authorized],
     ["Promotion", value.dimensions.promotionReady],
   ]
@@ -125,7 +123,7 @@ export function renderSiteReleaseReadiness(value) {
     "",
     "# Release truth bound to one exact candidate.",
     "",
-    `The current 1.0 promotion state is ${summary.result}; no historical report can override these source-bound gates.`,
+    `The current ${value.targetVersion} promotion state is ${summary.result}; no historical report can override these source-bound gates.`,
     "",
     "## Candidate identity {#candidate}",
     "",

@@ -38,7 +38,7 @@
       "id": "pliegors",
       "supportTier": "certified",
       "inputContract": "rendered-static-html-plus-pinned-framework-browser-replay",
-      "version": "pliego-dom=0.0.2;pliego-ssg=0.0.2"
+      "version": "source-revision=abb8653e75da4a5cb4dd9b51200114fbb1e760c7;pliego-dom=0.4.0-beta.1;pliego-ssg=0.4.0-beta.1"
     }
   ],
   "migration": {

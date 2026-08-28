@@ -13,7 +13,7 @@ coexistence protocol can reproduce, compare in a real browser, and roll back byt
 |---|---|---|
 | Static HTML | Complete static HTML document | 3.4.19 or 4.3.3 |
 | Vite | Vite 8.1.5 production build | 3.4.19 or 4.3.3 |
-| PliegoRS | Rendered static HTML plus `pliego-dom=0.0.2` / `pliego-ssg=0.0.2` browser replay | 3.4.19 or 4.3.3 |
+| PliegoRS | Rendered static HTML plus source-pinned `pliego-dom=0.4.0-beta.1` / `pliego-ssg=0.4.0-beta.1` browser replay | 3.4.19 or 4.3.3 |
 
 Certified adoption operates on complete, literal class groups. Tailwind remains loaded without
 Preflight during coexistence. Apply changes only the approved class-group bytes and PliegoCSS
@@ -41,5 +41,4 @@ claim without a versioned policy change and new evidence.
 
 ```console
 pnpm check:adapter-coexistence-authority
-pnpm check:external-adoption-authority
 ```

@@ -45,8 +45,8 @@ PliegoRS SSG/resumability browser gate; rendered-output cases alone do not subst
 - DOM comparison intentionally ignores `class` and the certification node marker; every other body
   attribute and text node remains authoritative.
 - PliegoRS source compatibility is pinned independently from the rendered-output corpus.
-- Passing owned projects is product evidence, not external adoption evidence; external pilots belong
-  to G7.
+- Passing owned projects proves only the bounded technical contract. Broader real-world adoption can
+  inform later product work as usage grows, but it is not part of this gate.
 
 ## Verification
 
